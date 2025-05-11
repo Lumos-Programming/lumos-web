@@ -1,0 +1,112 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Menu, X } from "lucide-react"
+import { cn } from "@/lib/utils"
+
+const navigation = [
+  { name: "ホーム", href: "/" },
+  { name: "サークル紹介", href: "/about" },
+  { name: "メンバー", href: "/members" },
+  { name: "お知らせ", href: "/news" },
+  { name: "お問い合わせ", href: "/contact" },
+]
+
+export default function Header() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  return (
+    <header
+      className={cn(
+        "fixed w-full z-50 transition-all duration-300",
+        scrolled ? "bg-white/90 backdrop-blur-md shadow-sm" : "bg-white",
+      )}
+    >
+      <nav className="container mx-auto px-4 md:px-6 flex items-center justify-between py-4">
+        <div className="flex items-center">
+          <Link href="/" className="text-2xl font-bold text-primary">
+            Lumos
+          </Link>
+        </div>
+
+        {/* Desktop navigation */}
+        <div className="hidden md:flex md:gap-x-8">
+          {navigation.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className="text-sm font-medium text-primary hover:text-accent transition-colors"
+            >
+              {item.name}
+            </Link>
+          ))}
+        </div>
+
+        {/* Mobile menu button */}
+        <div className="flex md:hidden">
+          <button
+            type="button"
+            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-primary"
+            onClick={() => setMobileMenuOpen(true)}
+          >
+            <span className="sr-only">メニューを開く</span>
+            <Menu className="h-6 w-6" aria-hidden="true" />
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 bg-white">
+          <div className="fixed inset-0 flex">
+            <div className="relative w-full">
+              <div className="flex h-16 items-center justify-between px-4">
+                <Link href="/" className="text-2xl font-bold text-primary">
+                  Lumos
+                </Link>
+                <button
+                  type="button"
+                  className="-m-2.5 rounded-md p-2.5 text-primary"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="sr-only">メニューを閉じる</span>
+                  <X className="h-6 w-6" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="mt-6 flow-root px-6">
+                <div className="space-y-6 py-6">
+                  {navigation.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="block text-base font-medium text-primary hover:text-accent"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+                <div className="mt-8">
+                  <Button asChild className="w-full bg-accent hover:bg-accent/90 text-primary">
+                    <Link href="/contact">お問い合わせ</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
+  )
+}
