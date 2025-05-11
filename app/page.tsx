@@ -75,18 +75,6 @@ export default function Home() {
                 </p>
               </CardContent>
             </Card>
-
-            <Card className="border-2 border-gray-100 hover:border-accent transition-colors">
-              <CardContent className="p-6 text-center">
-                <div className="mb-4 flex justify-center">
-                  <Award className="h-12 w-12 text-accent" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">就職サポート</h3>
-                <p className="text-gray-600">
-                  OB・OGとの交流会や、IT企業のインターンシップ情報の共有など、キャリアサポートも充実しています。
-                </p>
-              </CardContent>
-            </Card>
           </div>
 
           <div className="mt-12 text-center">
