@@ -22,7 +22,7 @@ export default function Home() {
             <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-primary">
               <Link href="/about">活動を見る</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+            <Button asChild size="lg" variant="outline" className="bg-white text-primary hover:bg-white/80">
               <Link href="/contact">お問い合わせへ</Link>
             </Button>
           </div>
