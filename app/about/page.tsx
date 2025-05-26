@@ -292,7 +292,7 @@ export default function AboutPage() {
             一緒に学び、成長していきましょう。
           </p>
           <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-primary">
-            <Link href="/contact">お問い合わせる</Link>
+            <Link href="/contact">お問い合わせ</Link>
           </Button>
         </div>
       </section>
