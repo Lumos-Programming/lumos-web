@@ -41,7 +41,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: asia-northeast1-docker.pkg.dev/lumos-infra/prd/frontend:latest
+          tags: asia-northeast1-docker.pkg.dev/lumos-infra/lumos-web/prd:latest
           context: .
           file: ./cloudrun/Dockerfile
 

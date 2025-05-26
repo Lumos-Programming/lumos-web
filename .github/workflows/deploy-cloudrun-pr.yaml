@@ -41,7 +41,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: asia-northeast1-docker.pkg.dev/lumos-infra/pr-${{ github.event.number }}/frontend:latest
+          tags: asia-northeast1-docker.pkg.dev/lumos-infra/lumos-web/pr-${{ github.event.number }}:latest
           context: .
           file: ./cloudrun/Dockerfile
       - name: Deploy to Cloud Run
@@ -50,7 +50,7 @@ jobs:
         with:
           service: dev-pr-${{ github.event.number }}
           region: 'asia-northeast1'
-          image: asia-northeast1-docker.pkg.dev/lumos-infra/lumos-web/frontend-pr-${{ github.event.number }}:latest
+          image: asia-northeast1-docker.pkg.dev/lumos-infra/lumos-web/pr-${{ github.event.number }}:latest
       - name: Make CloudRun accessible
         run: |
           gcloud run services add-iam-policy-binding dev-pr-${{ github.event.number }} --region=asia-northeast1 --member=allUsers --role=roles/run.invoker

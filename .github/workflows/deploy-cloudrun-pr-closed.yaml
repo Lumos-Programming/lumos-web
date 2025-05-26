@@ -51,7 +51,7 @@ jobs:
         run: |
           for i in {1..10}; do
             echo "Attempt #$i: Deleting Artifact Registry image..."
-            if gcloud artifacts docker images delete asia-northeast1-docker.pkg.dev/lumos-infra/lumos-web/frontend-pr-${{ github.event.number }} --quiet; then
+            if gcloud artifacts docker images delete asia-northeast1-docker.pkg.dev/lumos-infra/lumos-web/pr-${{ github.event.number }} --quiet; then
               echo "Artifact Registry image deleted successfully on attempt #$i."
               exit 0
             else
