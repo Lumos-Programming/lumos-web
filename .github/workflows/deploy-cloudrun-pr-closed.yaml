@@ -1,0 +1,75 @@
+name: Delete Cloud Run (PR closed)
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Login to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: access_token
+          workload_identity_provider: 'projects/599050591800/locations/global/workloadIdentityPools/default/providers/provider-github'
+          service_account: 'gh-actions@lumos-infra.iam.gserviceaccount.com'
+      - name: Set up Cloud SDK
+        uses: 'google-github-actions/setup-gcloud@v2'
+        with:
+          version: '>= 363.0.0'
+      - name: Delete Cloud Run (with retry)
+        id: delete-cloudrun-service
+        continue-on-error: true
+        run: |
+          for i in {1..10}; do
+            echo "Attempt #$i: Deleting Cloud Run service..."
+            if gcloud run services delete dev-pr-${{ github.event.number }} --region=asia-northeast1 --quiet; then
+              echo "Cloud Run service deleted successfully on attempt #$i."
+              exit 0
+            else
+              echo "Attempt #$i failed."
+              # If it's not the last attempt, we retry
+              if [ $i -lt 10 ]; then
+                echo "Retrying in 10 seconds..."
+                sleep 10
+              else
+                echo "All attempts failed. Marking as failure."
+                exit 1
+              fi
+            fi
+          done
+      - name: Delete from Artifact Registry (with retry)
+        id: delete-artifact-registry
+        continue-on-error: true
+        run: |
+          for i in {1..10}; do
+            echo "Attempt #$i: Deleting Artifact Registry image..."
+            if gcloud artifacts docker images delete asia-northeast1-docker.pkg.dev/lumos-infra/lumos-web/frontend-pr-${{ github.event.number }} --quiet; then
+              echo "Artifact Registry image deleted successfully on attempt #$i."
+              exit 0
+            else
+              echo "Attempt #$i failed."
+              # If it's not the last attempt, we retry
+              if [ $i -lt 10 ]; then
+                echo "Retrying in 10 seconds..."
+                sleep 10
+              else
+                echo "All attempts failed. Marking as failure."
+                exit 1
+              fi
+            fi
+          done
+      - name: Notify Failure on Pull Request
+        if: ${{ steps.delete-cloudrun-service.outcome != 'success' || steps.delete-artifact-registry.outcome != 'success' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment  ${{ github.event.pull_request.html_url }} -b "Failed to delete resources, CloudRun: ${{ steps.delete-cloudrun-service.outcome }}, Artifact Registry: ${{ steps.delete-artifact-registry.outcome }}"
+          exit 1
