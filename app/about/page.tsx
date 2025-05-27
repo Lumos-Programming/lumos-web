@@ -13,8 +13,8 @@ export default function AboutPage() {
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-bold mb-6">サークル紹介</h1>
             <p className="text-xl">
-              Lumosは横浜国立大学の学生が運営するプログラミングサークルです。
-              技術を学び、共有し、実践する場を提供しています。
+              プログラミングに興味がある人が集まり、勉強や交流活動を行っています。
+              discordを用いたオンライン活動が中心となっています。
             </p>
           </div>
         </div>
