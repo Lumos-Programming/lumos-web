@@ -35,7 +35,8 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Lumosについて</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              プログラミングに興味がある人が集まり、勉強や交流活動を行っています。discordを用いたオンライン活動が中心となっています。
+              プログラミングに興味がある人が集まり、勉強や交流活動を行っています。<br />
+              discordを用いたオンライン活動が中心となっています。
             </p>
           </div>
 
@@ -93,7 +94,7 @@ export default function Home() {
         <div className="container mx-auto container-padding">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">最新のお知らせ</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">Lumosの最新の活動やイベント情報をお届けします。</p>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">Lumosの最新の活動やイベント情報をお知らせします。</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -153,10 +154,10 @@ export default function Home() {
       {/* CTA Section */}
       <section className="section-padding accent-gradient text-white">
         <div className="container mx-auto container-padding text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Lumosで一緒に学びませんか？</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Lumosに入ってみませんか？</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
-            プログラミングの知識がなくても大丈夫。興味と熱意があれば、誰でも参加できます。
-            一緒に学び、成長していきましょう。
+            プログラミングができなくても大丈夫！<br />
+            プログラミングに興味がある初心者から経験者まで誰でも大歓迎です。
           </p>
           <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-primary">
             <Link href="/contact">お問い合わせる</Link>
