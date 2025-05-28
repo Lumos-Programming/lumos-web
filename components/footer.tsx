@@ -9,9 +9,8 @@ export default function Footer() {
           <div>
             <h3 className="text-xl font-bold mb-4">Lumos</h3>
             <p className="text-sm text-gray-300">
-              横浜国立大学のプログラミングサークル。
-              <br />
-              初心者からエキスパートまで、共に学び、成長する場を提供しています。
+              横浜国立大学のプログラミングサークル。<br />
+              プログラマーが集まり、交流・学習の場を提供しています。
             </p>
           </div>
           <div>
