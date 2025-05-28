@@ -16,7 +16,7 @@ export default function Home() {
             Lumos : Where Programmer Connect and Grow.
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed">
-            横浜国立大学のプログラミングサークル。初心者からエキスパートまで、共に学び、成長する場を提供しています。
+            初心者から経験者まで、すべてのプログラマーが気軽に集まり、学び合えるオンラインコミュニティを提供します。
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-primary">
@@ -35,7 +35,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Lumosについて</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Lumosは「光を灯す」という意味のラテン語。プログラミングの知識と経験を通じて、学生の未来に光を灯すことを目指しています。
+              プログラミングに興味がある人が集まり、勉強や交流活動を行っています。discordを用いたオンライン活動が中心となっています。
             </p>
           </div>
 
