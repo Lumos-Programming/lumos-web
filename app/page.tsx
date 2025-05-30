@@ -46,9 +46,9 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Code className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">週1回の勉強会</h3>
+                <h3 className="text-xl font-bold mb-2">短期間学習会</h3>
                 <p className="text-gray-600">
-                  毎週水曜日に開催される勉強会では、プログラミングの基礎からウェブ開発、AI、データサイエンスまで幅広く学びます。
+                  初⼼者向けの⾔語学習会や⼩規模なプロジェクトなど数回で終わる学習会を行います。
                 </p>
               </CardContent>
             </Card>
@@ -58,9 +58,9 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Users className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">チーム開発</h3>
+                <h3 className="text-xl font-bold mb-2">交流イベント</h3>
                 <p className="text-gray-600">
-                  実際のプロジェクトを通じて、チーム開発の経験を積むことができます。先輩からのフィードバックも受けられます。
+                  ピザパーティーやBBQなどの対面イベントを開催し、メンバー同士の親睦を深めます。
                 </p>
               </CardContent>
             </Card>
@@ -70,9 +70,21 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Calendar className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">ハッカソン参加</h3>
+                <h3 className="text-xl font-bold mb-2">LT会</h3>
                 <p className="text-gray-600">
-                  学内外のハッカソンに積極的に参加し、実践的なスキルを磨きます。過去には複数の賞を受賞しています。
+                  横浜国立大学の学園祭(常盤祭)にて、グループもしくは個人で発表会を行います。
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-gray-100 hover:border-accent transition-colors">
+              <CardContent className="p-6 text-center">
+                <div className="mb-4 flex justify-center">
+                  <Calendar className="h-12 w-12 text-accent" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">プロジェクト立ち上げ</h3>
+                <p className="text-gray-600">
+                  だれでも自由にプロジェクトを立ち上げることができ、メンバーと協力しながらプロジェクトを進めます。
                 </p>
               </CardContent>
             </Card>
@@ -101,24 +113,24 @@ export default function Home() {
             {[
               {
                 id: 1,
-                date: "2025年4月10日",
-                title: "新入生歓迎会を開催します",
+                date: "2025年5月24日",
+                title: "確定大新歓BBQ",
                 summary:
-                  "4月15日(水)18:00より、新入生歓迎会を開催します。プログラミングに興味のある方はぜひご参加ください。",
+                  "5月24日に確定大新歓としてBBQを行います。BBQを通じて親睦を深めましょう。",
               },
               {
                 id: 2,
-                date: "2025年3月20日",
-                title: "春のハッカソンで優勝しました",
+                date: "2025年5月21-23日",
+                title: "初学者向けプログラミング学習会",
                 summary:
-                  "横浜市主催の春のハッカソンにて、Lumosチームが優勝しました。開発したアプリは地域の課題解決に貢献します。",
+                  "21-23日に3日連続の言語学習会をオンライン開催します。プログラミング初心者大歓迎です。",
               },
               {
                 id: 3,
-                date: "2025年3月5日",
-                title: "2025年度の活動計画を発表",
+                date: "2025年4月中",
+                title: "新入生歓迎イベント",
                 summary:
-                  "2025年度の活動計画を発表しました。今年度はAIとウェブ開発に焦点を当てた勉強会を予定しています。",
+                  "4月中に新入生向けの複数のイベントを開催します。サークルに興味あるからはぜひご参加ください。",
               },
             ].map((news) => (
               <Card key={news.id} className="overflow-hidden hover:shadow-md transition-shadow">
