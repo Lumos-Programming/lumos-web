@@ -7,73 +7,30 @@ import { ArrowRight } from "lucide-react"
 const newsArticles = [
   {
     id: 1,
-    date: "2025年4月10日",
-    title: "新入生歓迎会を開催します",
-    summary: "4月15日(水)18:00より、新入生歓迎会を開催します。プログラミングに興味のある方はぜひご参加ください。",
+    date: "2025年5月24日",
+    title: "確定大新歓BBQ",
+    summary:"5月24日に確定大新歓としてBBQを行います。BBQを通じて親睦を深めましょう。",
     image: "/placeholder.svg?height=400&width=600",
     category: "イベント",
   },
   {
     id: 2,
-    date: "2025年3月20日",
-    title: "春のハッカソンで優勝しました",
-    summary: "横浜市主催の春のハッカソンにて、Lumosチームが優勝しました。開発したアプリは地域の課題解決に貢献します。",
-    image: "/placeholder.svg?height=400&width=600",
-    category: "実績",
-  },
-  {
-    id: 3,
-    date: "2025年3月5日",
-    title: "2025年度の活動計画を発表",
-    summary: "2025年度の活動計画を発表しました。今年度はAIとウェブ開発に焦点を当てた勉強会を予定しています。",
-    image: "/placeholder.svg?height=400&width=600",
-    category: "お知らせ",
-  },
-  {
-    id: 4,
-    date: "2025年2月15日",
-    title: "企業との共同プロジェクトを開始",
-    summary:
-      "地元IT企業と共同で、学生向けキャリア支援アプリの開発プロジェクトを開始しました。実践的な開発経験を積む絶好の機会です。",
+    date: "2025年5月21-23日",
+    title: "初学者向けプログラミング学習会",
+    summary:"21-23日に3日連続の言語学習会をオンライン開催します。プログラミング初心者大歓迎です。",
     image: "/placeholder.svg?height=400&width=600",
     category: "プロジェクト",
   },
   {
-    id: 5,
-    date: "2025年1月25日",
-    title: "冬季プログラミング講習会を実施",
-    summary:
-      "冬休み期間中、プログラミング初心者向けの講習会を実施しました。30名以上の学生が参加し、基礎からウェブアプリ開発までを学びました。",
+    id: 3,
+    date: "2025年4月中",
+    title: "新入生歓迎イベント",
+    summary:"4月中に新入生向けの複数のイベントを開催します。サークルに興味あるからはぜひご参加ください。",
     image: "/placeholder.svg?height=400&width=600",
     category: "イベント",
   },
-  {
-    id: 6,
-    date: "2024年12月10日",
-    title: "OB・OG交流会を開催",
-    summary:
-      "IT業界で活躍するOB・OGを招いた交流会を開催しました。就職活動のアドバイスや業界の最新動向について貴重な話を聞くことができました。",
-    image: "/placeholder.svg?height=400&width=600",
-    category: "イベント",
-  },
-  {
-    id: 7,
-    date: "2024年11月20日",
-    title: "技術書籍を寄贈いただきました",
-    summary:
-      "出版社様より、プログラミングに関する技術書籍を10冊寄贈いただきました。サークル内で貸し出しを行いますので、興味のある方はご連絡ください。",
-    image: "/placeholder.svg?height=400&width=600",
-    category: "お知らせ",
-  },
-  {
-    id: 8,
-    date: "2024年10月5日",
-    title: "大学祭でプログラミング体験ブースを出展",
-    summary:
-      "常盤祭にてプログラミング体験ブースを出展しました。多くの方に参加いただき、プログラミングの楽しさを体験していただきました。",
-    image: "/placeholder.svg?height=400&width=600",
-    category: "イベント",
-  },
+
+
 ]
 
 export default function NewsPage() {
@@ -85,7 +42,7 @@ export default function NewsPage() {
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-bold mb-6">お知らせ</h1>
             <p className="text-xl">
-              Lumosの最新の活動やイベント情報をお届けします。 サークルの活動内容や実績について詳しく知ることができます。
+              Lumosの活動やイベント情報についてお知らせします。
             </p>
           </div>
         </div>
