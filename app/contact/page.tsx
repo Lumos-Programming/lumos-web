@@ -245,7 +245,7 @@ export default function ContactPage() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-12">
             <h2 className="text-2xl font-bold mb-4">入会手続き</h2>
-            <p className="text-gray-600">下記のURLからフォームの入力をお願いします</p>
+            <p className="text-gray-600">下記のURLからフォームの入力をお願いします。<br></br>※他大学も入会可</p>
           </div>
               {/*ここに入会フォームのurlを貼る*/}
 
