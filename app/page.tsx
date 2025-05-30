@@ -46,9 +46,9 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Code className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">週1回の勉強会</h3>
+                <h3 className="text-xl font-bold mb-2">短期間学習会</h3>
                 <p className="text-gray-600">
-                  毎週水曜日に開催される勉強会では、プログラミングの基礎からウェブ開発、AI、データサイエンスまで幅広く学びます。
+                  初⼼者向けの⾔語学習会や⼩規模なプロジェクトなど数回で終わる学習会を行います。
                 </p>
               </CardContent>
             </Card>
@@ -58,9 +58,9 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Users className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">チーム開発</h3>
+                <h3 className="text-xl font-bold mb-2">交流イベント</h3>
                 <p className="text-gray-600">
-                  実際のプロジェクトを通じて、チーム開発の経験を積むことができます。先輩からのフィードバックも受けられます。
+                  ピザパーティーやBBQなどの対面イベントを開催し、メンバー同士の親睦を深めます。
                 </p>
               </CardContent>
             </Card>
@@ -70,9 +70,21 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Calendar className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">ハッカソン参加</h3>
+                <h3 className="text-xl font-bold mb-2">LT会</h3>
                 <p className="text-gray-600">
-                  学内外のハッカソンに積極的に参加し、実践的なスキルを磨きます。過去には複数の賞を受賞しています。
+                  横浜国立大学の学園祭(常盤祭)にて、グループもしくは個人で発表会を行います。
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-gray-100 hover:border-accent transition-colors">
+              <CardContent className="p-6 text-center">
+                <div className="mb-4 flex justify-center">
+                  <Calendar className="h-12 w-12 text-accent" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">プロジェクト立ち上げ</h3>
+                <p className="text-gray-600">
+                  だれでも自由にプロジェクトを立ち上げることができ、メンバーと協力しながらプロジェクトを進めます。
                 </p>
               </CardContent>
             </Card>
