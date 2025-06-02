@@ -13,8 +13,7 @@ export default function AboutPage() {
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-bold mb-6">サークル紹介</h1>
             <p className="text-xl">
-              プログラミングに興味がある人が集まり、勉強や交流活動を行っています。
-              discordを用いたオンライン活動が中心となっています。
+              Lumosは横浜国立大学のプログラミングサークルです。プログラミングに興味がある人が集まり、様々な活動を行っています。
             </p>
           </div>
         </div>
@@ -45,15 +44,15 @@ export default function AboutPage() {
                 <div className="flex items-start">
                   <CheckCircle className="h-6 w-6 text-accent mr-3 mt-1 flex-shrink-0" />
                   <p className="text-gray-700">
-                    <span className="font-bold">実践的なスキル習得：</span>
-                    実際のプロジェクトやハッカソンを通じて、実践的なスキルを身につけます。
+                    <span className="font-bold">プログラミングのスキル習得：</span>
+                    LT会や学習会を通じて、プログラミングのスキル向上を目指します。
                   </p>
                 </div>
                 <div className="flex items-start">
                   <CheckCircle className="h-6 w-6 text-accent mr-3 mt-1 flex-shrink-0" />
                   <p className="text-gray-700">
                     <span className="font-bold">コミュニティの形成：</span>
-                    同じ興味を持つ仲間との交流を通じて、生涯の友人や協力者を見つけます。
+                    プログラミングに興味がある仲間と交流を深め、メンバー同士のつながりをつくります。
                   </p>
                 </div>
               </div>
@@ -76,8 +75,7 @@ export default function AboutPage() {
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-3xl font-bold mb-6">活動内容</h2>
             <p className="text-lg text-gray-700">
-              Lumosでは、以下のような活動を通じてプログラミングスキルを磨いています。
-              初心者から経験者まで、それぞれのレベルに合わせた活動に参加できます。
+              Lumosでは以下の活動を通して、プログラミングの勉強、メンバーの交流を行っています。
             </p>
           </div>
 
