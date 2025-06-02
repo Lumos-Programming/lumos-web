@@ -13,10 +13,10 @@ export default function Home() {
         </div>
         <div className="container mx-auto px-4 md:px-6 relative z-10 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 max-w-4xl mx-auto leading-tight">
-            Learning by Doing with Lumos
+            Lumos : Where Programmer Connect and Grow.
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed">
-            横浜国立大学のプログラミングサークル。初心者からエキスパートまで、共に学び、成長する場を提供しています。
+            初心者から経験者まで、すべてのプログラマーが気軽に集まり、学び合えるオンラインコミュニティを提供します。
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-primary">
@@ -35,7 +35,8 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Lumosについて</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Lumosは「光を灯す」という意味のラテン語。プログラミングの知識と経験を通じて、学生の未来に光を灯すことを目指しています。
+              プログラミングに興味がある人が集まり、勉強や交流活動を行っています。<br />
+              discordを用いたオンライン活動が中心となっています。
             </p>
           </div>
 
@@ -45,9 +46,9 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Code className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">週1回の勉強会</h3>
+                <h3 className="text-xl font-bold mb-2">短期間学習会</h3>
                 <p className="text-gray-600">
-                  毎週水曜日に開催される勉強会では、プログラミングの基礎からウェブ開発、AI、データサイエンスまで幅広く学びます。
+                  初⼼者向けの⾔語学習会や⼩規模なプロジェクトなど数回で終わる学習会を行います。
                 </p>
               </CardContent>
             </Card>
@@ -57,9 +58,9 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Users className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">チーム開発</h3>
+                <h3 className="text-xl font-bold mb-2">交流イベント</h3>
                 <p className="text-gray-600">
-                  実際のプロジェクトを通じて、チーム開発の経験を積むことができます。先輩からのフィードバックも受けられます。
+                  ピザパーティーやBBQなどの対面イベントを開催し、メンバー同士の親睦を深めます。
                 </p>
               </CardContent>
             </Card>
@@ -69,9 +70,21 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Calendar className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">ハッカソン参加</h3>
+                <h3 className="text-xl font-bold mb-2">LT会</h3>
                 <p className="text-gray-600">
-                  学内外のハッカソンに積極的に参加し、実践的なスキルを磨きます。過去には複数の賞を受賞しています。
+                  横浜国立大学の学園祭(常盤祭)にて、グループもしくは個人で発表会を行います。
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-gray-100 hover:border-accent transition-colors">
+              <CardContent className="p-6 text-center">
+                <div className="mb-4 flex justify-center">
+                  <Calendar className="h-12 w-12 text-accent" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">プロジェクト立ち上げ</h3>
+                <p className="text-gray-600">
+                  だれでも自由にプロジェクトを立ち上げることができ、メンバーと協力しながらプロジェクトを進めます。
                 </p>
               </CardContent>
             </Card>
@@ -93,31 +106,31 @@ export default function Home() {
         <div className="container mx-auto container-padding">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">最新のお知らせ</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">Lumosの最新の活動やイベント情報をお届けします。</p>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">Lumosの最新の活動やイベント情報をお知らせします。</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
                 id: 1,
-                date: "2025年4月10日",
-                title: "新入生歓迎会を開催します",
+                date: "2025年5月24日",
+                title: "確定大新歓BBQ",
                 summary:
-                  "4月15日(水)18:00より、新入生歓迎会を開催します。プログラミングに興味のある方はぜひご参加ください。",
+                  "5月24日に確定大新歓としてBBQを行います。BBQを通じて親睦を深めましょう。",
               },
               {
                 id: 2,
-                date: "2025年3月20日",
-                title: "春のハッカソンで優勝しました",
+                date: "2025年5月21-23日",
+                title: "初学者向けプログラミング学習会",
                 summary:
-                  "横浜市主催の春のハッカソンにて、Lumosチームが優勝しました。開発したアプリは地域の課題解決に貢献します。",
+                  "21-23日に3日連続の言語学習会をオンライン開催します。プログラミング初心者大歓迎です。",
               },
               {
                 id: 3,
-                date: "2025年3月5日",
-                title: "2025年度の活動計画を発表",
+                date: "2025年4月中",
+                title: "新入生歓迎イベント",
                 summary:
-                  "2025年度の活動計画を発表しました。今年度はAIとウェブ開発に焦点を当てた勉強会を予定しています。",
+                  "4月中に新入生向けの複数のイベントを開催します。サークルに興味あるからはぜひご参加ください。",
               },
             ].map((news) => (
               <Card key={news.id} className="overflow-hidden hover:shadow-md transition-shadow">
@@ -153,10 +166,10 @@ export default function Home() {
       {/* CTA Section */}
       <section className="section-padding accent-gradient text-white">
         <div className="container mx-auto container-padding text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Lumosで一緒に学びませんか？</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Lumosに入ってみませんか？</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
-            プログラミングの知識がなくても大丈夫。興味と熱意があれば、誰でも参加できます。
-            一緒に学び、成長していきましょう。
+            プログラミングができなくても大丈夫！<br />
+            プログラミングに興味がある初心者から経験者まで誰でも大歓迎です。
           </p>
           <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-primary">
             <Link href="/contact">お問い合わせる</Link>

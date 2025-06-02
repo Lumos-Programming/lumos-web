@@ -13,7 +13,6 @@ export default function AboutPage() {
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-bold mb-6">サークル紹介</h1>
             <p className="text-xl">
-              Lumosは横浜国立大学のプログラミングサークルです。プログラミングに興味がある人が集まり、様々な活動を行っています。
             </p>
           </div>
         </div>
@@ -284,13 +283,13 @@ export default function AboutPage() {
       {/* Join Us Section */}
       <section className="py-16 md:py-24 bg-primary text-white">
         <div className="container mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-3xl font-bold mb-6">Lumosに参加しませんか？</h2>
+          <h2 className="text-3xl font-bold mb-6">Lumosに入ってみませんか？</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
-            プログラミングの知識がなくても大丈夫。興味と熱意があれば、誰でも参加できます。
-            一緒に学び、成長していきましょう。
+            プログラミングができなくても大丈夫！<br />
+            プログラミングに興味がある初心者から経験者まで誰でも大歓迎です。
           </p>
           <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-primary">
-            <Link href="/contact">お問い合わせる</Link>
+            <Link href="/contact">お問い合わせ</Link>
           </Button>
         </div>
       </section>
