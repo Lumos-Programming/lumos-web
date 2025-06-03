@@ -86,9 +86,8 @@ export default function ContactPage() {
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-bold mb-6">お問い合わせ</h1>
             <p className="text-xl">
-              Lumosに関するご質問やお問い合わせは、こちらのフォームからお気軽にご連絡ください。
-              <br />
-              入会希望の方も、まずはお問い合わせください。
+              Lumosに関するご質問やお問い合わせはこちらのフォームからご連絡ください。<br></br>
+              ⼊会希望の⽅は⼊会フォームの⼊⼒をお願いします。
             </p>
           </div>
         </div>
@@ -213,7 +212,7 @@ export default function ContactPage() {
                       <Mail className="h-5 w-5 text-accent mr-3 mt-1" />
                       <div>
                         <h3 className="font-bold">メールアドレス</h3>
-                        <p className="text-gray-600">info@lumos-ynu.org</p>
+                        <p className="text-gray-600">lumos.ynu.programming@gmail.com</p>
                       </div>
                     </div>
                   </CardContent>
@@ -224,52 +223,32 @@ export default function ContactPage() {
                     <div className="flex items-start">
                       <MapPin className="h-5 w-5 text-accent mr-3 mt-1" />
                       <div>
-                        <h3 className="font-bold">活動場所</h3>
+                        <h3 className="font-bold">活動拠点</h3>
                         <p className="text-gray-600">
-                          横浜国立大学 情報基盤センター 3階セミナールーム
-                          <br />
-                          〒240-8501 横浜市保土ケ谷区常盤台79-5
+                          横浜国立大学
+                          <br></br>
+                          〒240-0067 横浜市保土ケ谷区常盤台79-5
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-start">
-                      <Phone className="h-5 w-5 text-accent mr-3 mt-1" />
-                      <div>
-                        <h3 className="font-bold">活動日時</h3>
-                        <p className="text-gray-600">
-                          毎週水曜日 18:00-20:00
-                          <br />
-                          ※長期休暇中は変更になる場合があります
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Map Section */}
+      {/* 入会手続き */}
       <section className="py-16 md:py-24 bg-gray-50">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold mb-4">アクセスマップ</h2>
-            <p className="text-gray-600">横浜国立大学 情報基盤センターへのアクセス方法</p>
+            <h2 className="text-2xl font-bold mb-4">入会手続き</h2>
+            <p className="text-gray-600">下記のURLからフォームの入力をお願いします。<br></br>※他大学も入会可</p>
           </div>
+              {/*ここに入会フォームのurlを貼る*/}
 
-          <div className="aspect-video w-full max-w-4xl mx-auto rounded-lg overflow-hidden shadow-lg">
-            {/* 実際のサイトではGoogle Mapsなどの埋め込みマップを使用 */}
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <p className="text-gray-600">ここにマップが表示されます</p>
-            </div>
-          </div>
         </div>
       </section>
     </>
