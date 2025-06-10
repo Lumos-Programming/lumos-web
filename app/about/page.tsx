@@ -13,6 +13,7 @@ export default function AboutPage() {
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-bold mb-6">サークル紹介</h1>
             <p className="text-xl">
+              Lumosは横浜国⽴⼤学のプログラミングサークルです。プログラミングに興味がある⼈が集まり、様々な活動を⾏っています。
             </p>
           </div>
         </div>
@@ -23,21 +24,13 @@ export default function AboutPage() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-6">ミッション</h2>
-              <p className="text-lg text-gray-700 mb-6">
-                Lumosは「光を灯す」という意味のラテン語です。私たちは、プログラミングの知識と経験を通じて、
-                学生の未来に光を灯すことを目指しています。
-              </p>
-              <p className="text-lg text-gray-700 mb-6">
-                テクノロジーの力で社会に貢献できる人材を育成し、学生同士が互いに学び合い、
-                成長できるコミュニティを作ることが私たちの使命です。
-              </p>
+              <h2 className="text-3xl font-bold mb-6">ミッション</h2> 
               <div className="space-y-4">
                 <div className="flex items-start">
                   <CheckCircle className="h-6 w-6 text-accent mr-3 mt-1 flex-shrink-0" />
                   <p className="text-gray-700">
                     <span className="font-bold">学びの場の提供：</span>
-                    プログラミング初心者から経験者まで、それぞれのレベルに合わせた学習環境を提供します。
+                    プログラミング初心者から経験者まで、幅広いレベルのメンバーが学習しています。
                   </p>
                 </div>
                 <div className="flex items-start">
@@ -84,17 +77,17 @@ export default function AboutPage() {
                 <div className="mb-4">
                   <Code className="h-10 w-10 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">定期勉強会</h3>
+                <h3 className="text-xl font-bold mb-2">短期間勉強会</h3>
                 <p className="text-gray-600 mb-4">
-                  毎週水曜日18:00から20:00まで、プログラミングの基礎からウェブ開発、AI、データサイエンスまで幅広いテーマで勉強会を開催しています。
+                  数回で完結する学習会を行います。内容は初心者向け言語学習会や小規模なプロジェクトの立ち上げなど多岐にわたります。
                 </p>
                 <div className="flex items-center text-gray-500 text-sm">
                   <Clock className="h-4 w-4 mr-1" />
-                  <span>毎週水曜日 18:00-20:00</span>
+                  <span>不定期開催</span>
                 </div>
                 <div className="flex items-center text-gray-500 text-sm mt-1">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span>情報基盤センター 3階セミナールーム</span>
+                  <span>対面orオンライン（discord）</span>
                 </div>
               </CardContent>
             </Card>
@@ -104,17 +97,17 @@ export default function AboutPage() {
                 <div className="mb-4">
                   <Users className="h-10 w-10 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">チーム開発プロジェクト</h3>
+                <h3 className="text-xl font-bold mb-2">交流イベント</h3>
                 <p className="text-gray-600 mb-4">
-                  学期ごとにチームを組み、実際のウェブアプリやモバイルアプリを開発します。企画から設計、実装、テスト、リリースまでの一連の流れを経験できます。
+                  ピザパーティーやBBQなどの対面イベントを開催し、メンバー同士の親睦を深めます。Lumosメンバーならだれでも参加することができます。
                 </p>
                 <div className="flex items-center text-gray-500 text-sm">
                   <Clock className="h-4 w-4 mr-1" />
-                  <span>月2回 土曜日 13:00-17:00</span>
+                  <span>1-2ヶ月に1回 </span>
                 </div>
                 <div className="flex items-center text-gray-500 text-sm mt-1">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span>中央図書館 グループ学習室</span>
+                  <span>大学野音or空き教室</span>
                 </div>
               </CardContent>
             </Card>
@@ -124,17 +117,17 @@ export default function AboutPage() {
                 <div className="mb-4">
                   <Calendar className="h-10 w-10 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">ハッカソン参加</h3>
+                <h3 className="text-xl font-bold mb-2">LT会</h3>
                 <p className="text-gray-600 mb-4">
-                  学内外のハッカソンに積極的に参加し、実践的なスキルを磨きます。過去には横浜市主催のハッカソンで優勝するなど、複数の賞を受賞しています。
+                横浜国立大学の学園祭(常盤祭)にて、発表会を行います。個人もしくはグループでプロジェクトを進め、その成果を発表します。
                 </p>
                 <div className="flex items-center text-gray-500 text-sm">
                   <Clock className="h-4 w-4 mr-1" />
-                  <span>年3〜4回</span>
+                  <span>常盤祭</span>
                 </div>
                 <div className="flex items-center text-gray-500 text-sm mt-1">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span>開催地による</span>
+                  <span>横浜国立大学</span>
                 </div>
               </CardContent>
             </Card>
@@ -144,65 +137,27 @@ export default function AboutPage() {
                 <div className="mb-4">
                   <Award className="h-10 w-10 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">OB・OG交流会</h3>
+                <h3 className="text-xl font-bold mb-2">プロジェクト立ち上げ</h3>
                 <p className="text-gray-600 mb-4">
-                  IT企業で働くOB・OGを招いた交流会を開催し、業界の最新動向や就職活動のアドバイスを得る機会を提供しています。
+                  だれでも自由にプロジェクトを立ち上げることができます。サークル内で参加者を募り、メンバーを協⼒しながらプロジェクトを進めることができます。
                 </p>
                 <div className="flex items-center text-gray-500 text-sm">
                   <Clock className="h-4 w-4 mr-1" />
-                  <span>年2回（夏・冬）</span>
+                  <span>不定期</span>
                 </div>
                 <div className="flex items-center text-gray-500 text-sm mt-1">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span>大学会館 多目的ホール</span>
+                  <span>対面orオンライン（discord）</span>
                 </div>
               </CardContent>
             </Card>
-
-            <Card className="border-2 border-gray-100 hover:border-accent transition-colors">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <Code className="h-10 w-10 text-accent" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">技術書読書会</h3>
-                <p className="text-gray-600 mb-4">
-                  月に一度、プログラミングや技術に関する書籍を選び、読書会を開催しています。知識を深めるとともに、ディスカッションを通じて理解を深めます。
-                </p>
-                <div className="flex items-center text-gray-500 text-sm">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>月1回 日曜日 14:00-16:00</span>
-                </div>
-                <div className="flex items-center text-gray-500 text-sm mt-1">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>中央図書館 セミナールーム</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-gray-100 hover:border-accent transition-colors">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <Users className="h-10 w-10 text-accent" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">合宿・交流イベント</h3>
-                <p className="text-gray-600 mb-4">
-                  夏休みには合宿を開催し、集中的にプログラミングを学ぶとともに、メンバー同士の親睦を深めます。また、他大学のプログラミングサークルとの交流イベントも開催しています。
-                </p>
-                <div className="flex items-center text-gray-500 text-sm">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>年1回（夏）</span>
-                </div>
-                <div className="flex items-center text-gray-500 text-sm mt-1">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>箱根・伊豆方面</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
-      </section>
+      </div>
+    </section>
+
 
       {/* Achievements Section */}
+{/*
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-3xl mx-auto text-center mb-16">
@@ -279,6 +234,7 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+*/}
 
       {/* Join Us Section */}
       <section className="py-16 md:py-24 bg-primary text-white">
