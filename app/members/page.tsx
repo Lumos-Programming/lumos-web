@@ -21,7 +21,7 @@ export default function MembersPage() {
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-bold mb-6">メンバー紹介</h1>
             <p className="text-xl">
-              Lumosを支える個性豊かなメンバーたち。 それぞれが異なる専門性と情熱を持ち、サークルに貢献しています。
+              Lumosを運営するメンバーたち。イベントの計画・運営を行っています。
             </p>
           </div>
         </div>

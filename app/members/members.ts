@@ -22,9 +22,9 @@ export const members: Member[] = [
     name: "野田 タオ",
     role: "副会長",
     department: "理工学部",
-    year: "3年",
+    year: "2年",
     bio: "副代表として、主にイベント企画と運営を担当しています。プログラミングは大学から始めましたが、今ではフロントエンド開発が得意です。趣味は旅行と写真撮影です。",
-    skills: ["HTML/CSS", "JavaScript", "Vue.js", "UI/UXデザイン"],
+    skills: [],
     image: "/placeholder.svg?height=400&width=400",
     social: {
       twitter: "https://twitter.com/suzukihanako",
@@ -79,8 +79,8 @@ export const members: Member[] = [
     role: "メンバー",
     department: "理工学部",
     year: "2年",
-    bio: "広報担当として、SNSの運用やイベントの告知を行っています。マーケティングとコンテンツ制作に興味があります。趣味は映画鑑賞とカフェ巡りです。",
-    skills: ["SNS運用", "コンテンツ制作", "HTML/CSS", "WordPress"],
+    bio: "Lumosの運営に携わっています。プログラミングの勉強は大学から始めました。日々のびのびとプログラミングの勉強をしています。",
+    skills: ["Python", "R", "SQL", "データ分析"],
     image: "/placeholder.svg?height=400&width=400",
     social: {
       twitter: "https://twitter.com/nakamurayuu",
