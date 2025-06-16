@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 const navigation = [
   { name: "ホーム", href: "/" },
   { name: "サークル紹介", href: "/about" },
-  { name: "メンバー", href: "/members" },
+  //  { name: "メンバー", href: "/members" },
   { name: "お知らせ", href: "/news" },
   { name: "お問い合わせ", href: "/contact" },
 ]

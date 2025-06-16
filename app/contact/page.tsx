@@ -87,7 +87,7 @@ export default function ContactPage() {
             <h1 className="text-3xl md:text-5xl font-bold mb-6">お問い合わせ</h1>
             <p className="text-xl">
               Lumosに関するご質問やお問い合わせはこちらのフォームからご連絡ください。<br></br>
-              ⼊会希望の⽅は⼊会フォームの⼊⼒をお願いします。
+              ⼊会希望の方もこちらのフォームからご連絡ください。
             </p>
           </div>
         </div>
@@ -104,7 +104,7 @@ export default function ContactPage() {
                 <Alert className="bg-green-50 border-green-200 text-green-800 mb-6">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <AlertDescription>
-                    お問い合わせありがとうございます。内容を確認の上、担当者より折り返しご連絡いたします。
+                    お問い合わせありがとうございます。内容を確認の上、折り返しご連絡いたします。
                   </AlertDescription>
                 </Alert>
               ) : (
@@ -241,16 +241,17 @@ export default function ContactPage() {
       </section>
 
       {/* 入会手続き */}
+      {/*
       <section className="py-16 md:py-24 bg-gray-50">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-12">
             <h2 className="text-2xl font-bold mb-4">入会手続き</h2>
             <p className="text-gray-600">下記のURLからフォームの入力をお願いします。<br></br>※他大学も入会可</p>
           </div>
-              {/*ここに入会フォームのurlを貼る*/}
 
         </div>
       </section>
+      */}
     </>
   )
 }
