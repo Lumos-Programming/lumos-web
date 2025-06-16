@@ -46,7 +46,7 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Code className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">短期間学習会</h3>
+                <h3 className="text-xl font-bold mb-2">各種ハンズオン</h3>
                 <p className="text-gray-600">
                   初⼼者向けの⾔語学習会や⼩規模なプロジェクトなど数回で終わる学習会を行います。
                 </p>

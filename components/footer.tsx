@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Github, Twitter } from "lucide-react"
+import { Github, Twitter,Instagram } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -66,6 +66,16 @@ export default function Footer() {
               >
                 <Github className="h-6 w-6" />
               </Link>
+              <Link
+                href="https://www.instagram.com/lumos_programming"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white hover:text-accent transition-colors"
+                aria-label="Instagram"
+>
+                <Instagram className="h-6 w-6" />
+              </Link>
+
             </div>
           </div>
         </div>
