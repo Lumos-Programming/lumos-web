@@ -12,6 +12,9 @@ export default function Footer() {
               横浜国立大学のプログラミングサークル。<br />
               プログラミングやデータサイエンスなど、広くITに関心のある人が集まり、交流・学習を行っています。
             </p>
+            <p className="text-sm text-gray-300 mt-4 break-all">
+              お問い合わせ先： lumos.ynu.programming@gmail.com
+            </p>
           </div>
           <div>
             <h3 className="text-lg font-bold mb-4">リンク</h3>
@@ -38,11 +41,13 @@ export default function Footer() {
                   お知らせ
                 </Link>
               </li>
+              {/*
               <li>
                 <Link href="/contact" className="text-sm text-gray-300 hover:text-accent transition-colors">
                   お問い合わせ
                 </Link>
               </li>
+              */}
             </ul>
           </div>
           <div>
