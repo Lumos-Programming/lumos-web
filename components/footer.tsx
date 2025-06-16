@@ -10,7 +10,7 @@ export default function Footer() {
             <h3 className="text-xl font-bold mb-4">Lumos</h3>
             <p className="text-sm text-gray-300">
               横浜国立大学のプログラミングサークル。<br />
-              プログラマーが集まり、交流・学習の場を提供しています。
+              プログラミングやデータサイエンスなど、広くITに関心のある人が集まり、交流・学習を行っています。
             </p>
           </div>
           <div>

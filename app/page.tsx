@@ -16,7 +16,7 @@ export default function Home() {
           Where Programmer Connect and Grow.
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed">
-            初心者から経験者まで、すべてのプログラマーが気軽に集まり、学び合えるオンラインコミュニティを提供します。
+            初心者から経験者まで、プログラミングやデータサイエンスなど、広くITに関心のある人が気軽に集まり、学び合えるオンラインコミュニティを提供します。
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-primary">
@@ -82,7 +82,7 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Calendar className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">プロジェクト立ち上げ</h3>
+                <h3 className="text-xl font-bold mb-2">プロジェクト活動</h3>
                 <p className="text-gray-600">
                   だれでも自由にプロジェクトを立ち上げることができ、メンバーと協力しながらプロジェクトを進めます。
                 </p>
@@ -105,7 +105,7 @@ export default function Home() {
       <section className="section-padding bg-gray-50">
         <div className="container mx-auto container-padding">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">最新のお知らせ</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">お知らせ</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">Lumosの最新の活動やイベント情報をお知らせします。</p>
           </div>
 
@@ -116,21 +116,21 @@ export default function Home() {
                 date: "2025年5月24日",
                 title: "確定大新歓BBQ",
                 summary:
-                  "5月24日に確定大新歓としてBBQを行います。BBQを通じて親睦を深めましょう。",
+                  "5月24日に確定大新歓としてBBQを行いました。",
               },
               {
                 id: 2,
                 date: "2025年5月21-23日",
                 title: "初学者向けプログラミング学習会",
                 summary:
-                  "21-23日に3日連続の言語学習会をオンライン開催します。プログラミング初心者大歓迎です。",
+                  "21-23日に3日連続で言語学習会をオンライン開催しました。",
               },
               {
                 id: 3,
                 date: "2025年4月中",
                 title: "新入生歓迎イベント",
                 summary:
-                  "4月中に新入生向けの複数のイベントを開催します。サークルに興味あるからはぜひご参加ください。",
+                  "4月中に新入生向けの複数のイベントを開催しました。",
               },
             ].map((news) => (
               <Card key={news.id} className="overflow-hidden hover:shadow-md transition-shadow">

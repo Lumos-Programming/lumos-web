@@ -24,7 +24,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-6">ミッション</h2> 
+              <h2 className="text-3xl font-bold mb-6">ミッション</h2>
               <div className="space-y-4">
                 <div className="flex items-start">
                   <CheckCircle className="h-6 w-6 text-accent mr-3 mt-1 flex-shrink-0" />
@@ -137,7 +137,7 @@ export default function AboutPage() {
                 <div className="mb-4">
                   <Award className="h-10 w-10 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">プロジェクト立ち上げ</h3>
+                <h3 className="text-xl font-bold mb-2">プロジェクト活動</h3>
                 <p className="text-gray-600 mb-4">
                   だれでも自由にプロジェクトを立ち上げることができます。サークル内で参加者を募り、メンバーを協⼒しながらプロジェクトを進めることができます。
                 </p>
