@@ -19,7 +19,40 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Mission Section */}
+      {/* Mission Section 写真なし*/}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="max-w-2xl mx-auto text-center space-y-8">
+            <h2 className="text-3xl font-bold">ミッション</h2>
+              <div className="space-y-4 text-left">
+                <div className="flex items-start gap-4">
+                  <CheckCircle className="mt-1 text-yellow-500" />
+                  <p>
+                  <span className="font-semibold">学びの場の提供：</span>
+                  プログラミング初心者から経験者まで、幅広いレベルのメンバーが学習しています。
+                  </p>
+                </div>
+              <div className="flex items-start gap-4">
+                  <CheckCircle className="mt-1 text-yellow-500" />
+                  <p>
+                  <span className="font-semibold">プログラミングのスキル習得：</span>
+                  LT会や学習会を通じて、プログラミングのスキル向上を目指します。
+                  </p>
+              </div>
+              <div className="flex items-start gap-4">
+                  <CheckCircle className="mt-1 text-yellow-500" />
+                  <p>
+                  <span className="font-semibold">コミュニティの形成：</span>
+                  プログラミングに興味がある仲間と交流を深め、メンバー同士のなかをつくります。
+                  </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* //写真付きバージョン
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -49,7 +82,9 @@ export default function AboutPage() {
                 </div>
               </div>
             </div>
-            <div className="relative h-[400px] rounded-lg overflow-hidden">
+
+
+            <div className="relative h-[400px] rounded-lg overflow-hidden"> //写真
               <Image
                 src="/placeholder.svg?height=800&width=600"
                 alt="Lumosのミーティングの様子"
@@ -57,9 +92,11 @@ export default function AboutPage() {
                 className="object-cover"
               />
             </div>
+
           </div>
         </div>
       </section>
+    */}
 
       {/* Activities Section */}
       <section className="py-16 md:py-24 bg-gray-50">
@@ -71,19 +108,19 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2  gap-8">
             <Card className="border-2 border-gray-100 hover:border-accent transition-colors">
               <CardContent className="p-6">
                 <div className="mb-4">
                   <Code className="h-10 w-10 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">短期間勉強会</h3>
+                <h3 className="text-xl font-bold mb-2">各種ハンズオン</h3>
                 <p className="text-gray-600 mb-4">
                   数回で完結する学習会を行います。内容は初心者向け言語学習会や小規模なプロジェクトの立ち上げなど多岐にわたります。
                 </p>
                 <div className="flex items-center text-gray-500 text-sm">
                   <Clock className="h-4 w-4 mr-1" />
-                  <span>不定期開催</span>
+                  <span>不定期</span>
                 </div>
                 <div className="flex items-center text-gray-500 text-sm mt-1">
                   <MapPin className="h-4 w-4 mr-1" />
