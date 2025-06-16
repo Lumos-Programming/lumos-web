@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle, CheckCircle, Mail, MapPin, Phone } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
+
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -81,17 +82,64 @@ export default function ContactPage() {
   return (
     <>
       {/* Header Section */}
-      <section className="pt-32 pb-16 md:pt-40 md:pb-24 bg-primary text-white">
+      <section className="pt-16 pb-16 md:pt-40 md:pb-16  bg-primary text-white">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-bold mb-6">お問い合わせ</h1>
             <p className="text-xl">
-              Lumosに関するご質問やお問い合わせはこちらのフォームからご連絡ください。<br></br>
-              ⼊会希望の方もこちらのフォームからご連絡ください。
+              Lumosに関するご質問やお問い合わせ、入会希望は以下のメールアドレスにご連絡ください。<br></br>
             </p>
           </div>
         </div>
       </section>
+
+{/* //問い合わせフォームがないバージョン　これだけだとページがさびしい
+      <section className="py-12 md:py-12 bg-white text-gray-900">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="max-w-3xl mx-auto text-center">
+              <p className="text-lg">
+                Lumosへのご連絡は、以下の連絡先までお願いいたします。
+              </p>
+            </div>
+          </div>
+      </section>
+
+      <section className="py-8 pb-12 md:py-8 md:pb-12">
+        <div className="container mx-auto px-2 md:px-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-start">
+                  <Mail className="h-5 w-5 text-accent mr-3 mt-1" />
+                  <div>
+                    <h3 className="font-bold text-lg mb-1">メールアドレス</h3>
+                    <p className="text-gray-600 break-all">
+                      lumos.ynu.programming@gmail.com
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-start">
+                  <MapPin className="h-5 w-5 text-accent mr-3 mt-1" />
+                  <div>
+                    <h3 className="font-bold text-lg mb-1">活動拠点</h3>
+                    <p className="text-gray-600">
+                      横浜国立大学<br />
+                      〒240-0067 横浜市保土ケ谷区常盤台79-5
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+      */}
+
 
       {/* Contact Form Section */}
       <section className="py-16 md:py-24">
