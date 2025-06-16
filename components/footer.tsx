@@ -26,11 +26,13 @@ export default function Footer() {
                   サークル紹介
                 </Link>
               </li>
+              {/*
               <li>
                 <Link href="/members" className="text-sm text-gray-300 hover:text-accent transition-colors">
                   メンバー
                 </Link>
               </li>
+              */}
               <li>
                 <Link href="/news" className="text-sm text-gray-300 hover:text-accent transition-colors">
                   お知らせ
@@ -47,11 +49,11 @@ export default function Footer() {
             <h3 className="text-lg font-bold mb-4">フォローする</h3>
             <div className="flex space-x-4">
               <Link
-                href="https://twitter.com/lumos_ynu"
+                href="https://x.com/lumos_program"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-accent transition-colors"
-                aria-label="Twitter"
+                aria-label="X(Twitter)  "
               >
                 <Twitter className="h-6 w-6" />
               </Link>
