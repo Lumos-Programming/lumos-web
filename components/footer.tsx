@@ -63,7 +63,7 @@ export default function Footer() {
                 <Twitter className="h-6 w-6" />
               </Link>
               <Link
-                href="https://github.com/lumos-ynu"
+                href="https://github.com/Lumos-Programming"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-accent transition-colors"
