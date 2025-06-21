@@ -281,9 +281,11 @@ export default function AboutPage() {
             プログラミングができなくても大丈夫！<br />
             プログラミングに興味がある初心者から経験者まで誰でも大歓迎です。
           </p>
+          {/*
           <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-primary">
             <Link href="/contact">お問い合わせ</Link>
           </Button>
+          */}
         </div>
       </section>
     </>
