@@ -20,7 +20,7 @@ const newsArticles = [
       <p>今後もLumosでは、学びと交流の場をどんどん企画していきます。</p>
 
     `,
-    image: "/placeholder.svg?height=600&width=1200",
+    image: "/aset/BBQ.jpg?height=600&width=1200",
     category: "イベント",
   },
   {
@@ -35,7 +35,7 @@ const newsArticles = [
 
       <p>今後もLumosでは学習の場を企画していく予定です。</p>
     `,
-    image: "/placeholder.svg?height=600&width=1200",
+    image: "/aset/C-program.png?height=600&width=1200",
     category: "プロジェクト",
   },
   {
@@ -45,11 +45,11 @@ const newsArticles = [
     summary:"4月中に新入生向けの複数のイベントを開催しました。",
     content: `
       <p>2025年4月中に複数の新入生向けイベントを行いました。</p>
-      <p>イベント内容はみさきマグロツアーやピザ会、女子会やLumos説明会を行いました。</p>
+      <p>イベント内容はみさきマグロツアーやピザ会、女子会や鎌倉散策などを行いました。</p>
       <p>Lumosに興味がある新入生が多くのイベントに参加してくれました。</p>
 
     `,
-    image: "/placeholder.svg?height=600&width=1200",
+    image: "/aset/SHINKAN1.jpg?height=400&width=1000",
     category: "イベント",
   },
 ]
