@@ -20,7 +20,7 @@ const newsArticles = [
       <p>今後もLumosでは、学びと交流の場をどんどん企画していきます。</p>
 
     `,
-    image: "/aset/BBQ.jpg?height=600&width=1200",
+    image: "aset/BBQ.jpg?height=600&width=1200",
     category: "イベント",
   },
   {
@@ -35,7 +35,7 @@ const newsArticles = [
 
       <p>今後もLumosでは学習の場を企画していく予定です。</p>
     `,
-    image: "/aset/C-program.png?height=600&width=1200",
+    image: "aset/C-program.png?height=600&width=1200",
     category: "プロジェクト",
   },
   {
@@ -49,7 +49,7 @@ const newsArticles = [
       <p>Lumosに興味がある新入生が多くのイベントに参加してくれました。</p>
 
     `,
-    image: "/aset/SHINKAN1.jpg?height=400&width=1000",
+    image: "aset/SHINKAN1.jpg?height=400&width1000",
     category: "イベント",
   },
 ]
