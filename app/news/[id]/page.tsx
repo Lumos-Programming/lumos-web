@@ -20,7 +20,7 @@ const newsArticles = [
       <p>今後もLumosでは、学びと交流の場をどんどん企画していきます。</p>
 
     `,
-    image: "aset/BBQ.jpg?height=600&width=1200",
+    image: "/assets/BBQ.jpg",
     category: "イベント",
   },
   {
@@ -35,7 +35,7 @@ const newsArticles = [
 
       <p>今後もLumosでは学習の場を企画していく予定です。</p>
     `,
-    image: "aset/C-program.png?height=600&width=1200",
+    image: "/assets/C-program.png",
     category: "プロジェクト",
   },
   {
@@ -49,7 +49,7 @@ const newsArticles = [
       <p>Lumosに興味がある新入生が多くのイベントに参加してくれました。</p>
 
     `,
-    image: "aset/SHINKAN1.jpg?height=400&width1000",
+    image: "/assets/SHINKAN1.jpg",
     category: "イベント",
   },
 ]
@@ -97,7 +97,7 @@ export default function NewsDetailPage({ params }: { params: { id: string } }) {
                 alt={article.title}
                 width={1200}
                 height={600}
-                className="w-full h-auto"
+                className="w-full object-contain max-h-96"
               />
             </div>
 

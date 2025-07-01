@@ -10,7 +10,7 @@ const newsArticles = [
     date: "2025年5月24日",
     title: "確定大新歓BBQ",
     summary:"5月24日に確定大新歓としてBBQを行いました。",
-    image: "aset/BBQ.jpg?height=400&width=600",
+    image: "/assets/BBQ.jpg",
     category: "イベント",
   },
   {
@@ -18,7 +18,7 @@ const newsArticles = [
     date: "2025年5月21-23日",
     title: "初学者向けプログラミング学習会",
     summary:"21-23日に3日連続の言語学習会をオンライン開催しました。",
-    image: "aset/C-program.png?height=400&width=600",
+    image: "/assets/C-program.png",
     category: "プロジェクト",
   },
   {
@@ -26,7 +26,7 @@ const newsArticles = [
     date: "2025年4月中",
     title: "新入生歓迎イベント",
     summary:"4月中に新入生向けの複数のイベントを開催しました。",
-    image: "aset/SHINKAN1.jpg?height=400&width=600",
+    image: "/assets/SHINKAN1.jpg",
     category: "イベント",
   },
 
