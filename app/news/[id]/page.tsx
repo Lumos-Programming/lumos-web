@@ -97,7 +97,7 @@ export default function NewsDetailPage({ params }: { params: { id: string } }) {
                 alt={article.title}
                 width={1200}
                 height={600}
-                className="w-full h-auto"
+                className="w-full object-contain max-h-96"
               />
             </div>
 
