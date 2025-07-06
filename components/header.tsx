@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -35,6 +36,7 @@ export default function Header() {
     >
       <nav className="container mx-auto px-4 md:px-6 flex items-center justify-between py-4">
         <div className="flex items-center">
+          <Image src="/assets/Lumoslogo.png" alt={"Lumoslogo"} width={50} height={50} />
           <Link href="/" className="text-2xl font-bold text-primary">
             Lumos
           </Link>
