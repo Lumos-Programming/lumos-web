@@ -16,10 +16,11 @@ export const metadata: Metadata = {
   title: "Lumos | 横浜国立大学プログラミングサークル",
   description:
     "横浜国立大学のプログラミングサークル「Lumos」の公式サイトです。初心者から経験者まで、学習・交流を行っています。",
-    generator: 'v0.dev',
+    generator: "Next.js",
     icons: {
     icon: "/favicon.ico", // ここにファビコンのパス
   },
+  keywords: ['横国', '横浜国立大学', 'Lumos', 'ルーモス', 'プログラミング', 'サークル', '国大', 'YNU', '初心者', '情報', 'IT'],
 }
 
 export default function RootLayout({
