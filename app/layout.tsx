@@ -30,8 +30,8 @@ export const metadata: Metadata = {
     url: "https://lumos-ynu.jp/",
     images: [
       {
-        url: "https://lumos-ynu.jp/assets/LumosOGP.png",
-        type: "image/png",
+        url: "https://lumos-ynu.jp/assets/LumosOGP.webp",
+        type: "image/webp",
         width: 1200,
         height: 630,
       },
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     title: "Lumos | 横浜国立大学プログラミングサークル",
     description:
       "横浜国立大学のプログラミングサークル「Lumos」の公式サイトです。初心者から経験者まで、学習・交流を行っています。",
-    images: ["https://lumos-ynu.jp/assets/LumosOGP.png"],
+    images: ["https://lumos-ynu.jp/assets/LumosOGP.webp"],
   },
   keywords: ['横国', '横浜国立大学', 'Lumos', 'ルーモス', 'プログラミング', 'サークル', '国大', 'YNU', '初心者', '情報', 'IT'],
 }
