@@ -7,6 +7,58 @@ import { notFound } from "next/navigation"
 // ニュース記事のデータ
 const newsArticles = [
   {
+  id: 4,
+  date: "2025年10月31日",
+  title: "クレープ屋 Crepe++",
+  summary: "常盤祭にてクレープ屋を出店します。",
+  content: `
+    <p>2025年10月31日から11月2日にかけて開催される常盤祭にて、Lumosは「Crepe++」というクレープ屋を出店します！</p>
+    <p>メンバー自ら調理し、さまざまな味のクレープを販売予定です。</p>
+    <p>文化祭の雰囲気を楽しみながら、ぜひお立ち寄りください！</p>
+  `,
+  image: "/assets/Crepe.png",
+  category: "イベント",
+},
+{
+  id: 5,
+  date: "2025年10月23日",
+  title: "ピザパーティー",
+  summary: "サークルメンバーでピザパーティーを開催しました！",
+  content: `
+    <p>2025年10月23日に、秋学期最初のイベントとしてピザパーティーを開催しました。</p>
+    <p>約3か月ぶりの対面活動ということもあり、多くのメンバーが参加し、交流を深めました。</p>
+    <p>楽しく充実した時間となりました。</p>
+  `,
+  image: "/assets/pizza.png",
+  category: "イベント",
+},
+{
+  id: 6,
+  date: "2025年7月10日",
+  title: "LT会",
+  summary: "個人の成果を発表するLT会を開催しました。",
+  content: `
+    <p>2025年7月10日に、サークル内でLT（Lightning Talk）会を開催しました。</p>
+    <p>参加者がそれぞれ10分程度の発表を行い、それぞれの成果を共有しました。</p>
+    <p>互いに刺激を受ける良い機会となりました</p>
+  `,
+  image: "/assets/LT_1.png",
+  category: "プロジェクト",
+},
+{
+  id: 7,
+  date: "2025年6月17日",
+  title: "ドーナツパーティー",
+  summary: "サークルメンバーでミスドのドーナツを食べました。",
+  content: `
+    <p>2025年6月17日に、Lumosメンバーでドーナツパーティーを開催しました！</p>
+    <p>ミスタードーナツのドーナツをみんなで食べ、和やかな雰囲気で交流しました。</p>
+  `,
+  image: "/assets/donut.png",
+  category: "イベント",
+},
+
+  {
     id: 1,
     date: "2025年5月24日",
     title: "確定大新歓BBQ",
@@ -49,7 +101,7 @@ const newsArticles = [
       <p>Lumosに興味がある新入生が多くのイベントに参加してくれました。</p>
 
     `,
-    image: "/assets/SHINKAN1.jpg",
+    image: "/assets/shinkan.jpg",
     category: "イベント",
   },
 ]

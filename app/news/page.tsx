@@ -6,6 +6,39 @@ import { ArrowRight } from "lucide-react"
 // ニュース記事のデータ
 const newsArticles = [
   {
+  id: 4,
+  date: "2025年10月31日",
+  title: "クレープ屋 Crepe++",
+  summary: "常盤祭にてクレープ屋を出店します。",
+  image: "/assets/Crepe.png",
+  category: "イベント",
+},
+{
+  id: 5,
+  date: "2025年10月23日",
+  title: "ピザパーティー",
+  summary: "サークルメンバーでピザパーティーを開催しました。",
+  image: "/assets/pizza.png",
+  category: "イベント",
+},
+{
+  id: 6,
+  date: "2025年7月10日",
+  title: "LT会",
+  summary: "個人の成果を発表するLT会を開催しました。",
+  image: "/assets/LT_1.png",
+  category: "プロジェクト",
+},
+{
+  id: 7,
+  date: "2025年6月17日",
+  title: "ドーナツパーティー",
+  summary: "サークルメンバーでミスドのドーナツを食べました。",
+  image: "/assets/donut.png",
+  category: "イベント",
+},
+
+  {
     id: 1,
     date: "2025年5月24日",
     title: "確定大新歓BBQ",
@@ -26,7 +59,7 @@ const newsArticles = [
     date: "2025年4月中",
     title: "新入生歓迎イベント",
     summary:"4月中に新入生向けの複数のイベントを開催しました。",
-    image: "/assets/SHINKAN1.jpg",
+    image: "/assets/shinkan.jpg",
     category: "イベント",
   },
 
