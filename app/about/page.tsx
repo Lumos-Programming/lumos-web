@@ -156,15 +156,15 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-bold mb-2">LT会</h3>
                 <p className="text-gray-600 mb-4">
-                横浜国立大学の学園祭(常盤祭)にて、発表会を行います。個人もしくはグループでプロジェクトを進め、その成果を発表します。
+                横浜国立大学にて、発表会を行います。個人もしくはグループでプロジェクトを進め、その成果を発表します。
                 </p>
                 <div className="flex items-center text-gray-500 text-sm">
                   <Clock className="h-4 w-4 mr-1" />
-                  <span>常盤祭</span>
+                  <span>不定期</span>
                 </div>
                 <div className="flex items-center text-gray-500 text-sm mt-1">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span>横浜国立大学</span>
+                  <span>空き教室</span>
                 </div>
               </CardContent>
             </Card>

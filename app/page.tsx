@@ -74,7 +74,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold mb-2">LT会</h3>
                 <p className="text-gray-600">
-                  横浜国立大学の学園祭(常盤祭)にて、グループもしくは個人で発表会を行います。
+                  横浜国立大学にて、グループもしくは個人で発表会を行います。
                 </p>
               </CardContent>
             </Card>
@@ -112,28 +112,24 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                id: 1,
-                date: "2025年5月24日",
-                title: "確定大新歓BBQ",
-                summary:
-                  "5月24日に確定大新歓としてBBQを行いました。",
-              },
-              {
-                id: 2,
-                date: "2025年5月21-23日",
-                title: "初学者向けプログラミング学習会",
-                summary:
-                  "21-23日に3日連続で言語学習会をオンライン開催しました。",
-              },
-              {
-                id: 3,
-                date: "2025年4月中",
-                title: "新入生歓迎イベント",
-                summary:
-                  "4月中に新入生向けの複数のイベントを開催しました。",
-              },
+            {[{
+              id: 4,
+              date: "2025年10月31日",
+              title: "クレープ屋 Crepe++",
+              summary: "常盤祭にてクレープ屋を出店します。",
+            },
+            {
+              id: 5,
+              date: "2025年10月23日",
+              title: "ピザパーティー",
+              summary: "サークルメンバーでピザパーティーを開催しました。",
+            },
+            {
+              id: 6,
+              date: "2025年7月10日",
+              title: "LT会",
+              summary: "個人の成果を発表するLT会を開催しました。",
+            },
             ].map((news) => (
               <Card key={news.id} className="overflow-hidden hover:shadow-md transition-shadow">
                 <CardContent className="p-0">
