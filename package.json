@@ -4,9 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:emulator": "cp .env.local.emulator .env.local && concurrently \"npm run emulator:start\" \"sleep 5 && npm run dev\"",
+    "dev:production": "cp .env.local.production .env.local && npm run dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "emulator:start": "docker-compose up -d firebase-emulator",
+    "emulator:stop": "docker-compose down",
+    "emulator:logs": "docker-compose logs -f firebase-emulator",
+    "emulator:reset": "docker-compose down -v && docker-compose up -d firebase-emulator"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -43,6 +49,7 @@
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
+    "firebase": "^12.2.1",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
