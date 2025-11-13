@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to published content for everyone
+    match /news/{document} {
+      allow read: if resource.data.published == true;
+      allow write: if true; // For development - restrict this in production
+    }
+    
+    match /events/{document} {
+      allow read: if resource.data.published == true;
+      allow write: if true; // For development - restrict this in production
+    }
+    
+    match /activities/{document} {
+      allow read: if resource.data.published == true;
+      allow write: if true; // For development - restrict this in production
+    }
+    
+    match /siteContent/{document} {
+      allow read: if resource.data.published == true;
+      allow write: if true; // For development - restrict this in production
+    }
+    
+    match /members/{document} {
+      allow read: if true;
+      allow write: if true; // For development - restrict this in production
+    }
+    
+    match /contact/{document} {
+      allow read: if true; // For admins only in production
+      allow write: if true;
+    }
+    
+    // Temporary rule for development - allows all reads and writes
+    // REMOVE THIS IN PRODUCTION!
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

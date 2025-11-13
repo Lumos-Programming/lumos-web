@@ -1,10 +1,10 @@
 import type React from "react"
-import type { Metadata } from "next"
-import { Noto_Sans_JP } from "next/font/google"
+import type {Metadata} from "next"
+import {Noto_Sans_JP} from "next/font/google"
 import "./globals.css"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
-import { ThemeProvider } from "@/components/theme-provider"
+import {ThemeProvider} from "@/components/theme-provider"
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ["latin"],
@@ -48,19 +48,19 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({
-  children,
-}: Readonly<{
+                                     children,
+                                   }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className={`${notoSansJP.variable} font-sans min-h-screen flex flex-col`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
-        </ThemeProvider>
-      </body>
+    <body className={`${notoSansJP.variable} font-sans min-h-screen flex flex-col`}>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <Header/>
+      <main className="flex-grow">{children}</main>
+      <Footer/>
+    </ThemeProvider>
+    </body>
     </html>
   )
 }

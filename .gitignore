@@ -25,3 +25,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# images should be managed by Firebase Storage
+/public/assets/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.svg
+!public/placeholder*
+!public/favicon*
+
+!.env.local.example
+!.env.local.emulator

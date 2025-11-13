@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  firebase-emulator:
+    image: andreysenov/firebase-tools:latest
+    ports:
+      - "4000:4000"   # Firebase Emulator UI
+      - "8080:8080"   # Firestore Emulator
+      - "9099:9099"   # Firebase Auth Emulator
+      - "5001:5001"   # Firebase Functions Emulator
+      - "9199:9199"   # Firebase Storage Emulator
+      - "9000:9000"   # Firebase Hosting Emulator
+    volumes:
+      - ./firebase:/workspace
+      - firebase_data:/workspace/data
+    working_dir: /workspace
+    command: >
+      sh -c "
+        firebase emulators:start 
+        --only firestore,storage,ui 
+        --project lumos-web-cms 
+        --host 0.0.0.0
+      "
+    environment:
+      - FIREBASE_TOKEN=${FIREBASE_TOKEN:-}
+    networks:
+      - firebase-net
+
+networks:
+  firebase-net:
+    driver: bridge
+
+volumes:
+  firebase_data:
