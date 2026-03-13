@@ -24,27 +24,27 @@ export default function AboutPage() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-2xl mx-auto text-center space-y-8">
             <h2 className="text-3xl font-bold">ミッション</h2>
-              <div className="space-y-4 text-left">
-                <div className="flex items-start gap-4">
-                  <CheckCircle className="mt-1 text-yellow-500" />
-                  <p>
+            <div className="space-y-4 text-left">
+              <div className="flex items-start gap-4">
+                <CheckCircle className="mt-1 text-yellow-500" />
+                <p>
                   <span className="font-semibold">学びの場の提供：</span>
                   プログラミング初心者から経験者まで、幅広いレベルのメンバーが学習しています。
-                  </p>
-                </div>
-              <div className="flex items-start gap-4">
-                  <CheckCircle className="mt-1 text-yellow-500" />
-                  <p>
-                  <span className="font-semibold">プログラミングのスキル習得：</span>
-                  LT会や学習会を通じて、プログラミングのスキル向上を目指します。
-                  </p>
+                </p>
               </div>
               <div className="flex items-start gap-4">
-                  <CheckCircle className="mt-1 text-yellow-500" />
-                  <p>
+                <CheckCircle className="mt-1 text-yellow-500" />
+                <p>
+                  <span className="font-semibold">プログラミングのスキル習得：</span>
+                  LT会や学習会を通じて、プログラミングのスキル向上を目指します。
+                </p>
+              </div>
+              <div className="flex items-start gap-4">
+                <CheckCircle className="mt-1 text-yellow-500" />
+                <p>
                   <span className="font-semibold">コミュニティの形成：</span>
                   プログラミングに興味がある仲間と交流を深め、メンバー同士のなかをつくります。
-                  </p>
+                </p>
               </div>
             </div>
           </div>
@@ -114,9 +114,9 @@ export default function AboutPage() {
                 <div className="mb-4">
                   <Code className="h-10 w-10 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">各種ハンズオン</h3>
+                <h3 className="text-xl font-bold mb-2">各種ハンズオン学習会</h3>
                 <p className="text-gray-600 mb-4">
-                  数回で完結する学習会を行います。内容は初心者向け言語学習会や小規模なプロジェクトの立ち上げなど多岐にわたります。
+                  初心者向けの言語学習会や第一歩を踏み出すための小規模なプロジェクトを開催しています。
                 </p>
                 <div className="flex items-center text-gray-500 text-sm">
                   <Clock className="h-4 w-4 mr-1" />
@@ -156,15 +156,15 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-bold mb-2">LT会</h3>
                 <p className="text-gray-600 mb-4">
-                横浜国立大学にて、発表会を行います。個人もしくはグループでプロジェクトを進め、その成果を発表します。
+                  毎週オンラインでのmini-LTに加え、対面で集合して行うLT会も開催しています。個人の成果を発表する場として、メンバーの成長を促します。
                 </p>
                 <div className="flex items-center text-gray-500 text-sm">
                   <Clock className="h-4 w-4 mr-1" />
-                  <span>不定期</span>
+                  <span>毎週月曜 / 不定期</span>
                 </div>
                 <div className="flex items-center text-gray-500 text-sm mt-1">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span>空き教室</span>
+                  <span>オンライン(discord) / 空き教室</span>
                 </div>
               </CardContent>
             </Card>
@@ -176,7 +176,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-bold mb-2">プロジェクト活動</h3>
                 <p className="text-gray-600 mb-4">
-                  だれでも自由にプロジェクトを立ち上げることができます。サークル内で参加者を募り、メンバーを協⼒しながらプロジェクトを進めることができます。
+                  だれでも自由にプロジェクトを立ち上げることができ、メンバーと協力しながらプロジェクトを進めます。
                 </p>
                 <div className="flex items-center text-gray-500 text-sm">
                   <Clock className="h-4 w-4 mr-1" />
@@ -188,13 +188,13 @@ export default function AboutPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
 
       {/* Achievements Section */}
-{/*
+      {/*
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-3xl mx-auto text-center mb-16">

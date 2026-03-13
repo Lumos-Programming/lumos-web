@@ -12,11 +12,15 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-primary/80 to-primary/60" />
         </div>
         <div className="container mx-auto px-4 md:px-6 relative z-10 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 max-w-4xl mx-auto leading-tight">
-          Where Programmer Connect and Grow.
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 max-w-4xl mx-auto leading-tight">
+            ワクワク駆動型開発
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed">
-            初心者から経験者まで、プログラミングやデータサイエンスなど、広くITに関心のある人が気軽に集まり、学び合えるオンラインコミュニティを提供します。
+          <p className="text-xl md:text-2xl mb-6 max-w-3xl mx-auto leading-relaxed text-accent font-semibold">
+            Improving Together
+          </p>
+          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto leading-relaxed opacity-95">
+            プログラミングに興味を持つ学生たちが集い、共に学び、共に成長する。<br />
+            ワクワクする気持ちから始まる、最高のプロジェクトを創造しましょう。
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-primary">
@@ -48,9 +52,9 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Code className="h-12 w-12 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">各種ハンズオン</h3>
+                <h3 className="text-xl font-bold mb-2">各種ハンズオン学習会</h3>
                 <p className="text-gray-600">
-                  初⼼者向けの⾔語学習会や⼩規模なプロジェクトなど数回で終わる学習会を行います。
+                  初心者向けの言語学習会や第一歩を踏み出すための小規模なプロジェクトを開催しています。
                 </p>
               </CardContent>
             </Card>
@@ -74,7 +78,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold mb-2">LT会</h3>
                 <p className="text-gray-600">
-                  横浜国立大学にて、グループもしくは個人で発表会を行います。
+                  毎週オンラインでのmini-LTに加え、対面で集合して行うLT会も開催しています。個人の成果を発表する場として、メンバーの成長を促します。
                 </p>
               </CardContent>
             </Card>
