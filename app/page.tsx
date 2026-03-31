@@ -2,6 +2,23 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Code, Users, Calendar, Award } from "lucide-react"
+import { newsArticles } from "./news/news-data"
+
+// 日本語の日付文字列をYYYYMMDD形式の数値に変換してソート
+const parseJapaneseDate = (dateStr: string): number => {
+  const match = dateStr.match(/(\d+)年(\d+)月(\d+)?/)
+  if (match) {
+    const year = match[1]
+    const month = match[2].padStart(2, "0")
+    const day = match[3] ? match[3].padStart(2, "0") : "15" // "中" などの曖昧な表記は15とする
+    return Number(`${year}${month}${day}`)
+  }
+  return 0
+}
+
+const sortedNewsArticles = [...newsArticles].sort(
+  (a, b) => parseJapaneseDate(b.date) - parseJapaneseDate(a.date)
+)
 
 export default function Home() {
   return (
@@ -22,7 +39,10 @@ export default function Home() {
           </p>
           <div className="animate-fade-in-up-600 flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-gradient-orange hover:opacity-90 text-white font-semibold transition-all duration-300 hover:shadow-lg">
-              <Link href="/about">活動を見る</Link>
+              <Link href="/projects">プロジェクトを見る</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="font-semibold transition-all duration-300 hover:shadow-lg border-accent-foreground text-accent-foreground hover:bg-accent-foreground/10">
+              <Link href="/news">最新のニュース</Link>
             </Button>
           </div>
         </div>
@@ -109,25 +129,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[{
-              id: 4,
-              date: "2025年10月31日",
-              title: "クレープ屋 Crepe++",
-              summary: "常盤祭にてクレープ屋を出店します。",
-            },
-            {
-              id: 5,
-              date: "2025年10月23日",
-              title: "ピザパーティー",
-              summary: "サークルメンバーでピザパーティーを開催しました。",
-            },
-            {
-              id: 6,
-              date: "2025年7月10日",
-              title: "LT会",
-              summary: "個人の成果を発表するLT会を開催しました。",
-            },
-            ].map((news) => (
+            {sortedNewsArticles.slice(0, 3).map((news) => (
               <Card key={news.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card">
                 <CardContent className="p-0">
                   <div className="p-6">

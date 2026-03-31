@@ -2,77 +2,23 @@ import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight } from "lucide-react"
+import { newsArticles } from "./news-data"
 
-// ニュース記事のデータ
-const newsArticles = [
-  {
-    id: 8,
-    date: "2026年3月2日",
-    title: "毎週mini-LT開始",
-    summary: "毎週オンラインでのプログラミング成果共有会mini-LTが発足しました。",
-    image: "/assets/mini-lt.png",
-    category: "プロジェクト",
-  },
-  {
-    id: 4,
-    date: "2025年10月31日",
-    title: "クレープ屋 Crepe++",
-    summary: "常盤祭にてクレープ屋を出店しました。",
-    image: "/assets/Crepe.png",
-    category: "イベント",
-  },
-  {
-    id: 5,
-    date: "2025年10月23日",
-    title: "ピザパーティー",
-    summary: "サークルメンバーでピザパーティーを開催しました。",
-    image: "/assets/pizza.png",
-    category: "イベント",
-  },
-  {
-    id: 6,
-    date: "2025年7月10日",
-    title: "LT会",
-    summary: "個人の成果を発表するLT会を開催しました。",
-    image: "/assets/LT_1.png",
-    category: "プロジェクト",
-  },
-  {
-    id: 7,
-    date: "2025年6月17日",
-    title: "ドーナツパーティー",
-    summary: "サークルメンバーでミスドのドーナツを食べました。",
-    image: "/assets/donut.png",
-    category: "イベント",
-  },
+// 日本語の日付文字列をYYYYMMDD形式の数値に変換してソート
+const parseJapaneseDate = (dateStr: string): number => {
+  const match = dateStr.match(/(\d+)年(\d+)月(\d+)?/)
+  if (match) {
+    const year = match[1]
+    const month = match[2].padStart(2, "0")
+    const day = match[3] ? match[3].padStart(2, "0") : "15" // "中" などの曖昧な表記は15とする
+    return Number(`${year}${month}${day}`)
+  }
+  return 0
+}
 
-  {
-    id: 1,
-    date: "2025年5月24日",
-    title: "確定大新歓BBQ",
-    summary: "5月24日に確定大新歓としてBBQを行いました。",
-    image: "/assets/BBQ.jpg",
-    category: "イベント",
-  },
-  {
-    id: 2,
-    date: "2025年5月21-23日",
-    title: "初学者向けプログラミング学習会",
-    summary: "21-23日に3日連続の言語学習会をオンライン開催しました。",
-    image: "/assets/C-program.png",
-    category: "プロジェクト",
-  },
-  {
-    id: 3,
-    date: "2025年4月中",
-    title: "新入生歓迎イベント",
-    summary: "4月中に新入生向けの複数のイベントを開催しました。",
-    image: "/assets/shinkan.jpg",
-    category: "イベント",
-  },
-
-
-]
+const sortedNewsArticles = [...newsArticles].sort(
+  (a, b) => parseJapaneseDate(b.date) - parseJapaneseDate(a.date)
+)
 
 export default function NewsPage() {
   return (
@@ -94,7 +40,7 @@ export default function NewsPage() {
       <section className="section-padding bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {newsArticles.map((article) => (
+            {sortedNewsArticles.map((article) => (
               <Card key={article.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card">
                 <div className="aspect-video relative">
                   <Image src={article.image || "/placeholder.svg"} alt={article.title} fill className="object-cover" />
