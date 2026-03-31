@@ -1,7 +1,7 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Card, CardContent, CardHeader, CardTitle, Avatar, Badge, Button } from './ui'
-import { SerializableTalk } from '@/lib/firebase'
+import { SerializableTalk } from '@/lib/mini-lt/firebase'
 import { format } from 'date-fns'
 
 interface LTCardProps {

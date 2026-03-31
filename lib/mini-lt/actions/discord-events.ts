@@ -12,7 +12,7 @@ import {
   deleteDiscordEvent,
   getDiscordEventUrl,
 } from '@/lib/discord'
-import { formatWeekDate, getWeekDateFromWeekId } from '@/lib/utils'
+import { formatWeekDate, getWeekDateFromWeekId } from '@/lib/mini-lt/utils'
 import type { SerializableWeekData } from '@/lib/firebase'
 
 /**

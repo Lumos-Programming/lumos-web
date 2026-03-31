@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { SerializableTalk } from '@/lib/firebase'
-import { LTCard } from '@/components/LTCard'
-import { SubmitForm } from '@/components/SubmitForm'
+import { SerializableTalk } from '@/lib/mini-lt/firebase'
+import { LTCard } from '@/components/mini-lt/LTCard'
+import { SubmitForm } from '@/components/mini-lt/SubmitForm'
 
 interface ManageTalksProps {
   weekId: string

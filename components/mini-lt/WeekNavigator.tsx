@@ -1,7 +1,7 @@
 import { Button } from './ui'
 import Link from 'next/link'
-import { getNavigationWeeks, formatWeekDate } from '@/lib/utils'
-import { sendLineNextEvent } from '@/lib/actions/line'
+import { getNavigationWeeks, formatWeekDate } from '@/lib/mini-lt/utils'
+import { sendLineNextEvent } from '@/lib/mini-lt/actions/line'
 
 interface WeekNavigatorProps {
   currentWeek: string

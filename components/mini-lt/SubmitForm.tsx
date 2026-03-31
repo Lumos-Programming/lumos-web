@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button, Input, Textarea, Card, CardHeader, CardTitle, CardContent } from './ui'
-import { SerializableTalk } from '@/lib/firebase'
+import { SerializableTalk } from '@/lib/mini-lt/firebase'
 
 interface SubmitFormProps {
   weekId: string

@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Noto_Sans_JP } from "next/font/google"
 import "./globals.css"
 import Header from "@/components/header"
+import HeaderAuth from "@/components/header-auth"
 import Footer from "@/components/footer"
 import { ThemeProvider } from "@/components/theme-provider"
 
@@ -56,7 +57,7 @@ export default function RootLayout({
     <html lang="ja" suppressHydrationWarning>
       <body className={`${notoSansJP.variable} font-sans min-h-screen flex flex-col`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <Header />
+          <Header authSlot={<HeaderAuth />} />
           <main className="flex-grow">{children}</main>
           <Footer />
         </ThemeProvider>
