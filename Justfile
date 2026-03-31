@@ -2,9 +2,15 @@
 default:
     @just --list
 
-# Firestore エミュレータ + 開発サーバーを起動
+# Firestore エミュレータ + 開発サーバーを起動（エミュレータ未起動時のみ起動）
 dev:
-    pnpm exec firebase emulators:exec --only firestore "next dev"
+    #!/usr/bin/env sh
+    if nc -z localhost 8080 2>/dev/null; then
+        echo "Firestore emulator already running, starting Next.js only..."
+        pnpm dev
+    else
+        pnpm exec firebase emulators:exec --only firestore "next dev"
+    fi
 
 # Firestore エミュレータでテストを実行
 test:
