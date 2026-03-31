@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, type ReactNode } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -15,7 +15,7 @@ const navigation = [
   // { name: "お問い合わせ", href: "/contact" },
 ]
 
-export default function Header() {
+export default function Header({ authSlot }: { authSlot?: ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -43,7 +43,7 @@ export default function Header() {
         </div>
 
         {/* Desktop navigation */}
-        <div className="hidden md:flex md:gap-x-8">
+        <div className="hidden md:flex md:items-center md:gap-x-8">
           {navigation.map((item) => (
             <Link
               key={item.name}
@@ -53,6 +53,7 @@ export default function Header() {
               {item.name}
             </Link>
           ))}
+          {authSlot}
         </div>
 
         {/* Mobile menu button */}
@@ -99,11 +100,9 @@ export default function Header() {
                     </Link>
                   ))}
                 </div>
-                <div className="mt-8">
-                  <Button asChild className="w-full bg-accent hover:bg-accent/90 text-primary">
-                    <Link href="/contact">お問い合わせ</Link>
-                  </Button>
-                </div>
+                {authSlot && (
+                  <div className="mt-8">{authSlot}</div>
+                )}
               </div>
             </div>
           </div>
