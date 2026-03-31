@@ -9,7 +9,6 @@ import { Button } from '@/components/mini-lt/ui'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import Image from 'next/image'
-import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
