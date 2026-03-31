@@ -38,6 +38,7 @@ describe('Firebase CRUD Logic', () => {
       description: 'Test Description',
       presenterName: 'Test User',
       presenterAvatar: 'https://example.com/avatar.png',
+      duration: 5,
     }
 
     await addTalk(weekId, talkData, userId)
@@ -54,6 +55,7 @@ describe('Firebase CRUD Logic', () => {
       description: 'Initial Description',
       presenterName: 'Test User',
       presenterAvatar: 'https://example.com/avatar.png',
+      duration: 5,
     }
 
     await addTalk(weekId, talkData, userId)
@@ -72,6 +74,7 @@ describe('Firebase CRUD Logic', () => {
       description: 'Initial Description',
       presenterName: 'Test User',
       presenterAvatar: 'https://example.com/avatar.png',
+      duration: 5,
     }
 
     await addTalk(weekId, talkData, userId)
@@ -89,6 +92,7 @@ describe('Firebase CRUD Logic', () => {
       description: 'Initial Description',
       presenterName: 'Test User',
       presenterAvatar: 'https://example.com/avatar.png',
+      duration: 5,
     }
 
     await addTalk(weekId, talkData, userId)
@@ -107,6 +111,7 @@ describe('Firebase CRUD Logic', () => {
       description: 'Initial Description',
       presenterName: 'Test User',
       presenterAvatar: 'https://example.com/avatar.png',
+      duration: 5,
     }
 
     await addTalk(weekId, talkData, userId)
@@ -122,6 +127,7 @@ describe('Firebase CRUD Logic', () => {
       description: 'Desc 1',
       presenterName: 'User 1',
       presenterAvatar: 'avatar1',
+      duration: 5,
     }
 
     await addTalk(weekId, talkData, 'user1')
