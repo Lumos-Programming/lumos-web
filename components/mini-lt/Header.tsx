@@ -40,7 +40,7 @@ export async function Header() {
 
           {userIsAdmin && (
             <div className="hidden md:block">
-              <Link href="/admin">
+              <Link href="/mini-lt/admin">
                 <div className="bg-white/10 hover:bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg transition-all text-white text-sm font-semibold border border-white/20">
                   ⚙️ Admin
                 </div>
@@ -51,7 +51,7 @@ export async function Header() {
 
         {userIsAdmin && (
           <div className="md:hidden mt-4 text-center">
-            <Link href="/admin">
+            <Link href="/mini-lt/admin">
               <div className="bg-white/10 hover:bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg transition-all text-white text-sm font-semibold border border-white/20 inline-block">
                 ⚙️ Admin Dashboard
               </div>
