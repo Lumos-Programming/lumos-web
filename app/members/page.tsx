@@ -16,11 +16,12 @@ export default function MembersPage() {
   return (
     <>
       {/* Header Section */}
-      <section className="pt-32 pb-16 md:pt-40 md:pb-24 bg-primary text-white">
-        <div className="container mx-auto px-4 md:px-6">
+      <section className="relative pt-32 pb-16 md:pt-40 md:pb-24 bg-gradient-primary text-white overflow-hidden">
+        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px] z-0"></div>
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-3xl md:text-5xl font-bold mb-6">メンバー紹介</h1>
-            <p className="text-xl">
+            <h1 className="animate-fade-in-up text-3xl md:text-5xl font-bold mb-6">メンバー紹介</h1>
+            <p className="animate-fade-in-up-300 text-xl font-medium">
               Lumosを運営するメンバーたち。イベントの計画・運営を行っています。
             </p>
           </div>
@@ -28,13 +29,13 @@ export default function MembersPage() {
       </section>
 
       {/* Members Grid */}
-      <section className="py-16 md:py-24">
+      <section className="section-padding bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {members.map((member) => (
               <Card
                 key={member.id}
-                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card cursor-pointer"
                 onClick={() => setSelectedMember(member)}
               >
                 <div className="aspect-square relative">
@@ -46,9 +47,9 @@ export default function MembersPage() {
                   />
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="text-xl font-bold">{member.name}</h3>
-                  <p className="text-accent font-medium">{member.role}</p>
-                  <p className="text-gray-600 text-sm mt-1">
+                  <h3 className="text-xl font-bold text-foreground">{member.name}</h3>
+                  <p className="text-accent-foreground font-medium">{member.role}</p>
+                  <p className="text-muted-foreground text-sm mt-1">
                     {member.department} {member.year}
                   </p>
                 </CardContent>
@@ -64,8 +65,8 @@ export default function MembersPage() {
           {selectedMember && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-2xl">{selectedMember.name}</DialogTitle>
-                <DialogDescription className="text-accent font-medium">
+                <DialogTitle className="text-2xl text-foreground">{selectedMember.name}</DialogTitle>
+                <DialogDescription className="text-accent-foreground font-medium">
                   {selectedMember.role} | {selectedMember.department} {selectedMember.year}
                 </DialogDescription>
               </DialogHeader>
@@ -79,12 +80,12 @@ export default function MembersPage() {
                   />
                 </div>
                 <div>
-                  <p className="text-gray-700 mb-4">{selectedMember.bio}</p>
+                  <p className="text-foreground mb-4">{selectedMember.bio}</p>
                   <div className="mb-4">
-                    <h4 className="font-bold text-sm text-gray-500 mb-2">スキル</h4>
+                    <h4 className="font-bold text-sm text-muted-foreground mb-2">スキル</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedMember.skills.map((skill, index) => (
-                        <span key={index} className="bg-gray-100 text-primary text-xs px-2 py-1 rounded-full">
+                        <span key={index} className="bg-secondary text-primary text-xs px-2 py-1 rounded-full">
                           {skill}
                         </span>
                       ))}
@@ -92,7 +93,7 @@ export default function MembersPage() {
                   </div>
                   {selectedMember.social && (
                     <div>
-                      <h4 className="font-bold text-sm text-gray-500 mb-2">SNS / ウェブサイト</h4>
+                      <h4 className="font-bold text-sm text-muted-foreground mb-2">SNS / ウェブサイト</h4>
                       <div className="flex gap-3">
                         {selectedMember.social.github && (
                           <Link
