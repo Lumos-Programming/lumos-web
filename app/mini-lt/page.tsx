@@ -81,7 +81,7 @@ export default async function HomePage({
                 <span className="bg-white px-3 py-1 rounded-full text-gray-700">⏱️ 5分でもOK</span>
                 <span className="bg-white px-3 py-1 rounded-full text-gray-700">💭 雑談ベース</span>
               </div>
-              <Link href="/submit">
+              <Link href="/mini-lt/submit">
                 <button className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-8 py-3 rounded-xl font-bold hover:shadow-xl transition-all hover:scale-105 flex items-center gap-2 mx-auto">
                   <span className="text-xl">🎤</span>
                   <span>気軽に発表登録してみる</span>
@@ -128,7 +128,7 @@ export default async function HomePage({
         )}
 
         <footer className="mt-12 text-center pb-8">
-          <Link href="/submit">
+          <Link href="/mini-lt/submit">
             <Badge
               variant="outline"
               className="cursor-pointer hover:bg-purple-50 hover:border-purple-300 px-5 py-2 transition-all hover:scale-105"
@@ -140,7 +140,7 @@ export default async function HomePage({
       </div>
 
       {/* Floating Action Button */}
-      <Link href="/submit">
+      <Link href="/mini-lt/submit">
         <button className="fixed bottom-8 right-8 bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-6 py-4 rounded-full shadow-2xl hover:shadow-3xl transition-all hover:scale-110 z-50 animate-float group flex items-center gap-2 font-bold">
           <span className="text-2xl">➕</span>
           <span className="text-sm">発表登録</span>

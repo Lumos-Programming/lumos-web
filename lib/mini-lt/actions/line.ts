@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { getWeekData } from '@/lib/firebase'
-import { getNextEventWeekId } from '@/lib/utils'
-import { buildNextEventFlexMessage } from '@/lib/line-flex'
+import { getNextEventWeekId } from '@/lib/mini-lt/utils'
+import { buildNextEventFlexMessage } from '@/lib/mini-lt/line-flex'
 
 export async function sendLineNextEvent(): Promise<void> {
   const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN

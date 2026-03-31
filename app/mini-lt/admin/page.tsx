@@ -31,7 +31,7 @@ export default async function AdminPage({
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">Admin機能を使用するにはログインが必要です</p>
-            <Link href="/submit">
+            <Link href="/mini-lt/submit">
               <Button>ログインページへ</Button>
             </Link>
           </CardContent>

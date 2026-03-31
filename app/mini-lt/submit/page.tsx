@@ -248,7 +248,7 @@ export default async function SubmitPage({
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-            <WeekNavigator currentWeek={weekId} baseUrl="/submit" />
+            <WeekNavigator currentWeek={weekId} baseUrl="/mini-lt/submit" />
           </div>
 
           <ManageTalks
