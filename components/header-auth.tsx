@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth'
+import { auth, signIn } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
@@ -16,10 +16,15 @@ export default async function HeaderAuth() {
   }
 
   return (
-    <Link href="/api/auth/signin/discord">
-      <Button size="sm" className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
+    <form
+      action={async () => {
+        'use server'
+        await signIn('discord')
+      }}
+    >
+      <Button type="submit" size="sm" className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
         Discordでログイン
       </Button>
-    </Link>
+    </form>
   )
 }
