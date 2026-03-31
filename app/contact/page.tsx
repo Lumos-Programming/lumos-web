@@ -82,18 +82,19 @@ export default function ContactPage() {
   return (
     <>
       {/* Header Section */}
-      <section className="pt-16 pb-16 md:pt-40 md:pb-16  bg-primary text-white">
-        <div className="container mx-auto px-4 md:px-6">
+      <section className="relative pt-16 pb-16 md:pt-40 md:pb-16 bg-gradient-primary text-white overflow-hidden">
+        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px] z-0"></div>
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-3xl md:text-5xl font-bold mb-6">お問い合わせ</h1>
-            <p className="text-xl">
+            <h1 className="animate-fade-in-up text-3xl md:text-5xl font-bold mb-6">お問い合わせ</h1>
+            <p className="animate-fade-in-up-300 text-xl font-medium">
               Lumosに関するご質問やお問い合わせ、入会希望は以下のメールアドレスにご連絡ください。<br></br>
             </p>
           </div>
         </div>
       </section>
 
-{/* //問い合わせフォームがないバージョン　これだけだとページがさびしい
+      {/* //問い合わせフォームがないバージョン　これだけだとページがさびしい
       <section className="py-12 md:py-12 bg-white text-gray-900">
           <div className="container mx-auto px-4 md:px-6">
             <div className="max-w-3xl mx-auto text-center">
@@ -142,11 +143,11 @@ export default function ContactPage() {
 
 
       {/* Contact Form Section */}
-      <section className="py-16 md:py-24">
+      <section className="section-padding bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold mb-6">お問い合わせフォーム</h2>
+              <h2 className="text-2xl font-bold mb-6 text-foreground">お問い合わせフォーム</h2>
 
               {isSubmitted ? (
                 <Alert className="bg-green-50 border-green-200 text-green-800 mb-6">
@@ -158,8 +159,8 @@ export default function ContactPage() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name">
-                      お名前 <span className="text-red-500">*</span>
+                    <Label htmlFor="name" className="text-foreground">
+                      お名前 <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="name"
@@ -167,20 +168,20 @@ export default function ContactPage() {
                       value={formData.name}
                       onChange={handleChange}
                       placeholder="山田 太郎"
-                      className={errors.name ? "border-red-500" : ""}
+                      className={errors.name ? "border-destructive" : ""}
                       aria-invalid={errors.name ? "true" : "false"}
                       aria-describedby={errors.name ? "name-error" : undefined}
                     />
                     {errors.name && (
-                      <p id="name-error" className="text-red-500 text-sm">
+                      <p id="name-error" className="text-destructive text-sm">
                         {errors.name}
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email">
-                      メールアドレス <span className="text-red-500">*</span>
+                    <Label htmlFor="email" className="text-foreground">
+                      メールアドレス <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="email"
@@ -189,19 +190,19 @@ export default function ContactPage() {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="example@ynu.ac.jp"
-                      className={errors.email ? "border-red-500" : ""}
+                      className={errors.email ? "border-destructive" : ""}
                       aria-invalid={errors.email ? "true" : "false"}
                       aria-describedby={errors.email ? "email-error" : undefined}
                     />
                     {errors.email && (
-                      <p id="email-error" className="text-red-500 text-sm">
+                      <p id="email-error" className="text-destructive text-sm">
                         {errors.email}
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="subject">件名</Label>
+                    <Label htmlFor="subject" className="text-foreground">件名</Label>
                     <Input
                       id="subject"
                       name="subject"
@@ -212,8 +213,8 @@ export default function ContactPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="message">
-                      お問い合わせ内容 <span className="text-red-500">*</span>
+                    <Label htmlFor="message" className="text-foreground">
+                      お問い合わせ内容 <span className="text-destructive">*</span>
                     </Label>
                     <Textarea
                       id="message"
@@ -222,12 +223,12 @@ export default function ContactPage() {
                       onChange={handleChange}
                       placeholder="お問い合わせ内容を入力してください"
                       rows={6}
-                      className={errors.message ? "border-red-500" : ""}
+                      className={errors.message ? "border-destructive" : ""}
                       aria-invalid={errors.message ? "true" : "false"}
                       aria-describedby={errors.message ? "message-error" : undefined}
                     />
                     {errors.message && (
-                      <p id="message-error" className="text-red-500 text-sm">
+                      <p id="message-error" className="text-destructive text-sm">
                         {errors.message}
                       </p>
                     )}
@@ -242,7 +243,7 @@ export default function ContactPage() {
 
                   <Button
                     type="submit"
-                    className="bg-accent hover:bg-accent/90 text-primary w-full md:w-auto"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground w-full md:w-auto font-semibold"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? "送信中..." : "送信する"}
@@ -252,27 +253,27 @@ export default function ContactPage() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold mb-6">お問い合わせ先</h2>
+              <h2 className="text-2xl font-bold mb-6 text-foreground">お問い合わせ先</h2>
               <div className="space-y-8">
-                <Card>
+                <Card className="border-border bg-card">
                   <CardContent className="p-6">
                     <div className="flex items-start">
-                      <Mail className="h-5 w-5 text-accent mr-3 mt-1" />
+                      <Mail className="h-5 w-5 text-accent-foreground mr-3 mt-1" />
                       <div>
-                        <h3 className="font-bold">メールアドレス</h3>
-                        <p className="text-gray-600">lumos.ynu.programming@gmail.com</p>
+                        <h3 className="font-bold text-foreground">メールアドレス</h3>
+                        <p className="text-muted-foreground">lumos.ynu.programming@gmail.com</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border-border bg-card">
                   <CardContent className="p-6">
                     <div className="flex items-start">
-                      <MapPin className="h-5 w-5 text-accent mr-3 mt-1" />
+                      <MapPin className="h-5 w-5 text-accent-foreground mr-3 mt-1" />
                       <div>
-                        <h3 className="font-bold">活動拠点</h3>
-                        <p className="text-gray-600">
+                        <h3 className="font-bold text-foreground">活動拠点</h3>
+                        <p className="text-muted-foreground">
                           横浜国立大学
                           <br></br>
                           〒240-0067 横浜市保土ケ谷区常盤台79-5
