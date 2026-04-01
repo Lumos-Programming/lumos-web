@@ -3,7 +3,6 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight } from "lucide-react"
 
 // 現在のプロジェクト
 const currentProjects = [

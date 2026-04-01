@@ -7,9 +7,23 @@ import { notFound } from "next/navigation"
 // ニュース記事のデータ
 const newsArticles = [
   {
+    id: 9,
+    date: "2025年12月11日",
+    title: "はじプロ最終発表会",
+    summary: "はじめてのプロダクト開発ゼミの最終発表会がありました。",
+    content: `
+    <p>2025年12月11日、はじめてのプロダクト開発ゼミの最終発表会が行われました。</p>
+    <p>各メンバー、これまでに学んだことを発表し、他のメンバーの発表から刺激を受け、またアイデア交換などを行いました。</p>
+    <p>このイベントを通じてユニット外のメンバーとも交流し、さらにLumos内で知り合いが増えたという方も多いのではと思います。</p>
+    <p>今後もこのような初心者向けの活動を開催していく予定です。</p>
+  `,
+    image: "https://storage.googleapis.com/lumos-web-profile-data/hajipro.jpg",
+    category: "プロジェクト",
+  },
+  {
     id: 8,
     date: "2026年3月2日",
-    title: "毎週mini-LT開始",
+    title: "ウィークリーmini-LT開始",
     summary: "毎週オンラインでのプログラミング成果共有会mini-LTが発足しました。",
     content: `
     <p>2026年3月2日より、毎週月曜日にmini-LTを開始しました！</p>
