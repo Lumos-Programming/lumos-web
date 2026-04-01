@@ -33,27 +33,28 @@ export default function MembersPage() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {members.map((member) => (
-              <Card
-                key={member.id}
-                className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card cursor-pointer"
-                onClick={() => setSelectedMember(member)}
-              >
-                <div className="aspect-square relative">
-                  <Image
-                    src={member.image || "/placeholder.svg"}
-                    alt={`${member.name}の写真`}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="text-xl font-bold text-foreground">{member.name}</h3>
-                  <p className="text-accent-foreground font-medium">{member.role}</p>
-                  <p className="text-muted-foreground text-sm mt-1">
-                    {member.department} {member.year}
-                  </p>
-                </CardContent>
-              </Card>
+              <div key={member.id} id={`member-${member.id}`}>
+                <Card
+                  className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card cursor-pointer"
+                  onClick={() => setSelectedMember(member)}
+                >
+                  <div className="aspect-square relative">
+                    <Image
+                      src={member.image || "/placeholder.svg"}
+                      alt={`${member.name}の写真`}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="text-xl font-bold text-foreground">{member.name}</h3>
+                    <p className="text-accent-foreground font-medium">{member.role}</p>
+                    <p className="text-muted-foreground text-sm mt-1">
+                      {member.department} {member.year}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
         </div>
