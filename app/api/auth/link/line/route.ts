@@ -20,8 +20,8 @@ export async function GET() {
   const callbackUrl = getCallbackUrl('line', baseUrl)
 
   const cookieStore = await cookies()
-  cookieStore.set('oauth_link_state_line', state, { httpOnly: true, maxAge: 600, path: '/' })
-  cookieStore.set('oauth_link_discord_id', session.user.id, { httpOnly: true, maxAge: 600, path: '/' })
+  cookieStore.set('oauth_link_state_line', state, { httpOnly: true, maxAge: 600, path: '/', secure: process.env.NODE_ENV === 'production', sameSite: 'lax' })
+  cookieStore.set('oauth_link_discord_id', session.user.id, { httpOnly: true, maxAge: 600, path: '/', secure: process.env.NODE_ENV === 'production', sameSite: 'lax' })
 
   const url = new URL(config.authUrl)
   url.searchParams.set('response_type', 'code')

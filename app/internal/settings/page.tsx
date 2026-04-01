@@ -21,13 +21,13 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function SettingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ success?: string; error?: string }>
+  searchParams?: { success?: string; error?: string }
 }) {
   const session = await auth()
   if (!session?.user?.id) redirect("/api/auth/signin")
 
   const member = await getMember(session.user.id)
-  const { success, error } = await searchParams
+  const { success, error } = searchParams ?? {}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:bg-gradient-to-br dark:from-black dark:to-purple-900">
