@@ -6,7 +6,6 @@ export interface ProfileVisibility {
   faculty: boolean
   bio: boolean
   line: boolean
-  discord: boolean
   github: boolean
   x: boolean
 }

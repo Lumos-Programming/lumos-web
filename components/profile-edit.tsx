@@ -25,7 +25,7 @@ const FIELD_LABELS: Record<keyof Omit<Profile, "visibility" | "role" | "year" | 
   x: "X",
 }
 
-const SNS_FIELDS = new Set(["github", "x", "line"])
+const SNS_FIELDS = new Set(["github", "x", "line", "discord"])
 
 const PROFILE_FIELDS = Object.keys(FIELD_LABELS) as Array<keyof Omit<Profile, "visibility" | "role" | "year" | "skills">>
 
@@ -48,7 +48,6 @@ const DEFAULT_PROFILE: Profile = {
     faculty: false,
     bio: true,
     line: false,
-    discord: false,
     github: false,
     x: false,
   },
@@ -83,7 +82,6 @@ export default function ProfileEdit() {
               faculty: data.visibility?.faculty ?? false,
               bio: data.visibility?.bio ?? true,
               line: data.visibility?.line ?? false,
-              discord: data.visibility?.discord ?? false,
               github: data.visibility?.github ?? false,
               x: data.visibility?.x ?? false,
             },
