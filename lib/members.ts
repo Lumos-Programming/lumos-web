@@ -129,6 +129,10 @@ export async function deleteMemberSnsField(
   await db.collection('members').doc(discordId).update(updates)
 }
 
+export function isOnboardingComplete(member: MemberDocument): boolean {
+  return !!(member.studentId && member.lastName && member.firstName && member.faculty && member.lineId)
+}
+
 export function profileToMember(discordId: string, data: MemberDocument): Member {
   const v = data.visibility
 

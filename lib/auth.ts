@@ -13,6 +13,9 @@ export function isValidSnowflake(id: string | undefined): boolean {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  pages: {
+    signIn: '/login',
+  },
   providers: [
     Discord({
       authorization:
@@ -20,6 +23,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      if (url.startsWith(baseUrl)) return url
+      return `${baseUrl}/internal`
+    },
+
     async session({ session, token }) {
       // token.sub contains the Discord User ID
       if (token.sub) {

@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth"
 import { getMember } from "@/lib/members"
-import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -24,9 +23,7 @@ export default async function SettingPage({
   searchParams?: { success?: string; error?: string }
 }) {
   const session = await auth()
-  if (!session?.user?.id) redirect("/api/auth/signin")
-
-  const member = await getMember(session.user.id)
+  const member = await getMember(session!.user!.id)
   const { success, error } = searchParams ?? {}
 
   return (

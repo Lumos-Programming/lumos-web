@@ -34,14 +34,29 @@ cp .env.example .env.local
 ## 開発
 
 ```bash
-just dev       # Firestoreエミュレータ + Next.js 開発サーバーを起動
-just test      # テスト実行
-just lint      # ESLint
-just format    # Prettier
-just build     # プロダクションビルド
+just dev            # 開発サーバーを起動（エミュレータが未起動なら自動起動）
+just test           # テスト実行
+just lint           # ESLint
+just format         # Prettier
+just build          # プロダクションビルド
 ```
 
-> `just dev` はFirestoreエミュレータがすでに起動している場合、Next.jsのみを起動します。
+## Firestoreエミュレータ
+
+ローカル開発では Firebase Firestore エミュレータを使用します。プロジェクトIDは `lumos-web` で統一されています。
+
+```bash
+just emulator       # エミュレータをバックグラウンドで起動
+just emulator-stop  # エミュレータを停止
+just emulator-reset # エミュレータを再起動（データをリセット）
+```
+
+- エミュレータUI: http://localhost:4000/firestore
+- エミュレータのデータはインメモリのため、停止するとリセットされます
+- `just dev` 実行時にエミュレータが未起動であれば自動的に起動します
+- `just dev` を停止してもエミュレータは終了しません
+
+> **注意**: グローバルインストールの `firebase` コマンド（Homebrew等）は Node.js v25 と互換性がありません。必ず `pnpm exec firebase` を使用してください（justfile は自動的にこれを使用します）。
 
 ## 環境変数
 
