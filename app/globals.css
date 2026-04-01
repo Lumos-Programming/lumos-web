@@ -138,3 +138,52 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* 背景画像スライド */
+@keyframes backgroundSlide1 {
+  0% { opacity: 1; }
+  22.92% { opacity: 1; }
+  25% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes backgroundSlide2 {
+  0% { opacity: 0; }
+  22.92% { opacity: 0; }
+  25% { opacity: 1; }
+  47.92% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes backgroundSlide3 {
+  0% { opacity: 0; }
+  47.92% { opacity: 0; }
+  50% { opacity: 1; }
+  72.92% { opacity: 1; }
+  75% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes backgroundSlide4 {
+  0% { opacity: 0; }
+  72.92% { opacity: 0; }
+  75% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+.bg-slide-1 {
+  animation: backgroundSlide1 48s ease-in-out infinite;
+}
+
+.bg-slide-2 {
+  animation: backgroundSlide2 48s ease-in-out infinite;
+}
+
+.bg-slide-3 {
+  animation: backgroundSlide3 48s ease-in-out infinite;
+}
+
+.bg-slide-4 {
+  animation: backgroundSlide4 48s ease-in-out infinite;
+}
