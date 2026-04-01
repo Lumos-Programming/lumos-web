@@ -24,7 +24,7 @@ export const members: Member[] = [
     department: "環境情報学府",
     year: "2年",
     bio: "プロフィールを入力してください",
-    skills: ["devsecops", "インフラ全般", "応用情報技術者", "情報処理安全確保支援士"],
+    skills: ["DevSecOps", "インフラ全般", "応用情報技術者", "情報処理安全確保支援士"],
     image: "https://storage.googleapis.com/lumos-web-profile-data/shion1305.webp",
     social: {
       twitter: "https://x.com/shion1305",
