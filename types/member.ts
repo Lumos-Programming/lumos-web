@@ -1,5 +1,5 @@
 export type Member = {
-  id: number
+  id: string  // discordId
   name: string
   role: string
   department: string
@@ -8,7 +8,7 @@ export type Member = {
   skills: string[]
   image: string
   social?: {
-    twitter?: string
+    x?: string
     github?: string
     linkedin?: string
     website?: string

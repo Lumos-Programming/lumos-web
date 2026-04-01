@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth'
 import Discord from 'next-auth/providers/discord'
+import { getOrCreateMember } from '@/lib/members'
 
 /**
  * Check if a string is a valid Discord Snowflake ID
@@ -35,6 +36,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === 'discord') {
         // Use providerAccountId which is the Discord User ID (Snowflake)
         token.sub = account.providerAccountId
+        // Create or update member document in Firestore
+        await getOrCreateMember(
+          account.providerAccountId,
+          token.name ?? '',
+          token.picture ?? ''
+        )
       }
 
       // Check admin role on first sign in

@@ -1,30 +1,41 @@
 import { NextResponse } from "next/server"
-import { getDb } from "@/lib/firebase"
-import type { Profile } from "@/types/profile"
-
-// TODO: Replace with actual session userId once auth is implemented
-const userId = "placeholder"
+import { auth } from "@/lib/auth"
+import { getMember, updateMember } from "@/lib/members"
 
 export async function GET() {
-  // TODO: Wire up auth to get the real userId from the session
-  return NextResponse.json({ error: "Not implemented" }, { status: 501 })
+  const session = await auth()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const member = await getMember(session.user.id)
+  if (!member) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+
+  return NextResponse.json(member)
 }
 
 export async function PUT(request: Request) {
-  try {
-    const body: Profile = await request.json()
+  const session = await auth()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
 
-    const db = getDb()
-    await db.collection("profiles").doc(userId).set({
+  try {
+    const body = await request.json()
+
+    // Only allow updating non-SNS profile fields
+    await updateMember(session.user.id, {
       studentId: body.studentId,
       nickname: body.nickname,
       lastName: body.lastName,
       firstName: body.firstName,
       faculty: body.faculty,
       bio: body.bio,
-      line: body.line,
-      discord: body.discord,
-      github: body.github,
+      role: body.role,
+      year: body.year,
+      skills: body.skills,
       visibility: body.visibility,
     })
 
