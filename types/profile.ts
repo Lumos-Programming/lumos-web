@@ -6,8 +6,8 @@ export interface ProfileVisibility {
   faculty: boolean
   bio: boolean
   line: boolean
-  discord: boolean
   github: boolean
+  x: boolean
 }
 
 export interface Profile {
@@ -20,6 +20,10 @@ export interface Profile {
   line: string
   discord: string
   github: string
+  x: string
+  role?: string
+  year?: string
+  skills?: string[]
   visibility: ProfileVisibility
 }
 

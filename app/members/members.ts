@@ -2,7 +2,7 @@ import { Member } from "@/types/member";
 
 export const members: Member[] = [
   {
-    id: 1,
+    id: "1",
     name: "池田 駿",
     role: "会長",
     department: "環境情報学府",
@@ -11,14 +11,14 @@ export const members: Member[] = [
     skills: ["JavaScript", "Python", "C", "Linux", "応用情報技術者", "情報処理安全確保支援士（合格）"],
     image: "https://storage.googleapis.com/lumos-web-profile-data/tivo0921.jpg",
     social: {
-      twitter: "https://x.com/tivo0921",
+      x: "https://x.com/tivo0921",
       github: "https://github.com/tivo0921",
       linkedin: "https://www.linkedin.com/in/%E9%A7%BF-%E6%B1%A0%E7%94%B0-005221365/",
       website: "https://tivo0921.lumos-ynu.jp/",
     },
   },
   {
-    id: 2,
+    id: "2",
     name: "市川 詩恩",
     role: "テックリード",
     department: "環境情報学府",
@@ -27,14 +27,14 @@ export const members: Member[] = [
     skills: ["DevSecOps", "インフラ全般", "応用情報技術者", "情報処理安全確保支援士"],
     image: "https://storage.googleapis.com/lumos-web-profile-data/shion1305.webp",
     social: {
-      twitter: "https://x.com/shion1305",
+      x: "https://x.com/shion1305",
       github: "https://github.com/Shion1305",
       linkedin: "https://www.linkedin.com/in/shion1305/",
       website: "https://shion.pro/",
     },
   },
   {
-    id: 3,
+    id: "3",
     name: "野村 瑛吉",
     role: "アドバイザー",
     department: "環境情報学府",
@@ -43,14 +43,14 @@ export const members: Member[] = [
     skills: [],
     image: "/assets/lumoslogo.png",
     social: {
-      twitter: "",
+      x: "",
       github: "",
       linkedin: "",
       website: "",
     },
   },
   {
-    id: 4,
+    id: "4",
     name: "坪井 一馬",
     role: "運営",
     department: "理工学部",
@@ -59,7 +59,7 @@ export const members: Member[] = [
     skills: [],
     image: "/assets/lumoslogo.png",
     social: {
-      twitter: "",
+      x: "",
       github: "",
       linkedin: "",
       website: "",
