@@ -363,7 +363,11 @@ export default function OnboardingForm() {
     const errors: Partial<Record<keyof FormData, string>> = {}
     if (!form.lastName.trim()) errors.lastName = "姓を入力してください"
     if (!form.firstName.trim()) errors.firstName = "名を入力してください"
-    if (!form.studentId.trim()) errors.studentId = "学籍番号を入力してください"
+    if (!form.studentId.trim()) {
+      errors.studentId = "学籍番号を入力してください"
+    } else if (!/^\d{2}[A-Z0-9]{2}\d{3}$/.test(form.studentId.trim())) {
+      errors.studentId = "学籍番号の形式が正しくありません（例: 2164078 / 24HJ078）"
+    }
     setStep1Errors(errors)
     if (Object.keys(errors).length > 0) return
 
@@ -544,6 +548,7 @@ export default function OnboardingForm() {
     return score
   })())
 
+
   const dismissWelcome = useCallback(() => {
     setWelcomeFading(true)
     setTimeout(() => {
@@ -671,7 +676,6 @@ export default function OnboardingForm() {
     )
   }
 
-  const slideOffset = (currentStep - 1) * -100
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-purple-950 flex items-center justify-center p-4 relative overflow-hidden">
@@ -736,14 +740,11 @@ export default function OnboardingForm() {
           </div>
         </div>
 
-        {/* Card with sliding steps */}
+        {/* Card with active step */}
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-gray-800/50 overflow-hidden">
-          <div
-            className="flex transition-transform duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-            style={{ transform: `translateX(${slideOffset}%)` }}
-          >
+          <div>
             {/* Step 1 — 基本情報 */}
-            <div className="w-full flex-shrink-0 p-8">
+            {currentStep === 1 && <div className="p-8">
               <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">ようこそ、Lumosへ</h1>
                 <p className="text-muted-foreground mt-1 text-sm">まず、基本的な情報を入力してください。</p>
@@ -796,7 +797,7 @@ export default function OnboardingForm() {
                       setForm((f) => ({ ...f, studentId: e.target.value }))
                       if (step1Errors.studentId) setStep1Errors((p) => ({ ...p, studentId: undefined }))
                     }}
-                    placeholder="AB12345678"
+                    placeholder="2164078 / 24HJ078"
                     className={step1Errors.studentId ? "border-red-400" : ""}
                   />
                   {step1Errors.studentId && <p className="text-xs text-red-500">{step1Errors.studentId}</p>}
@@ -829,10 +830,10 @@ export default function OnboardingForm() {
                   {submitting ? "保存中..." : "次へ →"}
                 </Button>
               </div>
-            </div>
+            </div>}
 
             {/* Step 2 — 所属情報 */}
-            <div className="w-full flex-shrink-0 p-8">
+            {currentStep === 2 && <div className="p-8">
               <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">所属情報</h2>
                 <p className="text-muted-foreground mt-1 text-sm">所属する学部・学府や入学情報を入力してください。</p>
@@ -1273,10 +1274,10 @@ export default function OnboardingForm() {
                   {submitting ? "保存中..." : "次へ →"}
                 </Button>
               </div>
-            </div>
+            </div>}
 
             {/* Step 3 — SNS連携 */}
-            <div className="w-full flex-shrink-0 p-8">
+            {currentStep === 3 && <div className="p-8">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">SNSアカウントを連携</h2>
                 <p className="text-muted-foreground mt-1 text-sm">LINEの連携は必須です。GitHubとXは任意です。</p>
@@ -1406,10 +1407,10 @@ export default function OnboardingForm() {
                   次へ →
                 </Button>
               </div>
-            </div>
+            </div>}
 
             {/* Step 4 — 自己紹介 */}
-            <div className="w-full flex-shrink-0 p-8">
+            {currentStep === 4 && <div className="p-8">
               <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">自己紹介</h2>
                 <p className="text-muted-foreground mt-1 text-sm">自己紹介はメンバーページで表示されます。</p>
@@ -1436,10 +1437,10 @@ export default function OnboardingForm() {
                   {submitting ? "保存中..." : "次へ →"}
                 </Button>
               </div>
-            </div>
+            </div>}
 
             {/* Step 5 — 公開設定 */}
-            <div className="w-full flex-shrink-0 p-8">
+            {currentStep === 5 && <div className="p-8">
               <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">公開設定</h2>
                 <p className="text-muted-foreground mt-1 text-sm">各情報を誰に公開するか設定してください。</p>
@@ -1545,7 +1546,7 @@ export default function OnboardingForm() {
                   {submitting ? "登録中..." : "登録完了"}
                 </Button>
               </div>
-            </div>
+            </div>}
           </div>
         </div>
       </div>
