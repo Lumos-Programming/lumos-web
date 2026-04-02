@@ -1,12 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback, type ChangeEvent } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { VisibilityToggle } from "@/components/ui/visibility-toggle"
+import Cropper from "react-easy-crop"
+import type { Area } from "react-easy-crop"
 import ReactMarkdown from "react-markdown"
 import Link from "next/link"
 import type { Profile, VisibilityLevel } from "@/types/profile"
@@ -69,6 +72,19 @@ export default function ProfileEdit() {
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE)
   const [allowPublic, setAllowPublic] = useState(true)
   const [loading, setLoading] = useState(true)
+  // Image state
+  const [discordId, setDiscordId] = useState("")
+  const [discordAvatarHash, setDiscordAvatarHash] = useState("")
+  const [lineAvatar, setLineAvatar] = useState("")
+  const [lineLinked, setLineLinked] = useState(false)
+  const [faceImageUrl, setFaceImageUrl] = useState("")
+  const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+  const [imageUploading, setImageUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch("/api/profile")
@@ -97,6 +113,12 @@ export default function ProfileEdit() {
             const hasPublic = VISIBILITY_FIELD_KEYS.some((k) => vis[k] === "public")
             setAllowPublic(hasPublic)
           }
+          if (data.discordId) setDiscordId(data.discordId)
+          if (data.discordAvatar) setDiscordAvatarHash(data.discordAvatar)
+          if (data.lineAvatar) setLineAvatar(data.lineAvatar)
+          setLineLinked(!!data.lineId)
+          if (data.faceImage) setFaceImageUrl(data.faceImage)
+          if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
           setProfile({
             studentId: data.studentId ?? "",
             nickname: data.nickname ?? "",
@@ -122,7 +144,7 @@ export default function ProfileEdit() {
       const response = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profile, allowPublic }),
+        body: JSON.stringify({ ...profile, allowPublic, primaryAvatar }),
       })
 
       if (response.ok) {
@@ -135,6 +157,60 @@ export default function ProfileEdit() {
       alert("エラーが発生しました。もう一度お試しください。")
     }
   }
+
+  const handleFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setCropImageSrc(reader.result as string)
+    reader.readAsDataURL(file)
+    e.target.value = ""
+  }, [])
+
+  const getCroppedImage = useCallback(async (src: string, pixelCrop: Area): Promise<Blob> => {
+    const image = new window.Image()
+    image.crossOrigin = "anonymous"
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve()
+      image.onerror = reject
+      image.src = src
+    })
+    const canvas = document.createElement("canvas")
+    canvas.width = 400
+    canvas.height = 400
+    const ctx = canvas.getContext("2d")!
+    ctx.drawImage(image, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, 400, 400)
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
+        "image/webp",
+        0.85
+      )
+    })
+  }, [])
+
+  const handleCropConfirm = useCallback(async () => {
+    if (!cropImageSrc || !croppedAreaPixels) return
+    setImageUploading(true)
+    try {
+      const blob = await getCroppedImage(cropImageSrc, croppedAreaPixels)
+      const formData = new FormData()
+      formData.append("image", blob, "profile.webp")
+      const res = await fetch("/api/profile/image", { method: "POST", body: formData })
+      if (res.ok) {
+        const { url } = await res.json()
+        setFaceImageUrl(url)
+        setCropImageSrc(null)
+      } else {
+        const data = await res.json()
+        alert(data.error ?? "アップロードに失敗しました")
+      }
+    } catch {
+      alert("アップロードに失敗しました")
+    } finally {
+      setImageUploading(false)
+    }
+  }, [cropImageSrc, croppedAreaPixels, getCroppedImage])
 
   if (loading) {
     return <div className="text-center py-8">読み込み中...</div>
@@ -234,6 +310,99 @@ export default function ProfileEdit() {
               </div>
             </div>
           )}
+          {/* プロフィール画像セクション */}
+          {isEditing && (
+            <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+              <Label className="text-base font-semibold">プロフィール画像</Label>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="w-24 h-24 relative rounded-full overflow-hidden ring-4 ring-purple-100 dark:ring-purple-900/50 flex-shrink-0">
+                  <Image
+                    src={faceImageUrl || "/placeholder.svg"}
+                    alt="プロフィール画像"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={imageUploading}
+                  >
+                    画像を変更
+                  </Button>
+                </div>
+              </div>
+
+              {/* Crop UI */}
+              {cropImageSrc && (
+                <div className="space-y-3">
+                  <div className="relative w-full" style={{ height: 280 }}>
+                    <Cropper
+                      image={cropImageSrc}
+                      crop={crop}
+                      zoom={zoom}
+                      aspect={1}
+                      cropShape="round"
+                      onCropChange={setCrop}
+                      onZoomChange={setZoom}
+                      onCropComplete={(_, area) => setCroppedAreaPixels(area)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground flex-shrink-0">ズーム</span>
+                    <input type="range" min={1} max={3} step={0.1} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="flex-1" />
+                  </div>
+                  <div className="flex gap-2 justify-center">
+                    <Button variant="ghost" size="sm" onClick={() => setCropImageSrc(null)}>キャンセル</Button>
+                    <Button size="sm" onClick={handleCropConfirm} disabled={imageUploading}>{imageUploading ? "アップロード中..." : "切り抜き"}</Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Primary avatar selection */}
+              <div className="space-y-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">公開ページの表示画像</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { value: "face" as const, label: "顔写真", src: faceImageUrl || "/placeholder.svg", enabled: true },
+                    { value: "discord" as const, label: "Discord", src: discordAvatarHash ? `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatarHash}.png` : "/placeholder.svg", enabled: !!discordAvatarHash },
+                    { value: "line" as const, label: "LINE", src: lineAvatar || "/placeholder.svg", enabled: lineLinked && !!lineAvatar },
+                    { value: "default" as const, label: "なし", src: "/placeholder.svg", enabled: true },
+                  ]).map(({ value, label, src, enabled }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      disabled={!enabled}
+                      onClick={() => setPrimaryAvatar(value)}
+                      className={[
+                        "flex items-center gap-2 rounded-lg border-2 p-2 transition-all duration-200 text-left",
+                        primaryAvatar === value
+                          ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 dark:border-purple-600"
+                          : "border-gray-200 dark:border-gray-700",
+                        !enabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:border-purple-300",
+                      ].join(" ")}
+                    >
+                      <div className="w-8 h-8 relative rounded-full overflow-hidden flex-shrink-0">
+                        <Image src={src} alt="" fill className="object-cover" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {isEditing ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {PROFILE_FIELDS.map((key) => {
