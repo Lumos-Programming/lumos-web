@@ -176,7 +176,9 @@ export default function OnboardingForm() {
     return s >= 1 && s <= 5 ? s : 1
   })()
 
-  const [showWelcome, setShowWelcome] = useState(true)
+  const [showWelcome, setShowWelcome] = useState(
+    !searchParams.get("step") && !searchParams.get("success") && !searchParams.get("error")
+  )
   const [welcomeFading, setWelcomeFading] = useState(false)
   const [currentStep, setCurrentStep] = useState(initialStep)
   const [form, setForm] = useState<FormData>(DEFAULT_FORM)
@@ -184,10 +186,13 @@ export default function OnboardingForm() {
   const [visibility, setVisibility] = useState<VisibilityForm>(DEFAULT_VISIBILITY)
   const [lineUsername, setLineUsername] = useState("")
   const [lineLinked, setLineLinked] = useState(false)
+  const [lineAvatar, setLineAvatar] = useState("")
   const [githubUsername, setGithubUsername] = useState("")
   const [githubLinked, setGithubLinked] = useState(false)
+  const [githubAvatar, setGithubAvatar] = useState("")
   const [xUsername, setXUsername] = useState("")
   const [xLinked, setXLinked] = useState(false)
+  const [xAvatar, setXAvatar] = useState("")
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [step1Errors, setStep1Errors] = useState<Partial<Record<keyof FormData, string>>>({})
@@ -265,10 +270,13 @@ export default function OnboardingForm() {
           if (typeof data.allowPublic === "boolean") setAllowPublic(data.allowPublic)
           setLineLinked(!!data.lineId)
           setLineUsername(data.line ?? "")
+          setLineAvatar(data.lineAvatar ?? "")
           setGithubLinked(!!data.githubId)
           setGithubUsername(data.github ?? "")
+          setGithubAvatar(data.githubAvatar ?? "")
           setXLinked(!!data.xId)
           setXUsername(data.x ?? "")
+          setXAvatar(data.xAvatar ?? "")
         }
       })
       .catch(console.error)
@@ -285,19 +293,19 @@ export default function OnboardingForm() {
       setLineLinked(true)
       fetch("/api/profile")
         .then((res) => res.json())
-        .then((data) => { if (data?.line) setLineUsername(data.line) })
+        .then((data) => { if (data?.line) { setLineUsername(data.line); setLineAvatar(data.lineAvatar ?? "") } })
         .catch(console.error)
     } else if (success === "github_linked") {
       setGithubLinked(true)
       fetch("/api/profile")
         .then((res) => res.json())
-        .then((data) => { if (data?.github) setGithubUsername(data.github) })
+        .then((data) => { if (data?.github) { setGithubUsername(data.github); setGithubAvatar(data.githubAvatar ?? "") } })
         .catch(console.error)
     } else if (success === "x_linked") {
       setXLinked(true)
       fetch("/api/profile")
         .then((res) => res.json())
-        .then((data) => { if (data?.x) setXUsername(data.x) })
+        .then((data) => { if (data?.x) { setXUsername(data.x); setXAvatar(data.xAvatar ?? "") } })
         .catch(console.error)
     } else if (error === "line_link_failed") {
       setStep3Error("LINE連携に失敗しました。もう一度お試しください。")
@@ -678,7 +686,7 @@ export default function OnboardingForm() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-purple-950 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-purple-950 flex items-start justify-center pt-8 pb-8 px-4 relative overflow-hidden">
       {/* 背景装飾 */}
       <div className="absolute top-[-10%] right-[-5%] w-72 h-72 bg-purple-200/30 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-5%] w-64 h-64 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
@@ -794,7 +802,7 @@ export default function OnboardingForm() {
                     id="studentId"
                     value={form.studentId}
                     onChange={(e) => {
-                      setForm((f) => ({ ...f, studentId: e.target.value }))
+                      setForm((f) => ({ ...f, studentId: e.target.value.toUpperCase() }))
                       if (step1Errors.studentId) setStep1Errors((p) => ({ ...p, studentId: undefined }))
                     }}
                     placeholder="2164078 / 24HJ078"
@@ -1298,6 +1306,11 @@ export default function OnboardingForm() {
                       <div className="w-10 h-10 rounded-full bg-[#06C755] flex items-center justify-center flex-shrink-0">
                         <LineIcon className="w-6 h-6 text-white" />
                       </div>
+                      {lineLinked && lineAvatar && (
+                        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 -ml-5 ring-2 ring-white dark:ring-gray-900">
+                          <img src={lineAvatar} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                       <div>
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold text-gray-900 dark:text-gray-100">LINE</span>
@@ -1310,17 +1323,18 @@ export default function OnboardingForm() {
                         )}
                       </div>
                     </div>
-                    {lineLinked ? (
-                      <CheckCircleIcon className="w-6 h-6 text-green-500 flex-shrink-0 mt-1 animate-[fadeInUp_300ms_ease_both]" />
-                    ) : (
-                      <a
-                        href="/api/auth/link/line?redirectTo=/internal/onboarding%3Fstep%3D3"
-                        className="flex-shrink-0 flex items-center gap-1.5 bg-[#06C755] hover:bg-[#05a848] text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors"
-                      >
-                        <LineIcon className="w-4 h-4" />
-                        連携する
-                      </a>
-                    )}
+                    <a
+                      href="/api/auth/link/line?redirectTo=/internal/onboarding%3Fstep%3D3"
+                      className={[
+                        "flex-shrink-0 flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors",
+                        lineLinked
+                          ? "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                          : "bg-[#06C755] hover:bg-[#05a848] text-white",
+                      ].join(" ")}
+                    >
+                      <LineIcon className="w-4 h-4" />
+                      {lineLinked ? "再連携" : "連携する"}
+                    </a>
                   </div>
                 </div>
 
@@ -1338,6 +1352,11 @@ export default function OnboardingForm() {
                       <div className="w-8 h-8 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center flex-shrink-0">
                         <GithubIcon className="w-4 h-4 text-white dark:text-gray-900" />
                       </div>
+                      {githubLinked && githubAvatar && (
+                        <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 -ml-5 ring-2 ring-white dark:ring-gray-900">
+                          <img src={githubAvatar} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                       <div>
                         <span className="font-medium text-gray-900 dark:text-gray-100">GitHub</span>
                         {githubLinked && (
@@ -1345,17 +1364,18 @@ export default function OnboardingForm() {
                         )}
                       </div>
                     </div>
-                    {githubLinked ? (
-                      <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 animate-[fadeInUp_300ms_ease_both]" />
-                    ) : (
-                      <a
-                        href="/api/auth/link/github?redirectTo=/internal/onboarding%3Fstep%3D3"
-                        className="flex-shrink-0 flex items-center gap-1.5 bg-gray-900 hover:bg-gray-700 dark:bg-gray-100 dark:hover:bg-gray-300 dark:text-gray-900 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-                      >
-                        <GithubIcon className="w-3.5 h-3.5" />
-                        連携する
-                      </a>
-                    )}
+                    <a
+                      href="/api/auth/link/github?redirectTo=/internal/onboarding%3Fstep%3D3"
+                      className={[
+                        "flex-shrink-0 flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors",
+                        githubLinked
+                          ? "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                          : "bg-gray-900 hover:bg-gray-700 dark:bg-gray-100 dark:hover:bg-gray-300 dark:text-gray-900 text-white",
+                      ].join(" ")}
+                    >
+                      <GithubIcon className="w-3.5 h-3.5" />
+                      {githubLinked ? "再連携" : "連携する"}
+                    </a>
                   </div>
                 </div>
 
@@ -1373,6 +1393,11 @@ export default function OnboardingForm() {
                       <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center flex-shrink-0">
                         <XIcon className="w-4 h-4 text-white" />
                       </div>
+                      {xLinked && xAvatar && (
+                        <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 -ml-5 ring-2 ring-white dark:ring-gray-900">
+                          <img src={xAvatar} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                       <div>
                         <span className="font-medium text-gray-900 dark:text-gray-100">X (Twitter)</span>
                         {xLinked && (
@@ -1380,17 +1405,18 @@ export default function OnboardingForm() {
                         )}
                       </div>
                     </div>
-                    {xLinked ? (
-                      <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 animate-[fadeInUp_300ms_ease_both]" />
-                    ) : (
-                      <a
-                        href="/api/auth/link/x?redirectTo=/internal/onboarding%3Fstep%3D3"
-                        className="flex-shrink-0 flex items-center gap-1.5 bg-black hover:bg-gray-800 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-                      >
-                        <XIcon className="w-3.5 h-3.5" />
-                        連携する
-                      </a>
-                    )}
+                    <a
+                      href="/api/auth/link/x?redirectTo=/internal/onboarding%3Fstep%3D3"
+                      className={[
+                        "flex-shrink-0 flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors",
+                        xLinked
+                          ? "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                          : "bg-black hover:bg-gray-800 text-white",
+                      ].join(" ")}
+                    >
+                      <XIcon className="w-3.5 h-3.5" />
+                      {xLinked ? "再連携" : "連携する"}
+                    </a>
                   </div>
                 </div>
 
