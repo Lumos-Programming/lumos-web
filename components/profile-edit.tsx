@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback, type ChangeEvent } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent } from "react"
 import Image from "next/image"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { VisibilityToggle } from "@/components/ui/visibility-toggle"
+import { toast } from "@/hooks/use-toast"
+import { cropAndResizeImage } from "@/lib/image-crop"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import ReactMarkdown from "react-markdown"
@@ -25,6 +27,8 @@ const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "
   nickname: "ニックネーム",
   lastName: "姓",
   firstName: "名",
+  lastNameRomaji: "姓（ローマ字）",
+  firstNameRomaji: "名（ローマ字）",
   currentOrg: "現在の所属",
   birthDate: "誕生日",
   bio: "自己紹介",
@@ -43,6 +47,8 @@ const DEFAULT_PROFILE: Profile = {
   nickname: "",
   lastName: "",
   firstName: "",
+  lastNameRomaji: "",
+  firstNameRomaji: "",
   bio: "",
   line: "",
   discord: "",
@@ -84,6 +90,9 @@ export default function ProfileEdit() {
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const [imageUploading, setImageUploading] = useState(false)
+  const [faculty, setFaculty] = useState("")
+  const [year, setYear] = useState("")
+  const [role, setRole] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -113,6 +122,11 @@ export default function ProfileEdit() {
             const hasPublic = VISIBILITY_FIELD_KEYS.some((k) => vis[k] === "public")
             setAllowPublic(hasPublic)
           }
+          const currentFaculty = data.enrollments?.find((e: { isCurrent?: boolean }) => e.isCurrent)?.faculty ?? ""
+          setFaculty(currentFaculty)
+          const fiscalYear = new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1
+          setYear(data.yearByFiscal?.[String(fiscalYear)] ?? "")
+          setRole(data.role ?? "")
           if (data.discordId) setDiscordId(data.discordId)
           if (data.discordAvatar) setDiscordAvatarHash(data.discordAvatar)
           if (data.lineAvatar) setLineAvatar(data.lineAvatar)
@@ -124,6 +138,8 @@ export default function ProfileEdit() {
             nickname: data.nickname ?? "",
             lastName: data.lastName ?? "",
             firstName: data.firstName ?? "",
+            lastNameRomaji: data.lastNameRomaji ?? "",
+            firstNameRomaji: data.firstNameRomaji ?? "",
             bio: data.bio ?? "",
             birthDate: data.birthDate ?? "",
             currentOrg: data.currentOrg ?? "",
@@ -167,33 +183,11 @@ export default function ProfileEdit() {
     e.target.value = ""
   }, [])
 
-  const getCroppedImage = useCallback(async (src: string, pixelCrop: Area): Promise<Blob> => {
-    const image = new window.Image()
-    image.crossOrigin = "anonymous"
-    await new Promise<void>((resolve, reject) => {
-      image.onload = () => resolve()
-      image.onerror = reject
-      image.src = src
-    })
-    const canvas = document.createElement("canvas")
-    canvas.width = 400
-    canvas.height = 400
-    const ctx = canvas.getContext("2d")!
-    ctx.drawImage(image, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, 400, 400)
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
-        "image/webp",
-        0.85
-      )
-    })
-  }, [])
-
   const handleCropConfirm = useCallback(async () => {
     if (!cropImageSrc || !croppedAreaPixels) return
     setImageUploading(true)
     try {
-      const blob = await getCroppedImage(cropImageSrc, croppedAreaPixels)
+      const blob = await cropAndResizeImage(cropImageSrc, croppedAreaPixels, { maxSize: 1024 })
       const formData = new FormData()
       formData.append("image", blob, "profile.webp")
       const res = await fetch("/api/profile/image", { method: "POST", body: formData })
@@ -202,15 +196,82 @@ export default function ProfileEdit() {
         setFaceImageUrl(url)
         setCropImageSrc(null)
       } else {
-        const data = await res.json()
-        alert(data.error ?? "アップロードに失敗しました")
+        const data = await res.json().catch(() => ({}))
+        toast({
+          variant: "destructive",
+          title: "アップロードに失敗しました",
+          description: data.error || "しばらく経ってから再度お試しください。",
+        })
       }
     } catch {
-      alert("アップロードに失敗しました")
+      toast({
+        variant: "destructive",
+        title: "アップロードに失敗しました",
+        description: "ネットワークエラーが発生しました。接続を確認して再度お試しください。",
+      })
     } finally {
       setImageUploading(false)
     }
-  }, [cropImageSrc, croppedAreaPixels, getCroppedImage])
+  }, [cropImageSrc, croppedAreaPixels])
+
+  const resolveAvatar = useCallback((id: string, avatar: string): string => {
+    if (!avatar) return "/placeholder.svg"
+    if (avatar.startsWith("http")) return avatar
+    return `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`
+  }, [])
+
+  const discordAvatarUrl = useMemo(() => resolveAvatar(discordId, discordAvatarHash), [resolveAvatar, discordId, discordAvatarHash])
+
+  const getInitials = useCallback(() => {
+    const f = profile.firstNameRomaji?.trim()
+    const l = profile.lastNameRomaji?.trim()
+    if (f && l) return `${f[0].toUpperCase()}. ${l[0].toUpperCase()}.`
+    return ""
+  }, [profile.firstNameRomaji, profile.lastNameRomaji])
+
+  const internalPreview = useMemo(() => {
+    const v = profile.visibility
+    const name =
+      v.lastName !== "private" && v.firstName !== "private"
+        ? `${profile.lastName} ${profile.firstName}`.trim()
+        : v.nickname !== "private"
+        ? profile.nickname
+        : getInitials() || profile.discord
+    const dept = v.faculty !== "private" ? faculty : ""
+    const mainImage = faceImageUrl || "/assets/avatar-placeholder.svg"
+    const hasFace = !!faceImageUrl
+    return { name: name || getInitials() || "名前未設定", department: dept, image: mainImage, hasFace, snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined }
+  }, [profile, faculty, faceImageUrl, discordAvatarUrl, getInitials])
+
+  const externalPreview = useMemo(() => {
+    const v = profile.visibility
+    const name =
+      v.lastName === "public" && v.firstName === "public"
+        ? `${profile.lastName} ${profile.firstName}`.trim()
+        : v.nickname === "public"
+        ? profile.nickname
+        : getInitials() || profile.discord
+    const dept = v.faculty === "public" ? faculty : ""
+
+    let image: string
+    let hasFace = true
+    const pa = primaryAvatar
+    switch (pa) {
+      case "face":
+        if (faceImageUrl) { image = faceImageUrl } else { image = "/assets/avatar-placeholder.svg"; hasFace = false }
+        break
+      case "discord":
+        image = discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : "/assets/avatar-placeholder.svg"
+        break
+      case "line":
+        image = lineAvatar || "/assets/avatar-placeholder.svg"
+        break
+      default:
+        image = "/assets/avatar-placeholder.svg"
+        hasFace = false
+    }
+    return { name: name || getInitials() || "名前未設定", role, department: dept, year, image, hasFace }
+  }, [profile, faculty, year, role, faceImageUrl, primaryAvatar, discordAvatarUrl, lineAvatar, getInitials])
 
   if (loading) {
     return <div className="text-center py-8">読み込み中...</div>
@@ -258,7 +319,7 @@ export default function ProfileEdit() {
               </div>
               <div className="flex items-start gap-2">
                 <span className="inline-block px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-medium flex-shrink-0">内部のみ</span>
-                <span>Lumosにログインしたメンバーだけが閲覧できます。外部サイトには表示されません。</span>
+                <span>Lumosメンバーだけが閲覧できます。外部向けHPには表示されません。</span>
               </div>
               <div className="flex items-start gap-2">
                 <span className="inline-block px-1.5 py-0.5 rounded-full bg-green-600 text-white font-medium flex-shrink-0">外部公開</span>
@@ -307,6 +368,82 @@ export default function ProfileEdit() {
                   "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200",
                   allowPublic ? "translate-x-5" : "translate-x-0.5",
                 ].join(" ")} />
+              </div>
+            </div>
+          )}
+          {/* 表示プレビュー */}
+          {isEditing && (
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">表示プレビュー</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* 内部メンバーページ */}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground text-center">内部メンバーページ</p>
+                  <div className="flex flex-col items-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/60 p-4">
+                    <div className="relative flex-shrink-0">
+                      <div className="w-16 h-16 relative rounded-full overflow-hidden ring-2 ring-purple-200 dark:ring-purple-700">
+                        <Image
+                          src={internalPreview.image}
+                          alt="内部プレビュー"
+                          fill
+                          className="object-cover"
+                        />
+                        {!internalPreview.hasFace && (
+                          <div className="absolute inset-0 flex items-end justify-center bg-black/20">
+                            <span className="text-[10px] text-white bg-black/50 px-1 rounded mb-1">あとで設定</span>
+                          </div>
+                        )}
+                      </div>
+                      {internalPreview.snsAvatar && (
+                        <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
+                          <Image src={internalPreview.snsAvatar} alt="" fill className="object-cover" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight truncate w-full text-center">
+                      {internalPreview.name}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-full text-center">
+                      {internalPreview.department}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 外部HP */}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground text-center">外部HP</p>
+                  <div className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+                    <div className={allowPublic ? "" : "opacity-40"}>
+                      <div className="aspect-square relative w-full">
+                        <Image
+                          src={externalPreview.image}
+                          alt="外部プレビュー"
+                          fill
+                          className="object-cover"
+                        />
+                        {!externalPreview.hasFace && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                            <span className="text-xs text-white bg-black/50 px-2 py-0.5 rounded">あとで設定</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <p className="text-base font-bold text-gray-900 dark:text-gray-100 truncate">{externalPreview.name}</p>
+                        {externalPreview.role && (
+                          <p className="text-sm font-medium text-purple-600 dark:text-purple-400 truncate">{externalPreview.role}</p>
+                        )}
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                          {[externalPreview.department, externalPreview.year].filter(Boolean).join(" ")}
+                        </p>
+                      </div>
+                    </div>
+                    {!allowPublic && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="bg-gray-800/80 text-white text-sm font-semibold px-3 py-1.5 rounded-lg">HP掲載 OFF</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -490,6 +627,16 @@ export default function ProfileEdit() {
                         onChange={(e) => setProfile({ ...profile, birthDate: e.target.value })}
                         className="block w-full"
                       />
+                    ) : key === "lastNameRomaji" || key === "firstNameRomaji" ? (
+                      <Input
+                        value={profile[key] as string ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value.replace(/[^A-Za-z\s-]/g, "")
+                          const capitalized = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase()
+                          setProfile({ ...profile, [key]: capitalized })
+                        }}
+                        placeholder={key === "lastNameRomaji" ? "Yamada" : "Taro"}
+                      />
                     ) : (
                       <Input
                         value={profile[key] as string ?? ""}
@@ -498,7 +645,9 @@ export default function ProfileEdit() {
                       />
                     )}
 
-                    {key === "studentId" ? (
+                    {key === "lastNameRomaji" || key === "firstNameRomaji" ? (
+                      <p className="text-xs text-gray-400">イニシャル表示に使用されます</p>
+                    ) : key === "studentId" ? (
                       <div className="flex items-center space-x-2">
                         <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                           非公開（固定）
@@ -531,6 +680,7 @@ export default function ProfileEdit() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {PROFILE_FIELDS.map((key) => {
                 if (SNS_FIELDS.has(key)) return null
+                if (key === "lastNameRomaji" || key === "firstNameRomaji") return null
                 const visLevel = profile.visibility[key as keyof typeof profile.visibility]
                 if (!visLevel || visLevel === "private") return null
                 if (key === "firstName") return null

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback, type ChangeEvent } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import Cropper from "react-easy-crop"
@@ -10,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { VisibilityToggle } from "@/components/ui/visibility-toggle"
+import { toast } from "@/hooks/use-toast"
+import { cropAndResizeImage } from "@/lib/image-crop"
 import { MEMBER_TYPES, ENROLLMENT_TYPES, ADMISSION_YEARS, FACULTIES, getFacultyOptions } from "@/types/profile"
 import type { MemberType, EnrollmentType } from "@/types/profile"
 import type { VisibilityLevel } from "@/types/profile"
@@ -18,6 +20,8 @@ interface FormData {
   // Step 1
   lastName: string
   firstName: string
+  lastNameRomaji: string
+  firstNameRomaji: string
   studentId: string
   birthDate: string
   nickname: string
@@ -57,6 +61,8 @@ interface VisibilityForm {
 const DEFAULT_FORM: FormData = {
   lastName: "",
   firstName: "",
+  lastNameRomaji: "",
+  firstNameRomaji: "",
   studentId: "",
   birthDate: "",
   nickname: "",
@@ -281,6 +287,8 @@ export default function OnboardingForm() {
           setForm({
             lastName: data.lastName ?? "",
             firstName: data.firstName ?? "",
+            lastNameRomaji: data.lastNameRomaji ?? "",
+            firstNameRomaji: data.firstNameRomaji ?? "",
             studentId: data.studentId ?? "",
             birthDate: data.birthDate ?? "",
             nickname: data.nickname ?? "",
@@ -379,6 +387,8 @@ export default function OnboardingForm() {
           studentId: data.studentId,
           lastName: data.lastName,
           firstName: data.firstName,
+          lastNameRomaji: data.lastNameRomaji,
+          firstNameRomaji: data.firstNameRomaji,
           nickname: data.nickname,
           birthDate: data.birthDate,
           bio: data.bio,
@@ -418,6 +428,16 @@ export default function OnboardingForm() {
     const errors: Partial<Record<keyof FormData, string>> = {}
     if (!form.lastName.trim()) errors.lastName = "姓を入力してください"
     if (!form.firstName.trim()) errors.firstName = "名を入力してください"
+    if (!form.lastNameRomaji.trim()) {
+      errors.lastNameRomaji = "姓（ローマ字）を入力してください"
+    } else if (!/^[A-Za-z\s-]+$/.test(form.lastNameRomaji.trim())) {
+      errors.lastNameRomaji = "ローマ字（半角英字）で入力してください"
+    }
+    if (!form.firstNameRomaji.trim()) {
+      errors.firstNameRomaji = "名（ローマ字）を入力してください"
+    } else if (!/^[A-Za-z\s-]+$/.test(form.firstNameRomaji.trim())) {
+      errors.firstNameRomaji = "ローマ字（半角英字）で入力してください"
+    }
     if (!form.studentId.trim()) {
       errors.studentId = "学籍番号を入力してください"
     } else if (!/^\d{2}[A-Z0-9]{2}\d{3}$/.test(form.studentId.trim())) {
@@ -567,6 +587,64 @@ export default function OnboardingForm() {
     } catch { /* non-blocking */ }
   }, [allowPublic, visibility])
 
+  const resolveDiscordAvatarUrl = useCallback((id: string, avatar: string): string => {
+    if (!avatar) return "/placeholder.svg"
+    if (avatar.startsWith("http")) return avatar
+    return `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`
+  }, [])
+
+  const discordAvatarUrl = useMemo(() => resolveDiscordAvatarUrl(discordId, discordAvatar), [resolveDiscordAvatarUrl, discordId, discordAvatar])
+
+  const getOnbInitials = useCallback(() => {
+    const f = form.firstNameRomaji?.trim()
+    const l = form.lastNameRomaji?.trim()
+    if (f && l) return `${f[0].toUpperCase()}. ${l[0].toUpperCase()}.`
+    return ""
+  }, [form.firstNameRomaji, form.lastNameRomaji])
+
+  const onbInternalPreview = useMemo(() => {
+    const v = visibility
+    const name =
+      v.lastName !== "private" && v.firstName !== "private"
+        ? `${form.lastName} ${form.firstName}`.trim()
+        : v.nickname !== "private"
+        ? form.nickname
+        : getOnbInitials()
+    const dept = v.faculty !== "private" ? form.faculty : ""
+    const mainImage = faceImageUrl || "/assets/avatar-placeholder.svg"
+    const hasFace = !!faceImageUrl
+    return { name: name || getOnbInitials() || "名前未設定", department: dept, image: mainImage, hasFace, snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined }
+  }, [visibility, form.lastName, form.firstName, form.nickname, form.faculty, faceImageUrl, discordAvatarUrl, getOnbInitials])
+
+  const onbExternalPreview = useMemo(() => {
+    const v = visibility
+    const name =
+      v.lastName === "public" && v.firstName === "public"
+        ? `${form.lastName} ${form.firstName}`.trim()
+        : v.nickname === "public"
+        ? form.nickname
+        : getOnbInitials()
+    const dept = v.faculty === "public" ? form.faculty : ""
+
+    let image: string
+    let hasFace = true
+    switch (primaryAvatar) {
+      case "face":
+        if (faceImageUrl) { image = faceImageUrl } else { image = "/assets/avatar-placeholder.svg"; hasFace = false }
+        break
+      case "discord":
+        image = discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : "/assets/avatar-placeholder.svg"
+        break
+      case "line":
+        image = lineAvatar || "/assets/avatar-placeholder.svg"
+        break
+      default:
+        image = "/assets/avatar-placeholder.svg"
+        hasFace = false
+    }
+    return { name: name || getOnbInitials() || "名前未設定", department: dept, year: form.schoolYear, image, hasFace }
+  }, [visibility, form.lastName, form.firstName, form.nickname, form.faculty, form.schoolYear, faceImageUrl, primaryAvatar, discordAvatarUrl, lineAvatar, getOnbInitials])
+
   const handleFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -577,43 +655,11 @@ export default function OnboardingForm() {
     e.target.value = ""
   }, [])
 
-  const getCroppedImage = useCallback(async (src: string, pixelCrop: Area): Promise<Blob> => {
-    const image = new window.Image()
-    image.crossOrigin = "anonymous"
-    await new Promise<void>((resolve, reject) => {
-      image.onload = () => resolve()
-      image.onerror = reject
-      image.src = src
-    })
-    const canvas = document.createElement("canvas")
-    canvas.width = 400
-    canvas.height = 400
-    const ctx = canvas.getContext("2d")!
-    ctx.drawImage(
-      image,
-      pixelCrop.x,
-      pixelCrop.y,
-      pixelCrop.width,
-      pixelCrop.height,
-      0,
-      0,
-      400,
-      400
-    )
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
-        "image/webp",
-        0.85
-      )
-    })
-  }, [])
-
   const handleCropConfirm = useCallback(async () => {
     if (!cropImageSrc || !croppedAreaPixels) return
     setImageUploading(true)
     try {
-      const blob = await getCroppedImage(cropImageSrc, croppedAreaPixels)
+      const blob = await cropAndResizeImage(cropImageSrc, croppedAreaPixels, { maxSize: 1024 })
       const formData = new FormData()
       formData.append("image", blob, "profile.webp")
       const res = await fetch("/api/profile/image", { method: "POST", body: formData })
@@ -622,15 +668,23 @@ export default function OnboardingForm() {
         setFaceImageUrl(url)
         setCropImageSrc(null)
       } else {
-        const data = await res.json()
-        alert(data.error ?? "アップロードに失敗しました")
+        const data = await res.json().catch(() => ({}))
+        toast({
+          variant: "destructive",
+          title: "アップロードに失敗しました",
+          description: data.error || "しばらく経ってから再度お試しください。",
+        })
       }
     } catch {
-      alert("アップロードに失敗しました")
+      toast({
+        variant: "destructive",
+        title: "アップロードに失敗しました",
+        description: "ネットワークエラーが発生しました。接続を確認して再度お試しください。",
+      })
     } finally {
       setImageUploading(false)
     }
-  }, [cropImageSrc, croppedAreaPixels, getCroppedImage])
+  }, [cropImageSrc, croppedAreaPixels])
 
   const handleComplete = async () => {
     setSubmitting(true)
@@ -642,6 +696,8 @@ export default function OnboardingForm() {
           studentId: form.studentId,
           lastName: form.lastName,
           firstName: form.firstName,
+          lastNameRomaji: form.lastNameRomaji,
+          firstNameRomaji: form.firstNameRomaji,
           nickname: form.nickname,
           birthDate: form.birthDate,
           bio: form.bio,
@@ -943,6 +999,45 @@ export default function OnboardingForm() {
                       className={step1Errors.firstName ? "border-red-400" : ""}
                     />
                     {step1Errors.firstName && <p className="text-xs text-red-500">{step1Errors.firstName}</p>}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 animate-[fadeInUp_300ms_90ms_ease_both]">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="lastNameRomaji">
+                      姓（ローマ字） <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="lastNameRomaji"
+                      value={form.lastNameRomaji}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/[^A-Za-z\s-]/g, "")
+                        const capitalized = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase()
+                        setForm((f) => ({ ...f, lastNameRomaji: capitalized }))
+                        if (step1Errors.lastNameRomaji) setStep1Errors((p) => ({ ...p, lastNameRomaji: undefined }))
+                      }}
+                      placeholder="Yamada"
+                      className={step1Errors.lastNameRomaji ? "border-red-400" : ""}
+                    />
+                    {step1Errors.lastNameRomaji && <p className="text-xs text-red-500">{step1Errors.lastNameRomaji}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="firstNameRomaji">
+                      名（ローマ字） <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="firstNameRomaji"
+                      value={form.firstNameRomaji}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/[^A-Za-z\s-]/g, "")
+                        const capitalized = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase()
+                        setForm((f) => ({ ...f, firstNameRomaji: capitalized }))
+                        if (step1Errors.firstNameRomaji) setStep1Errors((p) => ({ ...p, firstNameRomaji: undefined }))
+                      }}
+                      placeholder="Taro"
+                      className={step1Errors.firstNameRomaji ? "border-red-400" : ""}
+                    />
+                    {step1Errors.firstNameRomaji && <p className="text-xs text-red-500">{step1Errors.firstNameRomaji}</p>}
                   </div>
                 </div>
 
@@ -1687,7 +1782,7 @@ export default function OnboardingForm() {
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="inline-block px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-medium flex-shrink-0">内部のみ</span>
-                    <span>Lumosにログインしたメンバーだけが閲覧できます。外部サイトには表示されません。</span>
+                    <span>Lumosメンバーだけが閲覧できます。外部向けHPには表示されません。</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="inline-block px-1.5 py-0.5 rounded-full bg-green-600 text-white font-medium flex-shrink-0">外部公開</span>
@@ -1727,7 +1822,7 @@ export default function OnboardingForm() {
                       HPにメンバー情報を掲載する
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {allowPublic ? "外部公開が選択できます" : "外部公開は無効になります（ログインメンバーのみ閲覧可）"}
+                      {allowPublic ? "Lumosメンバーとして公式HPにメンバー情報を掲載できます" : "公式HPにメンバー情報を掲載しません"}
                     </p>
                   </div>
                   <div className={[
@@ -1765,9 +1860,82 @@ export default function OnboardingForm() {
                     )
                   })}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  ※ 学籍番号は常に非公開です。設定はあとでプロフィール設定から変更できます。
-                </p>
+                {/* 表示プレビュー */}
+                <div className="space-y-3 pt-2">
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">表示プレビュー</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* 内部メンバーページ */}
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground text-center">内部メンバーページ</p>
+                      <div className="flex flex-col items-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/60 p-4">
+                        <div className="relative flex-shrink-0">
+                          <div className="w-16 h-16 relative rounded-full overflow-hidden ring-2 ring-purple-200 dark:ring-purple-700">
+                            <Image
+                              src={onbInternalPreview.image}
+                              alt="内部プレビュー"
+                              fill
+                              className="object-cover"
+                            />
+                            {!onbInternalPreview.hasFace && (
+                              <div className="absolute inset-0 flex items-end justify-center bg-black/20">
+                                <span className="text-[10px] text-white bg-black/50 px-1 rounded mb-1">あとで設定</span>
+                              </div>
+                            )}
+                          </div>
+                          {onbInternalPreview.snsAvatar && (
+                            <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
+                              <Image src={onbInternalPreview.snsAvatar} alt="" fill className="object-cover" />
+                            </div>
+                          )}
+                        </div>
+                        <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight truncate w-full text-center">
+                          {onbInternalPreview.name}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-full text-center">
+                          {onbInternalPreview.department}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* 外部HP */}
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground text-center">外部HP</p>
+                      <div className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+                        <div className={allowPublic ? "" : "opacity-40"}>
+                          <div className="aspect-square relative w-full">
+                            <Image
+                              src={onbExternalPreview.image}
+                              alt="外部プレビュー"
+                              fill
+                              className="object-cover"
+                            />
+                            {!onbExternalPreview.hasFace && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                <span className="text-xs text-white bg-black/50 px-2 py-0.5 rounded">あとで設定</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <p className="text-base font-bold text-gray-900 dark:text-gray-100 truncate">{onbExternalPreview.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                              {[onbExternalPreview.department, onbExternalPreview.year].filter(Boolean).join(" ")}
+                            </p>
+                          </div>
+                        </div>
+                        {!allowPublic && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="bg-gray-800/80 text-white text-sm font-semibold px-3 py-1.5 rounded-lg">HP掲載 OFF</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                  <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-2.5">
+                      <svg className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">公開設定はあとでプロフィール設定から変更できます。</p>
+                  </div>
               </div>
 
               <div className="mt-8 flex justify-between animate-[fadeInUp_300ms_120ms_ease_both]">
@@ -1798,15 +1966,42 @@ export default function OnboardingForm() {
                   </p>
                 </div>
 
-                {/* Face image preview + upload */}
+                {/* Face image preview + floating sample bubbles */}
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-32 h-32 relative rounded-full overflow-hidden ring-4 ring-purple-100 dark:ring-purple-900/50">
-                    <Image
-                      src={faceImageUrl || "/placeholder.svg"}
-                      alt="プロフィール画像"
-                      fill
-                      className="object-cover"
-                    />
+                  <div className="relative w-64 h-64 flex items-center justify-center">
+                    {/* Floating sample headshot bubbles */}
+                    {!cropImageSrc && ([
+                      { src: "/assets/sample-headshots/sample-1.jpg", size: 44, top: "2%",  left: "0%",              delay: "0s",   duration: "5s" },
+                      { src: "/assets/sample-headshots/sample-2.jpg", size: 36, top: "8%",             right: "2%",  delay: "0.8s", duration: "6s" },
+                      { src: "/assets/sample-headshots/sample-3.jpg", size: 40, top: "55%", left: "-4%",             delay: "1.5s", duration: "5.5s" },
+                      { src: "/assets/sample-headshots/sample-4.jpg", size: 34, top: "60%",             right: "0%", delay: "0.3s", duration: "6.5s" },
+                      { src: "/assets/sample-headshots/sample-5.jpg", size: 30, top: "85%", left: "18%",             delay: "2s",   duration: "5.8s" },
+                      { src: "/assets/sample-headshots/sample-6.jpg", size: 32, top: "88%",             right: "16%",delay: "1.2s", duration: "6.2s" },
+                      { src: "/assets/sample-headshots/sample-7.jpg", size: 28, top: "30%", left: "-8%",             delay: "0.5s", duration: "5.3s" },
+                      { src: "/assets/sample-headshots/sample-8.jpg", size: 26, top: "35%",             right: "-4%",delay: "1.8s", duration: "6.8s" },
+                    ] as { src: string; size: number; top: string; left?: string; right?: string; delay: string; duration: string }[]).map((b, i) => (
+                      <div
+                        key={i}
+                        className="absolute animate-float-bubble rounded-full overflow-hidden ring-2 ring-white/80 dark:ring-white/20 shadow-lg opacity-60"
+                        style={{
+                          width: b.size, height: b.size,
+                          top: b.top, left: b.left, right: b.right,
+                          animationDelay: b.delay,
+                          animationDuration: b.duration,
+                        }}
+                      >
+                        <Image src={b.src} alt="" fill className="object-cover" sizes={`${b.size}px`} />
+                      </div>
+                    ))}
+                    {/* Main preview circle */}
+                    <div className="w-32 h-32 relative rounded-full overflow-hidden ring-4 ring-purple-100 dark:ring-purple-900/50 z-10">
+                      <Image
+                        src={faceImageUrl || "/placeholder.svg"}
+                        alt="プロフィール画像"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                   </div>
                   <input
                     ref={fileInputRef}
