@@ -2181,20 +2181,25 @@ export default function OnboardingForm() {
         <div className="w-full max-w-3xl relative z-10 mt-4">
           <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-gray-800/50 p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">表示プレビュー</h3>
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-5 rounded-full bg-gradient-to-b from-purple-500 to-indigo-500" />
+                <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">表示プレビュー</h3>
+              </div>
               <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 text-sm">
                 <button
                   type="button"
                   onClick={() => setPreviewView("tile")}
-                  className={`px-4 py-1.5 rounded-md transition-all ${previewView === "tile" ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm font-semibold" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+                  className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md transition-all ${previewView === "tile" ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm font-semibold" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
                 >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
                   一覧
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewView("detail")}
-                  className={`px-4 py-1.5 rounded-md transition-all ${previewView === "detail" ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm font-semibold" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+                  className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md transition-all ${previewView === "detail" ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm font-semibold" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
                 >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="9" x2="9" y2="21" /></svg>
                   詳細
                 </button>
               </div>
