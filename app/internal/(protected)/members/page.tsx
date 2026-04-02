@@ -1,8 +1,8 @@
-import { getMembers } from "@/lib/members"
+import { getMembersInternal } from "@/lib/members"
 import MemberList from "@/components/member-list"
 
 export default async function MembersPage() {
-  const members = await getMembers()
+  const members = await getMembersInternal()
 
   return (
     <div className="min-h-screen bg-purple-50 dark:bg-gradient-to-br dark:from-black dark:to-purple-900">
