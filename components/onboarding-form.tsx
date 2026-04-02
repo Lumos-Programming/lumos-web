@@ -17,7 +17,7 @@ import type { VisibilityLevel } from "@/types/profile"
 import { DEFAULT_RING_COLOR } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
 import { RingColorPicker } from "@/components/ring-color-picker"
-import { PreviewViewToggle, TilePreviewGrid, DetailPreviewPanel, ExternalTilePreview } from "@/components/member-tile-preview"
+import { TilePreviewGrid, DetailPreviewPanel, ExternalTilePreview } from "@/components/member-tile-preview"
 import type { SnsEntry } from "@/components/member-tile-preview"
 
 interface FormData {
@@ -1912,11 +1912,6 @@ export default function OnboardingForm() {
                     )
                   })}
                 </div>
-                {/* 表示プレビュー toggle */}
-                <div className="pt-2">
-                  <PreviewViewToggle view={previewView} onViewChange={setPreviewView} />
-                </div>
-
                   <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-2.5">
                       <svg className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>
                       <p className="text-sm text-blue-700 dark:text-blue-300">公開設定はあとでプロフィール設定から変更できます。</p>
@@ -2184,7 +2179,26 @@ export default function OnboardingForm() {
       {/* プレビュー島 — Step 5 のカード外に幅広で表示 */}
       {currentStep === 5 && (
         <div className="w-full max-w-3xl relative z-10 mt-4">
-          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-gray-800/50 p-6">
+          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-gray-800/50 p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">表示プレビュー</h3>
+              <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 text-sm">
+                <button
+                  type="button"
+                  onClick={() => setPreviewView("tile")}
+                  className={`px-4 py-1.5 rounded-md transition-all ${previewView === "tile" ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm font-semibold" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+                >
+                  一覧
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewView("detail")}
+                  className={`px-4 py-1.5 rounded-md transition-all ${previewView === "detail" ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm font-semibold" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+                >
+                  詳細
+                </button>
+              </div>
+            </div>
             {previewView === "tile" ? (
               <TilePreviewGrid
                 internalData={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined }}
