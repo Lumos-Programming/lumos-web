@@ -683,13 +683,13 @@ export default function OnboardingForm() {
     const check = level === "public" ? (l: string) => l === "public" : (l: string) => l !== "private"
     const entries: SnsEntry[] = []
     if (check(v.github) && githubUsername)
-      entries.push({ platform: "github", username: githubUsername, avatarUrl: githubAvatar || undefined })
+      entries.push({ platform: "github", username: githubUsername, url: `https://github.com/${githubUsername}`, avatarUrl: githubAvatar || undefined })
     if (check(v.x) && xUsername)
-      entries.push({ platform: "x", username: xUsername, avatarUrl: xAvatar || undefined })
+      entries.push({ platform: "x", username: xUsername, url: `https://x.com/${xUsername}`, avatarUrl: xAvatar || undefined })
     if (check(v.discord) && discordUsername)
       entries.push({ platform: "discord", username: discordUsername, avatarUrl: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined })
     if (check(v.linkedin) && linkedinUsername)
-      entries.push({ platform: "linkedin", username: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
+      entries.push({ platform: "linkedin", username: linkedinUsername, url: `https://linkedin.com/in/${linkedinUsername}`, avatarUrl: linkedinAvatar || undefined })
     return entries
   }, [visibility, githubUsername, githubAvatar, xUsername, xAvatar, discordUsername, discordAvatarUrl, linkedinUsername, linkedinAvatar])
 

@@ -20,6 +20,7 @@ export interface MemberTileData {
 export interface SnsEntry {
   platform: "github" | "x" | "discord" | "linkedin"
   username: string
+  url?: string
   avatarUrl?: string
 }
 
@@ -73,8 +74,8 @@ const SNS_BRAND: Record<SnsEntry["platform"], { bg: string; text: string; Logo: 
 
 function SnsChip({ entry }: { entry: SnsEntry }) {
   const brand = SNS_BRAND[entry.platform]
-  return (
-    <div className={`inline-flex items-center gap-1.5 rounded-full pl-1.5 pr-2.5 py-1 ${brand.bg} ${brand.text}`}>
+  const inner = (
+    <>
       <brand.Logo className="w-3.5 h-3.5 flex-shrink-0" />
       {entry.avatarUrl && (
         <div className="w-4 h-4 relative rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/30">
@@ -84,8 +85,17 @@ function SnsChip({ entry }: { entry: SnsEntry }) {
       <span className="text-[11px] font-medium leading-none truncate max-w-[100px]">
         {entry.platform === "discord" ? entry.username : `@${entry.username}`}
       </span>
-    </div>
+    </>
   )
+  const className = `inline-flex items-center gap-1.5 rounded-full pl-1.5 pr-2.5 py-1 ${brand.bg} ${brand.text} ${entry.url ? "hover:opacity-80 transition-opacity" : ""}`
+  if (entry.url) {
+    return (
+      <a href={entry.url} target="_blank" rel="noopener noreferrer" className={className}>
+        {inner}
+      </a>
+    )
+  }
+  return <div className={className}>{inner}</div>
 }
 
 // --- Tile previews ---

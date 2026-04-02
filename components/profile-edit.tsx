@@ -321,13 +321,13 @@ export default function ProfileEdit() {
     const check = level === "public" ? (l: string) => l === "public" : (l: string) => l !== "private"
     const entries: SnsEntry[] = []
     if (check(v.github) && profile.github)
-      entries.push({ platform: "github", username: profile.github, avatarUrl: githubAvatar || undefined })
+      entries.push({ platform: "github", username: profile.github, url: `https://github.com/${profile.github}`, avatarUrl: githubAvatar || undefined })
     if (check(v.x) && profile.x)
-      entries.push({ platform: "x", username: profile.x, avatarUrl: xAvatar || undefined })
+      entries.push({ platform: "x", username: profile.x, url: `https://x.com/${profile.x}`, avatarUrl: xAvatar || undefined })
     if (check(v.discord) && profile.discord)
       entries.push({ platform: "discord", username: profile.discord, avatarUrl: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined })
     if (check(v.linkedin) && linkedinUsername)
-      entries.push({ platform: "linkedin", username: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
+      entries.push({ platform: "linkedin", username: linkedinUsername, url: `https://linkedin.com/in/${linkedinUsername}`, avatarUrl: linkedinAvatar || undefined })
     return entries
   }, [profile, githubAvatar, xAvatar, discordAvatarUrl, linkedinAvatar, linkedinUsername])
 
