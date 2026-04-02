@@ -39,6 +39,11 @@ function initializeFirebase() {
 // Lazy getter for db
 export function getDb() {
   initializeFirebase()
+  const databaseId = process.env.FIRESTORE_DATABASE_ID
+  if (databaseId) {
+    const { getFirestore } = require('firebase-admin/firestore')
+    return getFirestore(databaseId) as admin.firestore.Firestore
+  }
   return admin.firestore()
 }
 
