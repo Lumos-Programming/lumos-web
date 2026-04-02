@@ -3,8 +3,17 @@ import * as admin from 'firebase-admin'
 // Initialize Firebase lazily
 function initializeFirebase() {
   if (!admin.apps.length) {
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      // Emulator mode (for tests)
+    if (process.env.FIRESTORE_EMULATOR_HOST && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+      // Emulator mode + SA key: Firestore uses emulator, GCS uses real credentials
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID || 'test-project',
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        }),
+      })
+    } else if (process.env.FIRESTORE_EMULATOR_HOST) {
+      // Emulator mode without SA key (CI/tests)
       admin.initializeApp({
         projectId: process.env.FIREBASE_PROJECT_ID || 'test-project',
       })
@@ -31,12 +40,6 @@ function initializeFirebase() {
 export function getDb() {
   initializeFirebase()
   return admin.firestore()
-}
-
-// Lazy getter for GCS bucket
-export function getStorageBucket(bucketName?: string) {
-  initializeFirebase()
-  return admin.storage().bucket(bucketName ?? 'lumos-web-profile-data')
 }
 
 // Re-export mini-lt week/talk logic for backward compatibility

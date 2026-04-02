@@ -1,9 +1,8 @@
+import { randomUUID } from "crypto"
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { getStorageBucket } from "@/lib/firebase"
 import { getMember, updateMember } from "@/lib/members"
-
-const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
+import { uploadToGCS, validateImageUpload, UploadValidationError } from "@/lib/upload"
 
 export async function POST(request: Request) {
   const session = await auth()
@@ -22,47 +21,23 @@ export async function POST(request: Request) {
     const formData = await request.formData()
     const file = formData.get("image") as File | null
     if (!file) {
-      return NextResponse.json({ error: "No image provided" }, { status: 400 })
+      return NextResponse.json({ error: "画像が選択されていません" }, { status: 400 })
     }
 
-    if (file.type !== "image/webp") {
-      return NextResponse.json({ error: "Only WebP format is accepted" }, { status: 400 })
-    }
+    const buffer = await validateImageUpload(file)
 
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "File size exceeds 2MB limit" }, { status: 400 })
-    }
-
-    // Emulator mode: skip GCS upload, use mock URL
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      const mockUrl = "/placeholder.svg"
-      await updateMember(discordId, { faceImage: mockUrl })
-      return NextResponse.json({ url: mockUrl })
-    }
-
-    // Upload to GCS
-    const bucket = getStorageBucket()
-    const gcsPath = `profiles/${discordId}.webp`
-    const gcsFile = bucket.file(gcsPath)
-
-    const buffer = Buffer.from(await file.arrayBuffer())
-
-    await gcsFile.save(buffer, {
-      contentType: "image/webp",
-      metadata: {
-        cacheControl: "public, max-age=3600",
-      },
+    const url = await uploadToGCS(buffer, `profiles/${randomUUID()}.webp`, {
+      contentType: file.type,
     })
 
-    await gcsFile.makePublic()
+    await updateMember(discordId, { faceImage: url })
 
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${gcsPath}`
-
-    await updateMember(discordId, { faceImage: publicUrl })
-
-    return NextResponse.json({ url: publicUrl })
+    return NextResponse.json({ url })
   } catch (error) {
+    if (error instanceof UploadValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
     console.error("Failed to upload profile image:", error)
-    return NextResponse.json({ error: "Failed to upload image" }, { status: 500 })
+    return NextResponse.json({ error: "画像のアップロードに失敗しました" }, { status: 500 })
   }
 }
