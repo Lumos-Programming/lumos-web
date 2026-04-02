@@ -62,7 +62,7 @@ export async function getOrCreateMember(
       lastName: '',
       firstName: '',
       bio: '',
-      allowPublic: false,
+      allowPublic: true,
       visibility: {
         studentId: 'private',
         nickname: 'public',
