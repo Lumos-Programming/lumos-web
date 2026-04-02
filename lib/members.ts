@@ -10,6 +10,8 @@ export interface MemberDocument {
   nickname: string
   lastName: string
   firstName: string
+  lastNameRomaji?: string
+  firstNameRomaji?: string
   bio: string
   role?: string
   yearByFiscal?: Record<string, string>
@@ -73,6 +75,8 @@ export async function getOrCreateMember(
       nickname: '',
       lastName: '',
       firstName: '',
+      lastNameRomaji: '',
+      firstNameRomaji: '',
       bio: '',
       allowPublic: true,
       visibility: {
@@ -203,6 +207,13 @@ function resolvePrimaryAvatar(discordId: string, data: MemberDocument): string {
   }
 }
 
+function getInitials(data: MemberDocument): string {
+  const f = data.firstNameRomaji?.trim()
+  const l = data.lastNameRomaji?.trim()
+  if (f && l) return `${f[0].toUpperCase()}. ${l[0].toUpperCase()}.`
+  return ''
+}
+
 export function profileToMember(discordId: string, data: MemberDocument): Member {
   const v = data.visibility
 
@@ -211,7 +222,7 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
       ? `${data.lastName} ${data.firstName}`
       : v.nickname === 'public'
       ? data.nickname
-      : data.discordUsername
+      : getInitials(data) || data.discordUsername
 
   const social: Member['social'] = {}
   if (v.github === 'public' && data.github) social.github = `https://github.com/${data.github}`
@@ -242,7 +253,7 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
       ? `${data.lastName} ${data.firstName}`
       : v.nickname !== 'private'
       ? data.nickname
-      : data.discordUsername
+      : getInitials(data) || data.discordUsername
 
   const social: Member['social'] = {}
   if (v.github !== 'private' && data.github) social.github = `https://github.com/${data.github}`

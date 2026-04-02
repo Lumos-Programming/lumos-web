@@ -65,6 +65,9 @@ export default async function ProfilePage() {
                       ? `${member.lastName} ${member.firstName}`
                       : "未設定"}
                   </p>
+                  {(member.lastNameRomaji || member.firstNameRomaji) && (
+                    <p className="text-xs text-gray-400">{member.lastNameRomaji} {member.firstNameRomaji}</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">学部/学府</p>

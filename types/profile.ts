@@ -29,6 +29,8 @@ export interface Profile {
   nickname: string
   lastName: string
   firstName: string
+  lastNameRomaji: string
+  firstNameRomaji: string
   enrollments?: EnrollmentRecord[]
   currentOrg?: string      // 卒業生の現在の所属
   birthDate?: string       // YYYY-MM-DD

@@ -57,6 +57,8 @@ export async function PUT(request: Request) {
     if (typeof body.nickname  === "string") data.nickname  = body.nickname
     if (typeof body.lastName  === "string") data.lastName  = body.lastName
     if (typeof body.firstName === "string") data.firstName = body.firstName
+    if (typeof body.lastNameRomaji  === "string") data.lastNameRomaji  = body.lastNameRomaji
+    if (typeof body.firstNameRomaji === "string") data.firstNameRomaji = body.firstNameRomaji
     if (typeof body.bio       === "string") data.bio       = body.bio
 
     if (MEMBER_TYPES.includes(body.memberType)) data.memberType = body.memberType as MemberType
