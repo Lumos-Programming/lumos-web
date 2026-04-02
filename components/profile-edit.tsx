@@ -316,19 +316,23 @@ export default function ProfileEdit() {
     return { main, sub, role, department: dept, year, image, hasFace }
   }, [profile, faculty, year, role, faceImageUrl, primaryAvatar, discordAvatarUrl, lineAvatar, getInitials])
 
-  const previewSns = useMemo(() => {
+  const buildSnsEntries = useCallback((level: "public" | "internal") => {
     const v = profile.visibility
+    const check = level === "public" ? (l: string) => l === "public" : (l: string) => l !== "private"
     const entries: SnsEntry[] = []
-    if (v.github !== "private" && profile.github)
+    if (check(v.github) && profile.github)
       entries.push({ platform: "github", username: profile.github, avatarUrl: githubAvatar || undefined })
-    if (v.x !== "private" && profile.x)
+    if (check(v.x) && profile.x)
       entries.push({ platform: "x", username: profile.x, avatarUrl: xAvatar || undefined })
-    if (v.discord !== "private" && profile.discord)
+    if (check(v.discord) && profile.discord)
       entries.push({ platform: "discord", username: profile.discord, avatarUrl: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined })
-    if (v.linkedin !== "private" && linkedinUsername)
+    if (check(v.linkedin) && linkedinUsername)
       entries.push({ platform: "linkedin", username: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
     return entries
   }, [profile, githubAvatar, xAvatar, discordAvatarUrl, linkedinAvatar, linkedinUsername])
+
+  const internalSns = useMemo(() => buildSnsEntries("internal"), [buildSnsEntries])
+  const externalSns = useMemo(() => buildSnsEntries("public"), [buildSnsEntries])
 
   if (loading) {
     return <div className="text-center py-8">読み込み中...</div>
@@ -431,8 +435,8 @@ export default function ProfileEdit() {
           {/* 表示プレビュー */}
           {isEditing && (
             <MemberPreviewToggle
-              internalData={{ ...internalPreview, ringColor, memberType, currentOrg }}
-              externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: previewSns }}
+              internalData={{ ...internalPreview, ringColor, memberType, currentOrg, role, year, bio: profile.bio, sns: internalSns }}
+              externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: externalSns }}
               allowPublic={allowPublic}
             />
           )}

@@ -231,6 +231,7 @@ export default function OnboardingForm() {
   const [slideAnimating, setSlideAnimating] = useState(false)
   const [discordId, setDiscordId] = useState("")
   const [discordAvatar, setDiscordAvatar] = useState("")
+  const [discordUsername, setDiscordUsername] = useState("")
   // Step 6 — image
   const [faceImageUrl, setFaceImageUrl] = useState("")
   const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
@@ -313,6 +314,7 @@ export default function OnboardingForm() {
           })
           if (typeof data.allowPublic === "boolean") setAllowPublic(data.allowPublic)
           if (data.discordId) setDiscordId(data.discordId)
+          if (data.discordUsername) setDiscordUsername(data.discordUsername)
           if (data.discordAvatar) setDiscordAvatar(data.discordAvatar)
           if (data.faceImage) setFaceImageUrl(data.faceImage)
           if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
@@ -675,19 +677,23 @@ export default function OnboardingForm() {
     return { main, sub, department: dept, year: form.schoolYear, image, hasFace }
   }, [visibility, form.lastName, form.firstName, form.nickname, form.faculty, form.schoolYear, faceImageUrl, primaryAvatar, discordAvatarUrl, lineAvatar, getOnbInitials])
 
-  const onbPreviewSns = useMemo(() => {
+  const buildOnbSnsEntries = useCallback((level: "public" | "internal") => {
     const v = visibility
+    const check = level === "public" ? (l: string) => l === "public" : (l: string) => l !== "private"
     const entries: SnsEntry[] = []
-    if (v.github !== "private" && githubUsername)
+    if (check(v.github) && githubUsername)
       entries.push({ platform: "github", username: githubUsername, avatarUrl: githubAvatar || undefined })
-    if (v.x !== "private" && xUsername)
+    if (check(v.x) && xUsername)
       entries.push({ platform: "x", username: xUsername, avatarUrl: xAvatar || undefined })
-    if (v.discord !== "private" && discordAvatarUrl !== "/placeholder.svg")
-      entries.push({ platform: "discord", username: discordId, avatarUrl: discordAvatarUrl })
-    if (v.linkedin !== "private" && linkedinUsername)
+    if (check(v.discord) && discordUsername)
+      entries.push({ platform: "discord", username: discordUsername, avatarUrl: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined })
+    if (check(v.linkedin) && linkedinUsername)
       entries.push({ platform: "linkedin", username: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
     return entries
-  }, [visibility, githubUsername, githubAvatar, xUsername, xAvatar, discordId, discordAvatarUrl, linkedinUsername, linkedinAvatar])
+  }, [visibility, githubUsername, githubAvatar, xUsername, xAvatar, discordUsername, discordAvatarUrl, linkedinUsername, linkedinAvatar])
+
+  const onbInternalSns = useMemo(() => buildOnbSnsEntries("internal"), [buildOnbSnsEntries])
+  const onbExternalSns = useMemo(() => buildOnbSnsEntries("public"), [buildOnbSnsEntries])
 
   const handleFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -1908,8 +1914,8 @@ export default function OnboardingForm() {
                 {/* 表示プレビュー */}
                 <div className="pt-2">
                   <MemberPreviewToggle
-                    internalData={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined }}
-                    externalData={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbPreviewSns }}
+                    internalData={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbInternalSns }}
+                    externalData={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbExternalSns }}
                     allowPublic={allowPublic}
                   />
                 </div>
