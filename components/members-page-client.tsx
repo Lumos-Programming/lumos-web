@@ -5,6 +5,8 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Github, Linkedin, Globe } from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 function XIcon({ className }: { className?: string }) {
   return (
@@ -90,7 +92,9 @@ export default function MembersPageClient({ members }: Props) {
                   />
                 </div>
                 <div>
-                  <p className="text-foreground mb-4">{selectedMember.bio}</p>
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-foreground mb-4">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedMember.bio}</ReactMarkdown>
+                  </div>
                   <div className="mb-4">
                     <h4 className="font-bold text-sm text-muted-foreground mb-2">スキル</h4>
                     <div className="flex flex-wrap gap-2">

@@ -4,6 +4,8 @@ import { useState } from "react"
 import Image from "next/image"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Github, Linkedin, Globe } from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 function XIcon({ className }: { className?: string }) {
   return (
@@ -70,7 +72,9 @@ export default function MemberList({ members }: Props) {
                   />
                 </div>
                 <div>
-                  <p className="text-gray-700 mb-4">{selectedMember.bio}</p>
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700 mb-4">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedMember.bio}</ReactMarkdown>
+                  </div>
                   <div className="mb-4">
                     <h4 className="font-bold text-sm text-gray-500 mb-2">スキル</h4>
                     <div className="flex flex-wrap gap-2">
