@@ -37,6 +37,7 @@ export interface MemberDocument {
   lineTokenExpiresAt?: number   // Unix timestamp (seconds)
   faceImage?: string            // GCS URL (顔写真)
   primaryAvatar?: 'face' | 'discord' | 'line' | 'default'  // 公開ページ用
+  ringColor?: string            // リングカラーキー
   allowPublic?: boolean
   onboardingCompleted?: boolean
   visibility: {
@@ -242,6 +243,10 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
     skills: data.skills ?? [],
     image: resolvePrimaryAvatar(discordId, data),
     social: Object.keys(social).length > 0 ? social : undefined,
+    nickname: v.nickname === 'public' ? data.nickname || undefined : undefined,
+    memberType: data.memberType,
+    currentOrg: v.currentOrg === 'public' ? data.currentOrg || undefined : undefined,
+    ringColor: data.ringColor,
   }
 }
 
@@ -280,5 +285,9 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
     faceImage: data.faceImage || undefined,
     snsAvatar,
     social: Object.keys(social).length > 0 ? social : undefined,
+    nickname: v.nickname !== 'private' ? data.nickname || undefined : undefined,
+    memberType: data.memberType,
+    currentOrg: v.currentOrg !== 'private' ? data.currentOrg || undefined : undefined,
+    ringColor: data.ringColor,
   }
 }

@@ -100,6 +100,10 @@ export async function PUT(request: Request) {
     if (typeof body.primaryAvatar === "string" && (VALID_PRIMARY_AVATARS as readonly string[]).includes(body.primaryAvatar)) {
       data.primaryAvatar = body.primaryAvatar as typeof VALID_PRIMARY_AVATARS[number]
     }
+    const VALID_RING_COLORS = ["purple","blue","green","pink","orange","red","teal","amber","rose","indigo"]
+    if (typeof body.ringColor === "string" && VALID_RING_COLORS.includes(body.ringColor)) {
+      data.ringColor = body.ringColor
+    }
 
     await updateMember(session.user.id, data)
 
