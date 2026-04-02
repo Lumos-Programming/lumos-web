@@ -6,6 +6,7 @@ import Image from "next/image"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { VisibilityToggle } from "@/components/ui/visibility-toggle"
@@ -180,7 +181,8 @@ function CheckCircleIcon({ className }: { className?: string }) {
   )
 }
 
-const STEP_LABELS = ["基本情報", "所属情報", "SNS連携", "自己紹介", "公開設定", "画像"]
+const STEP_LABELS_BASE = ["基本情報", "所属情報", "SNS連携", "自己紹介", "公開設定", "顔写真"]
+const STEP_LABELS_WITH_AVATAR = [...STEP_LABELS_BASE, "HP画像"]
 
 export default function OnboardingForm() {
   const router = useRouter()
@@ -188,7 +190,7 @@ export default function OnboardingForm() {
 
   const initialStep = (() => {
     const s = parseInt(searchParams.get("step") ?? "1", 10)
-    return s >= 1 && s <= 6 ? s : 1
+    return s >= 1 && s <= 7 ? s : 1
   })()
 
   const [showWelcome, setShowWelcome] = useState(
@@ -676,6 +678,12 @@ export default function OnboardingForm() {
     }
   }
 
+  // ステップ構成: allowPublic なら 7 ステップ、そうでなければ 6 ステップ
+  const stepLabels = allowPublic ? STEP_LABELS_WITH_AVATAR : STEP_LABELS_BASE
+  const maxStep = stepLabels.length
+  // 最終ステップかどうか（handleComplete を呼ぶステップ）
+  const isFinalStep = (step: number) => step === maxStep
+
   // 進捗 % 計算
   // Step 5 完了とみなす（Step 6 に遷移済み = currentStep >= 6）
   const step5Done = currentStep >= 6
@@ -838,7 +846,7 @@ export default function OnboardingForm() {
       <div className="w-full max-w-lg relative z-10">
         {/* Step indicator */}
         <div className="flex items-center justify-center mb-4 gap-2">
-          {STEP_LABELS.map((label, i) => {
+          {stepLabels.map((label, i) => {
             const stepNum = i + 1
             const isActive = stepNum === currentStep
             const isDone = stepNum < currentStep
@@ -866,7 +874,7 @@ export default function OnboardingForm() {
                     {label}
                   </span>
                 </div>
-                {i < STEP_LABELS.length - 1 && (
+                {i < stepLabels.length - 1 && (
                   <div
                     className={[
                       "w-6 h-px mb-5 transition-colors duration-300",
@@ -1772,11 +1780,11 @@ export default function OnboardingForm() {
               </div>
             </div>}
 
-            {/* Step 6 — プロフィール画像 */}
+            {/* Step 6 — 顔写真アップロード */}
             {currentStep === 6 && <div className="p-8">
               <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">プロフィール画像</h2>
-                <p className="text-muted-foreground mt-1 text-sm">最後のステップです！</p>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">顔写真を設定</h2>
+                <p className="text-muted-foreground mt-1 text-sm">{isFinalStep(6) ? "最後のステップです！" : "あと少しで完了です！"}</p>
               </div>
 
               <div className="space-y-6 animate-[fadeInUp_300ms_60ms_ease_both]">
@@ -1787,9 +1795,6 @@ export default function OnboardingForm() {
                   </p>
                   <p className="text-xs text-purple-700 dark:text-purple-300 leading-relaxed">
                     Lumosではメンバー同士が「顔が見える」関係を大切にしています。内部メンバーページであなたの顔写真が表示されるので、イベントやプロジェクトで初めて会うときもスムーズです。
-                  </p>
-                  <p className="text-xs text-purple-600 dark:text-purple-400">
-                    ※ 任意です。あとからプロフィール設定でいつでも変更できます。
                   </p>
                 </div>
 
@@ -1864,58 +1869,133 @@ export default function OnboardingForm() {
                   </div>
                 )}
 
-                {/* Primary avatar selection — allowPublic 時のみ表示 */}
-                {allowPublic && (
-                  <div className="space-y-3 animate-[fadeInUp_300ms_120ms_ease_both]">
-                    <div className="flex items-center gap-2">
-                      <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
-                      <span className="text-xs font-medium text-muted-foreground px-2">外部HP掲載用の画像</span>
-                      <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
-                    </div>
-                    <div className="rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-2.5">
-                      <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                        前の画面で「HPにメンバー情報を掲載する」を選択しています。外部サイトであなたのプロフィールに表示する画像を選んでください。顔写真を公開したくない場合は、SNSアイコンや「なし」を選べます。
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {([
-                        { value: "face" as const, label: "顔写真", desc: "アップロードした写真", src: faceImageUrl || "/placeholder.svg", enabled: true },
-                        { value: "discord" as const, label: "Discord", desc: "Discordアイコン", src: discordAvatar ? (discordAvatar.startsWith("http") ? discordAvatar : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`) : "/placeholder.svg", enabled: !!discordAvatar },
-                        { value: "line" as const, label: "LINE", desc: "LINEアイコン", src: lineAvatar || "/placeholder.svg", enabled: lineLinked && !!lineAvatar },
-                        { value: "default" as const, label: "なし", desc: "デフォルト画像", src: "/placeholder.svg", enabled: true },
-                      ]).map(({ value, label, desc, src, enabled }) => (
-                        <button
-                          key={value}
-                          type="button"
-                          disabled={!enabled}
-                          onClick={() => setPrimaryAvatar(value)}
-                          className={[
-                            "flex items-center gap-3 rounded-xl border-2 p-3 transition-all duration-200",
-                            primaryAvatar === value
-                              ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 dark:border-purple-600"
-                              : "border-gray-200 dark:border-gray-700",
-                            !enabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:border-purple-300",
-                          ].join(" ")}
-                        >
-                          <div className="w-10 h-10 relative rounded-full overflow-hidden flex-shrink-0">
-                            <Image src={src} alt="" fill className="object-cover" />
-                          </div>
-                          <div className="text-left min-w-0">
-                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</span>
-                            {primaryAvatar === value && (
-                              <CheckCircleIcon className="inline-block w-4 h-4 ml-1 text-purple-600 dark:text-purple-400" />
-                            )}
-                            <p className="text-[11px] text-muted-foreground truncate">{desc}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+                {faceImageUrl && (
+                  <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-2.5">
+                    <svg className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">プロフィール設定からいつでも変更できます。</p>
                   </div>
                 )}
               </div>
 
               <div className="mt-8 flex justify-between animate-[fadeInUp_300ms_120ms_ease_both]">
                 <Button variant="ghost" onClick={() => goToStep(5)}>
+                  ← 戻る
+                </Button>
+                {faceImageUrl ? (
+                  isFinalStep(6) ? (
+                    <Button onClick={handleComplete} disabled={submitting} className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-200/50 dark:shadow-purple-900/30">
+                      {submitting ? "登録中..." : "登録完了"}
+                    </Button>
+                  ) : (
+                    <Button onClick={() => goToStep(7)} className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-200/50 dark:shadow-purple-900/30">
+                      次へ →
+                    </Button>
+                  )
+                ) : (
+                  isFinalStep(6) ? (
+                    <Button onClick={handleComplete} disabled={submitting} variant="ghost" className="text-muted-foreground">
+                      {submitting ? "登録中..." : "あとで設定する"}
+                    </Button>
+                  ) : (
+                    <Button onClick={() => goToStep(7)} variant="ghost" className="text-muted-foreground">
+                      あとで設定する
+                    </Button>
+                  )
+                )}
+              </div>
+            </div>}
+
+            {/* Step 7 — 外部HP掲載用画像選択 (allowPublic のみ) */}
+            {currentStep === 7 && allowPublic && <div className="p-8">
+              <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">HP掲載用の画像</h2>
+                <p className="text-muted-foreground mt-1 text-sm">最後のステップです！外部サイトに表示する画像を選んでください。</p>
+              </div>
+
+              <div className="space-y-6 animate-[fadeInUp_300ms_60ms_ease_both]">
+                <div className="rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-4 py-3">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                    前の画面で「HPにメンバー情報を掲載する」を選択しています。LumosのHP（公開サイト）のメンバー一覧に表示される画像を選んでください。顔写真を公開したくない場合は、SNSアイコンやデフォルト画像を選べます。
+                  </p>
+                </div>
+
+                {/* ライブプレビュー */}
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground text-center">表示プレビュー</p>
+                  <div className="flex justify-center">
+                    <Card className="overflow-hidden border-border bg-card w-52 shadow-md">
+                      <div className="aspect-square relative">
+                        <Image
+                          src={(() => {
+                            switch (primaryAvatar) {
+                              case "face": return faceImageUrl || "/placeholder.svg"
+                              case "discord": return discordAvatar ? (discordAvatar.startsWith("http") ? discordAvatar : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`) : "/placeholder.svg"
+                              case "line": return lineAvatar || "/placeholder.svg"
+                              case "default": return "/placeholder.svg"
+                            }
+                          })()}
+                          alt="プレビュー"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <CardContent className="p-3">
+                        <h3 className="text-base font-bold text-foreground truncate">
+                          {visibility.lastName !== "private" && visibility.firstName !== "private"
+                            ? `${form.lastName} ${form.firstName}`
+                            : visibility.nickname !== "private"
+                            ? form.nickname
+                            : "あなたの名前"}
+                        </h3>
+                        <p className="text-muted-foreground text-xs mt-0.5 truncate">
+                          {form.faculty} {form.schoolYear}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* 画像選択 */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">画像を選択</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      { value: "face" as const, label: "顔写真", desc: faceImageUrl ? "アップロードした写真" : "未設定", src: faceImageUrl || "/placeholder.svg", enabled: true },
+                      { value: "discord" as const, label: "Discord", desc: "Discordアイコン", src: discordAvatar ? (discordAvatar.startsWith("http") ? discordAvatar : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`) : "/placeholder.svg", enabled: !!discordAvatar },
+                      { value: "line" as const, label: "LINE", desc: "LINEアイコン", src: lineAvatar || "/placeholder.svg", enabled: lineLinked && !!lineAvatar },
+                      { value: "default" as const, label: "なし", desc: "デフォルト画像", src: "/placeholder.svg", enabled: true },
+                    ]).map(({ value, label, desc, src, enabled }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        disabled={!enabled}
+                        onClick={() => setPrimaryAvatar(value)}
+                        className={[
+                          "flex items-center gap-3 rounded-xl border-2 p-3 transition-all duration-200",
+                          primaryAvatar === value
+                            ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 dark:border-purple-600"
+                            : "border-gray-200 dark:border-gray-700",
+                          !enabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:border-purple-300",
+                        ].join(" ")}
+                      >
+                        <div className="w-10 h-10 relative rounded-full overflow-hidden flex-shrink-0">
+                          <Image src={src} alt="" fill className="object-cover" />
+                        </div>
+                        <div className="text-left min-w-0">
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</span>
+                          {primaryAvatar === value && (
+                            <CheckCircleIcon className="inline-block w-4 h-4 ml-1 text-purple-600 dark:text-purple-400" />
+                          )}
+                          <p className="text-[11px] text-muted-foreground truncate">{desc}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-between animate-[fadeInUp_300ms_120ms_ease_both]">
+                <Button variant="ghost" onClick={() => goToStep(6)}>
                   ← 戻る
                 </Button>
                 <Button onClick={handleComplete} disabled={submitting} className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-200/50 dark:shadow-purple-900/30">
