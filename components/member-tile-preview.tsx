@@ -235,7 +235,7 @@ interface PreviewToggleProps {
   allowPublic: boolean
 }
 
-function TogglePill({ options, value, onChange }: { options: { key: string; label: string }[]; value: string; onChange: (key: string) => void }) {
+export function TogglePill({ options, value, onChange }: { options: { key: string; label: string }[]; value: string; onChange: (key: string) => void }) {
   return (
     <div className="flex bg-gray-200 dark:bg-gray-700 rounded-full p-0.5 text-xs">
       {options.map((opt) => (
@@ -251,6 +251,60 @@ function TogglePill({ options, value, onChange }: { options: { key: string; labe
     </div>
   )
 }
+
+// --- Composable building blocks (for breakout layout) ---
+
+export function PreviewViewToggle({ view, onViewChange }: { view: "tile" | "detail"; onViewChange: (v: "tile" | "detail") => void }) {
+  return (
+    <div className="flex items-center justify-between">
+      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">表示プレビュー</p>
+      <TogglePill
+        options={[{ key: "tile", label: "一覧" }, { key: "detail", label: "詳細" }]}
+        value={view}
+        onChange={(k) => onViewChange(k as "tile" | "detail")}
+      />
+    </div>
+  )
+}
+
+export function TilePreviewGrid({ internalData, externalData, allowPublic }: { internalData: MemberTileData; externalData: MemberTileData; allowPublic: boolean }) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <InternalTilePreview data={internalData} label="内部" />
+      <ExternalTilePreview data={externalData} allowPublic={allowPublic} label="外部HP" />
+    </div>
+  )
+}
+
+export function DetailPreviewPanel({ internalData, externalData, allowPublic }: { internalData: MemberDetailData; externalData: MemberDetailData; allowPublic: boolean }) {
+  const [detailSide, setDetailSide] = useState<"internal" | "external">("internal")
+  return (
+    <div className="space-y-3">
+      {/* Desktop: side-by-side */}
+      <div className="hidden sm:grid grid-cols-2 gap-4">
+        <DetailPreview data={internalData} label="内部" />
+        <DetailPreview data={externalData} label="外部HP" allowPublic={allowPublic} />
+      </div>
+      {/* Mobile: sub-toggle */}
+      <div className="sm:hidden space-y-2">
+        <div className="flex justify-center">
+          <TogglePill
+            options={[{ key: "internal", label: "内部" }, { key: "external", label: "外部HP" }]}
+            value={detailSide}
+            onChange={(k) => setDetailSide(k as "internal" | "external")}
+          />
+        </div>
+        {detailSide === "internal" ? (
+          <DetailPreview data={internalData} />
+        ) : (
+          <DetailPreview data={externalData} allowPublic={allowPublic} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// --- All-in-one toggle (used by profile-edit where width is sufficient) ---
 
 export function MemberPreviewToggle({ internalData, externalData, allowPublic }: PreviewToggleProps) {
   const [view, setView] = useState<"tile" | "detail">("tile")

@@ -17,7 +17,7 @@ import type { VisibilityLevel } from "@/types/profile"
 import { DEFAULT_RING_COLOR } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
 import { RingColorPicker } from "@/components/ring-color-picker"
-import { MemberPreviewToggle, ExternalTilePreview } from "@/components/member-tile-preview"
+import { PreviewViewToggle, TilePreviewGrid, DetailPreviewPanel, ExternalTilePreview } from "@/components/member-tile-preview"
 import type { SnsEntry } from "@/components/member-tile-preview"
 
 interface FormData {
@@ -236,6 +236,7 @@ export default function OnboardingForm() {
   const [faceImageUrl, setFaceImageUrl] = useState("")
   const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
   const [ringColor, setRingColor] = useState<RingColorKey>(DEFAULT_RING_COLOR)
+  const [previewView, setPreviewView] = useState<"tile" | "detail">("tile")
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -945,7 +946,7 @@ export default function OnboardingForm() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-purple-950 flex items-start justify-center pt-8 pb-8 px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-purple-950 flex flex-col items-center pt-8 pb-8 px-4 relative overflow-hidden">
       {/* 背景装飾 */}
       <div className="absolute top-[-10%] right-[-5%] w-72 h-72 bg-purple-200/30 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-5%] w-64 h-64 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
@@ -1911,13 +1912,9 @@ export default function OnboardingForm() {
                     )
                   })}
                 </div>
-                {/* 表示プレビュー */}
+                {/* 表示プレビュー toggle */}
                 <div className="pt-2">
-                  <MemberPreviewToggle
-                    internalData={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbInternalSns }}
-                    externalData={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbExternalSns }}
-                    allowPublic={allowPublic}
-                  />
+                  <PreviewViewToggle view={previewView} onViewChange={setPreviewView} />
                 </div>
 
                   <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-2.5">
@@ -2183,6 +2180,27 @@ export default function OnboardingForm() {
           </div>
         </div>
       </div>
+
+      {/* プレビュー島 — Step 5 のカード外に幅広で表示 */}
+      {currentStep === 5 && (
+        <div className="w-full max-w-3xl relative z-10 mt-4">
+          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-gray-800/50 p-6">
+            {previewView === "tile" ? (
+              <TilePreviewGrid
+                internalData={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined }}
+                externalData={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined }}
+                allowPublic={allowPublic}
+              />
+            ) : (
+              <DetailPreviewPanel
+                internalData={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbInternalSns }}
+                externalData={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbExternalSns }}
+                allowPublic={allowPublic}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
