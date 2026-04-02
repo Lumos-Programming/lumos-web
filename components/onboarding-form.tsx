@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, type ChangeEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
+import Cropper from "react-easy-crop"
+import type { Area } from "react-easy-crop"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -176,7 +178,7 @@ function CheckCircleIcon({ className }: { className?: string }) {
   )
 }
 
-const STEP_LABELS = ["基本情報", "所属情報", "SNS連携", "自己紹介", "公開設定"]
+const STEP_LABELS = ["基本情報", "所属情報", "SNS連携", "自己紹介", "公開設定", "画像"]
 
 export default function OnboardingForm() {
   const router = useRouter()
@@ -184,7 +186,7 @@ export default function OnboardingForm() {
 
   const initialStep = (() => {
     const s = parseInt(searchParams.get("step") ?? "1", 10)
-    return s >= 1 && s <= 5 ? s : 1
+    return s >= 1 && s <= 6 ? s : 1
   })()
 
   const [showWelcome, setShowWelcome] = useState(
@@ -213,6 +215,17 @@ export default function OnboardingForm() {
   const [step2Errors, setStep2Errors] = useState<Partial<Record<keyof FormData, string>>>({})
   const [step3Error, setStep3Error] = useState("")
   const [slideAnimating, setSlideAnimating] = useState(false)
+  const [discordId, setDiscordId] = useState("")
+  const [discordAvatar, setDiscordAvatar] = useState("")
+  // Step 6 — image
+  const [faceImageUrl, setFaceImageUrl] = useState("")
+  const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+  const [imageUploading, setImageUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const prevStepRef = useRef(initialStep)
   const step2CacheKey = "onboarding_step2_cache"
   const step2TimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -282,6 +295,10 @@ export default function OnboardingForm() {
             bio: data.bio ?? "",
           })
           if (typeof data.allowPublic === "boolean") setAllowPublic(data.allowPublic)
+          if (data.discordId) setDiscordId(data.discordId)
+          if (data.discordAvatar) setDiscordAvatar(data.discordAvatar)
+          if (data.faceImage) setFaceImageUrl(data.faceImage)
+          if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
           setLineLinked(!!data.lineId)
           setLineUsername(data.line ?? "")
           setLineAvatar(data.lineAvatar ?? "")
@@ -519,6 +536,98 @@ export default function OnboardingForm() {
     goToStep(5)
   }
 
+  const handleStep5Save = useCallback(async () => {
+    // Save visibility settings when leaving step 5
+    try {
+      await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          allowPublic,
+          visibility: {
+            studentId: "private",
+            nickname: visibility.nickname,
+            lastName: visibility.lastName,
+            firstName: visibility.firstName,
+            faculty: visibility.faculty,
+            currentOrg: visibility.currentOrg,
+            birthDate: visibility.birthDate,
+            bio: visibility.bio,
+            line: visibility.line,
+            github: visibility.github,
+            x: visibility.x,
+            discord: visibility.discord,
+          },
+        }),
+      })
+    } catch { /* non-blocking */ }
+  }, [allowPublic, visibility])
+
+  const handleFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setCropImageSrc(reader.result as string)
+    reader.readAsDataURL(file)
+    // Reset input so the same file can be re-selected
+    e.target.value = ""
+  }, [])
+
+  const getCroppedImage = useCallback(async (src: string, pixelCrop: Area): Promise<Blob> => {
+    const image = new window.Image()
+    image.crossOrigin = "anonymous"
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve()
+      image.onerror = reject
+      image.src = src
+    })
+    const canvas = document.createElement("canvas")
+    canvas.width = 400
+    canvas.height = 400
+    const ctx = canvas.getContext("2d")!
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      400,
+      400
+    )
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
+        "image/webp",
+        0.85
+      )
+    })
+  }, [])
+
+  const handleCropConfirm = useCallback(async () => {
+    if (!cropImageSrc || !croppedAreaPixels) return
+    setImageUploading(true)
+    try {
+      const blob = await getCroppedImage(cropImageSrc, croppedAreaPixels)
+      const formData = new FormData()
+      formData.append("image", blob, "profile.webp")
+      const res = await fetch("/api/profile/image", { method: "POST", body: formData })
+      if (res.ok) {
+        const { url } = await res.json()
+        setFaceImageUrl(url)
+        setCropImageSrc(null)
+      } else {
+        const data = await res.json()
+        alert(data.error ?? "アップロードに失敗しました")
+      }
+    } catch {
+      alert("アップロードに失敗しました")
+    } finally {
+      setImageUploading(false)
+    }
+  }, [cropImageSrc, croppedAreaPixels, getCroppedImage])
+
   const handleComplete = async () => {
     setSubmitting(true)
     try {
@@ -533,6 +642,7 @@ export default function OnboardingForm() {
           birthDate: form.birthDate,
           bio: form.bio,
           allowPublic,
+          primaryAvatar,
           visibility: {
             studentId: "private",
             nickname: visibility.nickname,
@@ -1647,6 +1757,137 @@ export default function OnboardingForm() {
 
               <div className="mt-8 flex justify-between animate-[fadeInUp_300ms_120ms_ease_both]">
                 <Button variant="ghost" onClick={() => goToStep(4)}>
+                  ← 戻る
+                </Button>
+                <Button onClick={() => { handleStep5Save(); goToStep(6) }} disabled={submitting} className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-200/50 dark:shadow-purple-900/30">
+                  次へ →
+                </Button>
+              </div>
+            </div>}
+
+            {/* Step 6 — プロフィール画像 */}
+            {currentStep === 6 && <div className="p-8">
+              <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">プロフィール画像</h2>
+                <p className="text-muted-foreground mt-1 text-sm">顔がわかる写真を設定しましょう（任意）</p>
+              </div>
+
+              <div className="space-y-6 animate-[fadeInUp_300ms_60ms_ease_both]">
+                {/* Face image preview + upload */}
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-32 h-32 relative rounded-full overflow-hidden ring-4 ring-purple-100 dark:ring-purple-900/50">
+                    <Image
+                      src={faceImageUrl || "/placeholder.svg"}
+                      alt="プロフィール画像"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={imageUploading}
+                    className="gap-2"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx={12} cy={13} r={4} /></svg>
+                    画像を選択
+                  </Button>
+                </div>
+
+                {/* Crop dialog */}
+                {cropImageSrc && (
+                  <div className="space-y-4">
+                    <div className="relative w-full" style={{ height: 300 }}>
+                      <Cropper
+                        image={cropImageSrc}
+                        crop={crop}
+                        zoom={zoom}
+                        aspect={1}
+                        cropShape="round"
+                        onCropChange={setCrop}
+                        onZoomChange={setZoom}
+                        onCropComplete={(_, area) => setCroppedAreaPixels(area)}
+                      />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground flex-shrink-0">ズーム</span>
+                      <input
+                        type="range"
+                        min={1}
+                        max={3}
+                        step={0.1}
+                        value={zoom}
+                        onChange={(e) => setZoom(Number(e.target.value))}
+                        className="flex-1"
+                      />
+                    </div>
+                    <div className="flex gap-2 justify-center">
+                      <Button variant="ghost" onClick={() => setCropImageSrc(null)}>
+                        キャンセル
+                      </Button>
+                      <Button
+                        onClick={handleCropConfirm}
+                        disabled={imageUploading}
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
+                      >
+                        {imageUploading ? "アップロード中..." : "切り抜き"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Primary avatar selection */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                    <span className="text-xs text-muted-foreground px-2">公開ページの表示画像</span>
+                    <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      { value: "face" as const, label: "顔写真", src: faceImageUrl || "/placeholder.svg", enabled: true },
+                      { value: "discord" as const, label: "Discord", src: discordAvatar ? `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png` : "/placeholder.svg", enabled: !!discordAvatar },
+                      { value: "line" as const, label: "LINE", src: lineAvatar || "/placeholder.svg", enabled: lineLinked && !!lineAvatar },
+                      { value: "default" as const, label: "なし", src: "/placeholder.svg", enabled: true },
+                    ]).map(({ value, label, src, enabled }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        disabled={!enabled}
+                        onClick={() => setPrimaryAvatar(value)}
+                        className={[
+                          "flex items-center gap-3 rounded-xl border-2 p-3 transition-all duration-200",
+                          primaryAvatar === value
+                            ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 dark:border-purple-600"
+                            : "border-gray-200 dark:border-gray-700",
+                          !enabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:border-purple-300",
+                        ].join(" ")}
+                      >
+                        <div className="w-10 h-10 relative rounded-full overflow-hidden flex-shrink-0">
+                          <Image src={src} alt="" fill className="object-cover" />
+                        </div>
+                        <div className="text-left">
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</span>
+                          {primaryAvatar === value && (
+                            <CheckCircleIcon className="inline-block w-4 h-4 ml-1.5 text-purple-600 dark:text-purple-400" />
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-between animate-[fadeInUp_300ms_120ms_ease_both]">
+                <Button variant="ghost" onClick={() => goToStep(5)}>
                   ← 戻る
                 </Button>
                 <Button onClick={handleComplete} disabled={submitting} className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-200/50 dark:shadow-purple-900/30">
