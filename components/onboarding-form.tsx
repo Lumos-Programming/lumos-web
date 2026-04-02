@@ -1291,48 +1291,48 @@ export default function OnboardingForm() {
                 <p className="text-muted-foreground mt-1 text-sm">LINEの連携は必須です。GitHubとXは任意です。</p>
               </div>
 
-              <div className="space-y-4">
-                {/* LINE — required, large card */}
+              <div className="space-y-3">
+                {/* LINE — required */}
                 <div
                   className={[
-                    "rounded-xl border-2 p-5 transition-all duration-300",
+                    "rounded-xl border p-4 transition-all duration-300",
                     lineLinked
                       ? "border-green-400 bg-green-50 dark:bg-green-950/40 dark:border-green-700"
-                      : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50",
+                      : "border-gray-200 dark:border-gray-700",
                   ].join(" ")}
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#06C755] flex items-center justify-center flex-shrink-0">
-                        <LineIcon className="w-6 h-6 text-white" />
+                      <div className="relative flex items-center w-14 flex-shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-[#06C755] flex items-center justify-center">
+                          <LineIcon className="w-5 h-5 text-white" />
+                        </div>
+                        {lineLinked && lineAvatar && (
+                          <div className="absolute left-5 w-9 h-9 rounded-full overflow-hidden ring-2 ring-white dark:ring-gray-900">
+                            <img src={lineAvatar} alt="" className="w-full h-full object-cover" />
+                          </div>
+                        )}
                       </div>
-                      {lineLinked && lineAvatar && (
-                        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 -ml-5 ring-2 ring-white dark:ring-gray-900">
-                          <img src={lineAvatar} alt="" className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-gray-900 dark:text-gray-100">LINE</span>
-                          <span className="text-xs bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400 px-1.5 py-0.5 rounded font-medium">必須</span>
+                          <span className="font-medium text-gray-900 dark:text-gray-100">LINE</span>
+                          <span className="text-[10px] bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400 px-1.5 py-0.5 rounded font-medium">必須</span>
                         </div>
-                        {lineLinked ? (
-                          <p className="text-sm text-green-700 dark:text-green-400 mt-0.5">@{lineUsername} で連携済み</p>
-                        ) : (
-                          <p className="text-sm text-muted-foreground mt-0.5">LINEアカウントを連携してください</p>
+                        {lineLinked && (
+                          <p className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">@{lineUsername}</p>
                         )}
                       </div>
                     </div>
                     <a
                       href="/api/auth/link/line?redirectTo=/internal/onboarding%3Fstep%3D3"
                       className={[
-                        "flex-shrink-0 flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors",
+                        "flex-shrink-0 flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors",
                         lineLinked
                           ? "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                           : "bg-[#06C755] hover:bg-[#05a848] text-white",
                       ].join(" ")}
                     >
-                      <LineIcon className="w-4 h-4" />
+                      <LineIcon className="w-3.5 h-3.5" />
                       {lineLinked ? "再連携" : "連携する"}
                     </a>
                   </div>
@@ -1349,18 +1349,20 @@ export default function OnboardingForm() {
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <GithubIcon className="w-4 h-4 text-white dark:text-gray-900" />
-                      </div>
-                      {githubLinked && githubAvatar && (
-                        <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 -ml-5 ring-2 ring-white dark:ring-gray-900">
-                          <img src={githubAvatar} alt="" className="w-full h-full object-cover" />
+                      <div className="relative flex items-center w-14 flex-shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center">
+                          <GithubIcon className="w-4 h-4 text-white dark:text-gray-900" />
                         </div>
-                      )}
-                      <div>
+                        {githubLinked && githubAvatar && (
+                          <div className="absolute left-5 w-9 h-9 rounded-full overflow-hidden ring-2 ring-white dark:ring-gray-900">
+                            <img src={githubAvatar} alt="" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
                         <span className="font-medium text-gray-900 dark:text-gray-100">GitHub</span>
                         {githubLinked && (
-                          <p className="text-xs text-green-700 dark:text-green-400 mt-0.5">@{githubUsername}</p>
+                          <p className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">@{githubUsername}</p>
                         )}
                       </div>
                     </div>
@@ -1390,18 +1392,20 @@ export default function OnboardingForm() {
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center flex-shrink-0">
-                        <XIcon className="w-4 h-4 text-white" />
-                      </div>
-                      {xLinked && xAvatar && (
-                        <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 -ml-5 ring-2 ring-white dark:ring-gray-900">
-                          <img src={xAvatar} alt="" className="w-full h-full object-cover" />
+                      <div className="relative flex items-center w-14 flex-shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center">
+                          <XIcon className="w-4 h-4 text-white" />
                         </div>
-                      )}
-                      <div>
+                        {xLinked && xAvatar && (
+                          <div className="absolute left-5 w-9 h-9 rounded-full overflow-hidden ring-2 ring-white dark:ring-gray-900">
+                            <img src={xAvatar} alt="" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
                         <span className="font-medium text-gray-900 dark:text-gray-100">X (Twitter)</span>
                         {xLinked && (
-                          <p className="text-xs text-green-700 dark:text-green-400 mt-0.5">@{xUsername}</p>
+                          <p className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">@{xUsername}</p>
                         )}
                       </div>
                     </div>
