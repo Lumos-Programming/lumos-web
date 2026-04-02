@@ -49,13 +49,15 @@ export async function PUT(request: Request) {
     ) as Record<typeof VISIBILITY_KEYS[number], VisibilityLevel>
 
     const data: Parameters<typeof updateMember>[1] = {
-      studentId: typeof body.studentId === "string" ? body.studentId : "",
-      nickname:  typeof body.nickname  === "string" ? body.nickname  : "",
-      lastName:  typeof body.lastName  === "string" ? body.lastName  : "",
-      firstName: typeof body.firstName === "string" ? body.firstName : "",
-      bio:       typeof body.bio       === "string" ? body.bio       : "",
       visibility,
     }
+
+    // 文字列フィールドは送信された場合のみ更新（未送信時に空文字で上書きしない）
+    if (typeof body.studentId === "string") data.studentId = body.studentId
+    if (typeof body.nickname  === "string") data.nickname  = body.nickname
+    if (typeof body.lastName  === "string") data.lastName  = body.lastName
+    if (typeof body.firstName === "string") data.firstName = body.firstName
+    if (typeof body.bio       === "string") data.bio       = body.bio
 
     if (MEMBER_TYPES.includes(body.memberType)) data.memberType = body.memberType as MemberType
     if (typeof body.currentOrg === "string") data.currentOrg = body.currentOrg
