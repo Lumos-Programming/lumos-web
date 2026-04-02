@@ -20,10 +20,13 @@ export interface MemberDocument {
   skills?: string[]
   github?: string
   githubId?: string
+  githubAvatar?: string
   x?: string
   xId?: string
+  xAvatar?: string
   line?: string
   lineId?: string
+  lineAvatar?: string
   lineAccessToken?: string
   lineRefreshToken?: string
   lineTokenExpiresAt?: number   // Unix timestamp (seconds)
@@ -139,7 +142,7 @@ export async function updateMember(
 
 export async function updateMemberSns(
   discordId: string,
-  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'x' | 'xId' | 'line' | 'lineId' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
+  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'githubAvatar' | 'x' | 'xId' | 'xAvatar' | 'line' | 'lineId' | 'lineAvatar' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
 ): Promise<void> {
   const db = getDb()
   await db.collection('members').doc(discordId).update({
@@ -157,6 +160,7 @@ export async function deleteMemberSnsField(
     updatedAt: FieldValue.serverTimestamp(),
     [provider]: FieldValue.delete(),
     [`${provider}Id`]: FieldValue.delete(),
+    [`${provider}Avatar`]: FieldValue.delete(),
   }
   if (provider === 'line') {
     updates.lineAccessToken = FieldValue.delete()

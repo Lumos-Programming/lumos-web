@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const token = await exchangeCodeForToken('github', code, getCallbackUrl('github', baseUrl))
     const user = await fetchProviderUser('github', token)
 
-    await updateMemberSns(discordId, { github: user.username, githubId: user.id })
+    await updateMemberSns(discordId, { github: user.username, githubId: user.id, githubAvatar: user.avatar })
 
     const successUrl = new URL(redirectTo, request.nextUrl.origin)
     successUrl.searchParams.set('success', 'github_linked')

@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
     await updateMemberSns(discordId, {
       line: user.username,
       lineId: user.id,
+      lineAvatar: user.avatar,
       lineAccessToken: tokenResponse.access_token,
       lineRefreshToken: tokenResponse.refresh_token,
       lineTokenExpiresAt: tokenResponse.expires_in

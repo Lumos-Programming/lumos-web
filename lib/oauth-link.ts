@@ -24,7 +24,7 @@ export const PROVIDER_CONFIGS: Record<OAuthLinkProvider, ProviderConfig> = {
   x: {
     authUrl: 'https://twitter.com/i/oauth2/authorize',
     tokenUrl: 'https://api.twitter.com/2/oauth2/token',
-    userUrl: 'https://api.twitter.com/2/users/me?user.fields=username',
+    userUrl: 'https://api.twitter.com/2/users/me?user.fields=username,profile_image_url',
     clientIdEnv: 'AUTH_X_ID',
     clientSecretEnv: 'AUTH_X_SECRET',
     scope: 'users.read tweet.read',
@@ -167,7 +167,7 @@ export async function exchangeCodeForTokenFull(
 export async function fetchProviderUser(
   provider: OAuthLinkProvider,
   accessToken: string
-): Promise<{ id: string; username: string }> {
+): Promise<{ id: string; username: string; avatar?: string }> {
   const config = PROVIDER_CONFIGS[provider]
   const res = await fetch(config.userUrl, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -175,13 +175,13 @@ export async function fetchProviderUser(
   const data = await res.json()
 
   if (provider === 'github') {
-    return { id: String(data.id), username: data.login }
+    return { id: String(data.id), username: data.login, avatar: data.avatar_url }
   }
   if (provider === 'x') {
-    return { id: data.data.id, username: data.data.username }
+    return { id: data.data.id, username: data.data.username, avatar: data.data.profile_image_url }
   }
   if (provider === 'line') {
-    return { id: data.userId, username: data.displayName }
+    return { id: data.userId, username: data.displayName, avatar: data.pictureUrl }
   }
   throw new Error(`Unknown provider: ${provider}`)
 }
