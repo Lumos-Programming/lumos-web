@@ -12,8 +12,8 @@ import { toast } from "@/hooks/use-toast"
 import { cropAndResizeImage } from "@/lib/image-crop"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
-import ReactMarkdown from "react-markdown"
 import Link from "next/link"
+import { BioSection } from "@/components/member-detail-shared"
 import type { Profile, VisibilityLevel } from "@/types/profile"
 import { DEFAULT_RING_COLOR } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
@@ -648,15 +648,7 @@ export default function ProfileEdit() {
                       </span>
                     </div>
                     {key === "bio" ? (
-                      profile.bio ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                          <ReactMarkdown>{profile.bio}</ReactMarkdown>
-                        </div>
-                      ) : (
-                        <div className="rounded-lg bg-gray-100 dark:bg-gray-800 py-10 flex items-center justify-center">
-                          <p className="text-sm text-gray-400 dark:text-gray-500">自己紹介文は登録されていません</p>
-                        </div>
-                      )
+                      <BioSection bio={profile.bio} />
                     ) : key === "lastName" ? (
                       <p className="text-sm mt-1 whitespace-nowrap">
                         {profile.lastName} {profile.firstName}

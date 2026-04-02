@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import ReactMarkdown from "react-markdown"
 import { getRingColorClass, getMemberTypeBadgeClass } from "@/types/member"
+import { BioSection } from "@/components/member-detail-shared"
 
 export interface MemberTileData {
   main: string
@@ -178,7 +178,7 @@ export function ExternalTilePreview({ data, label, allowPublic }: { data: Member
 
 // --- Detail preview ---
 
-function DetailPreview({ data, label, allowPublic, hideSns }: { data: MemberDetailData; label?: string; allowPublic?: boolean; hideSns?: boolean }) {
+function DetailPreview({ data, label, allowPublic }: { data: MemberDetailData; label?: string; allowPublic?: boolean }) {
   const dept = data.memberType === "卒業生" && data.currentOrg ? data.currentOrg : data.department
   const isDisabled = allowPublic === false
   return (
@@ -212,7 +212,7 @@ function DetailPreview({ data, label, allowPublic, hideSns }: { data: MemberDeta
               </p>
             </div>
           </div>
-          {!hideSns && data.sns && data.sns.length > 0 && (
+          {data.sns && data.sns.length > 0 && (
             <div className="px-4 pb-3 -mt-1 flex flex-wrap gap-1.5">
               {data.sns.map((entry) => (
                 <SnsChip key={entry.platform} entry={entry} />
@@ -220,15 +220,7 @@ function DetailPreview({ data, label, allowPublic, hideSns }: { data: MemberDeta
             </div>
           )}
           <div className="px-4 pb-4">
-            {data.bio ? (
-              <div className="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-400 line-clamp-3 text-xs">
-                <ReactMarkdown>{data.bio}</ReactMarkdown>
-              </div>
-            ) : (
-              <div className="rounded-lg bg-gray-100 dark:bg-gray-800 py-8 flex items-center justify-center">
-                <p className="text-xs text-gray-400 dark:text-gray-500">自己紹介文は登録されていません</p>
-              </div>
-            )}
+            <BioSection bio={data.bio} clamp />
           </div>
         </div>
         {isDisabled && (
@@ -267,7 +259,7 @@ function TogglePill({ options, value, onChange }: { options: { key: string; labe
 }
 
 export function SingleDetailPreview({ data }: { data: MemberDetailData }) {
-  return <DetailPreview data={data} hideSns />
+  return <DetailPreview data={data} />
 }
 
 // --- Composable building blocks (for breakout layout) ---
