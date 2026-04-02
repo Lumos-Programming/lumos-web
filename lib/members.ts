@@ -43,6 +43,8 @@ export interface MemberDocument {
   faceImage?: string            // GCS URL (顔写真)
   primaryAvatar?: 'face' | 'discord' | 'line' | 'default'  // 公開ページ用
   ringColor?: string            // リングカラーキー
+  interests?: string[]          // 興味分野タグ
+  topInterests?: string[]       // 一覧カード表示用 (max 3)
   allowPublic?: boolean
   onboardingCompleted?: boolean
   visibility: {
@@ -243,7 +245,7 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
   if (v.github === 'public' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x === 'public' && data.x) social.x = `https://x.com/${data.x}`
   if (v.linkedin === 'public' && data.linkedin) social.linkedin = data.linkedin
-  if (v.discord === 'public' && data.discordHandle) social.discord = `@${data.discordHandle}`
+  if (v.discord === 'public' && data.discordHandle) social.discord = `https://discord.com/users/${discordId}`
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
 
@@ -261,6 +263,8 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
     memberType: data.memberType,
     currentOrg: v.currentOrg === 'public' ? data.currentOrg || undefined : undefined,
     ringColor: data.ringColor,
+    interests: data.interests ?? [],
+    topInterests: data.topInterests ?? [],
   }
 }
 
@@ -278,7 +282,7 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
   if (v.github !== 'private' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x !== 'private' && data.x) social.x = `https://x.com/${data.x}`
   if (v.linkedin !== 'private' && data.linkedin) social.linkedin = data.linkedin
-  if (v.discord !== 'private') social.discord = data.discordUsername
+  if (v.discord !== 'private') social.discord = `https://discord.com/users/${discordId}`
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
 
@@ -303,5 +307,7 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
     memberType: data.memberType,
     currentOrg: v.currentOrg !== 'private' ? data.currentOrg || undefined : undefined,
     ringColor: data.ringColor,
+    interests: data.interests ?? [],
+    topInterests: data.topInterests ?? [],
   }
 }

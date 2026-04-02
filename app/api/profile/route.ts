@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { getMember, updateMember } from "@/lib/members"
 import type { VisibilityLevel, MemberType, EnrollmentRecord, EnrollmentType } from "@/types/profile"
 import { MEMBER_TYPES, ENROLLMENT_TYPES } from "@/types/profile"
+import { isValidTag, MAX_TAGS, MAX_TOP_INTERESTS } from "@/types/interests"
 
 const VISIBILITY_KEYS = [
   "studentId", "nickname", "lastName", "firstName",
@@ -103,6 +104,15 @@ export async function PUT(request: Request) {
     const VALID_RING_COLORS = ["purple","blue","green","pink","orange","red","teal","amber","rose","indigo"]
     if (typeof body.ringColor === "string" && VALID_RING_COLORS.includes(body.ringColor)) {
       data.ringColor = body.ringColor
+    }
+    if (Array.isArray(body.interests) && body.interests.every((s: unknown) => typeof s === "string")) {
+      data.interests = (body.interests as string[]).filter(isValidTag).slice(0, MAX_TAGS)
+    }
+    if (Array.isArray(body.topInterests) && body.topInterests.every((s: unknown) => typeof s === "string")) {
+      const validInterests = data.interests ?? []
+      data.topInterests = (body.topInterests as string[])
+        .filter((t) => isValidTag(t) && validInterests.includes(t))
+        .slice(0, MAX_TOP_INTERESTS)
     }
 
     await updateMember(session.user.id, data)

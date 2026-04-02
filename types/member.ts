@@ -20,6 +20,8 @@ export type Member = {
   memberType?: string        // 学部生/院生/聴講生/卒業生
   currentOrg?: string        // 卒業生の現在の所属
   ringColor?: string         // リングカラーキー
+  interests?: string[]       // 興味分野タグ
+  topInterests?: string[]    // 一覧表示用Top 3
 };
 
 // リングカラーパレット定数（Tailwind content scan 対象のためここに定義）

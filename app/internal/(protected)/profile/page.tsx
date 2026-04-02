@@ -86,7 +86,7 @@ export default async function ProfilePage() {
                   <p className="text-sm">{member.role || "未設定"}</p>
                 </div>
                 <div className="md:col-span-2">
-                  <p className="text-xs text-gray-500">自己紹介</p>
+                  <p className="text-xs text-gray-500">プロフィール文</p>
                   <p className="text-sm whitespace-pre-wrap">{member.bio || "未設定"}</p>
                 </div>
                 <div>

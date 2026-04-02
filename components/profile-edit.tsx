@@ -15,11 +15,13 @@ import type { Area } from "react-easy-crop"
 import Link from "next/link"
 import { BioSection } from "@/components/member-detail-shared"
 import type { Profile, VisibilityLevel } from "@/types/profile"
-import { DEFAULT_RING_COLOR } from "@/types/member"
+import { DEFAULT_RING_COLOR, getRingColorClass } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
 import { RingColorPicker } from "@/components/ring-color-picker"
 import { MemberPreviewToggle } from "@/components/member-tile-preview"
 import type { SnsEntry } from "@/components/member-tile-preview"
+import { LiquidSplashEffect } from "@/components/liquid-splash-effect"
+import { InterestTagInput } from "@/components/interest-tag-input"
 
 function formatBirthDate(d: string) {
   const parts = d.split("-")
@@ -36,7 +38,7 @@ const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "
   firstNameRomaji: "名（ローマ字）",
   currentOrg: "現在の所属",
   birthDate: "誕生日",
-  bio: "自己紹介",
+  bio: "プロフィール文",
   line: "LINE",
   discord: "Discord",
   github: "GitHub",
@@ -76,7 +78,7 @@ const DEFAULT_PROFILE: Profile = {
   },
 }
 
-const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "bio", "github", "x", "linkedin", "line", "discord"] as const
+const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "bio", "discord", "line", "github", "x", "linkedin"] as const
 
 export default function ProfileEdit() {
   const [isEditing, setIsEditing] = useState(true)
@@ -101,11 +103,14 @@ export default function ProfileEdit() {
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const [imageUploading, setImageUploading] = useState(false)
+  const [blobAnimating, setBlobAnimating] = useState(false)
   const [faculty, setFaculty] = useState("")
   const [year, setYear] = useState("")
   const [role, setRole] = useState("")
   const [memberType, setMemberType] = useState("")
   const [currentOrg, setCurrentOrg] = useState("")
+  const [interests, setInterests] = useState<string[]>([])
+  const [topInterests, setTopInterests] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -154,6 +159,8 @@ export default function ProfileEdit() {
           if (data.ringColor) setRingColor(data.ringColor)
           if (data.memberType) setMemberType(data.memberType)
           if (data.currentOrg) setCurrentOrg(data.currentOrg)
+          if (data.interests) setInterests(data.interests)
+          if (data.topInterests) setTopInterests(data.topInterests)
           setProfile({
             studentId: data.studentId ?? "",
             nickname: data.nickname ?? "",
@@ -181,7 +188,7 @@ export default function ProfileEdit() {
       const response = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profile, allowPublic, primaryAvatar, ringColor }),
+        body: JSON.stringify({ ...profile, allowPublic, primaryAvatar, ringColor, interests, topInterests }),
       })
 
       if (response.ok) {
@@ -216,6 +223,7 @@ export default function ProfileEdit() {
         const { url } = await res.json()
         setFaceImageUrl(url)
         setCropImageSrc(null)
+        setBlobAnimating(true)
       } else {
         const data = await res.json().catch(() => ({}))
         toast({
@@ -322,16 +330,18 @@ export default function ProfileEdit() {
     const v = profile.visibility
     const check = level === "public" ? (l: string) => l === "public" : (l: string) => l !== "private"
     const entries: SnsEntry[] = []
+    if (check(v.discord) && profile.discord)
+      entries.push({ platform: "discord", username: profile.discord, url: `https://discord.com/users/${discordId}`, avatarUrl: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined })
+    if (check(v.line) && profile.line)
+      entries.push({ platform: "line", username: profile.line, avatarUrl: lineAvatar || undefined })
     if (check(v.github) && profile.github)
       entries.push({ platform: "github", username: profile.github, url: `https://github.com/${profile.github}`, avatarUrl: githubAvatar || undefined })
     if (check(v.x) && profile.x)
       entries.push({ platform: "x", username: profile.x, url: `https://x.com/${profile.x}`, avatarUrl: xAvatar || undefined })
-    if (check(v.discord) && profile.discord)
-      entries.push({ platform: "discord", username: profile.discord, avatarUrl: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined })
     if (check(v.linkedin) && linkedinUsername)
       entries.push({ platform: "linkedin", username: linkedinDisplayName || "LinkedIn", url: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
     return entries
-  }, [profile, githubAvatar, xAvatar, discordAvatarUrl, linkedinAvatar, linkedinUsername, linkedinDisplayName])
+  }, [profile, discordId, githubAvatar, xAvatar, discordAvatarUrl, lineAvatar, linkedinAvatar, linkedinUsername, linkedinDisplayName])
 
   const internalSns = useMemo(() => buildSnsEntries("internal"), [buildSnsEntries])
   const externalSns = useMemo(() => buildSnsEntries("public"), [buildSnsEntries])
@@ -437,8 +447,8 @@ export default function ProfileEdit() {
           {/* 表示プレビュー */}
           {isEditing && (
             <MemberPreviewToggle
-              internalData={{ ...internalPreview, ringColor, memberType, currentOrg, role, year, bio: profile.bio, sns: internalSns }}
-              externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: externalSns }}
+              internalData={{ ...internalPreview, ringColor, memberType, currentOrg, role, year, bio: profile.bio, sns: internalSns, topInterests, interests }}
+              externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: externalSns, topInterests, interests }}
               allowPublic={allowPublic}
             />
           )}
@@ -447,13 +457,18 @@ export default function ProfileEdit() {
             <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
               <Label className="text-base font-semibold">プロフィール画像</Label>
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="w-24 h-24 relative rounded-full overflow-hidden ring-4 ring-purple-100 dark:ring-purple-900/50 flex-shrink-0">
-                  <Image
-                    src={faceImageUrl || "/placeholder.svg"}
-                    alt="プロフィール画像"
-                    fill
-                    className="object-cover"
-                  />
+                <div className="relative flex-shrink-0 flex items-center justify-center overflow-visible" style={{ width: 136, height: 136 }}>
+                  {blobAnimating && (
+                    <LiquidSplashEffect width={136} height={136} onComplete={() => setBlobAnimating(false)} />
+                  )}
+                  <div className={`w-24 h-24 relative rounded-full overflow-hidden ring-4 ${getRingColorClass(ringColor)} z-10 ${blobAnimating ? "animate-liquid-pop" : ""}`}>
+                    <Image
+                      src={faceImageUrl || "/placeholder.svg"}
+                      alt="プロフィール画像"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
                 </div>
                 <div className="flex flex-col gap-2">
                   <input
@@ -534,6 +549,18 @@ export default function ProfileEdit() {
               </div>
 
               <RingColorPicker value={ringColor} onChange={setRingColor} />
+            </div>
+          )}
+
+          {isEditing && (
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">興味分野</Label>
+              <InterestTagInput
+                value={interests}
+                onChange={setInterests}
+                topInterests={topInterests}
+                onTopInterestsChange={setTopInterests}
+              />
             </div>
           )}
 
@@ -622,7 +649,7 @@ export default function ProfileEdit() {
                             })
                           }
                           max={key === "line" || key === "birthDate" || !allowPublic ? "internal" : undefined}
-                          min={key === "discord" ? "internal" : undefined}
+                          min={key === "line" || key === "discord" ? "internal" : undefined}
                         />
                       </div>
                     )}

@@ -70,6 +70,15 @@ export default function MemberList({ members }: Props) {
               <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-full">
                 {member.memberType === "卒業生" && member.currentOrg ? member.currentOrg : member.department}
               </p>
+              {member.topInterests && member.topInterests.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1 justify-center">
+                  {member.topInterests.map((tag) => (
+                    <span key={tag} className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-[10px] px-1.5 py-0.5 rounded-full">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </button>
           )
         })}

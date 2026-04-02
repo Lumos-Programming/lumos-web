@@ -42,6 +42,8 @@ export interface Profile {
   role?: string
   year?: string
   skills?: string[]
+  interests?: string[]
+  topInterests?: string[]
   visibility: ProfileVisibility
 }
 
