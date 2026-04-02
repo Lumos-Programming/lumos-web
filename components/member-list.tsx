@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Github, Linkedin, Globe } from "lucide-react"
 
@@ -25,14 +24,15 @@ export default function MemberList({ members }: Props) {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
         {members.map((member) => (
-          <Card
+          <button
             key={member.id}
-            className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+            type="button"
             onClick={() => setSelectedMember(member)}
+            className="group flex flex-col items-center text-center rounded-xl p-3 hover:bg-white/70 dark:hover:bg-gray-800/60 transition-colors cursor-pointer"
           >
-            <div className="aspect-square relative">
+            <div className="w-16 h-16 relative rounded-full overflow-hidden ring-2 ring-transparent group-hover:ring-purple-300 dark:group-hover:ring-purple-600 transition-all flex-shrink-0">
               <Image
                 src={member.image || "/placeholder.svg"}
                 alt={`${member.name}の写真`}
@@ -40,14 +40,13 @@ export default function MemberList({ members }: Props) {
                 className="object-cover"
               />
             </div>
-            <CardContent className="p-4">
-              <h3 className="text-xl font-bold">{member.name}</h3>
-              <p className="text-accent font-medium">{member.role}</p>
-              <p className="text-gray-600 text-sm mt-1">
-                {member.department} {member.year}
-              </p>
-            </CardContent>
-          </Card>
+            <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight truncate w-full">
+              {member.name}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-full">
+              {member.department}
+            </p>
+          </button>
         ))}
       </div>
 
