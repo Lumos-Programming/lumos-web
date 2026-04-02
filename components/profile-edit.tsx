@@ -57,11 +57,12 @@ const DEFAULT_PROFILE: Profile = {
     line: "internal",
     github: "public",
     x: "public",
+    linkedin: "public",
     discord: "public",
   },
 }
 
-const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "bio", "github", "x", "line", "discord"] as const
+const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "bio", "github", "x", "linkedin", "line", "discord"] as const
 
 export default function ProfileEdit() {
   const [isEditing, setIsEditing] = useState(true)
@@ -86,6 +87,7 @@ export default function ProfileEdit() {
             line: data.visibility?.line ?? "internal",
             github: data.visibility?.github ?? "public",
             x: data.visibility?.x ?? "public",
+            linkedin: data.visibility?.linkedin ?? "public",
             discord: data.visibility?.discord ?? "public",
           }
           // allowPublic が保存されていればそれを使い、なければ既存 visibility から推定

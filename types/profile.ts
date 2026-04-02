@@ -12,6 +12,7 @@ export interface ProfileVisibility {
   line: VisibilityLevel       // 最大 'internal'
   github: VisibilityLevel
   x: VisibilityLevel
+  linkedin: VisibilityLevel
   discord: VisibilityLevel
 }
 

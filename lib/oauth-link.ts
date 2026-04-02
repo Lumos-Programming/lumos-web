@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'crypto'
 
-export type OAuthLinkProvider = 'github' | 'x' | 'line'
+export type OAuthLinkProvider = 'github' | 'x' | 'line' | 'linkedin'
 
 interface ProviderConfig {
   authUrl: string
@@ -37,6 +37,14 @@ export const PROVIDER_CONFIGS: Record<OAuthLinkProvider, ProviderConfig> = {
     clientIdEnv: 'AUTH_LINE_ID',
     clientSecretEnv: 'AUTH_LINE_SECRET',
     scope: 'profile',
+  },
+  linkedin: {
+    authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
+    tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
+    userUrl: 'https://api.linkedin.com/v2/userinfo',
+    clientIdEnv: 'AUTH_LINKEDIN_ID',
+    clientSecretEnv: 'AUTH_LINKEDIN_SECRET',
+    scope: 'openid profile',
   },
 }
 
@@ -182,6 +190,9 @@ export async function fetchProviderUser(
   }
   if (provider === 'line') {
     return { id: data.userId, username: data.displayName, avatar: data.pictureUrl }
+  }
+  if (provider === 'linkedin') {
+    return { id: data.sub, username: data.name, avatar: data.picture }
   }
   throw new Error(`Unknown provider: ${provider}`)
 }

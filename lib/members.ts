@@ -27,6 +27,9 @@ export interface MemberDocument {
   line?: string
   lineId?: string
   lineAvatar?: string
+  linkedin?: string
+  linkedinId?: string
+  linkedinAvatar?: string
   lineAccessToken?: string
   lineRefreshToken?: string
   lineTokenExpiresAt?: number   // Unix timestamp (seconds)
@@ -43,6 +46,7 @@ export interface MemberDocument {
     bio: VisibilityLevel
     github: VisibilityLevel
     x: VisibilityLevel
+    linkedin: VisibilityLevel
     line: VisibilityLevel
     discord: VisibilityLevel
   }
@@ -80,6 +84,7 @@ export async function getOrCreateMember(
         bio: 'public',
         github: 'public',
         x: 'public',
+        linkedin: 'public',
         line: 'internal',
         discord: 'public',
       },
@@ -131,7 +136,7 @@ export async function getMemberInternal(discordId: string): Promise<Member | nul
 
 export async function updateMember(
   discordId: string,
-  data: Partial<Omit<MemberDocument, 'discordUsername' | 'discordAvatar' | 'github' | 'githubId' | 'x' | 'xId' | 'line' | 'lineId' | 'createdAt' | 'updatedAt'>>
+  data: Partial<Omit<MemberDocument, 'discordUsername' | 'discordAvatar' | 'github' | 'githubId' | 'x' | 'xId' | 'linkedin' | 'linkedinId' | 'line' | 'lineId' | 'createdAt' | 'updatedAt'>>
 ): Promise<void> {
   const db = getDb()
   await db.collection('members').doc(discordId).update({
@@ -142,7 +147,7 @@ export async function updateMember(
 
 export async function updateMemberSns(
   discordId: string,
-  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'githubAvatar' | 'x' | 'xId' | 'xAvatar' | 'line' | 'lineId' | 'lineAvatar' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
+  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'githubAvatar' | 'x' | 'xId' | 'xAvatar' | 'linkedin' | 'linkedinId' | 'linkedinAvatar' | 'line' | 'lineId' | 'lineAvatar' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
 ): Promise<void> {
   const db = getDb()
   await db.collection('members').doc(discordId).update({
@@ -153,7 +158,7 @@ export async function updateMemberSns(
 
 export async function deleteMemberSnsField(
   discordId: string,
-  provider: 'github' | 'x' | 'line'
+  provider: 'github' | 'x' | 'line' | 'linkedin'
 ): Promise<void> {
   const db = getDb()
   const updates: Record<string, unknown> = {
@@ -187,6 +192,7 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
   const social: Member['social'] = {}
   if (v.github === 'public' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x === 'public' && data.x) social.x = `https://x.com/${data.x}`
+  if (v.linkedin === 'public' && data.linkedin) social.linkedin = `https://www.linkedin.com/in/${data.linkedinId}`
   if (v.discord === 'public') social.discord = data.discordUsername
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
@@ -219,6 +225,7 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
   const social: Member['social'] = {}
   if (v.github !== 'private' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x !== 'private' && data.x) social.x = `https://x.com/${data.x}`
+  if (v.linkedin !== 'private' && data.linkedin) social.linkedin = `https://www.linkedin.com/in/${data.linkedinId}`
   if (v.discord !== 'private') social.discord = data.discordUsername
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''

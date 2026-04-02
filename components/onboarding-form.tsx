@@ -46,6 +46,7 @@ interface VisibilityForm {
   bio: VisibilityLevel
   github: VisibilityLevel
   x: VisibilityLevel
+  linkedin: VisibilityLevel
   line: VisibilityLevel
   discord: VisibilityLevel
 }
@@ -81,6 +82,7 @@ const DEFAULT_VISIBILITY: VisibilityForm = {
   bio: "public",
   github: "public",
   x: "public",
+  linkedin: "public",
   line: "internal",
   discord: "public",
 }
@@ -95,12 +97,13 @@ const VISIBILITY_LABELS: Record<keyof VisibilityForm, string> = {
   bio: "自己紹介",
   github: "GitHub",
   x: "X (Twitter)",
+  linkedin: "LinkedIn",
   line: "LINE",
   discord: "Discord",
 }
 
 const VISIBILITY_DISPLAY_KEYS: Array<keyof VisibilityForm> = [
-  "lastName", "faculty", "currentOrg", "birthDate", "nickname", "bio", "github", "x", "line", "discord",
+  "lastName", "faculty", "currentOrg", "birthDate", "nickname", "bio", "github", "x", "linkedin", "line", "discord",
 ]
 
 function getSchoolYearOptions(memberType: MemberType | ""): { label: string; note?: string } & { options: string[] } {
@@ -156,6 +159,14 @@ function XIcon({ className }: { className?: string }) {
   )
 }
 
+function LinkedInIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+    </svg>
+  )
+}
+
 function CheckCircleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -193,6 +204,9 @@ export default function OnboardingForm() {
   const [xUsername, setXUsername] = useState("")
   const [xLinked, setXLinked] = useState(false)
   const [xAvatar, setXAvatar] = useState("")
+  const [linkedinUsername, setLinkedinUsername] = useState("")
+  const [linkedinLinked, setLinkedinLinked] = useState(false)
+  const [linkedinAvatar, setLinkedinAvatar] = useState("")
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [step1Errors, setStep1Errors] = useState<Partial<Record<keyof FormData, string>>>({})
@@ -277,6 +291,9 @@ export default function OnboardingForm() {
           setXLinked(!!data.xId)
           setXUsername(data.x ?? "")
           setXAvatar(data.xAvatar ?? "")
+          setLinkedinLinked(!!data.linkedinId)
+          setLinkedinUsername(data.linkedin ?? "")
+          setLinkedinAvatar(data.linkedinAvatar ?? "")
         }
       })
       .catch(console.error)
@@ -307,12 +324,20 @@ export default function OnboardingForm() {
         .then((res) => res.json())
         .then((data) => { if (data?.x) { setXUsername(data.x); setXAvatar(data.xAvatar ?? "") } })
         .catch(console.error)
+    } else if (success === "linkedin_linked") {
+      setLinkedinLinked(true)
+      fetch("/api/profile")
+        .then((res) => res.json())
+        .then((data) => { if (data?.linkedin) { setLinkedinUsername(data.linkedin); setLinkedinAvatar(data.linkedinAvatar ?? "") } })
+        .catch(console.error)
     } else if (error === "line_link_failed") {
       setStep3Error("LINE連携に失敗しました。もう一度お試しください。")
     } else if (error === "github_link_failed") {
       setStep3Error("GitHub連携に失敗しました。もう一度お試しください。")
     } else if (error === "x_link_failed") {
       setStep3Error("X連携に失敗しました。もう一度お試しください。")
+    } else if (error === "linkedin_link_failed") {
+      setStep3Error("LinkedIn連携に失敗しました。もう一度お試しください。")
     }
 
     if (success || error) {
@@ -348,6 +373,7 @@ export default function OnboardingForm() {
             line: "internal",
             github: "public",
             x: "public",
+            linkedin: "public",
             discord: "public",
           },
         }),
@@ -435,6 +461,7 @@ export default function OnboardingForm() {
             line: "internal",
             github: "public",
             x: "public",
+            linkedin: "public",
             discord: "public",
           },
         }),
@@ -1420,6 +1447,49 @@ export default function OnboardingForm() {
                     >
                       <XIcon className="w-3.5 h-3.5" />
                       {xLinked ? "再連携" : "連携する"}
+                    </a>
+                  </div>
+                </div>
+
+                {/* LinkedIn — optional */}
+                <div
+                  className={[
+                    "rounded-xl border p-4 transition-all duration-300",
+                    linkedinLinked
+                      ? "border-green-400 bg-green-50 dark:bg-green-950/40 dark:border-green-700"
+                      : "border-gray-200 dark:border-gray-700",
+                  ].join(" ")}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex items-center w-14 flex-shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-[#0A66C2] flex items-center justify-center">
+                          <LinkedInIcon className="w-4 h-4 text-white" />
+                        </div>
+                        {linkedinLinked && linkedinAvatar && (
+                          <div className="absolute left-5 w-9 h-9 rounded-full overflow-hidden ring-2 ring-white dark:ring-gray-900">
+                            <img src={linkedinAvatar} alt="" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-medium text-gray-900 dark:text-gray-100">LinkedIn</span>
+                        {linkedinLinked && (
+                          <p className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">{linkedinUsername}</p>
+                        )}
+                      </div>
+                    </div>
+                    <a
+                      href="/api/auth/link/linkedin?redirectTo=/internal/onboarding%3Fstep%3D3"
+                      className={[
+                        "flex-shrink-0 flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors",
+                        linkedinLinked
+                          ? "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                          : "bg-[#0A66C2] hover:bg-[#004182] text-white",
+                      ].join(" ")}
+                    >
+                      <LinkedInIcon className="w-3.5 h-3.5" />
+                      {linkedinLinked ? "再連携" : "連携する"}
                     </a>
                   </div>
                 </div>

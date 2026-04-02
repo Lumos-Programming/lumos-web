@@ -6,7 +6,7 @@ import { MEMBER_TYPES, ENROLLMENT_TYPES } from "@/types/profile"
 
 const VISIBILITY_KEYS = [
   "studentId", "nickname", "lastName", "firstName",
-  "faculty", "currentOrg", "birthDate", "bio", "line", "github", "x", "discord",
+  "faculty", "currentOrg", "birthDate", "bio", "line", "github", "x", "linkedin", "discord",
 ] as const
 
 const VISIBILITY_LEVELS: VisibilityLevel[] = ["private", "internal", "public"]
