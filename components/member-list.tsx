@@ -34,13 +34,25 @@ export default function MemberList({ members }: Props) {
             onClick={() => setSelectedMember(member)}
             className="group flex flex-col items-center text-center rounded-xl p-3 hover:bg-white/70 dark:hover:bg-gray-800/60 transition-colors cursor-pointer"
           >
-            <div className="w-16 h-16 relative rounded-full overflow-hidden ring-2 ring-transparent group-hover:ring-purple-300 dark:group-hover:ring-purple-600 transition-all flex-shrink-0">
-              <Image
-                src={member.image || "/placeholder.svg"}
-                alt={`${member.name}の写真`}
-                fill
-                className="object-cover"
-              />
+            <div className="relative flex-shrink-0">
+              <div className="w-16 h-16 relative rounded-full overflow-hidden ring-2 ring-transparent group-hover:ring-purple-300 dark:group-hover:ring-purple-600 transition-all">
+                <Image
+                  src={member.faceImage || member.image || "/placeholder.svg"}
+                  alt={`${member.name}の写真`}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              {member.snsAvatar && (
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
+                  <Image
+                    src={member.snsAvatar}
+                    alt=""
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
             </div>
             <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight truncate w-full">
               {member.name}
@@ -63,13 +75,25 @@ export default function MemberList({ members }: Props) {
                 </DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 mt-4">
-                <div className="aspect-square relative rounded-lg overflow-hidden">
-                  <Image
-                    src={selectedMember.image || "/placeholder.svg"}
-                    alt={`${selectedMember.name}の写真`}
-                    fill
-                    className="object-cover"
-                  />
+                <div className="relative">
+                  <div className="aspect-square relative rounded-lg overflow-hidden">
+                    <Image
+                      src={selectedMember.faceImage || selectedMember.image || "/placeholder.svg"}
+                      alt={`${selectedMember.name}の写真`}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  {selectedMember.snsAvatar && (
+                    <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
+                      <Image
+                        src={selectedMember.snsAvatar}
+                        alt=""
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700 mb-4">
