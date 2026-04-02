@@ -22,17 +22,16 @@ export default function OnboardingComplete() {
   useEffect(() => {
     if (phase < 3) return
     const interval = setInterval(() => {
-      setCountdown((c) => {
-        if (c <= 1) {
-          clearInterval(interval)
-          router.push("/internal")
-          return 0
-        }
-        return c - 1
-      })
+      setCountdown((c) => c - 1)
     }, 1000)
     return () => clearInterval(interval)
-  }, [phase, router])
+  }, [phase])
+
+  useEffect(() => {
+    if (countdown <= 0) {
+      router.push("/internal")
+    }
+  }, [countdown, router])
 
   return (
     <div
