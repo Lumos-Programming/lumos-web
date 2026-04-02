@@ -2189,7 +2189,7 @@ export default function OnboardingForm() {
                 <button
                   type="button"
                   onClick={() => setPreviewView("tile")}
-                  className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md transition-all ${previewView === "tile" ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm font-semibold" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+                  className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md transition-all ${previewView === "tile" ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-sm font-semibold" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
                   一覧
@@ -2197,7 +2197,7 @@ export default function OnboardingForm() {
                 <button
                   type="button"
                   onClick={() => setPreviewView("detail")}
-                  className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md transition-all ${previewView === "detail" ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm font-semibold" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+                  className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md transition-all ${previewView === "detail" ? "bg-gradient-to-r from-orange-400 to-rose-500 text-white shadow-sm font-semibold" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="9" x2="9" y2="21" /></svg>
                   詳細
