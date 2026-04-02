@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { MarkdownEditor } from "@/components/markdown-editor"
 import { VisibilityToggle } from "@/components/ui/visibility-toggle"
 import { toast } from "@/hooks/use-toast"
 import { cropAndResizeImage } from "@/lib/image-crop"
@@ -95,7 +95,6 @@ export default function ProfileEdit() {
   const [faceImageUrl, setFaceImageUrl] = useState("")
   const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
   const [ringColor, setRingColor] = useState<RingColorKey>(DEFAULT_RING_COLOR)
-  const [bioTab, setBioTab] = useState<"write" | "preview">("write")
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -567,56 +566,12 @@ export default function ProfileEdit() {
                         </p>
                       </div>
                     ) : key === "bio" ? (
-                      <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                        <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 px-3 py-1.5">
-                          <div className="flex">
-                            <button
-                              type="button"
-                              onClick={() => setBioTab("write")}
-                              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${bioTab === "write" ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
-                            >
-                              編集
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setBioTab("preview")}
-                              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${bioTab === "preview" ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
-                            >
-                              プレビュー
-                            </button>
-                          </div>
-                          {bioTab === "write" && (
-                            <div className="flex items-center gap-1">
-                              <button type="button" title="太字" className="p-1 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-bold" onClick={() => setProfile({ ...profile, bio: profile.bio + " **太字**" })}>B</button>
-                              <button type="button" title="斜体" className="p-1 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm italic" onClick={() => setProfile({ ...profile, bio: profile.bio + " *斜体*" })}>I</button>
-                              <button type="button" title="リンク" className="p-1 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm" onClick={() => setProfile({ ...profile, bio: profile.bio + " [リンク名](https://example.com)" })}>
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" /><path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101" /></svg>
-                              </button>
-                              <button type="button" title="コード" className="p-1 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-mono" onClick={() => setProfile({ ...profile, bio: profile.bio + " `コード`" })}>{"<>"}</button>
-                              <button type="button" title="見出し" className="p-1 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-bold" onClick={() => setProfile({ ...profile, bio: profile.bio + "\n\n## 見出し" })}>H</button>
-                            </div>
-                          )}
-                        </div>
-                        {bioTab === "write" ? (
-                          <Textarea
-                            value={profile.bio}
-                            onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                            rows={6}
-                            className="border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 resize-y"
-                            placeholder="Markdownで自己紹介を入力してください"
-                          />
-                        ) : (
-                          <div className="px-4 py-3 min-h-[150px]">
-                            {profile.bio ? (
-                              <div className="prose prose-sm dark:prose-invert max-w-none">
-                                <ReactMarkdown>{profile.bio}</ReactMarkdown>
-                              </div>
-                            ) : (
-                              <p className="text-sm text-gray-400 dark:text-gray-500">まだ何も書かれていません</p>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      <MarkdownEditor
+                        value={profile.bio}
+                        onChange={(val) => setProfile({ ...profile, bio: val })}
+                        height={200}
+                        placeholder="Markdownで自己紹介を入力してください"
+                      />
                     ) : key === "birthDate" ? (
                       <Input
                         type="date"

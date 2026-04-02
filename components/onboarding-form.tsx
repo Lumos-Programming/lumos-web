@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
-import ReactMarkdown from "react-markdown"
+import { MarkdownEditor } from "@/components/markdown-editor"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import { Button } from "@/components/ui/button"
@@ -238,7 +238,6 @@ export default function OnboardingForm() {
   const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
   const [ringColor, setRingColor] = useState<RingColorKey>(DEFAULT_RING_COLOR)
   const [previewView, setPreviewView] = useState<"tile" | "detail">("tile")
-  const [bioTab, setBioTab] = useState<"write" | "preview">("write")
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -1791,57 +1790,12 @@ export default function OnboardingForm() {
               </div>
 
               <div className="space-y-2 animate-[fadeInUp_300ms_60ms_ease_both]">
-                <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 px-3 py-1.5">
-                    <div className="flex">
-                      <button
-                        type="button"
-                        onClick={() => setBioTab("write")}
-                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${bioTab === "write" ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
-                      >
-                        編集
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setBioTab("preview")}
-                        className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${bioTab === "preview" ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
-                      >
-                        プレビュー
-                      </button>
-                    </div>
-                    {bioTab === "write" && (
-                      <div className="flex items-center gap-1">
-                        <button type="button" title="太字" className="p-1 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-bold" onClick={() => setForm((f) => ({ ...f, bio: f.bio + " **太字**" }))}>B</button>
-                        <button type="button" title="斜体" className="p-1 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm italic" onClick={() => setForm((f) => ({ ...f, bio: f.bio + " *斜体*" }))}>I</button>
-                        <button type="button" title="リンク" className="p-1 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm" onClick={() => setForm((f) => ({ ...f, bio: f.bio + " [リンク名](https://example.com)" }))}>
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" /><path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101" /></svg>
-                        </button>
-                        <button type="button" title="コード" className="p-1 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-mono" onClick={() => setForm((f) => ({ ...f, bio: f.bio + " `コード`" }))}>{"<>"}</button>
-                        <button type="button" title="見出し" className="p-1 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-bold" onClick={() => setForm((f) => ({ ...f, bio: f.bio + "\n\n## 見出し" }))}>H</button>
-                      </div>
-                    )}
-                  </div>
-                  {bioTab === "write" ? (
-                    <textarea
-                      id="bio"
-                      value={form.bio}
-                      onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-                      placeholder="趣味や得意なことなど、自由に書いてください（Markdown対応）"
-                      rows={5}
-                      className="block w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 resize-y focus:outline-none border-0"
-                    />
-                  ) : (
-                    <div className="px-4 py-3 min-h-[130px] bg-white dark:bg-gray-800">
-                      {form.bio ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                          <ReactMarkdown>{form.bio}</ReactMarkdown>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-400 dark:text-gray-500">まだ何も書かれていません</p>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <MarkdownEditor
+                  value={form.bio}
+                  onChange={(val) => setForm((f) => ({ ...f, bio: val }))}
+                  height={180}
+                  placeholder="趣味や得意なことなど、自由に書いてください"
+                />
                 <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-2.5">
                   <svg className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>
                   <p className="text-sm text-blue-700 dark:text-blue-300">プロフィール設定からいつでも編集できます!</p>
