@@ -4,7 +4,8 @@ import type { VisibilityLevel, MemberType, EnrollmentRecord } from '@/types/prof
 import { FieldValue } from 'firebase-admin/firestore'
 
 export interface MemberDocument {
-  discordUsername: string
+  discordUsername: string       // Display name (token.name)
+  discordHandle?: string        // Discord username (@handle)
   discordAvatar: string
   studentId: string
   nickname: string
@@ -62,7 +63,8 @@ export interface MemberDocument {
 export async function getOrCreateMember(
   discordId: string,
   username: string,
-  avatar: string
+  avatar: string,
+  handle?: string
 ): Promise<void> {
   const db = getDb()
   const ref = db.collection('members').doc(discordId)
@@ -71,6 +73,7 @@ export async function getOrCreateMember(
   if (!snap.exists) {
     await ref.set({
       discordUsername: username,
+      ...(handle ? { discordHandle: handle } : {}),
       discordAvatar: avatar,
       studentId: '',
       nickname: '',
@@ -101,6 +104,7 @@ export async function getOrCreateMember(
   } else {
     await ref.update({
       discordUsername: username,
+      ...(handle ? { discordHandle: handle } : {}),
       discordAvatar: avatar,
       updatedAt: FieldValue.serverTimestamp(),
     })
@@ -229,7 +233,7 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
   if (v.github === 'public' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x === 'public' && data.x) social.x = `https://x.com/${data.x}`
   if (v.linkedin === 'public' && data.linkedin) social.linkedin = `https://www.linkedin.com/in/${data.linkedin}`
-  if (v.discord === 'public') social.discord = data.discordUsername
+  if (v.discord === 'public' && data.discordHandle) social.discord = `@${data.discordHandle}`
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
 
