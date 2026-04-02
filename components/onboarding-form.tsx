@@ -952,7 +952,7 @@ export default function OnboardingForm() {
       <div className="absolute top-[-10%] right-[-5%] w-72 h-72 bg-purple-200/30 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-5%] w-64 h-64 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
 
-      <div className={`w-full relative z-10 transition-all duration-300 ${currentStep === 4 ? "max-w-2xl" : "max-w-lg"}`}>
+      <div className={`w-full relative z-10 transition-all duration-300 max-w-lg`}>
         {/* Step indicator */}
         <div className="flex items-center justify-center mb-4 gap-2">
           {stepLabels.map((label, i) => {
@@ -2179,7 +2179,7 @@ export default function OnboardingForm() {
               <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">詳細ページプレビュー</h3>
             </div>
             <SingleDetailPreview
-              data={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio }}
+              data={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbInternalSns }}
             />
           </div>
         </div>
