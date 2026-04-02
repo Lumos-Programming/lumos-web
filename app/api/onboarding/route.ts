@@ -17,7 +17,8 @@ export async function POST() {
     return NextResponse.json({ error: 'Already completed' }, { status: 400 })
   }
 
-  if (!member.studentId || !member.lastName || !member.firstName || !member.faculty) {
+  const hasFaculty = member.enrollments?.some(e => e.isCurrent && e.faculty)
+  if (!member.studentId || !member.lastName || !member.firstName || !hasFaculty) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
@@ -25,14 +26,8 @@ export async function POST() {
     return NextResponse.json({ error: 'LINE account not linked' }, { status: 400 })
   }
 
-  // Set visibility defaults for required fields
   await updateMember(session.user.id, {
-    visibility: {
-      ...member.visibility,
-      lastName: true,
-      firstName: true,
-      faculty: true,
-    },
+    onboardingCompleted: true,
   })
 
   return NextResponse.json({ success: true })

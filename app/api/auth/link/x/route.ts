@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 import { generateState, generateCodeVerifier, generateCodeChallenge, getCallbackUrl, PROVIDER_CONFIGS } from '@/lib/oauth-link'
 import { cookies } from 'next/headers'
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -26,6 +26,7 @@ export async function GET() {
   cookieStore.set('oauth_link_state_x', state, { httpOnly: true, maxAge: 600, path: '/', secure: isProduction, sameSite: 'lax' })
   cookieStore.set('oauth_link_verifier_x', codeVerifier, { httpOnly: true, maxAge: 600, path: '/', secure: isProduction, sameSite: 'lax' })
   cookieStore.set('oauth_link_discord_id', session.user.id, { httpOnly: true, maxAge: 600, path: '/', secure: isProduction, sameSite: 'lax' })
+  cookieStore.set('oauth_link_redirect', new URL(request.url).searchParams.get('redirectTo') ?? '/internal/settings', { httpOnly: true, maxAge: 600, path: '/', secure: isProduction, sameSite: 'lax' })
 
   const url = new URL(config.authUrl)
   url.searchParams.set('response_type', 'code')

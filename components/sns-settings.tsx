@@ -60,6 +60,7 @@ interface ProviderCardProps {
   connectButton: React.ReactNode
   icon: React.ReactNode
   brandColor: string
+  reconnectOnly?: boolean
 }
 
 function ProviderCard({
@@ -71,6 +72,7 @@ function ProviderCard({
                         connectButton,
                         icon,
                         brandColor,
+                        reconnectOnly = false,
                       }: ProviderCardProps) {
   const [disconnecting, setDisconnecting] = useState(false)
 
@@ -98,13 +100,19 @@ function ProviderCard({
       </div>
       <div>
         {isConnected ? (
-          <button
-            onClick={handleDisconnect}
-            disabled={disconnecting}
-            className="text-xs text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 rounded px-3 py-1.5 transition-colors disabled:opacity-50"
-          >
-            {disconnecting ? "解除中..." : "連携解除"}
-          </button>
+          reconnectOnly ? (
+            <button onClick={onConnect} className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-400 rounded px-3 py-1.5 transition-colors">
+              再連携
+            </button>
+          ) : (
+            <button
+              onClick={handleDisconnect}
+              disabled={disconnecting}
+              className="text-xs text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 rounded px-3 py-1.5 transition-colors disabled:opacity-50"
+            >
+              {disconnecting ? "解除中..." : "連携解除"}
+            </button>
+          )
         ) : (
           <button onClick={onConnect} className="flex items-center">
             {connectButton}
@@ -195,6 +203,7 @@ export default function SnsSettings({
         name="LINE"
         connectedUser={line}
         isConnected={!!lineId}
+        reconnectOnly
         onConnect={() => {
           window.location.href = "/api/auth/link/line"
         }}

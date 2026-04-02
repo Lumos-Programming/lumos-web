@@ -5,6 +5,12 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
+function formatBirthDate(d: string) {
+  const parts = d.split("-")
+  if (parts.length >= 3) return `${parseInt(parts[1])}月${parseInt(parts[2])}日`
+  return d
+}
+
 export default async function ProfilePage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/api/auth/signin")
@@ -61,12 +67,16 @@ export default async function ProfilePage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">学部</p>
-                  <p className="text-sm">{member.faculty || "未設定"}</p>
+                  <p className="text-xs text-gray-500">学部/学府</p>
+                  <p className="text-sm">{member.enrollments?.find(e => e.isCurrent)?.faculty || "未設定"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">学年</p>
-                  <p className="text-sm">{member.year || "未設定"}</p>
+                  <p className="text-sm">{member.yearByFiscal?.[String(new Date().getFullYear())] || "未設定"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">誕生日</p>
+                  <p className="text-sm">{member.birthDate ? formatBirthDate(member.birthDate) : "未設定"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">役職</p>

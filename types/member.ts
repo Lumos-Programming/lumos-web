@@ -10,6 +10,7 @@ export type Member = {
   social?: {
     x?: string
     github?: string
+    discord?: string
     linkedin?: string
     website?: string
   }

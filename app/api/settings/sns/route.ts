@@ -34,7 +34,7 @@ export async function DELETE(request: Request) {
 
   try {
     const { provider } = await request.json()
-    if (!['github', 'x', 'line'].includes(provider)) {
+    if (!['github', 'x'].includes(provider)) {
       return NextResponse.json({ error: "Invalid provider" }, { status: 400 })
     }
 
