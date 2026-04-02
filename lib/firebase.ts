@@ -33,6 +33,12 @@ export function getDb() {
   return admin.firestore()
 }
 
+// Lazy getter for GCS bucket
+export function getStorageBucket(bucketName?: string) {
+  initializeFirebase()
+  return admin.storage().bucket(bucketName ?? 'lumos-web-profile-data')
+}
+
 // Re-export mini-lt week/talk logic for backward compatibility
 export {
   getWeekData,

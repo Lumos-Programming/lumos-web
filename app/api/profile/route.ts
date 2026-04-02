@@ -22,7 +22,7 @@ export async function GET() {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }
 
-  return NextResponse.json(member)
+  return NextResponse.json({ ...member, discordId: session.user.id })
 }
 
 export async function PUT(request: Request) {
@@ -93,6 +93,10 @@ export async function PUT(request: Request) {
     }
     if (Array.isArray(body.skills) && body.skills.every((s: unknown) => typeof s === "string")) {
       data.skills = body.skills
+    }
+    const VALID_PRIMARY_AVATARS = ["face", "discord", "line", "default"] as const
+    if (typeof body.primaryAvatar === "string" && (VALID_PRIMARY_AVATARS as readonly string[]).includes(body.primaryAvatar)) {
+      data.primaryAvatar = body.primaryAvatar as typeof VALID_PRIMARY_AVATARS[number]
     }
 
     await updateMember(session.user.id, data)

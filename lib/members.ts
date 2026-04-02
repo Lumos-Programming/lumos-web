@@ -33,6 +33,8 @@ export interface MemberDocument {
   lineAccessToken?: string
   lineRefreshToken?: string
   lineTokenExpiresAt?: number   // Unix timestamp (seconds)
+  faceImage?: string            // GCS URL (顔写真)
+  primaryAvatar?: 'face' | 'discord' | 'line' | 'default'  // 公開ページ用
   allowPublic?: boolean
   onboardingCompleted?: boolean
   visibility: {
@@ -179,6 +181,26 @@ export function isOnboardingComplete(member: MemberDocument): boolean {
   return member.onboardingCompleted === true
 }
 
+function resolveDiscordAvatar(discordId: string, discordAvatar?: string): string {
+  return discordAvatar
+    ? `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`
+    : '/placeholder.svg'
+}
+
+function resolvePrimaryAvatar(discordId: string, data: MemberDocument): string {
+  const pa = data.primaryAvatar ?? 'face'
+  switch (pa) {
+    case 'face':
+      return data.faceImage || resolveDiscordAvatar(discordId, data.discordAvatar)
+    case 'discord':
+      return resolveDiscordAvatar(discordId, data.discordAvatar)
+    case 'line':
+      return data.lineAvatar || '/placeholder.svg'
+    case 'default':
+      return '/placeholder.svg'
+  }
+}
+
 export function profileToMember(discordId: string, data: MemberDocument): Member {
   const v = data.visibility
 
@@ -205,9 +227,7 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
     year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? '',
     bio: v.bio === 'public' ? data.bio : '',
     skills: data.skills ?? [],
-    image: data.discordAvatar
-      ? `https://cdn.discordapp.com/avatars/${discordId}/${data.discordAvatar}.png`
-      : '/placeholder.svg',
+    image: resolvePrimaryAvatar(discordId, data),
     social: Object.keys(social).length > 0 ? social : undefined,
   }
 }
@@ -230,6 +250,11 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
 
+  // SNS avatar for overlay (prefer Discord, fallback to LINE)
+  const snsAvatar = resolveDiscordAvatar(discordId, data.discordAvatar) !== '/placeholder.svg'
+    ? resolveDiscordAvatar(discordId, data.discordAvatar)
+    : data.lineAvatar || undefined
+
   return {
     id: discordId,
     name: displayName,
@@ -238,9 +263,9 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
     year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? '',
     bio: v.bio !== 'private' ? data.bio : '',
     skills: data.skills ?? [],
-    image: data.discordAvatar
-      ? `https://cdn.discordapp.com/avatars/${discordId}/${data.discordAvatar}.png`
-      : '/placeholder.svg',
+    image: resolveDiscordAvatar(discordId, data.discordAvatar),
+    faceImage: data.faceImage || undefined,
+    snsAvatar,
     social: Object.keys(social).length > 0 ? social : undefined,
   }
 }
