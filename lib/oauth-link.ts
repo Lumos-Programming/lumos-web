@@ -175,7 +175,7 @@ export async function exchangeCodeForTokenFull(
 export async function fetchProviderUser(
   provider: OAuthLinkProvider,
   accessToken: string
-): Promise<{ id: string; username: string; avatar?: string; vanityName?: string; firstName?: string; lastName?: string }> {
+): Promise<{ id: string; username: string; avatar?: string; vanityName?: string; displayName?: string; firstName?: string; lastName?: string }> {
   const config = PROVIDER_CONFIGS[provider]
   const headers: Record<string, string> = { Authorization: `Bearer ${accessToken}` }
   if (provider === 'linkedin') {
@@ -226,7 +226,8 @@ export async function fetchProviderUser(
       }
     }
 
-    // 2. /v2/userinfo — non-localized given_name / family_name
+    // 2. /v2/userinfo — non-localized name, given_name, family_name
+    let displayName: string | undefined
     let firstName: string | undefined
     let lastName: string | undefined
     try {
@@ -235,6 +236,7 @@ export async function fetchProviderUser(
       })
       if (uiRes.ok) {
         const ui = await uiRes.json()
+        displayName = ui.name
         firstName = ui.given_name
         lastName = ui.family_name
       }
@@ -242,7 +244,7 @@ export async function fetchProviderUser(
       // name is optional, continue without it
     }
 
-    return { id: String(data.id), username: profileUrl ?? '', avatar, vanityName: vanityName || undefined, firstName, lastName }
+    return { id: String(data.id), username: profileUrl ?? '', avatar, vanityName: vanityName || undefined, displayName, firstName, lastName }
   }
   throw new Error(`Unknown provider: ${provider}`)
 }

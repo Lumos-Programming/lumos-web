@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       linkedinId: user.id,
       linkedinAvatar: user.avatar,
       ...(user.vanityName ? { linkedinVanity: user.vanityName } : {}),
+      ...(user.displayName ? { linkedinDisplayName: user.displayName } : {}),
       ...(user.firstName ? { linkedinFirstName: user.firstName } : {}),
       ...(user.lastName ? { linkedinLastName: user.lastName } : {}),
     })

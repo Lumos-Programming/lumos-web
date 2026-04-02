@@ -33,8 +33,9 @@ export interface MemberDocument {
   linkedin?: string            // Profile URL (from /rest/identityMe basicInfo.profileUrl)
   linkedinId?: string           // App-scoped member ID (from /rest/identityMe id)
   linkedinVanity?: string       // Vanity slug e.g. "shion1305" (resolved from profileUrl redirect)
-  linkedinFirstName?: string    // First name from LinkedIn profile
-  linkedinLastName?: string     // Last name from LinkedIn profile
+  linkedinDisplayName?: string  // Display name from /v2/userinfo (name)
+  linkedinFirstName?: string    // First name from /v2/userinfo (given_name)
+  linkedinLastName?: string     // Last name from /v2/userinfo (family_name)
   linkedinAvatar?: string
   lineAccessToken?: string
   lineRefreshToken?: string
@@ -161,7 +162,7 @@ export async function updateMember(
 
 export async function updateMemberSns(
   discordId: string,
-  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'githubAvatar' | 'x' | 'xId' | 'xAvatar' | 'linkedin' | 'linkedinId' | 'linkedinVanity' | 'linkedinFirstName' | 'linkedinLastName' | 'linkedinAvatar' | 'line' | 'lineId' | 'lineAvatar' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
+  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'githubAvatar' | 'x' | 'xId' | 'xAvatar' | 'linkedin' | 'linkedinId' | 'linkedinVanity' | 'linkedinDisplayName' | 'linkedinFirstName' | 'linkedinLastName' | 'linkedinAvatar' | 'line' | 'lineId' | 'lineAvatar' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
 ): Promise<void> {
   const db = getDb()
   await db.collection('members').doc(discordId).update({
@@ -188,6 +189,7 @@ export async function deleteMemberSnsField(
   }
   if (provider === 'linkedin') {
     updates.linkedinVanity = FieldValue.delete()
+    updates.linkedinDisplayName = FieldValue.delete()
     updates.linkedinFirstName = FieldValue.delete()
     updates.linkedinLastName = FieldValue.delete()
   }
