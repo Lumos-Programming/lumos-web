@@ -70,7 +70,7 @@ export async function getOrCreateMember(
         firstName: 'public',
         faculty: 'public',
         currentOrg: 'public',
-        birthDate: 'private',
+        birthDate: 'internal',
         bio: 'public',
         github: 'public',
         x: 'public',

@@ -52,7 +52,7 @@ const DEFAULT_PROFILE: Profile = {
     firstName: "public",
     faculty: "public",
     currentOrg: "public",
-    birthDate: "private",
+    birthDate: "internal",
     bio: "public",
     line: "internal",
     github: "public",
@@ -82,7 +82,7 @@ export default function ProfileEdit() {
             faculty: data.visibility?.faculty ?? "public",
             bio: data.visibility?.bio ?? "public",
             currentOrg: data.visibility?.currentOrg ?? "public",
-            birthDate: data.visibility?.birthDate ?? "private",
+            birthDate: data.visibility?.birthDate ?? "internal",
             line: data.visibility?.line ?? "internal",
             github: data.visibility?.github ?? "public",
             x: data.visibility?.x ?? "public",
@@ -172,6 +172,22 @@ export default function ProfileEdit() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
+          {isEditing && (
+            <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+              <div className="flex items-start gap-2">
+                <span className="inline-block px-1.5 py-0.5 rounded-full bg-gray-500 text-white font-medium flex-shrink-0">非公開</span>
+                <span>自分だけが閲覧できます。他のメンバーにも表示されません。</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="inline-block px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-medium flex-shrink-0">内部のみ</span>
+                <span>Lumosにログインしたメンバーだけが閲覧できます。外部サイトには表示されません。</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="inline-block px-1.5 py-0.5 rounded-full bg-green-600 text-white font-medium flex-shrink-0">外部公開</span>
+                <span>LumosのHP（公開サイト）にも表示されます。誰でも閲覧できます。</span>
+              </div>
+            </div>
+          )}
           {isEditing && (
             <div
               role="button"
