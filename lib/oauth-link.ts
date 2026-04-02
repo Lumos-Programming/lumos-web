@@ -204,7 +204,7 @@ export async function fetchProviderUser(
     return { id: data.userId, username: data.displayName, avatar: data.pictureUrl }
   }
   if (provider === 'linkedin') {
-    // /rest/identityMe returns { id, basicInfo: { profileUrl, firstName, lastName, profilePicture } }
+    // 1. /rest/identityMe — profileUrl, avatar, id
     const basicInfo = data.basicInfo
     if (!basicInfo) {
       console.error('LinkedIn identityMe unexpected response:', JSON.stringify(data))
@@ -219,7 +219,6 @@ export async function fetchProviderUser(
       try {
         const redirectRes = await fetch(profileUrl, { redirect: 'manual' })
         const location = redirectRes.headers.get('location') ?? ''
-        // Location is like https://jp.linkedin.com/in/shion1305 or https://www.linkedin.com/in/xxx
         const match = location.match(/linkedin\.com\/in\/([^/?#]+)/)
         if (match) vanityName = match[1]
       } catch {
@@ -227,12 +226,21 @@ export async function fetchProviderUser(
       }
     }
 
-    const firstName: string | undefined = basicInfo.firstName?.localized
-      ? Object.values(basicInfo.firstName.localized)[0] as string
-      : undefined
-    const lastName: string | undefined = basicInfo.lastName?.localized
-      ? Object.values(basicInfo.lastName.localized)[0] as string
-      : undefined
+    // 2. /v2/userinfo — non-localized given_name / family_name
+    let firstName: string | undefined
+    let lastName: string | undefined
+    try {
+      const uiRes = await fetch('https://api.linkedin.com/v2/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (uiRes.ok) {
+        const ui = await uiRes.json()
+        firstName = ui.given_name
+        lastName = ui.family_name
+      }
+    } catch {
+      // name is optional, continue without it
+    }
 
     return { id: String(data.id), username: profileUrl ?? '', avatar, vanityName: vanityName || undefined, firstName, lastName }
   }
