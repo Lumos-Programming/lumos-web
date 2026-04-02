@@ -228,7 +228,7 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
   const social: Member['social'] = {}
   if (v.github === 'public' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x === 'public' && data.x) social.x = `https://x.com/${data.x}`
-  if (v.linkedin === 'public' && data.linkedin) social.linkedin = `https://www.linkedin.com/in/${data.linkedinId}`
+  if (v.linkedin === 'public' && data.linkedin) social.linkedin = `https://www.linkedin.com/in/${data.linkedin}`
   if (v.discord === 'public') social.discord = data.discordUsername
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
@@ -263,7 +263,7 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
   const social: Member['social'] = {}
   if (v.github !== 'private' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x !== 'private' && data.x) social.x = `https://x.com/${data.x}`
-  if (v.linkedin !== 'private' && data.linkedin) social.linkedin = `https://www.linkedin.com/in/${data.linkedinId}`
+  if (v.linkedin !== 'private' && data.linkedin) social.linkedin = `https://www.linkedin.com/in/${data.linkedin}`
   if (v.discord !== 'private') social.discord = data.discordUsername
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
