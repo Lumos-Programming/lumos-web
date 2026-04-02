@@ -1776,10 +1776,23 @@ export default function OnboardingForm() {
             {currentStep === 6 && <div className="p-8">
               <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">プロフィール画像</h2>
-                <p className="text-muted-foreground mt-1 text-sm">顔がわかる写真を設定しましょう（任意）</p>
+                <p className="text-muted-foreground mt-1 text-sm">最後のステップです！</p>
               </div>
 
               <div className="space-y-6 animate-[fadeInUp_300ms_60ms_ease_both]">
+                {/* 背景説明 */}
+                <div className="rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 px-4 py-3 space-y-1.5">
+                  <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                    顔がわかる写真を設定しませんか？
+                  </p>
+                  <p className="text-xs text-purple-700 dark:text-purple-300 leading-relaxed">
+                    Lumosではメンバー同士が「顔が見える」関係を大切にしています。内部メンバーページであなたの顔写真が表示されるので、イベントやプロジェクトで初めて会うときもスムーズです。
+                  </p>
+                  <p className="text-xs text-purple-600 dark:text-purple-400">
+                    ※ 任意です。あとからプロフィール設定でいつでも変更できます。
+                  </p>
+                </div>
+
                 {/* Face image preview + upload */}
                 <div className="flex flex-col items-center gap-4">
                   <div className="w-32 h-32 relative rounded-full overflow-hidden ring-4 ring-purple-100 dark:ring-purple-900/50">
@@ -1805,7 +1818,7 @@ export default function OnboardingForm() {
                     className="gap-2"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx={12} cy={13} r={4} /></svg>
-                    画像を選択
+                    {faceImageUrl ? "画像を変更" : "画像を選択"}
                   </Button>
                 </div>
 
@@ -1851,46 +1864,54 @@ export default function OnboardingForm() {
                   </div>
                 )}
 
-                {/* Primary avatar selection */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
-                    <span className="text-xs text-muted-foreground px-2">公開ページの表示画像</span>
-                    <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                {/* Primary avatar selection — allowPublic 時のみ表示 */}
+                {allowPublic && (
+                  <div className="space-y-3 animate-[fadeInUp_300ms_120ms_ease_both]">
+                    <div className="flex items-center gap-2">
+                      <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                      <span className="text-xs font-medium text-muted-foreground px-2">外部HP掲載用の画像</span>
+                      <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                    </div>
+                    <div className="rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-2.5">
+                      <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                        前の画面で「HPにメンバー情報を掲載する」を選択しています。外部サイトであなたのプロフィールに表示する画像を選んでください。顔写真を公開したくない場合は、SNSアイコンや「なし」を選べます。
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { value: "face" as const, label: "顔写真", desc: "アップロードした写真", src: faceImageUrl || "/placeholder.svg", enabled: true },
+                        { value: "discord" as const, label: "Discord", desc: "Discordアイコン", src: discordAvatar ? (discordAvatar.startsWith("http") ? discordAvatar : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`) : "/placeholder.svg", enabled: !!discordAvatar },
+                        { value: "line" as const, label: "LINE", desc: "LINEアイコン", src: lineAvatar || "/placeholder.svg", enabled: lineLinked && !!lineAvatar },
+                        { value: "default" as const, label: "なし", desc: "デフォルト画像", src: "/placeholder.svg", enabled: true },
+                      ]).map(({ value, label, desc, src, enabled }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          disabled={!enabled}
+                          onClick={() => setPrimaryAvatar(value)}
+                          className={[
+                            "flex items-center gap-3 rounded-xl border-2 p-3 transition-all duration-200",
+                            primaryAvatar === value
+                              ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 dark:border-purple-600"
+                              : "border-gray-200 dark:border-gray-700",
+                            !enabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:border-purple-300",
+                          ].join(" ")}
+                        >
+                          <div className="w-10 h-10 relative rounded-full overflow-hidden flex-shrink-0">
+                            <Image src={src} alt="" fill className="object-cover" />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</span>
+                            {primaryAvatar === value && (
+                              <CheckCircleIcon className="inline-block w-4 h-4 ml-1 text-purple-600 dark:text-purple-400" />
+                            )}
+                            <p className="text-[11px] text-muted-foreground truncate">{desc}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {([
-                      { value: "face" as const, label: "顔写真", src: faceImageUrl || "/placeholder.svg", enabled: true },
-                      { value: "discord" as const, label: "Discord", src: discordAvatar ? (discordAvatar.startsWith("http") ? discordAvatar : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`) : "/placeholder.svg", enabled: !!discordAvatar },
-                      { value: "line" as const, label: "LINE", src: lineAvatar || "/placeholder.svg", enabled: lineLinked && !!lineAvatar },
-                      { value: "default" as const, label: "なし", src: "/placeholder.svg", enabled: true },
-                    ]).map(({ value, label, src, enabled }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        disabled={!enabled}
-                        onClick={() => setPrimaryAvatar(value)}
-                        className={[
-                          "flex items-center gap-3 rounded-xl border-2 p-3 transition-all duration-200",
-                          primaryAvatar === value
-                            ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 dark:border-purple-600"
-                            : "border-gray-200 dark:border-gray-700",
-                          !enabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:border-purple-300",
-                        ].join(" ")}
-                      >
-                        <div className="w-10 h-10 relative rounded-full overflow-hidden flex-shrink-0">
-                          <Image src={src} alt="" fill className="object-cover" />
-                        </div>
-                        <div className="text-left">
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</span>
-                          {primaryAvatar === value && (
-                            <CheckCircleIcon className="inline-block w-4 h-4 ml-1.5 text-purple-600 dark:text-purple-400" />
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="mt-8 flex justify-between animate-[fadeInUp_300ms_120ms_ease_both]">
