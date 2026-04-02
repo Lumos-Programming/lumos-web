@@ -11,12 +11,16 @@ export async function GET(request: NextRequest) {
   const cookieStore = await cookies()
   const savedState = cookieStore.get('oauth_link_state_github')?.value
   const discordId = cookieStore.get('oauth_link_discord_id')?.value
+  const redirectTo = cookieStore.get('oauth_link_redirect')?.value ?? '/internal/settings'
 
   cookieStore.delete('oauth_link_state_github')
   cookieStore.delete('oauth_link_discord_id')
+  cookieStore.delete('oauth_link_redirect')
 
   if (!code || !state || state !== savedState || !discordId) {
-    return NextResponse.redirect(new URL('/internal/settings?error=github_link_failed', request.nextUrl.origin))
+    const errorUrl = new URL(redirectTo, request.nextUrl.origin)
+    errorUrl.searchParams.set('error', 'github_link_failed')
+    return NextResponse.redirect(errorUrl.toString())
   }
 
   try {
@@ -26,9 +30,13 @@ export async function GET(request: NextRequest) {
 
     await updateMemberSns(discordId, { github: user.username, githubId: user.id })
 
-    return NextResponse.redirect(new URL('/internal/settings?success=github_linked', request.nextUrl.origin))
+    const successUrl = new URL(redirectTo, request.nextUrl.origin)
+    successUrl.searchParams.set('success', 'github_linked')
+    return NextResponse.redirect(successUrl.toString())
   } catch (e) {
     console.error('GitHub link callback error:', e)
-    return NextResponse.redirect(new URL('/internal/settings?error=github_link_failed', request.nextUrl.origin))
+    const errorUrl = new URL(redirectTo, request.nextUrl.origin)
+    errorUrl.searchParams.set('error', 'github_link_failed')
+    return NextResponse.redirect(errorUrl.toString())
   }
 }

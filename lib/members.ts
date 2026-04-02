@@ -1,5 +1,6 @@
 import { getDb } from '@/lib/firebase'
 import type { Member } from '@/types/member'
+import type { VisibilityLevel, MemberType, EnrollmentRecord } from '@/types/profile'
 import { FieldValue } from 'firebase-admin/firestore'
 
 export interface MemberDocument {
@@ -9,10 +10,13 @@ export interface MemberDocument {
   nickname: string
   lastName: string
   firstName: string
-  faculty: string
   bio: string
   role?: string
-  year?: string
+  yearByFiscal?: Record<string, string>
+  memberType?: MemberType
+  enrollments?: EnrollmentRecord[]
+  currentOrg?: string        // 卒業生の現在の所属
+  birthDate?: string         // YYYY-MM-DD
   skills?: string[]
   github?: string
   githubId?: string
@@ -20,16 +24,21 @@ export interface MemberDocument {
   xId?: string
   line?: string
   lineId?: string
+  allowPublic?: boolean
+  onboardingCompleted?: boolean
   visibility: {
-    studentId: boolean
-    nickname: boolean
-    lastName: boolean
-    firstName: boolean
-    faculty: boolean
-    bio: boolean
-    github: boolean
-    x: boolean
-    line: boolean
+    studentId: VisibilityLevel
+    nickname: VisibilityLevel
+    lastName: VisibilityLevel
+    firstName: VisibilityLevel
+    faculty: VisibilityLevel
+    currentOrg: VisibilityLevel
+    birthDate: VisibilityLevel
+    bio: VisibilityLevel
+    github: VisibilityLevel
+    x: VisibilityLevel
+    line: VisibilityLevel
+    discord: VisibilityLevel
   }
   createdAt: FirebaseFirestore.Timestamp
   updatedAt: FirebaseFirestore.Timestamp
@@ -52,18 +61,21 @@ export async function getOrCreateMember(
       nickname: '',
       lastName: '',
       firstName: '',
-      faculty: '',
       bio: '',
+      allowPublic: false,
       visibility: {
-        studentId: false,
-        nickname: true,
-        lastName: false,
-        firstName: false,
-        faculty: false,
-        bio: true,
-        github: false,
-        x: false,
-        line: false,
+        studentId: 'private',
+        nickname: 'public',
+        lastName: 'public',
+        firstName: 'public',
+        faculty: 'public',
+        currentOrg: 'public',
+        birthDate: 'private',
+        bio: 'public',
+        github: 'public',
+        x: 'public',
+        line: 'internal',
+        discord: 'public',
       },
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
@@ -87,11 +99,28 @@ export async function getMembers(): Promise<Member[]> {
   })
 }
 
+export async function getMembersInternal(): Promise<Member[]> {
+  const db = getDb()
+  const snap = await db.collection('members').get()
+
+  return snap.docs.map((doc) => {
+    const data = doc.data() as MemberDocument
+    return profileToMemberInternal(doc.id, data)
+  })
+}
+
 export async function getMember(discordId: string): Promise<MemberDocument | null> {
   const db = getDb()
   const snap = await db.collection('members').doc(discordId).get()
   if (!snap.exists) return null
   return snap.data() as MemberDocument
+}
+
+export async function getMemberInternal(discordId: string): Promise<Member | null> {
+  const db = getDb()
+  const snap = await db.collection('members').doc(discordId).get()
+  if (!snap.exists) return null
+  return profileToMemberInternal(discordId, snap.data() as MemberDocument)
 }
 
 export async function updateMember(
@@ -130,30 +159,65 @@ export async function deleteMemberSnsField(
 }
 
 export function isOnboardingComplete(member: MemberDocument): boolean {
-  return !!(member.studentId && member.lastName && member.firstName && member.faculty && member.lineId)
+  return member.onboardingCompleted === true
 }
 
 export function profileToMember(discordId: string, data: MemberDocument): Member {
   const v = data.visibility
 
   const displayName =
-    (v.lastName && v.firstName)
+    (v.lastName === 'public' && v.firstName === 'public')
       ? `${data.lastName} ${data.firstName}`
-      : v.nickname
+      : v.nickname === 'public'
       ? data.nickname
       : data.discordUsername
 
   const social: Member['social'] = {}
-  if (v.github && data.github) social.github = `https://github.com/${data.github}`
-  if (v.x && data.x) social.x = `https://x.com/${data.x}`
+  if (v.github === 'public' && data.github) social.github = `https://github.com/${data.github}`
+  if (v.x === 'public' && data.x) social.x = `https://x.com/${data.x}`
+  if (v.discord === 'public') social.discord = data.discordUsername
+
+  const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
 
   return {
     id: discordId,
     name: displayName,
     role: data.role ?? '',
-    department: v.faculty ? data.faculty : '',
-    year: data.year ?? '',
-    bio: v.bio ? data.bio : '',
+    department: v.faculty === 'public' ? currentFaculty : '',
+    year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? '',
+    bio: v.bio === 'public' ? data.bio : '',
+    skills: data.skills ?? [],
+    image: data.discordAvatar
+      ? `https://cdn.discordapp.com/avatars/${discordId}/${data.discordAvatar}.png`
+      : '/placeholder.svg',
+    social: Object.keys(social).length > 0 ? social : undefined,
+  }
+}
+
+export function profileToMemberInternal(discordId: string, data: MemberDocument): Member {
+  const v = data.visibility
+
+  const displayName =
+    (v.lastName !== 'private' && v.firstName !== 'private')
+      ? `${data.lastName} ${data.firstName}`
+      : v.nickname !== 'private'
+      ? data.nickname
+      : data.discordUsername
+
+  const social: Member['social'] = {}
+  if (v.github !== 'private' && data.github) social.github = `https://github.com/${data.github}`
+  if (v.x !== 'private' && data.x) social.x = `https://x.com/${data.x}`
+  if (v.discord !== 'private') social.discord = data.discordUsername
+
+  const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
+
+  return {
+    id: discordId,
+    name: displayName,
+    role: data.role ?? '',
+    department: v.faculty !== 'private' ? currentFaculty : '',
+    year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? '',
+    bio: v.bio !== 'private' ? data.bio : '',
     skills: data.skills ?? [],
     image: data.discordAvatar
       ? `https://cdn.discordapp.com/avatars/${discordId}/${data.discordAvatar}.png`
