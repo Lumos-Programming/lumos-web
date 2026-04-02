@@ -121,20 +121,22 @@ function getSchoolYearOptions(memberType: MemberType | ""): { label: string; not
   }
 }
 
-const FIELD_WEIGHTS: Partial<Record<keyof FormData | "line" | "github" | "x", number>> = {
-  lastName: 10,
-  firstName: 10,
-  studentId: 10,
-  birthDate: 5,
-  memberType: 10,
-  faculty: 10,
-  admissionYear: 5,
-  enrollmentType: 5,
-  nickname: 5,
-  bio: 15,
-  line: 10,
-  github: 5,
-  x: 5,
+const FIELD_WEIGHTS: Partial<Record<keyof FormData | "line" | "github" | "x" | "visibility" | "faceImage", number>> = {
+  lastName: 8,
+  firstName: 8,
+  studentId: 8,
+  birthDate: 4,
+  memberType: 8,
+  faculty: 8,
+  admissionYear: 4,
+  enrollmentType: 4,
+  nickname: 4,
+  bio: 12,
+  line: 8,
+  github: 4,
+  x: 4,
+  visibility: 8,   // Step 5 完了
+  faceImage: 10,    // Step 6 画像設定
 }
 
 function LineIcon({ className }: { className?: string }) {
@@ -675,6 +677,9 @@ export default function OnboardingForm() {
   }
 
   // 進捗 % 計算
+  // Step 5 完了とみなす（Step 6 に遷移済み = currentStep >= 6）
+  const step5Done = currentStep >= 6
+
   const progressPercent = Math.min(100, (() => {
     let score = 0
     if (form.lastName) score += FIELD_WEIGHTS.lastName ?? 0
@@ -690,6 +695,8 @@ export default function OnboardingForm() {
     if (lineLinked) score += FIELD_WEIGHTS.line ?? 0
     if (githubLinked) score += FIELD_WEIGHTS.github ?? 0
     if (xLinked) score += FIELD_WEIGHTS.x ?? 0
+    if (step5Done) score += FIELD_WEIGHTS.visibility ?? 0
+    if (faceImageUrl) score += FIELD_WEIGHTS.faceImage ?? 0
     return score
   })())
 
