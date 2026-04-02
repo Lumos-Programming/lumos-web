@@ -18,7 +18,7 @@ import type { VisibilityLevel } from "@/types/profile"
 import { DEFAULT_RING_COLOR } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
 import { RingColorPicker } from "@/components/ring-color-picker"
-import { TilePreviewGrid, DetailPreviewPanel, ExternalTilePreview } from "@/components/member-tile-preview"
+import { TilePreviewGrid, DetailPreviewPanel, SingleDetailPreview, ExternalTilePreview } from "@/components/member-tile-preview"
 import type { SnsEntry } from "@/components/member-tile-preview"
 
 interface FormData {
@@ -2172,16 +2172,14 @@ export default function OnboardingForm() {
 
       {/* プレビュー島 — Step 4 詳細ページプレビュー */}
       {currentStep === 4 && (
-        <div className="w-full max-w-3xl relative z-10 mt-4">
+        <div className="w-full max-w-2xl relative z-10 mt-4">
           <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-gray-800/50 p-6 space-y-4">
             <div className="flex items-center gap-2">
               <div className="w-1 h-5 rounded-full bg-gradient-to-b from-purple-500 to-indigo-500" />
               <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">詳細ページプレビュー</h3>
             </div>
-            <DetailPreviewPanel
-              internalData={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbInternalSns }}
-              externalData={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbExternalSns }}
-              allowPublic={allowPublic}
+            <SingleDetailPreview
+              data={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio }}
             />
           </div>
         </div>

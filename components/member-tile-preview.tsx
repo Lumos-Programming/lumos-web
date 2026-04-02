@@ -178,7 +178,7 @@ export function ExternalTilePreview({ data, label, allowPublic }: { data: Member
 
 // --- Detail preview ---
 
-function DetailPreview({ data, label, allowPublic }: { data: MemberDetailData; label?: string; allowPublic?: boolean }) {
+function DetailPreview({ data, label, allowPublic, hideSns }: { data: MemberDetailData; label?: string; allowPublic?: boolean; hideSns?: boolean }) {
   const dept = data.memberType === "卒業生" && data.currentOrg ? data.currentOrg : data.department
   const isDisabled = allowPublic === false
   return (
@@ -212,7 +212,7 @@ function DetailPreview({ data, label, allowPublic }: { data: MemberDetailData; l
               </p>
             </div>
           </div>
-          {data.sns && data.sns.length > 0 && (
+          {!hideSns && data.sns && data.sns.length > 0 && (
             <div className="px-4 pb-3 -mt-1 flex flex-wrap gap-1.5">
               {data.sns.map((entry) => (
                 <SnsChip key={entry.platform} entry={entry} />
@@ -260,6 +260,10 @@ function TogglePill({ options, value, onChange }: { options: { key: string; labe
       ))}
     </div>
   )
+}
+
+export function SingleDetailPreview({ data }: { data: MemberDetailData }) {
+  return <DetailPreview data={data} hideSns />
 }
 
 // --- Composable building blocks (for breakout layout) ---
