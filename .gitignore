@@ -31,3 +31,8 @@ firebase-debug.log
 firestore-debug.log
 
 .claude
+
+# terraform
+infra/.terraform/
+infra/*.tfstate*
+.sa-key-*.json
