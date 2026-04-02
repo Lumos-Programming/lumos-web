@@ -1861,7 +1861,7 @@ export default function OnboardingForm() {
                   <div className="grid grid-cols-2 gap-2">
                     {([
                       { value: "face" as const, label: "顔写真", src: faceImageUrl || "/placeholder.svg", enabled: true },
-                      { value: "discord" as const, label: "Discord", src: discordAvatar ? `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png` : "/placeholder.svg", enabled: !!discordAvatar },
+                      { value: "discord" as const, label: "Discord", src: discordAvatar ? (discordAvatar.startsWith("http") ? discordAvatar : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`) : "/placeholder.svg", enabled: !!discordAvatar },
                       { value: "line" as const, label: "LINE", src: lineAvatar || "/placeholder.svg", enabled: lineLinked && !!lineAvatar },
                       { value: "default" as const, label: "なし", src: "/placeholder.svg", enabled: true },
                     ]).map(({ value, label, src, enabled }) => (

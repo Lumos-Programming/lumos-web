@@ -38,7 +38,7 @@ export default async function ProfilePage() {
               {member?.discordAvatar && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={`https://cdn.discordapp.com/avatars/${session.user.id}/${member.discordAvatar}.png`}
+                  src={member.discordAvatar.startsWith("http") ? member.discordAvatar : `https://cdn.discordapp.com/avatars/${session.user.id}/${member.discordAvatar}.png`}
                   alt="Discord avatar"
                   className="w-16 h-16 rounded-full"
                 />

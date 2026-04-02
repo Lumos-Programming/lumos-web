@@ -182,9 +182,11 @@ export function isOnboardingComplete(member: MemberDocument): boolean {
 }
 
 function resolveDiscordAvatar(discordId: string, discordAvatar?: string): string {
-  return discordAvatar
-    ? `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`
-    : '/placeholder.svg'
+  if (!discordAvatar) return '/placeholder.svg'
+  // Already a full URL (stored from token.picture)
+  if (discordAvatar.startsWith('http')) return discordAvatar
+  // Legacy: hash only
+  return `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`
 }
 
 function resolvePrimaryAvatar(discordId: string, data: MemberDocument): string {

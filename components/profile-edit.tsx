@@ -375,7 +375,7 @@ export default function ProfileEdit() {
                 <div className="grid grid-cols-2 gap-2">
                   {([
                     { value: "face" as const, label: "顔写真", src: faceImageUrl || "/placeholder.svg", enabled: true },
-                    { value: "discord" as const, label: "Discord", src: discordAvatarHash ? `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatarHash}.png` : "/placeholder.svg", enabled: !!discordAvatarHash },
+                    { value: "discord" as const, label: "Discord", src: discordAvatarHash ? (discordAvatarHash.startsWith("http") ? discordAvatarHash : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatarHash}.png`) : "/placeholder.svg", enabled: !!discordAvatarHash },
                     { value: "line" as const, label: "LINE", src: lineAvatar || "/placeholder.svg", enabled: lineLinked && !!lineAvatar },
                     { value: "default" as const, label: "なし", src: "/placeholder.svg", enabled: true },
                   ]).map(({ value, label, src, enabled }) => (
