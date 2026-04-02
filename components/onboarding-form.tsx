@@ -1789,7 +1789,7 @@ export default function OnboardingForm() {
                 <p className="text-muted-foreground mt-1 text-sm">自己紹介はメンバーページで表示されます。</p>
               </div>
 
-              <div className="space-y-2 animate-[fadeInUp_300ms_60ms_ease_both]">
+              <div className="space-y-3 animate-[fadeInUp_300ms_60ms_ease_both]">
                 <MarkdownEditor
                   value={form.bio}
                   onChange={(val) => setForm((f) => ({ ...f, bio: val }))}
@@ -2169,6 +2169,23 @@ export default function OnboardingForm() {
           </div>
         </div>
       </div>
+
+      {/* プレビュー島 — Step 4 詳細ページプレビュー */}
+      {currentStep === 4 && (
+        <div className="w-full max-w-3xl relative z-10 mt-4">
+          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-gray-800/50 p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-5 rounded-full bg-gradient-to-b from-purple-500 to-indigo-500" />
+              <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">詳細ページプレビュー</h3>
+            </div>
+            <DetailPreviewPanel
+              internalData={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbInternalSns }}
+              externalData={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbExternalSns }}
+              allowPublic={allowPublic}
+            />
+          </div>
+        </div>
+      )}
 
       {/* プレビュー島 — Step 5 のカード外に幅広で表示 */}
       {currentStep === 5 && (
