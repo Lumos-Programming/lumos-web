@@ -235,29 +235,36 @@ interface PreviewToggleProps {
   allowPublic: boolean
 }
 
+function TogglePill({ options, value, onChange }: { options: { key: string; label: string }[]; value: string; onChange: (key: string) => void }) {
+  return (
+    <div className="flex bg-gray-200 dark:bg-gray-700 rounded-full p-0.5 text-xs">
+      {options.map((opt) => (
+        <button
+          key={opt.key}
+          type="button"
+          onClick={() => onChange(opt.key)}
+          className={`px-3 py-1 rounded-full transition-colors ${value === opt.key ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm font-medium" : "text-gray-500 dark:text-gray-400"}`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function MemberPreviewToggle({ internalData, externalData, allowPublic }: PreviewToggleProps) {
   const [view, setView] = useState<"tile" | "detail">("tile")
+  const [detailSide, setDetailSide] = useState<"internal" | "external">("internal")
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">表示プレビュー</p>
-        <div className="flex bg-gray-200 dark:bg-gray-700 rounded-full p-0.5 text-xs">
-          <button
-            type="button"
-            onClick={() => setView("tile")}
-            className={`px-3 py-1 rounded-full transition-colors ${view === "tile" ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm font-medium" : "text-gray-500 dark:text-gray-400"}`}
-          >
-            一覧
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("detail")}
-            className={`px-3 py-1 rounded-full transition-colors ${view === "detail" ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm font-medium" : "text-gray-500 dark:text-gray-400"}`}
-          >
-            詳細
-          </button>
-        </div>
+        <TogglePill
+          options={[{ key: "tile", label: "一覧" }, { key: "detail", label: "詳細" }]}
+          value={view}
+          onChange={(k) => setView(k as "tile" | "detail")}
+        />
       </div>
       {view === "tile" ? (
         <div className="grid grid-cols-2 gap-3">
@@ -265,10 +272,30 @@ export function MemberPreviewToggle({ internalData, externalData, allowPublic }:
           <ExternalTilePreview data={externalData} allowPublic={allowPublic} label="外部HP" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <DetailPreview data={internalData} label="内部" />
-          <DetailPreview data={externalData} label="外部HP" allowPublic={allowPublic} />
-        </div>
+        <>
+          {/* Desktop: side-by-side in wider container */}
+          <div className="hidden sm:block -mx-4 md:-mx-8 px-4 md:px-8">
+            <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
+              <DetailPreview data={internalData} label="内部" />
+              <DetailPreview data={externalData} label="外部HP" allowPublic={allowPublic} />
+            </div>
+          </div>
+          {/* Mobile: sub-toggle for internal/external */}
+          <div className="sm:hidden space-y-2">
+            <div className="flex justify-center">
+              <TogglePill
+                options={[{ key: "internal", label: "内部" }, { key: "external", label: "外部HP" }]}
+                value={detailSide}
+                onChange={(k) => setDetailSide(k as "internal" | "external")}
+              />
+            </div>
+            {detailSide === "internal" ? (
+              <DetailPreview data={internalData} />
+            ) : (
+              <DetailPreview data={externalData} allowPublic={allowPublic} />
+            )}
+          </div>
+        </>
       )}
     </div>
   )
