@@ -107,6 +107,63 @@ export async function exchangeCodeForToken(
   return data.access_token
 }
 
+export interface OAuthTokenResponse {
+  access_token: string
+  refresh_token?: string
+  expires_in?: number
+  token_type?: string
+}
+
+export async function exchangeCodeForTokenFull(
+  provider: OAuthLinkProvider,
+  code: string,
+  redirectUri: string,
+  codeVerifier?: string
+): Promise<OAuthTokenResponse> {
+  const config = PROVIDER_CONFIGS[provider]
+  const clientId = process.env[config.clientIdEnv]
+  const clientSecret = process.env[config.clientSecretEnv]
+
+  if (!clientId || !clientSecret) {
+    throw new Error(`Missing env vars for ${provider}`)
+  }
+
+  const params: Record<string, string> = {
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: redirectUri,
+    client_id: clientId,
+  }
+  if (codeVerifier) params.code_verifier = codeVerifier
+
+  let res: Response
+  if (provider === 'x') {
+    const body = new URLSearchParams(params)
+    res = await fetch(config.tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+      },
+      body: body.toString(),
+    })
+  } else {
+    const body = new URLSearchParams({ ...params, client_secret: clientSecret })
+    res = await fetch(config.tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: body.toString(),
+    })
+  }
+
+  const data = await res.json()
+  if (!data.access_token) throw new Error(`No access_token: ${JSON.stringify(data)}`)
+  return data as OAuthTokenResponse
+}
+
 export async function fetchProviderUser(
   provider: OAuthLinkProvider,
   accessToken: string

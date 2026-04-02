@@ -24,6 +24,9 @@ export interface MemberDocument {
   xId?: string
   line?: string
   lineId?: string
+  lineAccessToken?: string
+  lineRefreshToken?: string
+  lineTokenExpiresAt?: number   // Unix timestamp (seconds)
   allowPublic?: boolean
   onboardingCompleted?: boolean
   visibility: {
@@ -136,7 +139,7 @@ export async function updateMember(
 
 export async function updateMemberSns(
   discordId: string,
-  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'x' | 'xId' | 'line' | 'lineId'>>
+  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'x' | 'xId' | 'line' | 'lineId' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
 ): Promise<void> {
   const db = getDb()
   await db.collection('members').doc(discordId).update({
@@ -154,6 +157,11 @@ export async function deleteMemberSnsField(
     updatedAt: FieldValue.serverTimestamp(),
     [provider]: FieldValue.delete(),
     [`${provider}Id`]: FieldValue.delete(),
+  }
+  if (provider === 'line') {
+    updates.lineAccessToken = FieldValue.delete()
+    updates.lineRefreshToken = FieldValue.delete()
+    updates.lineTokenExpiresAt = FieldValue.delete()
   }
   await db.collection('members').doc(discordId).update(updates)
 }

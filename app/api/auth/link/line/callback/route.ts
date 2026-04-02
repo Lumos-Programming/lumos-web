@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { exchangeCodeForToken, fetchProviderUser, getCallbackUrl } from '@/lib/oauth-link'
+import { exchangeCodeForTokenFull, fetchProviderUser, getCallbackUrl } from '@/lib/oauth-link'
 import { updateMemberSns } from '@/lib/members'
 
 export async function GET(request: NextRequest) {
@@ -23,10 +23,18 @@ export async function GET(request: NextRequest) {
 
   try {
     const baseUrl = process.env.AUTH_URL ?? request.nextUrl.origin
-    const token = await exchangeCodeForToken('line', code, getCallbackUrl('line', baseUrl))
-    const user = await fetchProviderUser('line', token)
+    const tokenResponse = await exchangeCodeForTokenFull('line', code, getCallbackUrl('line', baseUrl))
+    const user = await fetchProviderUser('line', tokenResponse.access_token)
 
-    await updateMemberSns(discordId, { line: user.username, lineId: user.id })
+    await updateMemberSns(discordId, {
+      line: user.username,
+      lineId: user.id,
+      lineAccessToken: tokenResponse.access_token,
+      lineRefreshToken: tokenResponse.refresh_token,
+      lineTokenExpiresAt: tokenResponse.expires_in
+        ? Math.floor(Date.now() / 1000) + tokenResponse.expires_in
+        : undefined,
+    })
 
     const successUrl = new URL(redirectTo, request.nextUrl.origin)
     successUrl.searchParams.set('success', 'line_linked')
