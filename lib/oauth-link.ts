@@ -41,10 +41,10 @@ export const PROVIDER_CONFIGS: Record<OAuthLinkProvider, ProviderConfig> = {
   linkedin: {
     authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
     tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
-    userUrl: 'https://api.linkedin.com/v2/userinfo',
+    userUrl: 'https://api.linkedin.com/rest/identityMe',
     clientIdEnv: 'AUTH_LINKEDIN_ID',
     clientSecretEnv: 'AUTH_LINKEDIN_SECRET',
-    scope: 'openid profile',
+    scope: 'openid profile r_profile_basicinfo',
   },
 }
 
@@ -175,11 +175,13 @@ export async function exchangeCodeForTokenFull(
 export async function fetchProviderUser(
   provider: OAuthLinkProvider,
   accessToken: string
-): Promise<{ id: string; username: string; avatar?: string }> {
+): Promise<{ id: string; username: string; avatar?: string; vanityName?: string; firstName?: string; lastName?: string }> {
   const config = PROVIDER_CONFIGS[provider]
-  const res = await fetch(config.userUrl, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
+  const headers: Record<string, string> = { Authorization: `Bearer ${accessToken}` }
+  if (provider === 'linkedin') {
+    headers['LinkedIn-Version'] = '202510'
+  }
+  const res = await fetch(config.userUrl, { headers })
   const data = await res.json()
 
   if (!res.ok) {
@@ -202,7 +204,37 @@ export async function fetchProviderUser(
     return { id: data.userId, username: data.displayName, avatar: data.pictureUrl }
   }
   if (provider === 'linkedin') {
-    return { id: data.sub, username: data.name, avatar: data.picture }
+    // /rest/identityMe returns { id, basicInfo: { profileUrl, firstName, lastName, profilePicture } }
+    const basicInfo = data.basicInfo
+    if (!basicInfo) {
+      console.error('LinkedIn identityMe unexpected response:', JSON.stringify(data))
+      throw new Error('LinkedIn identityMe returned no basicInfo')
+    }
+    const avatar: string | undefined = basicInfo.profilePicture?.croppedImage?.downloadUrl
+
+    // profileUrl is a temporary redirect URL — follow it to get the vanity slug
+    let vanityName = ''
+    const profileUrl: string | undefined = basicInfo.profileUrl
+    if (profileUrl) {
+      try {
+        const redirectRes = await fetch(profileUrl, { redirect: 'manual' })
+        const location = redirectRes.headers.get('location') ?? ''
+        // Location is like https://jp.linkedin.com/in/shion1305 or https://www.linkedin.com/in/xxx
+        const match = location.match(/linkedin\.com\/in\/([^/?#]+)/)
+        if (match) vanityName = match[1]
+      } catch {
+        // fallback: vanity name unavailable
+      }
+    }
+
+    const firstName: string | undefined = basicInfo.firstName?.localized
+      ? Object.values(basicInfo.firstName.localized)[0] as string
+      : undefined
+    const lastName: string | undefined = basicInfo.lastName?.localized
+      ? Object.values(basicInfo.lastName.localized)[0] as string
+      : undefined
+
+    return { id: String(data.id), username: profileUrl ?? '', avatar, vanityName: vanityName || undefined, firstName, lastName }
   }
   throw new Error(`Unknown provider: ${provider}`)
 }

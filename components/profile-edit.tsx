@@ -92,6 +92,7 @@ export default function ProfileEdit() {
   const [xAvatar, setXAvatar] = useState("")
   const [linkedinAvatar, setLinkedinAvatar] = useState("")
   const [linkedinUsername, setLinkedinUsername] = useState("")
+  const [linkedinVanity, setLinkedinVanity] = useState("")
   const [faceImageUrl, setFaceImageUrl] = useState("")
   const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
   const [ringColor, setRingColor] = useState<RingColorKey>(DEFAULT_RING_COLOR)
@@ -147,6 +148,7 @@ export default function ProfileEdit() {
           if (data.xAvatar) setXAvatar(data.xAvatar)
           if (data.linkedinAvatar) setLinkedinAvatar(data.linkedinAvatar)
           if (data.linkedin) setLinkedinUsername(data.linkedin)
+          if (data.linkedinVanity) setLinkedinVanity(data.linkedinVanity)
           if (data.faceImage) setFaceImageUrl(data.faceImage)
           if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
           if (data.ringColor) setRingColor(data.ringColor)
@@ -327,9 +329,9 @@ export default function ProfileEdit() {
     if (check(v.discord) && profile.discord)
       entries.push({ platform: "discord", username: profile.discord, avatarUrl: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined })
     if (check(v.linkedin) && linkedinUsername)
-      entries.push({ platform: "linkedin", username: linkedinUsername, url: `https://linkedin.com/in/${linkedinUsername}`, avatarUrl: linkedinAvatar || undefined })
+      entries.push({ platform: "linkedin", username: linkedinVanity || "LinkedIn", url: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
     return entries
-  }, [profile, githubAvatar, xAvatar, discordAvatarUrl, linkedinAvatar, linkedinUsername])
+  }, [profile, githubAvatar, xAvatar, discordAvatarUrl, linkedinAvatar, linkedinUsername, linkedinVanity])
 
   const internalSns = useMemo(() => buildSnsEntries("internal"), [buildSnsEntries])
   const externalSns = useMemo(() => buildSnsEntries("public"), [buildSnsEntries])

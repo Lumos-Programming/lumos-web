@@ -30,8 +30,11 @@ export interface MemberDocument {
   line?: string
   lineId?: string
   lineAvatar?: string
-  linkedin?: string
-  linkedinId?: string
+  linkedin?: string            // Profile URL (from /rest/identityMe basicInfo.profileUrl)
+  linkedinId?: string           // App-scoped member ID (from /rest/identityMe id)
+  linkedinVanity?: string       // Vanity slug e.g. "shion1305" (resolved from profileUrl redirect)
+  linkedinFirstName?: string    // First name from LinkedIn profile
+  linkedinLastName?: string     // Last name from LinkedIn profile
   linkedinAvatar?: string
   lineAccessToken?: string
   lineRefreshToken?: string
@@ -158,7 +161,7 @@ export async function updateMember(
 
 export async function updateMemberSns(
   discordId: string,
-  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'githubAvatar' | 'x' | 'xId' | 'xAvatar' | 'linkedin' | 'linkedinId' | 'linkedinAvatar' | 'line' | 'lineId' | 'lineAvatar' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
+  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'githubAvatar' | 'x' | 'xId' | 'xAvatar' | 'linkedin' | 'linkedinId' | 'linkedinVanity' | 'linkedinFirstName' | 'linkedinLastName' | 'linkedinAvatar' | 'line' | 'lineId' | 'lineAvatar' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
 ): Promise<void> {
   const db = getDb()
   await db.collection('members').doc(discordId).update({
@@ -182,6 +185,11 @@ export async function deleteMemberSnsField(
     updates.lineAccessToken = FieldValue.delete()
     updates.lineRefreshToken = FieldValue.delete()
     updates.lineTokenExpiresAt = FieldValue.delete()
+  }
+  if (provider === 'linkedin') {
+    updates.linkedinVanity = FieldValue.delete()
+    updates.linkedinFirstName = FieldValue.delete()
+    updates.linkedinLastName = FieldValue.delete()
   }
   await db.collection('members').doc(discordId).update(updates)
 }
@@ -232,7 +240,7 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
   const social: Member['social'] = {}
   if (v.github === 'public' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x === 'public' && data.x) social.x = `https://x.com/${data.x}`
-  if (v.linkedin === 'public' && data.linkedin) social.linkedin = `https://www.linkedin.com/in/${data.linkedin}`
+  if (v.linkedin === 'public' && data.linkedin) social.linkedin = data.linkedin
   if (v.discord === 'public' && data.discordHandle) social.discord = `@${data.discordHandle}`
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
@@ -267,7 +275,7 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
   const social: Member['social'] = {}
   if (v.github !== 'private' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x !== 'private' && data.x) social.x = `https://x.com/${data.x}`
-  if (v.linkedin !== 'private' && data.linkedin) social.linkedin = `https://www.linkedin.com/in/${data.linkedin}`
+  if (v.linkedin !== 'private' && data.linkedin) social.linkedin = data.linkedin
   if (v.discord !== 'private') social.discord = data.discordUsername
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''

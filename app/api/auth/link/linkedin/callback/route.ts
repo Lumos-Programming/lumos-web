@@ -28,7 +28,14 @@ export async function GET(request: NextRequest) {
     const token = await exchangeCodeForToken('linkedin', code, getCallbackUrl('linkedin', baseUrl))
     const user = await fetchProviderUser('linkedin', token)
 
-    await updateMemberSns(discordId, { linkedin: user.username, linkedinId: user.id, linkedinAvatar: user.avatar })
+    await updateMemberSns(discordId, {
+      linkedin: user.username,
+      linkedinId: user.id,
+      linkedinAvatar: user.avatar,
+      ...(user.vanityName ? { linkedinVanity: user.vanityName } : {}),
+      ...(user.firstName ? { linkedinFirstName: user.firstName } : {}),
+      ...(user.lastName ? { linkedinLastName: user.lastName } : {}),
+    })
 
     const successUrl = new URL(redirectTo, request.nextUrl.origin)
     successUrl.searchParams.set('success', 'linkedin_linked')
