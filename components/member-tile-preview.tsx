@@ -219,13 +219,17 @@ function DetailPreview({ data, label, allowPublic, hideSns }: { data: MemberDeta
               ))}
             </div>
           )}
-          {data.bio && (
-            <div className="px-4 pb-4">
+          <div className="px-4 pb-4">
+            {data.bio ? (
               <div className="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-400 line-clamp-3 text-xs">
                 <ReactMarkdown>{data.bio}</ReactMarkdown>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="rounded-lg bg-gray-100 dark:bg-gray-800 py-8 flex items-center justify-center">
+                <p className="text-xs text-gray-400 dark:text-gray-500">自己紹介文は登録されていません</p>
+              </div>
+            )}
+          </div>
         </div>
         {isDisabled && (
           <div className="absolute inset-0 flex items-center justify-center">

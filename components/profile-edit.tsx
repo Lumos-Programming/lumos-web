@@ -648,7 +648,15 @@ export default function ProfileEdit() {
                       </span>
                     </div>
                     {key === "bio" ? (
-                      <ReactMarkdown>{profile.bio}</ReactMarkdown>
+                      profile.bio ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown>{profile.bio}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <div className="rounded-lg bg-gray-100 dark:bg-gray-800 py-10 flex items-center justify-center">
+                          <p className="text-sm text-gray-400 dark:text-gray-500">自己紹介文は登録されていません</p>
+                        </div>
+                      )
                     ) : key === "lastName" ? (
                       <p className="text-sm mt-1 whitespace-nowrap">
                         {profile.lastName} {profile.firstName}

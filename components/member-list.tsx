@@ -122,8 +122,16 @@ export default function MemberList({ members }: Props) {
                     )}
                   </div>
                   <div>
-                    <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700 mb-4">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedMember.bio}</ReactMarkdown>
+                    <div className="mb-4">
+                      {selectedMember.bio ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedMember.bio}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <div className="rounded-lg bg-gray-100 dark:bg-gray-800 py-10 flex items-center justify-center">
+                          <p className="text-sm text-gray-400 dark:text-gray-500">自己紹介文は登録されていません</p>
+                        </div>
+                      )}
                     </div>
                     <div className="mb-4">
                       <h4 className="font-bold text-sm text-gray-500 mb-2">スキル</h4>
