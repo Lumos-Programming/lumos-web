@@ -245,7 +245,7 @@ interface PreviewToggleProps {
   allowPublic: boolean
 }
 
-export function TogglePill({ options, value, onChange }: { options: { key: string; label: string }[]; value: string; onChange: (key: string) => void }) {
+function TogglePill({ options, value, onChange }: { options: { key: string; label: string }[]; value: string; onChange: (key: string) => void }) {
   return (
     <div className="flex bg-gray-200 dark:bg-gray-700 rounded-full p-0.5 text-xs">
       {options.map((opt) => (
@@ -263,19 +263,6 @@ export function TogglePill({ options, value, onChange }: { options: { key: strin
 }
 
 // --- Composable building blocks (for breakout layout) ---
-
-export function PreviewViewToggle({ view, onViewChange }: { view: "tile" | "detail"; onViewChange: (v: "tile" | "detail") => void }) {
-  return (
-    <div className="flex items-center justify-between">
-      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">表示プレビュー</p>
-      <TogglePill
-        options={[{ key: "tile", label: "一覧" }, { key: "detail", label: "詳細" }]}
-        value={view}
-        onChange={(k) => onViewChange(k as "tile" | "detail")}
-      />
-    </div>
-  )
-}
 
 export function TilePreviewGrid({ internalData, externalData, allowPublic }: { internalData: MemberTileData; externalData: MemberTileData; allowPublic: boolean }) {
   return (
