@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -175,6 +176,8 @@ export default function OnboardingForm() {
     return s >= 1 && s <= 5 ? s : 1
   })()
 
+  const [showWelcome, setShowWelcome] = useState(true)
+  const [welcomeFading, setWelcomeFading] = useState(false)
   const [currentStep, setCurrentStep] = useState(initialStep)
   const [form, setForm] = useState<FormData>(DEFAULT_FORM)
   const [allowPublic, setAllowPublic] = useState(true)
@@ -541,6 +544,14 @@ export default function OnboardingForm() {
     return score
   })())
 
+  const dismissWelcome = useCallback(() => {
+    setWelcomeFading(true)
+    setTimeout(() => {
+      setShowWelcome(false)
+      setWelcomeFading(false)
+    }, 500)
+  }, [])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -549,11 +560,126 @@ export default function OnboardingForm() {
     )
   }
 
+  if (showWelcome) {
+    return (
+      <div
+        className={[
+          "fixed inset-0 flex flex-col items-center justify-center bg-[#0d0f1a] overflow-hidden transition-opacity duration-500",
+          welcomeFading ? "opacity-0" : "opacity-100",
+        ].join(" ")}
+      >
+        {/* 浮遊パーティクル */}
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-white/10 pointer-events-none animate-[welcomeFloat_linear_infinite]"
+            style={{
+              width: `${4 + (i % 3) * 3}px`,
+              height: `${4 + (i % 3) * 3}px`,
+              left: `${10 + i * 11}%`,
+              top: `${15 + ((i * 17) % 60)}%`,
+              animationDuration: `${6 + i * 1.5}s`,
+              animationDelay: `${i * 0.4}s`,
+            }}
+          />
+        ))}
+
+        {/* 背景グロー */}
+        <div
+          className="absolute w-[500px] h-[500px] rounded-full pointer-events-none animate-[welcomePulse_4s_ease-in-out_infinite]"
+          style={{
+            background: "radial-gradient(circle, rgba(130,120,200,0.12) 0%, transparent 70%)",
+          }}
+        />
+
+        <div className="relative z-10 flex flex-col items-center w-full max-w-xl px-4">
+          {/* ロゴ — spin + scale in */}
+          <div className="w-56 h-56 rounded-full bg-white flex items-center justify-center shadow-2xl shadow-black/25 overflow-hidden p-4 animate-[welcomeLogoIn_1s_cubic-bezier(0.34,1.56,0.64,1)_both]">
+            <Image
+              src="/assets/lumos_logo-full.png"
+              alt="Lumos"
+              width={168}
+              height={168}
+              className="object-contain"
+              priority
+            />
+          </div>
+
+          {/* タイトル — letter by letter fade in */}
+          <h1 className="mt-10 text-4xl sm:text-5xl font-bold text-white tracking-tight text-center">
+            {"Lumosへようこそ！".split("").map((char, i) => (
+              <span
+                key={i}
+                className="inline-block animate-[welcomeLetterIn_0.4s_ease_both]"
+                style={{ animationDelay: `${0.8 + i * 0.06}s` }}
+              >
+                {char}
+              </span>
+            ))}
+          </h1>
+
+          {/* バッジ — pop in */}
+          <div className="mt-6 animate-[welcomeBadgeIn_0.5s_cubic-bezier(0.34,1.56,0.64,1)_both]" style={{ animationDelay: "1.8s" }}>
+            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 text-sm text-[#c8cae0]">
+              <svg className="w-4 h-4 text-[#7c7fda]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <circle cx={12} cy={12} r={10} />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              3分ほどで基本情報の登録が完了します
+            </span>
+          </div>
+
+          {/* ボタン — slide up */}
+          <div className="mt-10 animate-[welcomeSlideUp_0.6s_ease_both]" style={{ animationDelay: "2.2s" }}>
+            <button
+              onClick={dismissWelcome}
+              className="group inline-flex items-center gap-2 px-10 py-3.5 rounded-full text-base font-semibold text-[#0d0f1a] bg-white hover:bg-gray-100 active:scale-[0.97] transition-all duration-200 shadow-lg shadow-black/25"
+            >
+              はじめる
+              <span className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+            </button>
+          </div>
+        </div>
+
+        <style jsx>{`
+          @keyframes welcomeFloat {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
+            50% { transform: translateY(-40px) scale(1.3); opacity: 0.8; }
+          }
+          @keyframes welcomePulse {
+            0%, 100% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+          }
+          @keyframes welcomeLogoIn {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+          }
+          @keyframes welcomeLetterIn {
+            0% { opacity: 0; transform: translateY(8px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes welcomeBadgeIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+          @keyframes welcomeSlideUp {
+            0% { transform: translateY(24px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+          }
+        `}</style>
+      </div>
+    )
+  }
+
   const slideOffset = (currentStep - 1) * -100
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-purple-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-purple-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* 背景装飾 */}
+      <div className="absolute top-[-10%] right-[-5%] w-72 h-72 bg-purple-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-64 h-64 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-lg relative z-10">
         {/* Step indicator */}
         <div className="flex items-center justify-center mb-4 gap-2">
           {STEP_LABELS.map((label, i) => {
@@ -565,20 +691,20 @@ export default function OnboardingForm() {
                 <div className="flex flex-col items-center gap-1">
                   <div
                     className={[
-                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300",
+                      "w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300",
                       isActive
-                        ? "bg-purple-600 text-white shadow-lg shadow-purple-200 dark:shadow-purple-900 scale-110"
+                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-200/50 dark:shadow-purple-900/50 scale-110"
                         : isDone
-                        ? "bg-purple-200 text-purple-700 dark:bg-purple-800 dark:text-purple-200"
-                        : "bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500",
+                        ? "bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400"
+                        : "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500",
                     ].join(" ")}
                   >
                     {isDone ? "✓" : stepNum}
                   </div>
                   <span
                     className={[
-                      "text-xs font-medium transition-colors duration-300",
-                      isActive ? "text-purple-700 dark:text-purple-300" : "text-gray-400 dark:text-gray-500",
+                      "text-[10px] font-medium transition-colors duration-300",
+                      isActive ? "text-purple-700 dark:text-purple-300" : isDone ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-gray-500",
                     ].join(" ")}
                   >
                     {label}
@@ -587,8 +713,8 @@ export default function OnboardingForm() {
                 {i < STEP_LABELS.length - 1 && (
                   <div
                     className={[
-                      "w-6 h-0.5 mb-5 transition-colors duration-300",
-                      stepNum < currentStep ? "bg-purple-400 dark:bg-purple-600" : "bg-gray-200 dark:bg-gray-700",
+                      "w-6 h-px mb-5 transition-colors duration-300",
+                      stepNum < currentStep ? "bg-green-400 dark:bg-green-600" : "bg-gray-200 dark:bg-gray-700",
                     ].join(" ")}
                   />
                 )}
@@ -602,16 +728,16 @@ export default function OnboardingForm() {
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-muted-foreground">{progressPercent}% 完了</span>
           </div>
-          <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-gray-200/70 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
-              className="h-full bg-purple-500 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
 
         {/* Card with sliding steps */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-gray-800/50 overflow-hidden">
           <div
             className="flex transition-transform duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
             style={{ transform: `translateX(${slideOffset}%)` }}
@@ -619,7 +745,7 @@ export default function OnboardingForm() {
             {/* Step 1 — 基本情報 */}
             <div className="w-full flex-shrink-0 p-8">
               <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">ようこそ、Lumosへ</h1>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">ようこそ、Lumosへ</h1>
                 <p className="text-muted-foreground mt-1 text-sm">まず、基本的な情報を入力してください。</p>
               </div>
 
@@ -699,7 +825,7 @@ export default function OnboardingForm() {
               </div>
 
               <div className="mt-8 flex justify-end animate-[fadeInUp_300ms_300ms_ease_both]">
-                <Button onClick={handleStep1Next} disabled={submitting} className="px-8">
+                <Button onClick={handleStep1Next} disabled={submitting} className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-200/50 dark:shadow-purple-900/30">
                   {submitting ? "保存中..." : "次へ →"}
                 </Button>
               </div>
@@ -708,7 +834,7 @@ export default function OnboardingForm() {
             {/* Step 2 — 所属情報 */}
             <div className="w-full flex-shrink-0 p-8">
               <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">所属情報</h2>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">所属情報</h2>
                 <p className="text-muted-foreground mt-1 text-sm">所属する学部・学府や入学情報を入力してください。</p>
               </div>
 
@@ -730,7 +856,7 @@ export default function OnboardingForm() {
                         className={[
                           "px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200",
                           form.memberType === type
-                            ? "bg-purple-600 text-white border-purple-600"
+                            ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-600"
                             : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400",
                         ].join(" ")}
                       >
@@ -1143,7 +1269,7 @@ export default function OnboardingForm() {
                 <Button variant="ghost" onClick={() => goToStep(1)}>
                   ← 戻る
                 </Button>
-                <Button onClick={handleStep2Next} disabled={submitting} className="px-8">
+                <Button onClick={handleStep2Next} disabled={submitting} className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-200/50 dark:shadow-purple-900/30">
                   {submitting ? "保存中..." : "次へ →"}
                 </Button>
               </div>
@@ -1152,7 +1278,7 @@ export default function OnboardingForm() {
             {/* Step 3 — SNS連携 */}
             <div className="w-full flex-shrink-0 p-8">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">SNSアカウントを連携</h2>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">SNSアカウントを連携</h2>
                 <p className="text-muted-foreground mt-1 text-sm">LINEの連携は必須です。GitHubとXは任意です。</p>
               </div>
 
@@ -1276,7 +1402,7 @@ export default function OnboardingForm() {
                 <Button variant="ghost" onClick={() => goToStep(2)}>
                   ← 戻る
                 </Button>
-                <Button onClick={handleStep3Next} className="px-8">
+                <Button onClick={handleStep3Next} className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-200/50 dark:shadow-purple-900/30">
                   次へ →
                 </Button>
               </div>
@@ -1285,7 +1411,7 @@ export default function OnboardingForm() {
             {/* Step 4 — 自己紹介 */}
             <div className="w-full flex-shrink-0 p-8">
               <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">自己紹介</h2>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">自己紹介</h2>
                 <p className="text-muted-foreground mt-1 text-sm">自己紹介はメンバーページで表示されます。</p>
               </div>
 
@@ -1306,7 +1432,7 @@ export default function OnboardingForm() {
                 <Button variant="ghost" onClick={() => goToStep(3)}>
                   ← 戻る
                 </Button>
-                <Button onClick={handleStep4Next} disabled={submitting} className="px-8">
+                <Button onClick={handleStep4Next} disabled={submitting} className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-200/50 dark:shadow-purple-900/30">
                   {submitting ? "保存中..." : "次へ →"}
                 </Button>
               </div>
@@ -1315,7 +1441,7 @@ export default function OnboardingForm() {
             {/* Step 5 — 公開設定 */}
             <div className="w-full flex-shrink-0 p-8">
               <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">公開設定</h2>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">公開設定</h2>
                 <p className="text-muted-foreground mt-1 text-sm">各情報を誰に公開するか設定してください。</p>
               </div>
 
@@ -1373,7 +1499,7 @@ export default function OnboardingForm() {
                   </div>
                   <div className={[
                     "w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 relative",
-                    allowPublic ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600",
+                    allowPublic ? "bg-gradient-to-r from-purple-600 to-indigo-600" : "bg-gray-300 dark:bg-gray-600",
                   ].join(" ")}>
                     <span className={[
                       "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200",
@@ -1415,7 +1541,7 @@ export default function OnboardingForm() {
                 <Button variant="ghost" onClick={() => goToStep(4)}>
                   ← 戻る
                 </Button>
-                <Button onClick={handleComplete} disabled={submitting} className="px-8 bg-purple-600 hover:bg-purple-700">
+                <Button onClick={handleComplete} disabled={submitting} className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-200/50 dark:shadow-purple-900/30">
                   {submitting ? "登録中..." : "登録完了"}
                 </Button>
               </div>
