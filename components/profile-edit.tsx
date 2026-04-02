@@ -18,7 +18,7 @@ import type { Profile, VisibilityLevel } from "@/types/profile"
 import { DEFAULT_RING_COLOR } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
 import { RingColorPicker } from "@/components/ring-color-picker"
-import { InternalTilePreview, ExternalTilePreview } from "@/components/member-tile-preview"
+import { MemberPreviewToggle } from "@/components/member-tile-preview"
 
 function formatBirthDate(d: string) {
   const parts = d.split("-")
@@ -407,20 +407,11 @@ export default function ProfileEdit() {
           )}
           {/* 表示プレビュー */}
           {isEditing && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">表示プレビュー</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <InternalTilePreview
-                  label="内部メンバーページ"
-                  data={{ ...internalPreview, ringColor, memberType, currentOrg }}
-                />
-                <ExternalTilePreview
-                  label="外部HP"
-                  allowPublic={allowPublic}
-                  data={{ ...externalPreview, ringColor, memberType, currentOrg }}
-                />
-              </div>
-            </div>
+            <MemberPreviewToggle
+              internalData={{ ...internalPreview, ringColor, memberType, currentOrg }}
+              externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio }}
+              allowPublic={allowPublic}
+            />
           )}
           {/* プロフィール画像セクション */}
           {isEditing && (

@@ -17,7 +17,7 @@ import type { VisibilityLevel } from "@/types/profile"
 import { DEFAULT_RING_COLOR } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
 import { RingColorPicker } from "@/components/ring-color-picker"
-import { InternalTilePreview, ExternalTilePreview } from "@/components/member-tile-preview"
+import { MemberPreviewToggle, ExternalTilePreview } from "@/components/member-tile-preview"
 
 interface FormData {
   // Step 1
@@ -1891,19 +1891,12 @@ export default function OnboardingForm() {
                   })}
                 </div>
                 {/* 表示プレビュー */}
-                <div className="space-y-3 pt-2">
-                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">表示プレビュー</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <InternalTilePreview
-                      label="内部メンバーページ"
-                      data={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined }}
-                    />
-                    <ExternalTilePreview
-                      label="外部HP"
-                      allowPublic={allowPublic}
-                      data={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined }}
-                    />
-                  </div>
+                <div className="pt-2">
+                  <MemberPreviewToggle
+                    internalData={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined }}
+                    externalData={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio }}
+                    allowPublic={allowPublic}
+                  />
                 </div>
 
                   <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-2.5">
