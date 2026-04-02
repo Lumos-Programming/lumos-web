@@ -83,7 +83,7 @@ function SnsChip({ entry }: { entry: SnsEntry }) {
         </div>
       )}
       <span className="text-[11px] font-medium leading-none truncate max-w-[100px]">
-        {entry.platform === "discord" ? entry.username : `@${entry.username}`}
+        {entry.platform === "discord" || entry.platform === "linkedin" ? entry.username : `@${entry.username}`}
       </span>
     </>
   )

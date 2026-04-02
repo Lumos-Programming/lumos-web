@@ -222,7 +222,7 @@ export default function OnboardingForm() {
   const [xLinked, setXLinked] = useState(false)
   const [xAvatar, setXAvatar] = useState("")
   const [linkedinUsername, setLinkedinUsername] = useState("")
-  const [linkedinVanity, setLinkedinVanity] = useState("")
+  const [linkedinDisplayName, setLinkedinVanity] = useState("")
   const [linkedinLinked, setLinkedinLinked] = useState(false)
   const [linkedinAvatar, setLinkedinAvatar] = useState("")
   const [loading, setLoading] = useState(true)
@@ -333,7 +333,7 @@ export default function OnboardingForm() {
           setXAvatar(data.xAvatar ?? "")
           setLinkedinLinked(!!data.linkedinId)
           setLinkedinUsername(data.linkedin ?? "")
-          setLinkedinVanity(data.linkedinVanity ?? "")
+          setLinkedinVanity(data.linkedinDisplayName ?? "")
           setLinkedinAvatar(data.linkedinAvatar ?? "")
         }
       })
@@ -369,7 +369,7 @@ export default function OnboardingForm() {
       setLinkedinLinked(true)
       fetch("/api/profile")
         .then((res) => res.json())
-        .then((data) => { if (data?.linkedin) { setLinkedinUsername(data.linkedin); setLinkedinVanity(data.linkedinVanity ?? ""); setLinkedinAvatar(data.linkedinAvatar ?? "") } })
+        .then((data) => { if (data?.linkedin) { setLinkedinUsername(data.linkedin); setLinkedinVanity(data.linkedinDisplayName ?? ""); setLinkedinAvatar(data.linkedinAvatar ?? "") } })
         .catch(console.error)
     } else if (error === "line_link_failed") {
       setStep3Error("LINE連携に失敗しました。もう一度お試しください。")
@@ -692,9 +692,9 @@ export default function OnboardingForm() {
     if (check(v.discord) && discordUsername)
       entries.push({ platform: "discord", username: discordUsername, avatarUrl: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined })
     if (check(v.linkedin) && linkedinUsername)
-      entries.push({ platform: "linkedin", username: linkedinVanity || "LinkedIn", url: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
+      entries.push({ platform: "linkedin", username: linkedinDisplayName || "LinkedIn", url: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
     return entries
-  }, [visibility, githubUsername, githubAvatar, xUsername, xAvatar, discordUsername, discordAvatarUrl, linkedinUsername, linkedinVanity, linkedinAvatar])
+  }, [visibility, githubUsername, githubAvatar, xUsername, xAvatar, discordUsername, discordAvatarUrl, linkedinUsername, linkedinDisplayName, linkedinAvatar])
 
   const onbInternalSns = useMemo(() => buildOnbSnsEntries("internal"), [buildOnbSnsEntries])
   const onbExternalSns = useMemo(() => buildOnbSnsEntries("public"), [buildOnbSnsEntries])
@@ -1750,7 +1750,7 @@ export default function OnboardingForm() {
                       <div className="min-w-0">
                         <span className="font-medium text-gray-900 dark:text-gray-100">LinkedIn</span>
                         {linkedinLinked && (
-                          <p className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">{linkedinVanity || "連携済み"}</p>
+                          <p className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">{linkedinDisplayName || "連携済み"}</p>
                         )}
                       </div>
                     </div>
