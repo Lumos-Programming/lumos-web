@@ -570,7 +570,7 @@ export default function ProfileEdit() {
                         value={profile.bio}
                         onChange={(val) => setProfile({ ...profile, bio: val })}
                         height={200}
-                        placeholder="Markdownで自己紹介を入力してください"
+                        placeholder={"## 👋 こんにちは！\n\nコーヒーを燃料に動くタイプの人間です。\n\n**好きなこと**\n- 🖥️ Webアプリを作ること\n- 📚 技術書を積むこと（読むとは言ってない）\n\n> 「動くコードは正義」がモットーです。"}
                       />
                     ) : key === "birthDate" ? (
                       <Input
