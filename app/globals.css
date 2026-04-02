@@ -192,3 +192,29 @@
 .bg-slide-4 {
   animation: backgroundSlide4 48s ease-in-out infinite;
 }
+
+/* 浮遊バブルアニメーション（サンプル顔写真） */
+@keyframes float-bubble {
+  0%, 100% { transform: translateY(0) scale(1); }
+  33% { transform: translateY(-8px) scale(1.03); }
+  66% { transform: translateY(4px) scale(0.97); }
+}
+
+.animate-float-bubble {
+  animation: float-bubble ease-in-out infinite;
+}
+
+/* 液体スプラッシュ — 顔写真設定時のアバターポップ */
+
+@keyframes liquid-pop {
+  0%   { transform: scale(1); }
+  20%  { transform: scale(1.12); }
+  40%  { transform: scale(0.95); }
+  60%  { transform: scale(1.04); }
+  80%  { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+.animate-liquid-pop {
+  animation: liquid-pop 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
