@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { MemberDetailContent } from "@/components/member-detail-shared"
 import type { Member } from "@/types/member"
-import { getRingColorClass, getMemberTypeBadgeClass } from "@/types/member"
+import { getRingColorClass, getMemberTypeBadgeClass, getMemberTypeBadgeLabel } from "@/types/member"
 
 interface Props {
   members: Member[]
@@ -64,7 +64,7 @@ export default function MemberList({ members }: Props) {
               )}
               {member.memberType && (
                 <span className={`mt-1 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${getMemberTypeBadgeClass(member.memberType)}`}>
-                  {member.memberType}
+                  {getMemberTypeBadgeLabel(member.memberType, member.year)}
                 </span>
               )}
               <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-full">

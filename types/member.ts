@@ -43,6 +43,25 @@ export function getRingColorClass(key?: string): string {
   return RING_COLORS.find(c => c.key === key)?.ring ?? "ring-purple-400"
 }
 
+/**
+ * バッジに表示するラベルを返す。
+ * 学部生/院生 → 学年テキストそのまま（例: "学部3年", "修士2年"）
+ * 聴講生 → "聴講生 X年"
+ * 卒業生 → "卒業生"
+ */
+export function getMemberTypeBadgeLabel(memberType?: string, year?: string): string {
+  if (!memberType) return ""
+  switch (memberType) {
+    case "学部生":
+    case "院生":
+      return year || memberType
+    case "聴講生":
+      return year ? `聴講生 ${year}` : memberType
+    default:
+      return memberType
+  }
+}
+
 export function getMemberTypeBadgeClass(type: string): string {
   switch (type) {
     case "学部生": return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"

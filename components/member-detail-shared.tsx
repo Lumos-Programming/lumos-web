@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import type { Member } from "@/types/member"
-import { getRingColorClass, getMemberTypeBadgeClass } from "@/types/member"
+import { getRingColorClass, getMemberTypeBadgeClass, getMemberTypeBadgeLabel } from "@/types/member"
 
 function XIcon({ className }: { className?: string }) {
   return (
@@ -104,10 +104,10 @@ export function MemberDetailContent({ member, showSnsAvatar }: { member: Member;
           {sub && <span className="mr-2">{sub}</span>}
           {member.memberType && (
             <span className={`inline-block text-xs font-medium px-1.5 py-0.5 rounded-full mr-2 ${getMemberTypeBadgeClass(member.memberType)}`}>
-              {member.memberType}
+              {getMemberTypeBadgeLabel(member.memberType, member.year)}
             </span>
           )}
-          {member.role} | {member.memberType === "卒業生" && member.currentOrg ? member.currentOrg : member.department} {member.year}
+          {member.role} | {member.memberType === "卒業生" && member.currentOrg ? member.currentOrg : member.department}
         </DialogDescription>
       </DialogHeader>
       <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 mt-4">

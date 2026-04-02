@@ -635,8 +635,8 @@ export default function OnboardingForm() {
     const dept = v.faculty !== "private" ? form.faculty : ""
     const mainImage = faceImageUrl || "/assets/avatar-placeholder.svg"
     const hasFace = !!faceImageUrl
-    return { main, sub, department: dept, image: mainImage, hasFace, snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined }
-  }, [visibility, form.lastName, form.firstName, form.nickname, form.faculty, faceImageUrl, discordAvatarUrl, getOnbInitials])
+    return { main, sub, department: dept, year: form.schoolYear, image: mainImage, hasFace, snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined }
+  }, [visibility, form.lastName, form.firstName, form.nickname, form.faculty, form.schoolYear, faceImageUrl, discordAvatarUrl, getOnbInitials])
 
   const onbExternalPreview = useMemo(() => {
     const v = visibility

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { getRingColorClass, getMemberTypeBadgeClass } from "@/types/member"
+import { getRingColorClass, getMemberTypeBadgeClass, getMemberTypeBadgeLabel } from "@/types/member"
 import { BioSection } from "@/components/member-detail-shared"
 
 export interface MemberTileData {
@@ -12,6 +12,7 @@ export interface MemberTileData {
   image: string
   hasFace: boolean
   memberType?: string
+  year?: string
   currentOrg?: string
   ringColor?: string
   snsAvatar?: string
@@ -26,7 +27,6 @@ export interface SnsEntry {
 
 export interface MemberDetailData extends MemberTileData {
   role?: string
-  year?: string
   bio?: string
   sns?: SnsEntry[]
 }
@@ -128,7 +128,7 @@ export function InternalTilePreview({ data, label }: { data: MemberTileData; lab
         )}
         {data.memberType && (
           <span className={`mt-1 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${getMemberTypeBadgeClass(data.memberType)}`}>
-            {data.memberType}
+            {getMemberTypeBadgeLabel(data.memberType, data.year)}
           </span>
         )}
         <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-full text-center">
@@ -159,7 +159,7 @@ export function ExternalTilePreview({ data, label, allowPublic }: { data: Member
           )}
           {data.memberType && (
             <span className={`mt-1 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${getMemberTypeBadgeClass(data.memberType)}`}>
-              {data.memberType}
+              {getMemberTypeBadgeLabel(data.memberType, data.year)}
             </span>
           )}
           <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-full text-center">
@@ -200,7 +200,7 @@ function DetailPreview({ data, label, allowPublic }: { data: MemberDetailData; l
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 {data.memberType && (
                   <span className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded-full ${getMemberTypeBadgeClass(data.memberType)}`}>
-                    {data.memberType}
+                    {getMemberTypeBadgeLabel(data.memberType, data.year)}
                   </span>
                 )}
                 {data.role && (
@@ -208,7 +208,7 @@ function DetailPreview({ data, label, allowPublic }: { data: MemberDetailData; l
                 )}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                {[dept, data.year].filter(Boolean).join(" ")}
+                {dept}
               </p>
             </div>
           </div>
