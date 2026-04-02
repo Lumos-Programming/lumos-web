@@ -18,6 +18,7 @@ import { DEFAULT_RING_COLOR } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
 import { RingColorPicker } from "@/components/ring-color-picker"
 import { MemberPreviewToggle, ExternalTilePreview } from "@/components/member-tile-preview"
+import type { SnsEntry } from "@/components/member-tile-preview"
 
 interface FormData {
   // Step 1
@@ -673,6 +674,20 @@ export default function OnboardingForm() {
     }
     return { main, sub, department: dept, year: form.schoolYear, image, hasFace }
   }, [visibility, form.lastName, form.firstName, form.nickname, form.faculty, form.schoolYear, faceImageUrl, primaryAvatar, discordAvatarUrl, lineAvatar, getOnbInitials])
+
+  const onbPreviewSns = useMemo(() => {
+    const v = visibility
+    const entries: SnsEntry[] = []
+    if (v.github !== "private" && githubUsername)
+      entries.push({ platform: "github", username: githubUsername, avatarUrl: githubAvatar || undefined })
+    if (v.x !== "private" && xUsername)
+      entries.push({ platform: "x", username: xUsername, avatarUrl: xAvatar || undefined })
+    if (v.discord !== "private" && discordAvatarUrl !== "/placeholder.svg")
+      entries.push({ platform: "discord", username: discordId, avatarUrl: discordAvatarUrl })
+    if (v.linkedin !== "private" && linkedinUsername)
+      entries.push({ platform: "linkedin", username: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
+    return entries
+  }, [visibility, githubUsername, githubAvatar, xUsername, xAvatar, discordId, discordAvatarUrl, linkedinUsername, linkedinAvatar])
 
   const handleFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -1894,7 +1909,7 @@ export default function OnboardingForm() {
                 <div className="pt-2">
                   <MemberPreviewToggle
                     internalData={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined }}
-                    externalData={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio }}
+                    externalData={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined, bio: form.bio, sns: onbPreviewSns }}
                     allowPublic={allowPublic}
                   />
                 </div>

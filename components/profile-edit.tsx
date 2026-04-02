@@ -19,6 +19,7 @@ import { DEFAULT_RING_COLOR } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
 import { RingColorPicker } from "@/components/ring-color-picker"
 import { MemberPreviewToggle } from "@/components/member-tile-preview"
+import type { SnsEntry } from "@/components/member-tile-preview"
 
 function formatBirthDate(d: string) {
   const parts = d.split("-")
@@ -87,6 +88,10 @@ export default function ProfileEdit() {
   const [discordAvatarHash, setDiscordAvatarHash] = useState("")
   const [lineAvatar, setLineAvatar] = useState("")
   const [lineLinked, setLineLinked] = useState(false)
+  const [githubAvatar, setGithubAvatar] = useState("")
+  const [xAvatar, setXAvatar] = useState("")
+  const [linkedinAvatar, setLinkedinAvatar] = useState("")
+  const [linkedinUsername, setLinkedinUsername] = useState("")
   const [faceImageUrl, setFaceImageUrl] = useState("")
   const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
   const [ringColor, setRingColor] = useState<RingColorKey>(DEFAULT_RING_COLOR)
@@ -138,6 +143,10 @@ export default function ProfileEdit() {
           if (data.discordAvatar) setDiscordAvatarHash(data.discordAvatar)
           if (data.lineAvatar) setLineAvatar(data.lineAvatar)
           setLineLinked(!!data.lineId)
+          if (data.githubAvatar) setGithubAvatar(data.githubAvatar)
+          if (data.xAvatar) setXAvatar(data.xAvatar)
+          if (data.linkedinAvatar) setLinkedinAvatar(data.linkedinAvatar)
+          if (data.linkedin) setLinkedinUsername(data.linkedin)
           if (data.faceImage) setFaceImageUrl(data.faceImage)
           if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
           if (data.ringColor) setRingColor(data.ringColor)
@@ -307,6 +316,20 @@ export default function ProfileEdit() {
     return { main, sub, role, department: dept, year, image, hasFace }
   }, [profile, faculty, year, role, faceImageUrl, primaryAvatar, discordAvatarUrl, lineAvatar, getInitials])
 
+  const previewSns = useMemo(() => {
+    const v = profile.visibility
+    const entries: SnsEntry[] = []
+    if (v.github !== "private" && profile.github)
+      entries.push({ platform: "github", username: profile.github, avatarUrl: githubAvatar || undefined })
+    if (v.x !== "private" && profile.x)
+      entries.push({ platform: "x", username: profile.x, avatarUrl: xAvatar || undefined })
+    if (v.discord !== "private" && profile.discord)
+      entries.push({ platform: "discord", username: profile.discord, avatarUrl: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined })
+    if (v.linkedin !== "private" && linkedinUsername)
+      entries.push({ platform: "linkedin", username: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
+    return entries
+  }, [profile, githubAvatar, xAvatar, discordAvatarUrl, linkedinAvatar, linkedinUsername])
+
   if (loading) {
     return <div className="text-center py-8">読み込み中...</div>
   }
@@ -409,7 +432,7 @@ export default function ProfileEdit() {
           {isEditing && (
             <MemberPreviewToggle
               internalData={{ ...internalPreview, ringColor, memberType, currentOrg }}
-              externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio }}
+              externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: previewSns }}
               allowPublic={allowPublic}
             />
           )}
