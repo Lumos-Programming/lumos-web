@@ -6,7 +6,6 @@ import Image from "next/image"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { VisibilityToggle } from "@/components/ui/visibility-toggle"
@@ -15,6 +14,10 @@ import { cropAndResizeImage } from "@/lib/image-crop"
 import { MEMBER_TYPES, ENROLLMENT_TYPES, ADMISSION_YEARS, FACULTIES, getFacultyOptions } from "@/types/profile"
 import type { MemberType, EnrollmentType } from "@/types/profile"
 import type { VisibilityLevel } from "@/types/profile"
+import { DEFAULT_RING_COLOR } from "@/types/member"
+import type { RingColorKey } from "@/types/member"
+import { RingColorPicker } from "@/components/ring-color-picker"
+import { InternalTilePreview, ExternalTilePreview } from "@/components/member-tile-preview"
 
 interface FormData {
   // Step 1
@@ -230,6 +233,7 @@ export default function OnboardingForm() {
   // Step 6 — image
   const [faceImageUrl, setFaceImageUrl] = useState("")
   const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
+  const [ringColor, setRingColor] = useState<RingColorKey>(DEFAULT_RING_COLOR)
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -311,6 +315,7 @@ export default function OnboardingForm() {
           if (data.discordAvatar) setDiscordAvatar(data.discordAvatar)
           if (data.faceImage) setFaceImageUrl(data.faceImage)
           if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
+          if (data.ringColor) setRingColor(data.ringColor)
           setLineLinked(!!data.lineId)
           setLineUsername(data.line ?? "")
           setLineAvatar(data.lineAvatar ?? "")
@@ -604,26 +609,50 @@ export default function OnboardingForm() {
 
   const onbInternalPreview = useMemo(() => {
     const v = visibility
-    const name =
-      v.lastName !== "private" && v.firstName !== "private"
-        ? `${form.lastName} ${form.firstName}`.trim()
-        : v.nickname !== "private"
-        ? form.nickname
-        : getOnbInitials()
+    const hasName = v.lastName !== "private" && v.firstName !== "private"
+    const fullName = hasName ? `${form.lastName} ${form.firstName}`.trim() : undefined
+    const hasNickname = v.nickname !== "private" && !!form.nickname
+    const nickname = hasNickname ? form.nickname : undefined
+
+    let main: string
+    let sub: string | undefined
+    if (nickname && fullName && nickname !== fullName) {
+      main = nickname
+      sub = fullName
+    } else if (nickname) {
+      main = nickname
+    } else if (fullName) {
+      main = fullName
+    } else {
+      main = getOnbInitials() || "名前未設定"
+    }
+
     const dept = v.faculty !== "private" ? form.faculty : ""
     const mainImage = faceImageUrl || "/assets/avatar-placeholder.svg"
     const hasFace = !!faceImageUrl
-    return { name: name || getOnbInitials() || "名前未設定", department: dept, image: mainImage, hasFace, snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined }
+    return { main, sub, department: dept, image: mainImage, hasFace, snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined }
   }, [visibility, form.lastName, form.firstName, form.nickname, form.faculty, faceImageUrl, discordAvatarUrl, getOnbInitials])
 
   const onbExternalPreview = useMemo(() => {
     const v = visibility
-    const name =
-      v.lastName === "public" && v.firstName === "public"
-        ? `${form.lastName} ${form.firstName}`.trim()
-        : v.nickname === "public"
-        ? form.nickname
-        : getOnbInitials()
+    const hasName = v.lastName === "public" && v.firstName === "public"
+    const fullName = hasName ? `${form.lastName} ${form.firstName}`.trim() : undefined
+    const hasNickname = v.nickname === "public" && !!form.nickname
+    const nickname = hasNickname ? form.nickname : undefined
+
+    let main: string
+    let sub: string | undefined
+    if (nickname && fullName && nickname !== fullName) {
+      main = nickname
+      sub = fullName
+    } else if (nickname) {
+      main = nickname
+    } else if (fullName) {
+      main = fullName
+    } else {
+      main = getOnbInitials() || "名前未設定"
+    }
+
     const dept = v.faculty === "public" ? form.faculty : ""
 
     let image: string
@@ -642,7 +671,7 @@ export default function OnboardingForm() {
         image = "/assets/avatar-placeholder.svg"
         hasFace = false
     }
-    return { name: name || getOnbInitials() || "名前未設定", department: dept, year: form.schoolYear, image, hasFace }
+    return { main, sub, department: dept, year: form.schoolYear, image, hasFace }
   }, [visibility, form.lastName, form.firstName, form.nickname, form.faculty, form.schoolYear, faceImageUrl, primaryAvatar, discordAvatarUrl, lineAvatar, getOnbInitials])
 
   const handleFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -703,6 +732,7 @@ export default function OnboardingForm() {
           bio: form.bio,
           allowPublic,
           primaryAvatar,
+          ringColor,
           visibility: {
             studentId: "private",
             nickname: visibility.nickname,
@@ -1864,71 +1894,15 @@ export default function OnboardingForm() {
                 <div className="space-y-3 pt-2">
                   <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">表示プレビュー</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* 内部メンバーページ */}
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground text-center">内部メンバーページ</p>
-                      <div className="flex flex-col items-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/60 p-4">
-                        <div className="relative flex-shrink-0">
-                          <div className="w-16 h-16 relative rounded-full overflow-hidden ring-2 ring-purple-200 dark:ring-purple-700">
-                            <Image
-                              src={onbInternalPreview.image}
-                              alt="内部プレビュー"
-                              fill
-                              className="object-cover"
-                            />
-                            {!onbInternalPreview.hasFace && (
-                              <div className="absolute inset-0 flex items-end justify-center bg-black/20">
-                                <span className="text-[10px] text-white bg-black/50 px-1 rounded mb-1">あとで設定</span>
-                              </div>
-                            )}
-                          </div>
-                          {onbInternalPreview.snsAvatar && (
-                            <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
-                              <Image src={onbInternalPreview.snsAvatar} alt="" fill className="object-cover" />
-                            </div>
-                          )}
-                        </div>
-                        <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight truncate w-full text-center">
-                          {onbInternalPreview.name}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-full text-center">
-                          {onbInternalPreview.department}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* 外部HP */}
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground text-center">外部HP</p>
-                      <div className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
-                        <div className={allowPublic ? "" : "opacity-40"}>
-                          <div className="aspect-square relative w-full">
-                            <Image
-                              src={onbExternalPreview.image}
-                              alt="外部プレビュー"
-                              fill
-                              className="object-cover"
-                            />
-                            {!onbExternalPreview.hasFace && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                <span className="text-xs text-white bg-black/50 px-2 py-0.5 rounded">あとで設定</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-3">
-                            <p className="text-base font-bold text-gray-900 dark:text-gray-100 truncate">{onbExternalPreview.name}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                              {[onbExternalPreview.department, onbExternalPreview.year].filter(Boolean).join(" ")}
-                            </p>
-                          </div>
-                        </div>
-                        {!allowPublic && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="bg-gray-800/80 text-white text-sm font-semibold px-3 py-1.5 rounded-lg">HP掲載 OFF</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <InternalTilePreview
+                      label="内部メンバーページ"
+                      data={{ ...onbInternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined }}
+                    />
+                    <ExternalTilePreview
+                      label="外部HP"
+                      allowPublic={allowPublic}
+                      data={{ ...onbExternalPreview, ringColor, memberType: form.memberType || undefined, currentOrg: form.currentOrg || undefined }}
+                    />
                   </div>
                 </div>
 
@@ -2070,6 +2044,12 @@ export default function OnboardingForm() {
                     <p className="text-xs text-blue-700 dark:text-blue-300">プロフィール設定からいつでも変更できます。</p>
                   </div>
                 )}
+
+                <RingColorPicker
+                  value={ringColor}
+                  onChange={setRingColor}
+                  description="アバターの周りに表示されるカラーリングを選べます。"
+                />
               </div>
 
               <div className="mt-8 flex justify-between animate-[fadeInUp_300ms_120ms_ease_both]">
@@ -2115,38 +2095,26 @@ export default function OnboardingForm() {
                 </div>
 
                 {/* ライブプレビュー */}
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground text-center">表示プレビュー</p>
-                  <div className="flex justify-center">
-                    <Card className="overflow-hidden border-border bg-card w-52 shadow-md">
-                      <div className="aspect-square relative">
-                        <Image
-                          src={(() => {
-                            switch (primaryAvatar) {
-                              case "face": return faceImageUrl || "/placeholder.svg"
-                              case "discord": return discordAvatar ? (discordAvatar.startsWith("http") ? discordAvatar : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`) : "/placeholder.svg"
-                              case "line": return lineAvatar || "/placeholder.svg"
-                              case "default": return "/placeholder.svg"
-                            }
-                          })()}
-                          alt="プレビュー"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <CardContent className="p-3">
-                        <h3 className="text-base font-bold text-foreground truncate">
-                          {visibility.lastName !== "private" && visibility.firstName !== "private"
-                            ? `${form.lastName} ${form.firstName}`
-                            : visibility.nickname !== "private"
-                            ? form.nickname
-                            : "あなたの名前"}
-                        </h3>
-                        <p className="text-muted-foreground text-xs mt-0.5 truncate">
-                          {form.faculty} {form.schoolYear}
-                        </p>
-                      </CardContent>
-                    </Card>
+                <div className="flex justify-center">
+                  <div className="w-44">
+                    <ExternalTilePreview
+                      label="表示プレビュー"
+                      allowPublic={true}
+                      data={{
+                        ...onbExternalPreview,
+                        image: (() => {
+                          switch (primaryAvatar) {
+                            case "face": return faceImageUrl || "/placeholder.svg"
+                            case "discord": return discordAvatar ? (discordAvatar.startsWith("http") ? discordAvatar : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`) : "/placeholder.svg"
+                            case "line": return lineAvatar || "/placeholder.svg"
+                            case "default": return "/placeholder.svg"
+                          }
+                        })(),
+                        ringColor,
+                        memberType: form.memberType || undefined,
+                        currentOrg: form.currentOrg || undefined,
+                      }}
+                    />
                   </div>
                 </div>
 

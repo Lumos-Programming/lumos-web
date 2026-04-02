@@ -15,6 +15,10 @@ import type { Area } from "react-easy-crop"
 import ReactMarkdown from "react-markdown"
 import Link from "next/link"
 import type { Profile, VisibilityLevel } from "@/types/profile"
+import { DEFAULT_RING_COLOR } from "@/types/member"
+import type { RingColorKey } from "@/types/member"
+import { RingColorPicker } from "@/components/ring-color-picker"
+import { InternalTilePreview, ExternalTilePreview } from "@/components/member-tile-preview"
 
 function formatBirthDate(d: string) {
   const parts = d.split("-")
@@ -85,6 +89,7 @@ export default function ProfileEdit() {
   const [lineLinked, setLineLinked] = useState(false)
   const [faceImageUrl, setFaceImageUrl] = useState("")
   const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
+  const [ringColor, setRingColor] = useState<RingColorKey>(DEFAULT_RING_COLOR)
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -93,6 +98,8 @@ export default function ProfileEdit() {
   const [faculty, setFaculty] = useState("")
   const [year, setYear] = useState("")
   const [role, setRole] = useState("")
+  const [memberType, setMemberType] = useState("")
+  const [currentOrg, setCurrentOrg] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -133,6 +140,9 @@ export default function ProfileEdit() {
           setLineLinked(!!data.lineId)
           if (data.faceImage) setFaceImageUrl(data.faceImage)
           if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
+          if (data.ringColor) setRingColor(data.ringColor)
+          if (data.memberType) setMemberType(data.memberType)
+          if (data.currentOrg) setCurrentOrg(data.currentOrg)
           setProfile({
             studentId: data.studentId ?? "",
             nickname: data.nickname ?? "",
@@ -160,7 +170,7 @@ export default function ProfileEdit() {
       const response = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profile, allowPublic, primaryAvatar }),
+        body: JSON.stringify({ ...profile, allowPublic, primaryAvatar, ringColor }),
       })
 
       if (response.ok) {
@@ -231,26 +241,50 @@ export default function ProfileEdit() {
 
   const internalPreview = useMemo(() => {
     const v = profile.visibility
-    const name =
-      v.lastName !== "private" && v.firstName !== "private"
-        ? `${profile.lastName} ${profile.firstName}`.trim()
-        : v.nickname !== "private"
-        ? profile.nickname
-        : getInitials() || profile.discord
+    const hasName = v.lastName !== "private" && v.firstName !== "private"
+    const fullName = hasName ? `${profile.lastName} ${profile.firstName}`.trim() : undefined
+    const hasNickname = v.nickname !== "private" && !!profile.nickname
+    const nickname = hasNickname ? profile.nickname : undefined
+
+    let main: string
+    let sub: string | undefined
+    if (nickname && fullName && nickname !== fullName) {
+      main = nickname
+      sub = fullName
+    } else if (nickname) {
+      main = nickname
+    } else if (fullName) {
+      main = fullName
+    } else {
+      main = getInitials() || profile.discord || "名前未設定"
+    }
+
     const dept = v.faculty !== "private" ? faculty : ""
     const mainImage = faceImageUrl || "/assets/avatar-placeholder.svg"
     const hasFace = !!faceImageUrl
-    return { name: name || getInitials() || "名前未設定", department: dept, image: mainImage, hasFace, snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined }
+    return { main, sub, department: dept, image: mainImage, hasFace, snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined }
   }, [profile, faculty, faceImageUrl, discordAvatarUrl, getInitials])
 
   const externalPreview = useMemo(() => {
     const v = profile.visibility
-    const name =
-      v.lastName === "public" && v.firstName === "public"
-        ? `${profile.lastName} ${profile.firstName}`.trim()
-        : v.nickname === "public"
-        ? profile.nickname
-        : getInitials() || profile.discord
+    const hasName = v.lastName === "public" && v.firstName === "public"
+    const fullName = hasName ? `${profile.lastName} ${profile.firstName}`.trim() : undefined
+    const hasNickname = v.nickname === "public" && !!profile.nickname
+    const nickname = hasNickname ? profile.nickname : undefined
+
+    let main: string
+    let sub: string | undefined
+    if (nickname && fullName && nickname !== fullName) {
+      main = nickname
+      sub = fullName
+    } else if (nickname) {
+      main = nickname
+    } else if (fullName) {
+      main = fullName
+    } else {
+      main = getInitials() || profile.discord || "名前未設定"
+    }
+
     const dept = v.faculty === "public" ? faculty : ""
 
     let image: string
@@ -270,7 +304,7 @@ export default function ProfileEdit() {
         image = "/assets/avatar-placeholder.svg"
         hasFace = false
     }
-    return { name: name || getInitials() || "名前未設定", role, department: dept, year, image, hasFace }
+    return { main, sub, role, department: dept, year, image, hasFace }
   }, [profile, faculty, year, role, faceImageUrl, primaryAvatar, discordAvatarUrl, lineAvatar, getInitials])
 
   if (loading) {
@@ -376,74 +410,15 @@ export default function ProfileEdit() {
             <div className="space-y-3">
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">表示プレビュー</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* 内部メンバーページ */}
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground text-center">内部メンバーページ</p>
-                  <div className="flex flex-col items-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/60 p-4">
-                    <div className="relative flex-shrink-0">
-                      <div className="w-16 h-16 relative rounded-full overflow-hidden ring-2 ring-purple-200 dark:ring-purple-700">
-                        <Image
-                          src={internalPreview.image}
-                          alt="内部プレビュー"
-                          fill
-                          className="object-cover"
-                        />
-                        {!internalPreview.hasFace && (
-                          <div className="absolute inset-0 flex items-end justify-center bg-black/20">
-                            <span className="text-[10px] text-white bg-black/50 px-1 rounded mb-1">あとで設定</span>
-                          </div>
-                        )}
-                      </div>
-                      {internalPreview.snsAvatar && (
-                        <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
-                          <Image src={internalPreview.snsAvatar} alt="" fill className="object-cover" />
-                        </div>
-                      )}
-                    </div>
-                    <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight truncate w-full text-center">
-                      {internalPreview.name}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-full text-center">
-                      {internalPreview.department}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 外部HP */}
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground text-center">外部HP</p>
-                  <div className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
-                    <div className={allowPublic ? "" : "opacity-40"}>
-                      <div className="aspect-square relative w-full">
-                        <Image
-                          src={externalPreview.image}
-                          alt="外部プレビュー"
-                          fill
-                          className="object-cover"
-                        />
-                        {!externalPreview.hasFace && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                            <span className="text-xs text-white bg-black/50 px-2 py-0.5 rounded">あとで設定</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <p className="text-base font-bold text-gray-900 dark:text-gray-100 truncate">{externalPreview.name}</p>
-                        {externalPreview.role && (
-                          <p className="text-sm font-medium text-purple-600 dark:text-purple-400 truncate">{externalPreview.role}</p>
-                        )}
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                          {[externalPreview.department, externalPreview.year].filter(Boolean).join(" ")}
-                        </p>
-                      </div>
-                    </div>
-                    {!allowPublic && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="bg-gray-800/80 text-white text-sm font-semibold px-3 py-1.5 rounded-lg">HP掲載 OFF</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <InternalTilePreview
+                  label="内部メンバーページ"
+                  data={{ ...internalPreview, ringColor, memberType, currentOrg }}
+                />
+                <ExternalTilePreview
+                  label="外部HP"
+                  allowPublic={allowPublic}
+                  data={{ ...externalPreview, ringColor, memberType, currentOrg }}
+                />
               </div>
             </div>
           )}
@@ -537,6 +512,8 @@ export default function ProfileEdit() {
                   ))}
                 </div>
               </div>
+
+              <RingColorPicker value={ringColor} onChange={setRingColor} />
             </div>
           )}
 
