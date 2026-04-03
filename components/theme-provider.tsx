@@ -34,32 +34,32 @@ export function ThemeProvider({
     }
   })
 
-  const resolvedTheme = React.useMemo(() => {
-    if (theme !== 'system') return theme
+  const [systemThemeState, setSystemThemeState] = React.useState<'light' | 'dark'>(() => {
     if (typeof window === 'undefined') return 'light'
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  }, [theme])
+  })
+
+  const resolvedTheme = theme !== 'system' ? theme : systemThemeState
 
   const setTheme = React.useCallback((value: string | ((prev: string) => string)) => {
-    const next = typeof value === 'function' ? value(theme) : value
-    setThemeState(next)
-    try { localStorage.setItem(storageKey, next) } catch {}
-  }, [theme, storageKey])
+    setThemeState((prev) => {
+      const next = typeof value === 'function' ? value(prev) : value
+      try { localStorage.setItem(storageKey, next) } catch {}
+      return next
+    })
+  }, [storageKey])
 
   // Apply theme to <html>
   React.useEffect(() => {
     const root = document.documentElement
-    const resolved = theme === 'system'
-      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-      : theme
 
     if (attribute === 'class') {
       root.classList.remove('light', 'dark')
-      root.classList.add(resolved)
+      root.classList.add(resolvedTheme)
     } else if (typeof attribute === 'string') {
-      root.setAttribute(attribute, resolved)
+      root.setAttribute(attribute, resolvedTheme)
     }
-    root.style.colorScheme = resolved
+    root.style.colorScheme = resolvedTheme
 
     if (disableTransitionOnChange) {
       const style = document.createElement('style')
@@ -68,16 +68,16 @@ export function ThemeProvider({
       window.getComputedStyle(document.body)
       setTimeout(() => document.head.removeChild(style), 1)
     }
-  }, [theme, attribute, disableTransitionOnChange])
+  }, [resolvedTheme, attribute, disableTransitionOnChange])
 
   // Listen for system theme changes
   React.useEffect(() => {
     if (!enableSystem) return
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = () => { if (theme === 'system') setThemeState(prev => prev) /* force re-render */ }
+    const handler = (e: MediaQueryListEvent) => { setSystemThemeState(e.matches ? 'dark' : 'light') }
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
-  }, [enableSystem, theme])
+  }, [enableSystem])
 
   // Listen for storage changes (cross-tab sync)
   React.useEffect(() => {
@@ -93,9 +93,9 @@ export function ThemeProvider({
     setTheme,
     resolvedTheme,
     themes: enableSystem ? ['light', 'dark', 'system'] : ['light', 'dark'],
-    systemTheme: (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') as 'light' | 'dark' | undefined,
+    systemTheme: systemThemeState,
     forcedTheme: undefined,
-  }), [theme, setTheme, resolvedTheme, enableSystem])
+  }), [theme, setTheme, resolvedTheme, enableSystem, systemThemeState])
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
