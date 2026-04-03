@@ -64,6 +64,13 @@ export function getMemberTypeBadgeLabel(memberType?: string, year?: string): str
   }
 }
 
+export function getTileDisplay(member: { name: string; nickname?: string }) {
+  if (member.nickname && member.nickname !== member.name) {
+    return { main: member.nickname, sub: member.name }
+  }
+  return { main: member.name, sub: undefined }
+}
+
 export function getMemberTypeBadgeClass(type: string): string {
   switch (type) {
     case "学部生": return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
