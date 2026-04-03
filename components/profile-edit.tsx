@@ -579,7 +579,7 @@ export default function ProfileEdit() {
                       <Input
                         value={profile[key] as string ?? ""}
                         onChange={(e) => setProfile({ ...profile, [key]: e.target.value })}
-                        placeholder={`${FIELD_LABELS[key]}を入力してください`}
+                        placeholder={key === "currentOrg" ? "例: 株式会社〇〇" : `${FIELD_LABELS[key]}を入力してください`}
                       />
                     )}
 
@@ -626,7 +626,17 @@ export default function ProfileEdit() {
                 onClick={() => {
                   const next = !allowPublic
                   setAllowPublic(next)
-                  if (!next) {
+                  if (next) {
+                    // ONに戻す: 各フィールドを制約に応じた最大レベルに設定
+                    setProfile((prev) => {
+                      const vis = { ...prev.visibility }
+                      const internalOnly = new Set(["line", "birthDate"])
+                      for (const k of VISIBILITY_FIELD_KEYS) {
+                        vis[k] = internalOnly.has(k) ? "internal" : "public"
+                      }
+                      return { ...prev, visibility: vis }
+                    })
+                  } else {
                     setProfile((prev) => {
                       const vis = { ...prev.visibility }
                       for (const k of VISIBILITY_FIELD_KEYS) {
@@ -673,8 +683,8 @@ export default function ProfileEdit() {
                 {VISIBILITY_DISPLAY_KEYS.map((key) => {
                   if (key === "currentOrg" && memberType !== "卒業生") return null
                   return (
-                    <div key={key} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <div key={key} className="flex items-center justify-between gap-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0 shrink-1">
                         {VISIBILITY_LABELS[key]}
                       </span>
                       <VisibilityToggle
