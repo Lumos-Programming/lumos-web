@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { badgeVariants } from "@/components/ui/badge"
 import MemberList from "@/components/member-list"
 import type { Member } from "@/types/member"
 
@@ -52,16 +52,17 @@ export function MemberSearch({ members }: MemberSearchProps) {
             className="pl-9 focus-visible:shadow-md transition-shadow duration-200"
           />
         </div>
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap" role="group" aria-label="メンバー種別フィルター">
           {MEMBER_TYPE_FILTERS.map((f) => (
-            <Badge
+            <button
               key={f.key}
-              variant={typeFilter === f.key ? "default" : "outline"}
-              className={`cursor-pointer transition-all duration-200 ${typeFilter === f.key ? "scale-105" : "hover:scale-105"}`}
+              type="button"
+              aria-pressed={typeFilter === f.key}
+              className={`${badgeVariants({ variant: typeFilter === f.key ? "default" : "outline" })} cursor-pointer transition-all duration-200 ${typeFilter === f.key ? "scale-105" : "hover:scale-105"}`}
               onClick={() => setTypeFilter(f.key)}
             >
               {f.label}
-            </Badge>
+            </button>
           ))}
         </div>
       </div>

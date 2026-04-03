@@ -36,7 +36,7 @@ export default async function ProfilePage() {
   const social: Member["social"] = member ? {
     github: member.github ? `https://github.com/${member.github}` : undefined,
     x: member.x ? `https://x.com/${member.x}` : undefined,
-    discord: member.discordUsername || undefined,
+    discord: member.discordUsername ? `https://discord.com/users/${session.user.id}` : undefined,
     linkedin: member.linkedin || undefined,
   } : undefined
 

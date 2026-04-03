@@ -1,4 +1,9 @@
-import versionData from '@/lib/version.json'
+let versionData: { commitSha: string; buildDate: string } = { commitSha: 'dev', buildDate: new Date().toISOString() }
+try {
+  versionData = require('@/lib/version.json')
+} catch {
+  // version.json is generated at Docker build time; use fallback for local dev
+}
 
 export function VersionInfo() {
   const { commitSha, buildDate } = versionData

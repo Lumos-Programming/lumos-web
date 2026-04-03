@@ -102,7 +102,12 @@ export function socialToSnsEntries(social?: {
     entries.push({ platform: "x", username, url: social.x })
   }
   if (social.discord) {
-    entries.push({ platform: "discord", username: social.discord, url: social.discord })
+    const isUrl = social.discord.startsWith("http")
+    entries.push({
+      platform: "discord",
+      username: isUrl ? "Discord" : social.discord,
+      url: isUrl ? social.discord : undefined,
+    })
   }
   if (social.linkedin) {
     const username = social.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "")

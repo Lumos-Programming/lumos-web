@@ -230,6 +230,7 @@ export default function ProfileEdit() {
     const handler = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault()
+        e.returnValue = ""
       }
     }
     window.addEventListener("beforeunload", handler)
@@ -843,20 +844,25 @@ export default function ProfileEdit() {
                 </div>
                 {VISIBILITY_DISPLAY_KEYS.map((key) => {
                   if (key === "currentOrg" && memberType !== "卒業生") return null
+                  const isCombinedName = key === "lastName"
+                  const visibilityValue = isCombinedName
+                    ? (profile.visibility.lastName === profile.visibility.firstName
+                        ? profile.visibility.lastName
+                        : "internal")
+                    : (profile.visibility[key as keyof typeof profile.visibility] ?? "private")
                   return (
                     <div key={key} className="flex items-center justify-between gap-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0 shrink-1">
                         {VISIBILITY_LABELS[key]}
                       </span>
                       <VisibilityToggle
-                        value={profile.visibility[key as keyof typeof profile.visibility] ?? "private"}
+                        value={visibilityValue}
                         onChange={(v: VisibilityLevel) =>
                           setProfile({
                             ...profile,
-                            visibility: {
-                              ...profile.visibility,
-                              [key]: v,
-                            },
+                            visibility: isCombinedName
+                              ? { ...profile.visibility, lastName: v, firstName: v }
+                              : { ...profile.visibility, [key]: v },
                           })
                         }
                         max={key === "line" || key === "birthDate" || !allowPublic ? "internal" : undefined}
