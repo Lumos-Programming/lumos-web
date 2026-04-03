@@ -40,15 +40,15 @@ export function AppSidebar({ userName, userImage, memberNickname, memberRole }: 
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <Avatar className="h-9 w-9 shrink-0 ring-2 ring-sidebar-primary/20">
+      <SidebarHeader className="border-b border-sidebar-border p-4 group-data-[collapsible=icon]:p-2">
+        <div className="flex items-center gap-3 overflow-hidden group-data-[collapsible=icon]:justify-start">
+          <Avatar className="h-9 w-9 shrink-0 ring-2 ring-sidebar-primary/20 transition-all duration-200 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7">
             <AvatarImage src={userImage} alt={userName} />
             <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">
               {(memberNickname || userName).charAt(0)}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col overflow-hidden">
+          <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold truncate">{memberNickname || userName}</span>
             {memberRole && (
               <span className="text-[11px] text-sidebar-foreground/50 truncate">{memberRole}</span>

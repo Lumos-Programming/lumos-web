@@ -26,12 +26,12 @@ export function InternalShell({ children, userName, userImage, memberNickname, m
       <SidebarInset>
         <header className="relative flex h-16 shrink-0 items-center border-b px-4">
           <SidebarTrigger className="-ml-1 shrink-0" />
-          <Link href="/internal" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
+          <Link href="/internal" className="internal-logo-link absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
             <Image
               src="/assets/Lumoslogo.png"
               alt="Lumos"
-              width={56}
-              height={56}
+              width={64}
+              height={40}
               className="shrink-0"
             />
             <span className="text-lg font-bold tracking-tight text-foreground whitespace-nowrap">

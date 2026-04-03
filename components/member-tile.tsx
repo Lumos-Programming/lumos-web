@@ -41,7 +41,7 @@ export function MemberTile({
   const content = (
     <>
       <div className="relative flex-shrink-0">
-        <div className={`${sizeClass} relative rounded-full overflow-hidden ring-2 ${ringClass} transition-all duration-300 ${!preview ? "group-hover:ring-4 group-hover:shadow-lg" : ""}`}>
+        <div className={`${sizeClass} relative rounded-full overflow-hidden ring-2 ${ringClass} transition-all duration-300 ${!preview ? "group-hover:ring-4 group-hover:shadow-lg group-hover:scale-105" : ""}`}>
           <Image
             src={image}
             alt={`${main}の写真`}
@@ -100,7 +100,7 @@ export function MemberTile({
     <button
       type="button"
       onClick={onClick}
-      className="group flex flex-col items-center text-center rounded-xl p-3 hover:bg-card hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:scale-[0.97]"
+      className="group flex flex-col items-center text-center rounded-xl p-3 hover:bg-card hover:shadow-lg hover:shadow-purple-200/30 dark:hover:shadow-purple-900/20 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:scale-[0.97]"
     >
       {content}
     </button>

@@ -6,7 +6,7 @@ export default async function MembersPage() {
   const members = await getMembersInternal()
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto animate-spring-up">
       <PageHeader
         title="メンバー一覧"
         description={`${members.length}名のメンバー`}

@@ -41,7 +41,7 @@ export default async function ProfilePage() {
   } : undefined
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto animate-spring-up">
       <PageHeader
         title="プロフィール"
         actions={
@@ -59,9 +59,9 @@ export default async function ProfilePage() {
       {member ? (
         <div className="space-y-4">
           {/* Header Card */}
-          <Card className="stagger-1 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards overflow-visible">
+          <Card className="stagger-1 animate-spring-up fill-mode-backwards overflow-visible">
             <div className="relative">
-              <div className="relative h-28 bg-gradient-primary rounded-t-xl overflow-hidden">
+              <div className="relative h-28 bg-gradient-primary rounded-t-xl overflow-hidden animate-gradient">
                 {member.bannerImage && (
                   <Image
                     src={member.bannerImage}
@@ -100,7 +100,7 @@ export default async function ProfilePage() {
           </Card>
 
           {/* Basic Info */}
-          <Card className="stagger-2 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
+          <Card className="stagger-2 animate-spring-up fill-mode-backwards">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">基本情報</CardTitle>
             </CardHeader>
@@ -155,7 +155,7 @@ export default async function ProfilePage() {
           </Card>
 
           {/* Bio */}
-          <Card className="stagger-3 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
+          <Card className="stagger-3 animate-spring-up fill-mode-backwards">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">プロフィール文</CardTitle>
             </CardHeader>
@@ -165,7 +165,7 @@ export default async function ProfilePage() {
           </Card>
 
           {/* Interests */}
-          <Card className="stagger-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
+          <Card className="stagger-4 animate-spring-up fill-mode-backwards">
             <CardContent className="pt-6">
               {member.interests && member.interests.length > 0 ? (
                 <InterestsSection interests={member.interests} />
@@ -180,7 +180,7 @@ export default async function ProfilePage() {
 
           {/* SNS */}
           {social && (
-            <Card className="stagger-5 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
+            <Card className="stagger-5 animate-spring-up fill-mode-backwards">
               <CardContent className="pt-6">
                 <SnsChipsSection social={social} />
               </CardContent>

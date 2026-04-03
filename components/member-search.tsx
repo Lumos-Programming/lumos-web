@@ -42,7 +42,7 @@ export function MemberSearch({ members }: MemberSearchProps) {
   return (
     <div className="space-y-4">
       {/* Search + Filter Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 animate-in fade-in-80 slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col sm:flex-row gap-3 animate-spring-up">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -67,7 +67,7 @@ export function MemberSearch({ members }: MemberSearchProps) {
       </div>
 
       {/* Results */}
-      <div className="animate-in fade-in-50 zoom-in-95 duration-200">
+      <div className="animate-spring-up stagger-tight-2 fill-mode-backwards">
         <MemberList members={filtered} />
       </div>
     </div>

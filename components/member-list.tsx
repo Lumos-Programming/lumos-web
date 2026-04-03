@@ -17,20 +17,25 @@ export default function MemberList({ members }: Props) {
   return (
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-        {members.map((member) => (
-          <MemberTile
+        {members.map((member, i) => (
+          <div
             key={member.id}
-            {...getTileDisplay(member)}
-            department={member.department}
-            image={member.faceImage || member.image || "/placeholder.svg"}
-            snsAvatar={member.snsAvatar}
-            ringColor={member.ringColor}
-            memberType={member.memberType}
-            year={member.year}
-            currentOrg={member.currentOrg}
-            topInterests={member.topInterests}
-            onClick={() => setSelectedMember(member)}
-          />
+            className="animate-spring-up fill-mode-backwards"
+            style={{ animationDelay: `${Math.min(i * 40, 400)}ms` }}
+          >
+            <MemberTile
+              {...getTileDisplay(member)}
+              department={member.department}
+              image={member.faceImage || member.image || "/placeholder.svg"}
+              snsAvatar={member.snsAvatar}
+              ringColor={member.ringColor}
+              memberType={member.memberType}
+              year={member.year}
+              currentOrg={member.currentOrg}
+              topInterests={member.topInterests}
+              onClick={() => setSelectedMember(member)}
+            />
+          </div>
         ))}
       </div>
 

@@ -72,10 +72,10 @@ export default async function InternalPage() {
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-primary p-6 md:p-8 text-white animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-primary p-6 md:p-8 text-white animate-spring-up">
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/5 rounded-full blur-2xl" />
-        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/5 rounded-full blur-2xl" />
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/5 rounded-full blur-2xl animate-soft-pulse" />
+        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/5 rounded-full blur-2xl animate-soft-pulse" style={{ animationDelay: "2s" }} />
         <div className="relative z-10">
           <p className="text-white/70 text-sm font-medium">{today}</p>
           <h1 className="text-2xl md:text-3xl font-bold mt-1 tracking-tight">
@@ -87,7 +87,7 @@ export default async function InternalPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Profile Completion — takes 1 col on lg */}
-        <Card className="lg:col-span-1 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 stagger-2 fill-mode-backwards">
+        <Card className="lg:col-span-1 animate-spring-up stagger-tight-2 fill-mode-backwards">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold">プロフィール完成度</CardTitle>
@@ -121,10 +121,10 @@ export default async function InternalPage() {
         {/* Quick Actions — takes 2 cols on lg */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {QUICK_ACTIONS.map(({ href, icon: Icon, label, description, gradient }, i) => (
-            <Link key={href} href={href} className={`stagger-${i + 3} animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards`}>
+            <Link key={href} href={href} className={`stagger-tight-${i + 3} animate-spring-up fill-mode-backwards`}>
               <Card className="h-full hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 cursor-pointer group border-transparent hover:border-purple-200 dark:hover:border-purple-800">
                 <CardContent className="flex items-start gap-4 p-5">
-                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} text-white shrink-0 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
+                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} text-white shrink-0 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-lg transition-all duration-300`}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>

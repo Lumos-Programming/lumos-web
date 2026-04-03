@@ -43,7 +43,7 @@ export default function EventList() {
     return (
       <Card>
         <CardContent className="py-16 text-center">
-          <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+          <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4 animate-soft-pulse" />
           <p className="text-muted-foreground font-medium">イベントはまだありません</p>
           <p className="text-muted-foreground/60 text-sm mt-1">イベントが登録されると、ここに表示されます。</p>
         </CardContent>
@@ -56,7 +56,7 @@ export default function EventList() {
       {events.map((event, i) => (
         <Card
           key={event.id}
-          className={`hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800 transition-all duration-200 stagger-${Math.min(i + 1, 5)} animate-in fade-in-0 slide-in-from-bottom-2 duration-500 fill-mode-backwards`}
+          className={`hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800 hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 stagger-tight-${Math.min(i + 1, 8)} animate-spring-up fill-mode-backwards`}
         >
           <CardContent className="p-5">
             <div className="flex items-start justify-between gap-4">

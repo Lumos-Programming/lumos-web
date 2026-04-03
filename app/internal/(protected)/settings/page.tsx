@@ -29,7 +29,7 @@ export default async function SettingPage({
   const { success, error } = searchParams ?? {}
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto animate-spring-up">
       <PageHeader title="設定" />
 
       <Tabs defaultValue="sns" className="space-y-4">
