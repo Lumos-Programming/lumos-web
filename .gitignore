@@ -32,6 +32,9 @@ firestore-debug.log
 
 .claude
 
+# build version info (generated at build time)
+/lib/version.json
+
 # terraform
 infra/.terraform/
 infra/*.tfstate*

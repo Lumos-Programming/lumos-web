@@ -18,6 +18,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Generate version.json before build
+ARG COMMIT_SHA
+ARG BUILD_DATE
+RUN mkdir -p lib && \
+    COMMIT=${COMMIT_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo "dev")} && \
+    BUILD_TIME=${BUILD_DATE:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")} && \
+    echo "{\"commitSha\":\"${COMMIT}\",\"buildDate\":\"${BUILD_TIME}\"}" > lib/version.json
+
 RUN \
   if [ -f yarn.lock ]; then yarn run build; \
   elif [ -f package-lock.json ]; then npm run build; \
