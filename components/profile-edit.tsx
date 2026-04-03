@@ -1,15 +1,27 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { MarkdownEditor } from "@/components/markdown-editor"
 import { VisibilityToggle } from "@/components/ui/visibility-toggle"
-import ReactMarkdown from "react-markdown"
+import { toast } from "@/hooks/use-toast"
+import { cropAndResizeImage } from "@/lib/image-crop"
+import Cropper from "react-easy-crop"
+import type { Area } from "react-easy-crop"
 import Link from "next/link"
+import { BioSection } from "@/components/member-detail-shared"
 import type { Profile, VisibilityLevel } from "@/types/profile"
+import { DEFAULT_RING_COLOR, getRingColorClass } from "@/types/member"
+import type { RingColorKey } from "@/types/member"
+import { RingColorPicker } from "@/components/ring-color-picker"
+import { MemberPreviewToggle } from "@/components/member-tile-preview"
+import type { SnsEntry } from "@/components/member-tile-preview"
+import { LiquidSplashEffect } from "@/components/liquid-splash-effect"
+import { InterestTagInput } from "@/components/interest-tag-input"
 
 function formatBirthDate(d: string) {
   const parts = d.split("-")
@@ -22,9 +34,11 @@ const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "
   nickname: "ニックネーム",
   lastName: "姓",
   firstName: "名",
+  lastNameRomaji: "姓（ローマ字）",
+  firstNameRomaji: "名（ローマ字）",
   currentOrg: "現在の所属",
   birthDate: "誕生日",
-  bio: "自己紹介",
+  bio: "プロフィール文",
   line: "LINE",
   discord: "Discord",
   github: "GitHub",
@@ -40,6 +54,8 @@ const DEFAULT_PROFILE: Profile = {
   nickname: "",
   lastName: "",
   firstName: "",
+  lastNameRomaji: "",
+  firstNameRomaji: "",
   bio: "",
   line: "",
   discord: "",
@@ -57,17 +73,45 @@ const DEFAULT_PROFILE: Profile = {
     line: "internal",
     github: "public",
     x: "public",
+    linkedin: "public",
     discord: "public",
   },
 }
 
-const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "bio", "github", "x", "line", "discord"] as const
+const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "bio", "discord", "line", "github", "x", "linkedin"] as const
 
 export default function ProfileEdit() {
   const [isEditing, setIsEditing] = useState(true)
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE)
   const [allowPublic, setAllowPublic] = useState(true)
   const [loading, setLoading] = useState(true)
+  // Image state
+  const [discordId, setDiscordId] = useState("")
+  const [discordAvatarHash, setDiscordAvatarHash] = useState("")
+  const [lineAvatar, setLineAvatar] = useState("")
+  const [lineLinked, setLineLinked] = useState(false)
+  const [githubAvatar, setGithubAvatar] = useState("")
+  const [xAvatar, setXAvatar] = useState("")
+  const [linkedinAvatar, setLinkedinAvatar] = useState("")
+  const [linkedinUsername, setLinkedinUsername] = useState("")
+  const [linkedinDisplayName, setLinkedinVanity] = useState("")
+  const [faceImageUrl, setFaceImageUrl] = useState("")
+  const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
+  const [ringColor, setRingColor] = useState<RingColorKey>(DEFAULT_RING_COLOR)
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+  const [imageUploading, setImageUploading] = useState(false)
+  const [blobAnimating, setBlobAnimating] = useState(false)
+  const [faculty, setFaculty] = useState("")
+  const [year, setYear] = useState("")
+  const [role, setRole] = useState("")
+  const [memberType, setMemberType] = useState("")
+  const [currentOrg, setCurrentOrg] = useState("")
+  const [interests, setInterests] = useState<string[]>([])
+  const [topInterests, setTopInterests] = useState<string[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch("/api/profile")
@@ -86,6 +130,7 @@ export default function ProfileEdit() {
             line: data.visibility?.line ?? "internal",
             github: data.visibility?.github ?? "public",
             x: data.visibility?.x ?? "public",
+            linkedin: data.visibility?.linkedin ?? "public",
             discord: data.visibility?.discord ?? "public",
           }
           // allowPublic が保存されていればそれを使い、なければ既存 visibility から推定
@@ -95,11 +140,34 @@ export default function ProfileEdit() {
             const hasPublic = VISIBILITY_FIELD_KEYS.some((k) => vis[k] === "public")
             setAllowPublic(hasPublic)
           }
+          const currentFaculty = data.enrollments?.find((e: { isCurrent?: boolean }) => e.isCurrent)?.faculty ?? ""
+          setFaculty(currentFaculty)
+          const fiscalYear = new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1
+          setYear(data.yearByFiscal?.[String(fiscalYear)] ?? "")
+          setRole(data.role ?? "")
+          if (data.discordId) setDiscordId(data.discordId)
+          if (data.discordAvatar) setDiscordAvatarHash(data.discordAvatar)
+          if (data.lineAvatar) setLineAvatar(data.lineAvatar)
+          setLineLinked(!!data.lineId)
+          if (data.githubAvatar) setGithubAvatar(data.githubAvatar)
+          if (data.xAvatar) setXAvatar(data.xAvatar)
+          if (data.linkedinAvatar) setLinkedinAvatar(data.linkedinAvatar)
+          if (data.linkedin) setLinkedinUsername(data.linkedin)
+          if (data.linkedinDisplayName) setLinkedinVanity(data.linkedinDisplayName)
+          if (data.faceImage) setFaceImageUrl(data.faceImage)
+          if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
+          if (data.ringColor) setRingColor(data.ringColor)
+          if (data.memberType) setMemberType(data.memberType)
+          if (data.currentOrg) setCurrentOrg(data.currentOrg)
+          if (data.interests) setInterests(data.interests)
+          if (data.topInterests) setTopInterests(data.topInterests)
           setProfile({
             studentId: data.studentId ?? "",
             nickname: data.nickname ?? "",
             lastName: data.lastName ?? "",
             firstName: data.firstName ?? "",
+            lastNameRomaji: data.lastNameRomaji ?? "",
+            firstNameRomaji: data.firstNameRomaji ?? "",
             bio: data.bio ?? "",
             birthDate: data.birthDate ?? "",
             currentOrg: data.currentOrg ?? "",
@@ -120,7 +188,7 @@ export default function ProfileEdit() {
       const response = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profile, allowPublic }),
+        body: JSON.stringify({ ...profile, allowPublic, primaryAvatar, ringColor, interests, topInterests }),
       })
 
       if (response.ok) {
@@ -133,6 +201,150 @@ export default function ProfileEdit() {
       alert("エラーが発生しました。もう一度お試しください。")
     }
   }
+
+  const handleFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setCropImageSrc(reader.result as string)
+    reader.readAsDataURL(file)
+    e.target.value = ""
+  }, [])
+
+  const handleCropConfirm = useCallback(async () => {
+    if (!cropImageSrc || !croppedAreaPixels) return
+    setImageUploading(true)
+    try {
+      const blob = await cropAndResizeImage(cropImageSrc, croppedAreaPixels, { maxSize: 1024 })
+      const formData = new FormData()
+      formData.append("image", blob, "profile.webp")
+      const res = await fetch("/api/profile/image", { method: "POST", body: formData })
+      if (res.ok) {
+        const { url } = await res.json()
+        setFaceImageUrl(url)
+        setCropImageSrc(null)
+        setBlobAnimating(true)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast({
+          variant: "destructive",
+          title: "アップロードに失敗しました",
+          description: data.error || "しばらく経ってから再度お試しください。",
+        })
+      }
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "アップロードに失敗しました",
+        description: "ネットワークエラーが発生しました。接続を確認して再度お試しください。",
+      })
+    } finally {
+      setImageUploading(false)
+    }
+  }, [cropImageSrc, croppedAreaPixels])
+
+  const resolveAvatar = useCallback((id: string, avatar: string): string => {
+    if (!avatar) return "/placeholder.svg"
+    if (avatar.startsWith("http")) return avatar
+    return `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`
+  }, [])
+
+  const discordAvatarUrl = useMemo(() => resolveAvatar(discordId, discordAvatarHash), [resolveAvatar, discordId, discordAvatarHash])
+
+  const getInitials = useCallback(() => {
+    const f = profile.firstNameRomaji?.trim()
+    const l = profile.lastNameRomaji?.trim()
+    if (f && l) return `${f[0].toUpperCase()}. ${l[0].toUpperCase()}.`
+    return ""
+  }, [profile.firstNameRomaji, profile.lastNameRomaji])
+
+  const internalPreview = useMemo(() => {
+    const v = profile.visibility
+    const hasName = v.lastName !== "private" && v.firstName !== "private"
+    const fullName = hasName ? `${profile.lastName} ${profile.firstName}`.trim() : undefined
+    const hasNickname = v.nickname !== "private" && !!profile.nickname
+    const nickname = hasNickname ? profile.nickname : undefined
+
+    let main: string
+    let sub: string | undefined
+    if (nickname && fullName && nickname !== fullName) {
+      main = nickname
+      sub = fullName
+    } else if (nickname) {
+      main = nickname
+    } else if (fullName) {
+      main = fullName
+    } else {
+      main = getInitials() || profile.discord || "名前未設定"
+    }
+
+    const dept = v.faculty !== "private" ? faculty : ""
+    const mainImage = faceImageUrl || "/assets/avatar-placeholder.svg"
+    const hasFace = !!faceImageUrl
+    return { main, sub, department: dept, image: mainImage, hasFace, snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined }
+  }, [profile, faculty, faceImageUrl, discordAvatarUrl, getInitials])
+
+  const externalPreview = useMemo(() => {
+    const v = profile.visibility
+    const hasName = v.lastName === "public" && v.firstName === "public"
+    const fullName = hasName ? `${profile.lastName} ${profile.firstName}`.trim() : undefined
+    const hasNickname = v.nickname === "public" && !!profile.nickname
+    const nickname = hasNickname ? profile.nickname : undefined
+
+    let main: string
+    let sub: string | undefined
+    if (nickname && fullName && nickname !== fullName) {
+      main = nickname
+      sub = fullName
+    } else if (nickname) {
+      main = nickname
+    } else if (fullName) {
+      main = fullName
+    } else {
+      main = getInitials() || profile.discord || "名前未設定"
+    }
+
+    const dept = v.faculty === "public" ? faculty : ""
+
+    let image: string
+    let hasFace = true
+    const pa = primaryAvatar
+    switch (pa) {
+      case "face":
+        if (faceImageUrl) { image = faceImageUrl } else { image = "/assets/avatar-placeholder.svg"; hasFace = false }
+        break
+      case "discord":
+        image = discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : "/assets/avatar-placeholder.svg"
+        break
+      case "line":
+        image = lineAvatar || "/assets/avatar-placeholder.svg"
+        break
+      default:
+        image = "/assets/avatar-placeholder.svg"
+        hasFace = false
+    }
+    return { main, sub, role, department: dept, year, image, hasFace }
+  }, [profile, faculty, year, role, faceImageUrl, primaryAvatar, discordAvatarUrl, lineAvatar, getInitials])
+
+  const buildSnsEntries = useCallback((level: "public" | "internal") => {
+    const v = profile.visibility
+    const check = level === "public" ? (l: string) => l === "public" : (l: string) => l !== "private"
+    const entries: SnsEntry[] = []
+    if (check(v.discord) && profile.discord)
+      entries.push({ platform: "discord", username: profile.discord, url: `https://discord.com/users/${discordId}`, avatarUrl: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined })
+    if (check(v.line) && profile.line)
+      entries.push({ platform: "line", username: profile.line, avatarUrl: lineAvatar || undefined })
+    if (check(v.github) && profile.github)
+      entries.push({ platform: "github", username: profile.github, url: `https://github.com/${profile.github}`, avatarUrl: githubAvatar || undefined })
+    if (check(v.x) && profile.x)
+      entries.push({ platform: "x", username: profile.x, url: `https://x.com/${profile.x}`, avatarUrl: xAvatar || undefined })
+    if (check(v.linkedin) && linkedinUsername)
+      entries.push({ platform: "linkedin", username: linkedinDisplayName || "LinkedIn", url: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
+    return entries
+  }, [profile, discordId, githubAvatar, xAvatar, discordAvatarUrl, lineAvatar, linkedinAvatar, linkedinUsername, linkedinDisplayName])
+
+  const internalSns = useMemo(() => buildSnsEntries("internal"), [buildSnsEntries])
+  const externalSns = useMemo(() => buildSnsEntries("public"), [buildSnsEntries])
 
   if (loading) {
     return <div className="text-center py-8">読み込み中...</div>
@@ -180,7 +392,7 @@ export default function ProfileEdit() {
               </div>
               <div className="flex items-start gap-2">
                 <span className="inline-block px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-medium flex-shrink-0">内部のみ</span>
-                <span>Lumosにログインしたメンバーだけが閲覧できます。外部サイトには表示されません。</span>
+                <span>Lumosメンバーだけが閲覧できます。外部向けHPには表示されません。</span>
               </div>
               <div className="flex items-start gap-2">
                 <span className="inline-block px-1.5 py-0.5 rounded-full bg-green-600 text-white font-medium flex-shrink-0">外部公開</span>
@@ -232,6 +444,126 @@ export default function ProfileEdit() {
               </div>
             </div>
           )}
+          {/* 表示プレビュー */}
+          {isEditing && (
+            <MemberPreviewToggle
+              internalData={{ ...internalPreview, ringColor, memberType, currentOrg, role, year, bio: profile.bio, sns: internalSns, topInterests, interests }}
+              externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: externalSns, topInterests, interests }}
+              allowPublic={allowPublic}
+            />
+          )}
+          {/* プロフィール画像セクション */}
+          {isEditing && (
+            <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+              <Label className="text-base font-semibold">プロフィール画像</Label>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="relative flex-shrink-0 flex items-center justify-center overflow-visible" style={{ width: 136, height: 136 }}>
+                  {blobAnimating && (
+                    <LiquidSplashEffect width={136} height={136} onComplete={() => setBlobAnimating(false)} />
+                  )}
+                  <div className={`w-24 h-24 relative rounded-full overflow-hidden ring-4 ${getRingColorClass(ringColor)} z-10 ${blobAnimating ? "animate-liquid-pop" : ""}`}>
+                    <Image
+                      src={faceImageUrl || "/placeholder.svg"}
+                      alt="プロフィール画像"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={imageUploading}
+                  >
+                    画像を変更
+                  </Button>
+                </div>
+              </div>
+
+              {/* Crop UI */}
+              {cropImageSrc && (
+                <div className="space-y-3">
+                  <div className="relative w-full" style={{ height: 280 }}>
+                    <Cropper
+                      image={cropImageSrc}
+                      crop={crop}
+                      zoom={zoom}
+                      aspect={1}
+                      cropShape="round"
+                      onCropChange={setCrop}
+                      onZoomChange={setZoom}
+                      onCropComplete={(_, area) => setCroppedAreaPixels(area)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground flex-shrink-0">ズーム</span>
+                    <input type="range" min={1} max={3} step={0.1} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="flex-1" />
+                  </div>
+                  <div className="flex gap-2 justify-center">
+                    <Button variant="ghost" size="sm" onClick={() => setCropImageSrc(null)}>キャンセル</Button>
+                    <Button size="sm" onClick={handleCropConfirm} disabled={imageUploading}>{imageUploading ? "アップロード中..." : "切り抜き"}</Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Primary avatar selection */}
+              <div className="space-y-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">公開ページの表示画像</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { value: "face" as const, label: "顔写真", src: faceImageUrl || "/placeholder.svg", enabled: true },
+                    { value: "discord" as const, label: "Discord", src: discordAvatarHash ? (discordAvatarHash.startsWith("http") ? discordAvatarHash : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatarHash}.png`) : "/placeholder.svg", enabled: !!discordAvatarHash },
+                    { value: "line" as const, label: "LINE", src: lineAvatar || "/placeholder.svg", enabled: lineLinked && !!lineAvatar },
+                    { value: "default" as const, label: "なし", src: "/placeholder.svg", enabled: true },
+                  ]).map(({ value, label, src, enabled }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      disabled={!enabled}
+                      onClick={() => setPrimaryAvatar(value)}
+                      className={[
+                        "flex items-center gap-2 rounded-lg border-2 p-2 transition-all duration-200 text-left",
+                        primaryAvatar === value
+                          ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 dark:border-purple-600"
+                          : "border-gray-200 dark:border-gray-700",
+                        !enabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:border-purple-300",
+                      ].join(" ")}
+                    >
+                      <div className="w-8 h-8 relative rounded-full overflow-hidden flex-shrink-0">
+                        <Image src={src} alt="" fill className="object-cover" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <RingColorPicker value={ringColor} onChange={setRingColor} />
+            </div>
+          )}
+
+          {isEditing && (
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">興味分野</Label>
+              <InterestTagInput
+                value={interests}
+                onChange={setInterests}
+                topInterests={topInterests}
+                onTopInterestsChange={setTopInterests}
+              />
+            </div>
+          )}
+
           {isEditing ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {PROFILE_FIELDS.map((key) => {
@@ -241,53 +573,11 @@ export default function ProfileEdit() {
                     key={key}
                     className={key === "bio" ? "md:col-span-2 space-y-2" : "space-y-2"}
                   >
-                    <div className="flex items-center justify-between">
-                      <Label>{FIELD_LABELS[key]}</Label>
-                      {key === "bio" && (
-                        <div className="flex items-center space-x-2">
-                          <button
-                            type="button"
-                            title="太字を挿入"
-                            className="px-2 py-1 rounded bg-purple-800 text-white text-sm"
-                            onClick={() => setProfile({ ...profile, bio: profile.bio + " **太字**" })}
-                          >
-                            B
-                          </button>
-                          <button
-                            type="button"
-                            title="斜体を挿入"
-                            className="px-2 py-1 rounded bg-purple-800 text-white text-sm"
-                            onClick={() => setProfile({ ...profile, bio: profile.bio + " *斜体*" })}
-                          >
-                            I
-                          </button>
-                          <button
-                            type="button"
-                            title="リンク挿入"
-                            className="px-2 py-1 rounded bg-purple-800 text-white text-sm"
-                            onClick={() => setProfile({ ...profile, bio: profile.bio + " [リンク名](https://example.com)" })}
-                          >
-                            🔗
-                          </button>
-                          <button
-                            type="button"
-                            title="インラインコードを挿入"
-                            className="px-2 py-1 rounded bg-purple-800 text-white text-sm font-mono"
-                            onClick={() => setProfile({ ...profile, bio: profile.bio + " `コード`" })}
-                          >
-                            {"</>"}
-                          </button>
-                          <button
-                            type="button"
-                            title="見出しを挿入"
-                            className="px-2 py-1 rounded bg-purple-800 text-white text-sm"
-                            onClick={() => setProfile({ ...profile, bio: profile.bio + "\n\n## 見出し" })}
-                          >
-                            H
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    {key !== "bio" && (
+                      <div className="flex items-center justify-between">
+                        <Label>{FIELD_LABELS[key]}</Label>
+                      </div>
+                    )}
 
                     {isSns ? (
                       <div className="space-y-1">
@@ -305,12 +595,11 @@ export default function ProfileEdit() {
                         </p>
                       </div>
                     ) : key === "bio" ? (
-                      <Textarea
+                      <MarkdownEditor
                         value={profile.bio}
-                        onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                        rows={6}
-                        className="mt-1"
-                        placeholder="自己紹介を入力してください"
+                        onChange={(val) => setProfile({ ...profile, bio: val })}
+                        height={200}
+                        placeholder={"## 👋 こんにちは！\n\nコーヒーを燃料に動くタイプの人間です。\n\n**好きなこと**\n- 🖥️ Webアプリを作ること\n- 📚 技術書を積むこと（読むとは言ってない）\n\n> 「動くコードは正義」がモットーです。"}
                       />
                     ) : key === "birthDate" ? (
                       <Input
@@ -318,6 +607,16 @@ export default function ProfileEdit() {
                         value={profile.birthDate ?? ""}
                         onChange={(e) => setProfile({ ...profile, birthDate: e.target.value })}
                         className="block w-full"
+                      />
+                    ) : key === "lastNameRomaji" || key === "firstNameRomaji" ? (
+                      <Input
+                        value={profile[key] as string ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value.replace(/[^A-Za-z\s-]/g, "")
+                          const capitalized = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase()
+                          setProfile({ ...profile, [key]: capitalized })
+                        }}
+                        placeholder={key === "lastNameRomaji" ? "Yamada" : "Taro"}
                       />
                     ) : (
                       <Input
@@ -327,7 +626,9 @@ export default function ProfileEdit() {
                       />
                     )}
 
-                    {key === "studentId" ? (
+                    {key === "lastNameRomaji" || key === "firstNameRomaji" ? (
+                      <p className="text-xs text-gray-400">イニシャル表示に使用されます</p>
+                    ) : key === "studentId" ? (
                       <div className="flex items-center space-x-2">
                         <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                           非公開（固定）
@@ -348,7 +649,7 @@ export default function ProfileEdit() {
                             })
                           }
                           max={key === "line" || key === "birthDate" || !allowPublic ? "internal" : undefined}
-                          min={key === "discord" ? "internal" : undefined}
+                          min={key === "line" || key === "discord" ? "internal" : undefined}
                         />
                       </div>
                     )}
@@ -360,6 +661,7 @@ export default function ProfileEdit() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {PROFILE_FIELDS.map((key) => {
                 if (SNS_FIELDS.has(key)) return null
+                if (key === "lastNameRomaji" || key === "firstNameRomaji") return null
                 const visLevel = profile.visibility[key as keyof typeof profile.visibility]
                 if (!visLevel || visLevel === "private") return null
                 if (key === "firstName") return null
@@ -375,7 +677,7 @@ export default function ProfileEdit() {
                       </span>
                     </div>
                     {key === "bio" ? (
-                      <ReactMarkdown>{profile.bio}</ReactMarkdown>
+                      <BioSection bio={profile.bio} />
                     ) : key === "lastName" ? (
                       <p className="text-sm mt-1 whitespace-nowrap">
                         {profile.lastName} {profile.firstName}

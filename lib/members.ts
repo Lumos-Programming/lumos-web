@@ -4,12 +4,15 @@ import type { VisibilityLevel, MemberType, EnrollmentRecord } from '@/types/prof
 import { FieldValue } from 'firebase-admin/firestore'
 
 export interface MemberDocument {
-  discordUsername: string
+  discordUsername: string       // Display name (token.name)
+  discordHandle?: string        // Discord username (@handle)
   discordAvatar: string
   studentId: string
   nickname: string
   lastName: string
   firstName: string
+  lastNameRomaji?: string
+  firstNameRomaji?: string
   bio: string
   role?: string
   yearByFiscal?: Record<string, string>
@@ -20,10 +23,28 @@ export interface MemberDocument {
   skills?: string[]
   github?: string
   githubId?: string
+  githubAvatar?: string
   x?: string
   xId?: string
+  xAvatar?: string
   line?: string
   lineId?: string
+  lineAvatar?: string
+  linkedin?: string            // Profile URL (from /rest/identityMe basicInfo.profileUrl)
+  linkedinId?: string           // App-scoped member ID (from /rest/identityMe id)
+  linkedinVanity?: string       // Vanity slug e.g. "shion1305" (resolved from profileUrl redirect)
+  linkedinDisplayName?: string  // Display name from /v2/userinfo (name)
+  linkedinFirstName?: string    // First name from /v2/userinfo (given_name)
+  linkedinLastName?: string     // Last name from /v2/userinfo (family_name)
+  linkedinAvatar?: string
+  lineAccessToken?: string
+  lineRefreshToken?: string
+  lineTokenExpiresAt?: number   // Unix timestamp (seconds)
+  faceImage?: string            // GCS URL (顔写真)
+  primaryAvatar?: 'face' | 'discord' | 'line' | 'default'  // 公開ページ用
+  ringColor?: string            // リングカラーキー
+  interests?: string[]          // 興味分野タグ
+  topInterests?: string[]       // 一覧カード表示用 (max 3)
   allowPublic?: boolean
   onboardingCompleted?: boolean
   visibility: {
@@ -37,6 +58,7 @@ export interface MemberDocument {
     bio: VisibilityLevel
     github: VisibilityLevel
     x: VisibilityLevel
+    linkedin: VisibilityLevel
     line: VisibilityLevel
     discord: VisibilityLevel
   }
@@ -47,7 +69,8 @@ export interface MemberDocument {
 export async function getOrCreateMember(
   discordId: string,
   username: string,
-  avatar: string
+  avatar: string,
+  handle?: string
 ): Promise<void> {
   const db = getDb()
   const ref = db.collection('members').doc(discordId)
@@ -56,11 +79,14 @@ export async function getOrCreateMember(
   if (!snap.exists) {
     await ref.set({
       discordUsername: username,
+      ...(handle ? { discordHandle: handle } : {}),
       discordAvatar: avatar,
       studentId: '',
       nickname: '',
       lastName: '',
       firstName: '',
+      lastNameRomaji: '',
+      firstNameRomaji: '',
       bio: '',
       allowPublic: true,
       visibility: {
@@ -74,6 +100,7 @@ export async function getOrCreateMember(
         bio: 'public',
         github: 'public',
         x: 'public',
+        linkedin: 'public',
         line: 'internal',
         discord: 'public',
       },
@@ -83,6 +110,7 @@ export async function getOrCreateMember(
   } else {
     await ref.update({
       discordUsername: username,
+      ...(handle ? { discordHandle: handle } : {}),
       discordAvatar: avatar,
       updatedAt: FieldValue.serverTimestamp(),
     })
@@ -125,7 +153,7 @@ export async function getMemberInternal(discordId: string): Promise<Member | nul
 
 export async function updateMember(
   discordId: string,
-  data: Partial<Omit<MemberDocument, 'discordUsername' | 'discordAvatar' | 'github' | 'githubId' | 'x' | 'xId' | 'line' | 'lineId' | 'createdAt' | 'updatedAt'>>
+  data: Partial<Omit<MemberDocument, 'discordUsername' | 'discordAvatar' | 'github' | 'githubId' | 'x' | 'xId' | 'linkedin' | 'linkedinId' | 'line' | 'lineId' | 'createdAt' | 'updatedAt'>>
 ): Promise<void> {
   const db = getDb()
   await db.collection('members').doc(discordId).update({
@@ -136,7 +164,7 @@ export async function updateMember(
 
 export async function updateMemberSns(
   discordId: string,
-  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'x' | 'xId' | 'line' | 'lineId'>>
+  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'githubAvatar' | 'x' | 'xId' | 'xAvatar' | 'linkedin' | 'linkedinId' | 'linkedinVanity' | 'linkedinDisplayName' | 'linkedinFirstName' | 'linkedinLastName' | 'linkedinAvatar' | 'line' | 'lineId' | 'lineAvatar' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
 ): Promise<void> {
   const db = getDb()
   await db.collection('members').doc(discordId).update({
@@ -147,19 +175,60 @@ export async function updateMemberSns(
 
 export async function deleteMemberSnsField(
   discordId: string,
-  provider: 'github' | 'x' | 'line'
+  provider: 'github' | 'x' | 'line' | 'linkedin'
 ): Promise<void> {
   const db = getDb()
   const updates: Record<string, unknown> = {
     updatedAt: FieldValue.serverTimestamp(),
     [provider]: FieldValue.delete(),
     [`${provider}Id`]: FieldValue.delete(),
+    [`${provider}Avatar`]: FieldValue.delete(),
+  }
+  if (provider === 'line') {
+    updates.lineAccessToken = FieldValue.delete()
+    updates.lineRefreshToken = FieldValue.delete()
+    updates.lineTokenExpiresAt = FieldValue.delete()
+  }
+  if (provider === 'linkedin') {
+    updates.linkedinVanity = FieldValue.delete()
+    updates.linkedinDisplayName = FieldValue.delete()
+    updates.linkedinFirstName = FieldValue.delete()
+    updates.linkedinLastName = FieldValue.delete()
   }
   await db.collection('members').doc(discordId).update(updates)
 }
 
 export function isOnboardingComplete(member: MemberDocument): boolean {
   return member.onboardingCompleted === true
+}
+
+function resolveDiscordAvatar(discordId: string, discordAvatar?: string): string {
+  if (!discordAvatar) return '/placeholder.svg'
+  // Already a full URL (stored from token.picture)
+  if (discordAvatar.startsWith('http')) return discordAvatar
+  // Legacy: hash only
+  return `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`
+}
+
+function resolvePrimaryAvatar(discordId: string, data: MemberDocument): string {
+  const pa = data.primaryAvatar ?? 'face'
+  switch (pa) {
+    case 'face':
+      return data.faceImage || resolveDiscordAvatar(discordId, data.discordAvatar)
+    case 'discord':
+      return resolveDiscordAvatar(discordId, data.discordAvatar)
+    case 'line':
+      return data.lineAvatar || '/placeholder.svg'
+    case 'default':
+      return '/placeholder.svg'
+  }
+}
+
+function getInitials(data: MemberDocument): string {
+  const f = data.firstNameRomaji?.trim()
+  const l = data.lastNameRomaji?.trim()
+  if (f && l) return `${f[0].toUpperCase()}. ${l[0].toUpperCase()}.`
+  return ''
 }
 
 export function profileToMember(discordId: string, data: MemberDocument): Member {
@@ -170,12 +239,13 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
       ? `${data.lastName} ${data.firstName}`
       : v.nickname === 'public'
       ? data.nickname
-      : data.discordUsername
+      : getInitials(data) || data.discordUsername
 
   const social: Member['social'] = {}
   if (v.github === 'public' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x === 'public' && data.x) social.x = `https://x.com/${data.x}`
-  if (v.discord === 'public') social.discord = data.discordUsername
+  if (v.linkedin === 'public' && data.linkedin) social.linkedin = data.linkedin
+  if (v.discord === 'public' && data.discordHandle) social.discord = `https://discord.com/users/${discordId}`
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
 
@@ -187,10 +257,14 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
     year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? '',
     bio: v.bio === 'public' ? data.bio : '',
     skills: data.skills ?? [],
-    image: data.discordAvatar
-      ? `https://cdn.discordapp.com/avatars/${discordId}/${data.discordAvatar}.png`
-      : '/placeholder.svg',
+    image: resolvePrimaryAvatar(discordId, data),
     social: Object.keys(social).length > 0 ? social : undefined,
+    nickname: v.nickname === 'public' ? data.nickname || undefined : undefined,
+    memberType: data.memberType,
+    currentOrg: v.currentOrg === 'public' ? data.currentOrg || undefined : undefined,
+    ringColor: data.ringColor,
+    interests: data.interests ?? [],
+    topInterests: data.topInterests ?? [],
   }
 }
 
@@ -202,14 +276,20 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
       ? `${data.lastName} ${data.firstName}`
       : v.nickname !== 'private'
       ? data.nickname
-      : data.discordUsername
+      : getInitials(data) || data.discordUsername
 
   const social: Member['social'] = {}
   if (v.github !== 'private' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x !== 'private' && data.x) social.x = `https://x.com/${data.x}`
-  if (v.discord !== 'private') social.discord = data.discordUsername
+  if (v.linkedin !== 'private' && data.linkedin) social.linkedin = data.linkedin
+  if (v.discord !== 'private') social.discord = `https://discord.com/users/${discordId}`
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
+
+  // SNS avatar for overlay (prefer Discord, fallback to LINE)
+  const snsAvatar = resolveDiscordAvatar(discordId, data.discordAvatar) !== '/placeholder.svg'
+    ? resolveDiscordAvatar(discordId, data.discordAvatar)
+    : data.lineAvatar || undefined
 
   return {
     id: discordId,
@@ -219,9 +299,15 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
     year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? '',
     bio: v.bio !== 'private' ? data.bio : '',
     skills: data.skills ?? [],
-    image: data.discordAvatar
-      ? `https://cdn.discordapp.com/avatars/${discordId}/${data.discordAvatar}.png`
-      : '/placeholder.svg',
+    image: resolveDiscordAvatar(discordId, data.discordAvatar),
+    faceImage: data.faceImage || undefined,
+    snsAvatar,
     social: Object.keys(social).length > 0 ? social : undefined,
+    nickname: v.nickname !== 'private' ? data.nickname || undefined : undefined,
+    memberType: data.memberType,
+    currentOrg: v.currentOrg !== 'private' ? data.currentOrg || undefined : undefined,
+    ringColor: data.ringColor,
+    interests: data.interests ?? [],
+    topInterests: data.topInterests ?? [],
   }
 }

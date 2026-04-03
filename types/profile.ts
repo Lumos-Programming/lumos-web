@@ -12,6 +12,7 @@ export interface ProfileVisibility {
   line: VisibilityLevel       // 最大 'internal'
   github: VisibilityLevel
   x: VisibilityLevel
+  linkedin: VisibilityLevel
   discord: VisibilityLevel
 }
 
@@ -28,6 +29,8 @@ export interface Profile {
   nickname: string
   lastName: string
   firstName: string
+  lastNameRomaji: string
+  firstNameRomaji: string
   enrollments?: EnrollmentRecord[]
   currentOrg?: string      // 卒業生の現在の所属
   birthDate?: string       // YYYY-MM-DD
@@ -39,6 +42,8 @@ export interface Profile {
   role?: string
   year?: string
   skills?: string[]
+  interests?: string[]
+  topInterests?: string[]
   visibility: ProfileVisibility
 }
 

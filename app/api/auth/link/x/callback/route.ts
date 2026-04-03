@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const token = await exchangeCodeForToken('x', code, getCallbackUrl('x', baseUrl), codeVerifier)
     const user = await fetchProviderUser('x', token)
 
-    await updateMemberSns(discordId, { x: user.username, xId: user.id })
+    await updateMemberSns(discordId, { x: user.username, xId: user.id, xAvatar: user.avatar })
 
     const successUrl = new URL(redirectTo, request.nextUrl.origin)
     successUrl.searchParams.set('success', 'x_linked')

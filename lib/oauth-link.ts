@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'crypto'
 
-export type OAuthLinkProvider = 'github' | 'x' | 'line'
+export type OAuthLinkProvider = 'github' | 'x' | 'line' | 'linkedin'
 
 interface ProviderConfig {
   authUrl: string
@@ -22,9 +22,9 @@ export const PROVIDER_CONFIGS: Record<OAuthLinkProvider, ProviderConfig> = {
     scope: 'read:user',
   },
   x: {
-    authUrl: 'https://twitter.com/i/oauth2/authorize',
-    tokenUrl: 'https://api.twitter.com/2/oauth2/token',
-    userUrl: 'https://api.twitter.com/2/users/me?user.fields=username',
+    authUrl: 'https://x.com/i/oauth2/authorize',
+    tokenUrl: 'https://api.x.com/2/oauth2/token',
+    userUrl: 'https://api.x.com/2/users/me?user.fields=username,profile_image_url',
     clientIdEnv: 'AUTH_X_ID',
     clientSecretEnv: 'AUTH_X_SECRET',
     scope: 'users.read tweet.read',
@@ -37,6 +37,14 @@ export const PROVIDER_CONFIGS: Record<OAuthLinkProvider, ProviderConfig> = {
     clientIdEnv: 'AUTH_LINE_ID',
     clientSecretEnv: 'AUTH_LINE_SECRET',
     scope: 'profile',
+  },
+  linkedin: {
+    authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
+    tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
+    userUrl: 'https://api.linkedin.com/rest/identityMe',
+    clientIdEnv: 'AUTH_LINKEDIN_ID',
+    clientSecretEnv: 'AUTH_LINKEDIN_SECRET',
+    scope: 'openid profile r_profile_basicinfo',
   },
 }
 
@@ -107,24 +115,136 @@ export async function exchangeCodeForToken(
   return data.access_token
 }
 
+export interface OAuthTokenResponse {
+  access_token: string
+  refresh_token?: string
+  expires_in?: number
+  token_type?: string
+}
+
+export async function exchangeCodeForTokenFull(
+  provider: OAuthLinkProvider,
+  code: string,
+  redirectUri: string,
+  codeVerifier?: string
+): Promise<OAuthTokenResponse> {
+  const config = PROVIDER_CONFIGS[provider]
+  const clientId = process.env[config.clientIdEnv]
+  const clientSecret = process.env[config.clientSecretEnv]
+
+  if (!clientId || !clientSecret) {
+    throw new Error(`Missing env vars for ${provider}`)
+  }
+
+  const params: Record<string, string> = {
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: redirectUri,
+    client_id: clientId,
+  }
+  if (codeVerifier) params.code_verifier = codeVerifier
+
+  let res: Response
+  if (provider === 'x') {
+    const body = new URLSearchParams(params)
+    res = await fetch(config.tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+      },
+      body: body.toString(),
+    })
+  } else {
+    const body = new URLSearchParams({ ...params, client_secret: clientSecret })
+    res = await fetch(config.tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: body.toString(),
+    })
+  }
+
+  const data = await res.json()
+  if (!data.access_token) throw new Error(`No access_token: ${JSON.stringify(data)}`)
+  return data as OAuthTokenResponse
+}
+
 export async function fetchProviderUser(
   provider: OAuthLinkProvider,
   accessToken: string
-): Promise<{ id: string; username: string }> {
+): Promise<{ id: string; username: string; avatar?: string; vanityName?: string; displayName?: string; firstName?: string; lastName?: string }> {
   const config = PROVIDER_CONFIGS[provider]
-  const res = await fetch(config.userUrl, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
+  const headers: Record<string, string> = { Authorization: `Bearer ${accessToken}` }
+  if (provider === 'linkedin') {
+    headers['LinkedIn-Version'] = '202510'
+  }
+  const res = await fetch(config.userUrl, { headers })
   const data = await res.json()
 
+  if (!res.ok) {
+    console.error(`fetchProviderUser(${provider}) failed:`, JSON.stringify(data))
+    throw new Error(`Provider API error: ${res.status}`)
+  }
+
   if (provider === 'github') {
-    return { id: String(data.id), username: data.login }
+    return { id: String(data.id), username: data.login, avatar: data.avatar_url }
   }
   if (provider === 'x') {
-    return { id: data.data.id, username: data.data.username }
+    const user = data.data
+    if (!user) {
+      console.error('X API unexpected response:', JSON.stringify(data))
+      throw new Error('X API returned no user data')
+    }
+    return { id: user.id, username: user.username, avatar: user.profile_image_url }
   }
   if (provider === 'line') {
-    return { id: data.userId, username: data.displayName }
+    return { id: data.userId, username: data.displayName, avatar: data.pictureUrl }
+  }
+  if (provider === 'linkedin') {
+    // 1. /rest/identityMe — profileUrl, avatar, id
+    const basicInfo = data.basicInfo
+    if (!basicInfo) {
+      console.error('LinkedIn identityMe unexpected response:', JSON.stringify(data))
+      throw new Error('LinkedIn identityMe returned no basicInfo')
+    }
+    const avatar: string | undefined = basicInfo.profilePicture?.croppedImage?.downloadUrl
+
+    // profileUrl is a temporary redirect URL — follow it to get the vanity slug
+    let vanityName = ''
+    const profileUrl: string | undefined = basicInfo.profileUrl
+    if (profileUrl) {
+      try {
+        const redirectRes = await fetch(profileUrl, { redirect: 'manual' })
+        const location = redirectRes.headers.get('location') ?? ''
+        const match = location.match(/linkedin\.com\/in\/([^/?#]+)/)
+        if (match) vanityName = match[1]
+      } catch {
+        // fallback: vanity name unavailable
+      }
+    }
+
+    // 2. /v2/userinfo — non-localized name, given_name, family_name
+    let displayName: string | undefined
+    let firstName: string | undefined
+    let lastName: string | undefined
+    try {
+      const uiRes = await fetch('https://api.linkedin.com/v2/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (uiRes.ok) {
+        const ui = await uiRes.json()
+        displayName = ui.name
+        firstName = ui.given_name
+        lastName = ui.family_name
+      }
+    } catch {
+      // name is optional, continue without it
+    }
+
+    return { id: String(data.id), username: profileUrl ?? '', avatar, vanityName: vanityName || undefined, displayName, firstName, lastName }
   }
   throw new Error(`Unknown provider: ${provider}`)
 }

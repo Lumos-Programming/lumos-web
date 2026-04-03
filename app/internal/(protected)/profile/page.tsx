@@ -38,7 +38,7 @@ export default async function ProfilePage() {
               {member?.discordAvatar && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={`https://cdn.discordapp.com/avatars/${session.user.id}/${member.discordAvatar}.png`}
+                  src={member.discordAvatar.startsWith("http") ? member.discordAvatar : `https://cdn.discordapp.com/avatars/${session.user.id}/${member.discordAvatar}.png`}
                   alt="Discord avatar"
                   className="w-16 h-16 rounded-full"
                 />
@@ -65,6 +65,9 @@ export default async function ProfilePage() {
                       ? `${member.lastName} ${member.firstName}`
                       : "未設定"}
                   </p>
+                  {(member.lastNameRomaji || member.firstNameRomaji) && (
+                    <p className="text-xs text-gray-400">{member.lastNameRomaji} {member.firstNameRomaji}</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">学部/学府</p>
@@ -83,7 +86,7 @@ export default async function ProfilePage() {
                   <p className="text-sm">{member.role || "未設定"}</p>
                 </div>
                 <div className="md:col-span-2">
-                  <p className="text-xs text-gray-500">自己紹介</p>
+                  <p className="text-xs text-gray-500">プロフィール文</p>
                   <p className="text-sm whitespace-pre-wrap">{member.bio || "未設定"}</p>
                 </div>
                 <div>

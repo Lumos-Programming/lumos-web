@@ -10,7 +10,7 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json()
-    const allowed = ['github', 'githubId', 'x', 'xId', 'line', 'lineId'] as const
+    const allowed = ['github', 'githubId', 'x', 'xId', 'linkedin', 'linkedinId', 'line', 'lineId'] as const
     type SnsKey = typeof allowed[number]
 
     const data: Partial<Record<SnsKey, string>> = {}
@@ -34,7 +34,7 @@ export async function DELETE(request: Request) {
 
   try {
     const { provider } = await request.json()
-    if (!['github', 'x'].includes(provider)) {
+    if (!['github', 'x', 'linkedin'].includes(provider)) {
       return NextResponse.json({ error: "Invalid provider" }, { status: 400 })
     }
 

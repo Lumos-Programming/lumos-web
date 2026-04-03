@@ -3,10 +3,11 @@ import { auth } from "@/lib/auth"
 import { getMember, updateMember } from "@/lib/members"
 import type { VisibilityLevel, MemberType, EnrollmentRecord, EnrollmentType } from "@/types/profile"
 import { MEMBER_TYPES, ENROLLMENT_TYPES } from "@/types/profile"
+import { isValidTag, MAX_TAGS, MAX_TOP_INTERESTS } from "@/types/interests"
 
 const VISIBILITY_KEYS = [
   "studentId", "nickname", "lastName", "firstName",
-  "faculty", "currentOrg", "birthDate", "bio", "line", "github", "x", "discord",
+  "faculty", "currentOrg", "birthDate", "bio", "line", "github", "x", "linkedin", "discord",
 ] as const
 
 const VISIBILITY_LEVELS: VisibilityLevel[] = ["private", "internal", "public"]
@@ -22,7 +23,7 @@ export async function GET() {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }
 
-  return NextResponse.json(member)
+  return NextResponse.json({ ...member, discordId: session.user.id })
 }
 
 export async function PUT(request: Request) {
@@ -57,6 +58,8 @@ export async function PUT(request: Request) {
     if (typeof body.nickname  === "string") data.nickname  = body.nickname
     if (typeof body.lastName  === "string") data.lastName  = body.lastName
     if (typeof body.firstName === "string") data.firstName = body.firstName
+    if (typeof body.lastNameRomaji  === "string") data.lastNameRomaji  = body.lastNameRomaji
+    if (typeof body.firstNameRomaji === "string") data.firstNameRomaji = body.firstNameRomaji
     if (typeof body.bio       === "string") data.bio       = body.bio
 
     if (MEMBER_TYPES.includes(body.memberType)) data.memberType = body.memberType as MemberType
@@ -93,6 +96,23 @@ export async function PUT(request: Request) {
     }
     if (Array.isArray(body.skills) && body.skills.every((s: unknown) => typeof s === "string")) {
       data.skills = body.skills
+    }
+    const VALID_PRIMARY_AVATARS = ["face", "discord", "line", "default"] as const
+    if (typeof body.primaryAvatar === "string" && (VALID_PRIMARY_AVATARS as readonly string[]).includes(body.primaryAvatar)) {
+      data.primaryAvatar = body.primaryAvatar as typeof VALID_PRIMARY_AVATARS[number]
+    }
+    const VALID_RING_COLORS = ["purple","blue","green","pink","orange","red","teal","amber","rose","indigo"]
+    if (typeof body.ringColor === "string" && VALID_RING_COLORS.includes(body.ringColor)) {
+      data.ringColor = body.ringColor
+    }
+    if (Array.isArray(body.interests) && body.interests.every((s: unknown) => typeof s === "string")) {
+      data.interests = (body.interests as string[]).filter(isValidTag).slice(0, MAX_TAGS)
+    }
+    if (Array.isArray(body.topInterests) && body.topInterests.every((s: unknown) => typeof s === "string")) {
+      const validInterests = data.interests ?? []
+      data.topInterests = (body.topInterests as string[])
+        .filter((t) => isValidTag(t) && validInterests.includes(t))
+        .slice(0, MAX_TOP_INTERESTS)
     }
 
     await updateMember(session.user.id, data)

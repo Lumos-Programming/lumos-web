@@ -18,7 +18,7 @@ export async function POST() {
   }
 
   const hasFaculty = member.enrollments?.some(e => e.isCurrent && e.faculty)
-  if (!member.studentId || !member.lastName || !member.firstName || !hasFaculty) {
+  if (!member.studentId || !member.lastName || !member.firstName || !member.lastNameRomaji || !member.firstNameRomaji || !hasFaculty) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 

@@ -49,7 +49,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         await getOrCreateMember(
           account.providerAccountId,
           token.name ?? '',
-          token.picture ?? ''
+          token.picture ?? '',
+          (profile as { username?: string })?.username ?? undefined
         )
       }
 

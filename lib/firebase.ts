@@ -3,8 +3,17 @@ import * as admin from 'firebase-admin'
 // Initialize Firebase lazily
 function initializeFirebase() {
   if (!admin.apps.length) {
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      // Emulator mode (for tests)
+    if (process.env.FIRESTORE_EMULATOR_HOST && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+      // Emulator mode + SA key: Firestore uses emulator, GCS uses real credentials
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID || 'test-project',
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        }),
+      })
+    } else if (process.env.FIRESTORE_EMULATOR_HOST) {
+      // Emulator mode without SA key (CI/tests)
       admin.initializeApp({
         projectId: process.env.FIREBASE_PROJECT_ID || 'test-project',
       })
@@ -30,6 +39,11 @@ function initializeFirebase() {
 // Lazy getter for db
 export function getDb() {
   initializeFirebase()
+  const databaseId = process.env.FIRESTORE_DATABASE_ID
+  if (databaseId) {
+    const { getFirestore } = require('firebase-admin/firestore')
+    return getFirestore(databaseId) as admin.firestore.Firestore
+  }
   return admin.firestore()
 }
 
