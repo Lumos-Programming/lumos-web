@@ -59,28 +59,34 @@ export default async function ProfilePage() {
       {member ? (
         <div className="space-y-4">
           {/* Header Card */}
-          <Card className="overflow-hidden stagger-1 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
-            <div className="h-20 bg-gradient-primary" />
-            <CardContent className="relative px-6 pb-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-10">
-                <div className={`w-20 h-20 relative rounded-full overflow-hidden ring-4 ring-card ${ringClass} shrink-0 shadow-lg`}>
+          <Card className="stagger-1 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards overflow-visible">
+            <div className="relative h-28 bg-gradient-primary rounded-t-xl">
+              <div className="absolute -bottom-10 left-6">
+                <div className={`w-20 h-20 relative rounded-full overflow-hidden ring-4 ring-card ${ringClass} shrink-0 shadow-lg bg-card`}>
                   <Image src={avatarUrl} alt={displayName} fill className="object-cover" />
                 </div>
-                <div className="flex-1 pt-1 sm:pb-1">
-                  <h2 className="text-xl font-bold">{displayName}</h2>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    {member.discordUsername && member.nickname && member.nickname !== member.discordUsername && (
-                      <span className="text-sm text-muted-foreground">{member.discordUsername}</span>
-                    )}
-                    {member.role && (
-                      <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                        {member.role}
-                      </span>
-                    )}
-                  </div>
+              </div>
+            </div>
+            <div className="px-6 pb-6 pt-12 sm:pt-2 sm:pl-32">
+              <div className="pt-1">
+                <h2 className="text-xl font-bold">{displayName}</h2>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  {member.discordUsername && member.nickname && member.nickname !== member.discordUsername && (
+                    <span className="text-sm text-muted-foreground">{member.discordUsername}</span>
+                  )}
+                  {member.memberType && (
+                    <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                      {member.memberType}
+                    </span>
+                  )}
+                  {member.role && (
+                    <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                      {member.role}
+                    </span>
+                  )}
                 </div>
               </div>
-            </CardContent>
+            </div>
           </Card>
 
           {/* Basic Info */}
@@ -97,6 +103,16 @@ export default async function ProfilePage() {
                       ? `${member.lastName} ${member.firstName}`
                       : "未設定"}
                   </p>
+                </div>
+                {(member.lastNameRomaji || member.firstNameRomaji) && (
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">氏名（ローマ字）</p>
+                    <p className="text-sm font-medium mt-0.5">{`${member.lastNameRomaji || ""} ${member.firstNameRomaji || ""}`.trim()}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">種別</p>
+                  <p className="text-sm font-medium mt-0.5">{member.memberType || "未設定"}</p>
                 </div>
                 <div>
                   <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">学籍番号</p>
@@ -118,6 +134,12 @@ export default async function ProfilePage() {
                   <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">役職</p>
                   <p className="text-sm font-medium mt-0.5">{member.role || "未設定"}</p>
                 </div>
+                {member.memberType === "卒業生" && (
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">現在の所属</p>
+                    <p className="text-sm font-medium mt-0.5">{member.currentOrg || "未設定"}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -133,13 +155,18 @@ export default async function ProfilePage() {
           </Card>
 
           {/* Interests */}
-          {member.interests && member.interests.length > 0 && (
-            <Card className="stagger-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
-              <CardContent className="pt-6">
+          <Card className="stagger-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
+            <CardContent className="pt-6">
+              {member.interests && member.interests.length > 0 ? (
                 <InterestsSection interests={member.interests} />
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <>
+                  <h3 className="text-sm font-semibold mb-2">興味分野</h3>
+                  <p className="text-sm text-muted-foreground">まだ何も登録されていません。<Link href="/internal/profile/edit" className="text-primary hover:underline">登録しよう!</Link></p>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
           {/* SNS */}
           {social && (
