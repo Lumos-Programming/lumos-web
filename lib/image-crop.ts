@@ -61,3 +61,41 @@ export async function cropAndResizeImage(
     )
   })
 }
+
+/**
+ * Resize an image to fit within maxWidth (maintaining aspect ratio) and convert to WebP.
+ * No cropping is performed — the full image is used.
+ */
+export async function resizeImage(
+  src: string,
+  opts?: { maxWidth?: number; quality?: number }
+): Promise<Blob> {
+  const maxWidth = opts?.maxWidth ?? 1200
+  const quality = opts?.quality ?? 0.85
+
+  const image = new Image()
+  image.crossOrigin = "anonymous"
+  await new Promise<void>((resolve, reject) => {
+    image.onload = () => resolve()
+    image.onerror = reject
+    image.src = src
+  })
+
+  const scale = Math.min(1, maxWidth / image.naturalWidth)
+  const outW = Math.round(image.naturalWidth * scale)
+  const outH = Math.round(image.naturalHeight * scale)
+
+  const canvas = document.createElement("canvas")
+  canvas.width = outW
+  canvas.height = outH
+  const ctx = canvas.getContext("2d")!
+  ctx.drawImage(image, 0, 0, outW, outH)
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
+      "image/webp",
+      quality
+    )
+  })
+}

@@ -41,6 +41,7 @@ export interface MemberDocument {
   lineRefreshToken?: string
   lineTokenExpiresAt?: number   // Unix timestamp (seconds)
   faceImage?: string            // GCS URL (顔写真)
+  bannerImage?: string          // GCS URL (プロフィールバナー画像)
   primaryAvatar?: 'face' | 'discord' | 'line' | 'default'  // 公開ページ用
   ringColor?: string            // リングカラーキー
   interests?: string[]          // 興味分野タグ
