@@ -1,6 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { CalendarDays, MapPin } from "lucide-react"
 import type { Event } from "@/types/event"
 
 export default function EventList() {
@@ -16,27 +19,69 @@ export default function EventList() {
   }, [])
 
   if (loading) {
-    return <p className="text-center text-gray-500 py-12">読み込み中...</p>
+    return (
+      <div className="space-y-3">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-5 w-48" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-full max-w-md" />
+                </div>
+                <Skeleton className="h-10 w-20 rounded-lg shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
   }
 
   if (events.length === 0) {
-    return <p className="text-center text-gray-500 py-12">イベントはまだありません。</p>
+    return (
+      <Card>
+        <CardContent className="py-16 text-center">
+          <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4 animate-soft-pulse" />
+          <p className="text-muted-foreground font-medium">イベントはまだありません</p>
+          <p className="text-muted-foreground/60 text-sm mt-1">イベントが登録されると、ここに表示されます。</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
-    <ul className="space-y-4">
-      {events.map((event) => (
-        <li key={event.id} className="border rounded-lg p-4 bg-white shadow-sm">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-lg font-semibold">{event.title}</h2>
-            <span className="text-sm text-gray-500">{event.date}</span>
-          </div>
-          {event.location && (
-            <p className="text-sm text-gray-500 mb-2">{event.location}</p>
-          )}
-          <p className="text-gray-700 text-sm">{event.description}</p>
-        </li>
+    <div className="space-y-3">
+      {events.map((event, i) => (
+        <Card
+          key={event.id}
+          className={`hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800 hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 stagger-tight-${Math.min(i + 1, 8)} animate-spring-up fill-mode-backwards`}
+        >
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-foreground truncate">{event.title}</h3>
+                <div className="flex items-center gap-3 mt-1.5 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <CalendarDays className="w-3.5 h-3.5" />
+                    {event.date}
+                  </span>
+                  {event.location && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {event.location}
+                    </span>
+                  )}
+                </div>
+                {event.description && (
+                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{event.description}</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       ))}
-    </ul>
+    </div>
   )
 }

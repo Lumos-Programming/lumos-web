@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { getMember, isOnboardingComplete } from '@/lib/members'
 import { redirect } from 'next/navigation'
+import { InternalShell } from '@/components/internal-shell'
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -11,5 +12,14 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     redirect('/internal/onboarding')
   }
 
-  return <>{children}</>
+  return (
+    <InternalShell
+      userName={session.user.name || ""}
+      userImage={session.user.image || undefined}
+      memberNickname={member.nickname || undefined}
+      memberRole={member.role || undefined}
+    >
+      {children}
+    </InternalShell>
+  )
 }

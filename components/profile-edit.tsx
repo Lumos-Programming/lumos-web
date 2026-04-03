@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MarkdownEditor } from "@/components/markdown-editor"
 import { VisibilityToggle } from "@/components/ui/visibility-toggle"
 import { toast } from "@/hooks/use-toast"
@@ -13,8 +14,8 @@ import { cropAndResizeImage } from "@/lib/image-crop"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import Link from "next/link"
-import { BioSection } from "@/components/member-detail-shared"
 import type { Profile, VisibilityLevel } from "@/types/profile"
+import { GENDER_OPTIONS } from "@/types/profile"
 import { DEFAULT_RING_COLOR, getRingColorClass } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
 import { RingColorPicker } from "@/components/ring-color-picker"
@@ -22,12 +23,6 @@ import { MemberPreviewToggle } from "@/components/member-tile-preview"
 import type { SnsEntry } from "@/components/member-tile-preview"
 import { LiquidSplashEffect } from "@/components/liquid-splash-effect"
 import { InterestTagInput } from "@/components/interest-tag-input"
-
-function formatBirthDate(d: string) {
-  const parts = d.split("-")
-  if (parts.length >= 3) return `${parseInt(parts[1])}月${parseInt(parts[2])}日`
-  return d
-}
 
 const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "year" | "skills" | "enrollments">, string>> = {
   studentId: "学籍番号",
@@ -38,6 +33,7 @@ const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "
   firstNameRomaji: "名（ローマ字）",
   currentOrg: "現在の所属",
   birthDate: "誕生日",
+  gender: "性別",
   bio: "プロフィール文",
   line: "LINE",
   discord: "Discord",
@@ -46,6 +42,23 @@ const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "
 }
 
 const SNS_FIELDS = new Set(["github", "x", "line", "discord"])
+
+const VISIBILITY_LABELS: Record<string, string> = {
+  lastName: "姓・名",
+  faculty: "学部/学府",
+  currentOrg: "現在の所属",
+  birthDate: "誕生日",
+  gender: "性別",
+  nickname: "ニックネーム",
+  bio: "プロフィール文",
+  discord: "Discord",
+  line: "LINE",
+  github: "GitHub",
+  x: "X (Twitter)",
+  linkedin: "LinkedIn",
+}
+
+const VISIBILITY_DISPLAY_KEYS = ["lastName", "faculty", "currentOrg", "birthDate", "gender", "nickname", "bio", "discord", "line", "github", "x", "linkedin"] as const
 
 const PROFILE_FIELDS = Object.keys(FIELD_LABELS) as Array<keyof Omit<Profile, "visibility" | "role" | "year" | "skills" | "enrollments">>
 
@@ -69,6 +82,7 @@ const DEFAULT_PROFILE: Profile = {
     faculty: "public",
     currentOrg: "public",
     birthDate: "internal",
+    gender: "internal",
     bio: "public",
     line: "internal",
     github: "public",
@@ -78,10 +92,10 @@ const DEFAULT_PROFILE: Profile = {
   },
 }
 
-const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "bio", "discord", "line", "github", "x", "linkedin"] as const
+const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "gender", "bio", "discord", "line", "github", "x", "linkedin"] as const
 
 export default function ProfileEdit() {
-  const [isEditing, setIsEditing] = useState(true)
+  const [showPreview, setShowPreview] = useState(false)
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE)
   const [allowPublic, setAllowPublic] = useState(true)
   const [loading, setLoading] = useState(true)
@@ -111,7 +125,15 @@ export default function ProfileEdit() {
   const [currentOrg, setCurrentOrg] = useState("")
   const [interests, setInterests] = useState<string[]>([])
   const [topInterests, setTopInterests] = useState<string[]>([])
+  const [bannerImageUrl, setBannerImageUrl] = useState("")
+  const [bannerUploading, setBannerUploading] = useState(false)
+  const [bannerCropSrc, setBannerCropSrc] = useState<string | null>(null)
+  const [bannerCrop, setBannerCrop] = useState({ x: 0, y: 0 })
+  const [bannerZoom, setBannerZoom] = useState(1)
+  const [bannerCroppedArea, setBannerCroppedArea] = useState<Area | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const bannerFileInputRef = useRef<HTMLInputElement>(null)
+  const initialSnapshot = useRef<string>("")
 
   useEffect(() => {
     fetch("/api/profile")
@@ -127,6 +149,7 @@ export default function ProfileEdit() {
             bio: data.visibility?.bio ?? "public",
             currentOrg: data.visibility?.currentOrg ?? "public",
             birthDate: data.visibility?.birthDate ?? "internal",
+            gender: data.visibility?.gender ?? "internal",
             line: data.visibility?.line ?? "internal",
             github: data.visibility?.github ?? "public",
             x: data.visibility?.x ?? "public",
@@ -155,13 +178,14 @@ export default function ProfileEdit() {
           if (data.linkedin) setLinkedinUsername(data.linkedin)
           if (data.linkedinDisplayName) setLinkedinVanity(data.linkedinDisplayName)
           if (data.faceImage) setFaceImageUrl(data.faceImage)
+          if (data.bannerImage) setBannerImageUrl(data.bannerImage)
           if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
           if (data.ringColor) setRingColor(data.ringColor)
           if (data.memberType) setMemberType(data.memberType)
           if (data.currentOrg) setCurrentOrg(data.currentOrg)
           if (data.interests) setInterests(data.interests)
           if (data.topInterests) setTopInterests(data.topInterests)
-          setProfile({
+          const loadedProfile: Profile = {
             studentId: data.studentId ?? "",
             nickname: data.nickname ?? "",
             lastName: data.lastName ?? "",
@@ -170,18 +194,47 @@ export default function ProfileEdit() {
             firstNameRomaji: data.firstNameRomaji ?? "",
             bio: data.bio ?? "",
             birthDate: data.birthDate ?? "",
+            gender: data.gender ?? "",
             currentOrg: data.currentOrg ?? "",
             line: data.line ?? "",
             discord: data.discordUsername ?? "",
             github: data.github ?? "",
             x: data.x ?? "",
             visibility: vis,
+          }
+          setProfile(loadedProfile)
+          initialSnapshot.current = JSON.stringify({
+            profile: loadedProfile,
+            allowPublic: typeof data.allowPublic === "boolean" ? data.allowPublic : !!(VISIBILITY_FIELD_KEYS.some((k) => vis[k] === "public")),
+            primaryAvatar: data.primaryAvatar ?? "face",
+            ringColor: data.ringColor ?? DEFAULT_RING_COLOR,
+            interests: data.interests ?? [],
+            topInterests: data.topInterests ?? [],
+            memberType: data.memberType ?? "",
+            currentOrg: data.currentOrg ?? "",
           })
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
+
+  const currentSnapshot = useMemo(() =>
+    JSON.stringify({ profile, allowPublic, primaryAvatar, ringColor, interests, topInterests, memberType, currentOrg }),
+    [profile, allowPublic, primaryAvatar, ringColor, interests, topInterests, memberType, currentOrg]
+  )
+
+  const isDirty = !loading && initialSnapshot.current !== "" && currentSnapshot !== initialSnapshot.current
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [isDirty])
 
   const handlePublish = async () => {
     try {
@@ -192,6 +245,7 @@ export default function ProfileEdit() {
       })
 
       if (response.ok) {
+        initialSnapshot.current = currentSnapshot
         alert("プロフィールが保存されました！")
       } else {
         alert("保存に失敗しました。もう一度お試しください。")
@@ -242,6 +296,79 @@ export default function ProfileEdit() {
       setImageUploading(false)
     }
   }, [cropImageSrc, croppedAreaPixels])
+
+  const handleBannerFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ""
+    const reader = new FileReader()
+    reader.onload = () => {
+      setBannerCropSrc(reader.result as string)
+      setBannerCrop({ x: 0, y: 0 })
+      setBannerZoom(1)
+    }
+    reader.readAsDataURL(file)
+  }, [])
+
+  const handleBannerCropConfirm = useCallback(async () => {
+    if (!bannerCropSrc || !bannerCroppedArea) return
+    setBannerUploading(true)
+    try {
+      const blob = await cropAndResizeImage(bannerCropSrc, bannerCroppedArea, { maxSize: 1200 })
+      const formData = new FormData()
+      formData.append("image", blob, "banner.webp")
+      formData.append("type", "banner")
+      const res = await fetch("/api/profile/image", { method: "POST", body: formData })
+      if (res.ok) {
+        const { url } = await res.json()
+        setBannerImageUrl(url)
+        setBannerCropSrc(null)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast({
+          variant: "destructive",
+          title: "バナー画像のアップロードに失敗しました",
+          description: data.error || "しばらく経ってから再度お試しください。",
+        })
+      }
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "バナー画像のアップロードに失敗しました",
+        description: "ネットワークエラーが発生しました。接続を確認して再度お試しください。",
+      })
+    } finally {
+      setBannerUploading(false)
+    }
+  }, [bannerCropSrc, bannerCroppedArea])
+
+  const handleBannerRemove = useCallback(async () => {
+    setBannerUploading(true)
+    try {
+      const res = await fetch("/api/profile/image", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "banner" }),
+      })
+      if (res.ok) {
+        setBannerImageUrl("")
+      } else {
+        toast({
+          variant: "destructive",
+          title: "バナー画像の削除に失敗しました",
+          description: "しばらく経ってから再度お試しください。",
+        })
+      }
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "バナー画像の削除に失敗しました",
+        description: "ネットワークエラーが発生しました。接続を確認して再度お試しください。",
+      })
+    } finally {
+      setBannerUploading(false)
+    }
+  }, [])
 
   const resolveAvatar = useCallback((id: string, avatar: string): string => {
     if (!avatar) return "/placeholder.svg"
@@ -308,8 +435,7 @@ export default function ProfileEdit() {
 
     let image: string
     let hasFace = true
-    const pa = primaryAvatar
-    switch (pa) {
+    switch (primaryAvatar) {
       case "face":
         if (faceImageUrl) { image = faceImageUrl } else { image = "/assets/avatar-placeholder.svg"; hasFace = false }
         break
@@ -352,108 +478,17 @@ export default function ProfileEdit() {
 
   return (
     <>
-      {/* スライドトグル */}
-      <div className="flex justify-center mb-6">
-        <div className="flex bg-gray-200 rounded-full p-1">
-          <button
-            onClick={() => setIsEditing(true)}
-            className={`px-4 py-2 rounded-full ${isEditing ? "bg-purple-600 text-white" : "text-gray-700"}`}
-          >
-            編集モード
-          </button>
-          <button
-            onClick={() => setIsEditing(false)}
-            className={`px-4 py-2 rounded-full ${!isEditing ? "bg-purple-600 text-white" : "text-gray-700"}`}
-          >
-            プレビューモード
-          </button>
-        </div>
-      </div>
-
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-semibold">
-              {isEditing ? "編集モード" : "プレビューモード"}
-            </div>
-            {isEditing && (
-              <Button onClick={handlePublish} variant="default">
-                保存
-              </Button>
-            )}
+            <div className="text-2xl font-semibold">プロフィール編集</div>
+            <Button onClick={handlePublish} variant="default">
+              保存
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isEditing && (
-            <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
-              <div className="flex items-start gap-2">
-                <span className="inline-block px-1.5 py-0.5 rounded-full bg-gray-500 text-white font-medium flex-shrink-0">非公開</span>
-                <span>自分だけが閲覧できます。他のメンバーにも表示されません。</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="inline-block px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-medium flex-shrink-0">内部のみ</span>
-                <span>Lumosメンバーだけが閲覧できます。外部向けHPには表示されません。</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="inline-block px-1.5 py-0.5 rounded-full bg-green-600 text-white font-medium flex-shrink-0">外部公開</span>
-                <span>LumosのHP（公開サイト）にも表示されます。誰でも閲覧できます。</span>
-              </div>
-            </div>
-          )}
-          {isEditing && (
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => {
-                const next = !allowPublic
-                setAllowPublic(next)
-                if (!next) {
-                  setProfile((prev) => {
-                    const vis = { ...prev.visibility }
-                    for (const k of VISIBILITY_FIELD_KEYS) {
-                      if (vis[k] === "public") vis[k] = "internal"
-                    }
-                    return { ...prev, visibility: vis }
-                  })
-                }
-              }}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.currentTarget.click() }}
-              className={[
-                "w-full flex items-center justify-between rounded-xl border-2 px-4 py-3 transition-all duration-200 cursor-pointer select-none",
-                allowPublic
-                  ? "border-green-400 bg-green-50 dark:bg-green-950/40 dark:border-green-700"
-                  : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50",
-              ].join(" ")}
-            >
-              <div>
-                <p className={["font-semibold text-sm", allowPublic ? "text-green-800 dark:text-green-300" : "text-gray-700 dark:text-gray-300"].join(" ")}>
-                  HPにメンバー情報を掲載する
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {allowPublic ? "外部公開が選択できます" : "外部公開は無効になります（ログインメンバーのみ閲覧可）"}
-                </p>
-              </div>
-              <div className={[
-                "w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 relative",
-                allowPublic ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600",
-              ].join(" ")}>
-                <span className={[
-                  "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200",
-                  allowPublic ? "translate-x-5" : "translate-x-0.5",
-                ].join(" ")} />
-              </div>
-            </div>
-          )}
-          {/* 表示プレビュー */}
-          {isEditing && (
-            <MemberPreviewToggle
-              internalData={{ ...internalPreview, ringColor, memberType, currentOrg, role, year, bio: profile.bio, sns: internalSns, topInterests, interests }}
-              externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: externalSns, topInterests, interests }}
-              allowPublic={allowPublic}
-            />
-          )}
           {/* プロフィール画像セクション */}
-          {isEditing && (
             <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
               <Label className="text-base font-semibold">プロフィール画像</Label>
               <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -550,9 +585,80 @@ export default function ProfileEdit() {
 
               <RingColorPicker value={ringColor} onChange={setRingColor} />
             </div>
-          )}
 
-          {isEditing && (
+          {/* バナー画像セクション */}
+            <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+              <Label className="text-base font-semibold">バナー画像</Label>
+              <p className="text-xs text-muted-foreground">プロフィールカード上部に表示される背景画像です。未設定の場合はグラデーションが表示されます。</p>
+              <div className="relative h-28 rounded-xl overflow-hidden">
+                {bannerImageUrl ? (
+                  <Image
+                    src={bannerImageUrl}
+                    alt="バナー画像"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-primary" />
+                )}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  ref={bannerFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleBannerFileSelect}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => bannerFileInputRef.current?.click()}
+                  disabled={bannerUploading}
+                >
+                  {bannerUploading ? "アップロード中..." : "画像を選択"}
+                </Button>
+                {bannerImageUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBannerRemove}
+                    disabled={bannerUploading}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/40"
+                  >
+                    削除
+                  </Button>
+                )}
+              </div>
+
+              {/* Banner Crop UI */}
+              {bannerCropSrc && (
+                <div className="space-y-3">
+                  <div className="relative w-full" style={{ height: 200 }}>
+                    <Cropper
+                      image={bannerCropSrc}
+                      crop={bannerCrop}
+                      zoom={bannerZoom}
+                      aspect={16 / 5}
+                      onCropChange={setBannerCrop}
+                      onZoomChange={setBannerZoom}
+                      onCropComplete={(_, area) => setBannerCroppedArea(area)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground flex-shrink-0">ズーム</span>
+                    <input type="range" min={1} max={3} step={0.1} value={bannerZoom} onChange={(e) => setBannerZoom(Number(e.target.value))} className="flex-1" />
+                  </div>
+                  <div className="flex gap-2 justify-center">
+                    <Button variant="ghost" size="sm" onClick={() => setBannerCropSrc(null)}>キャンセル</Button>
+                    <Button size="sm" onClick={handleBannerCropConfirm} disabled={bannerUploading}>{bannerUploading ? "アップロード中..." : "切り抜き"}</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label className="text-base font-semibold">興味分野</Label>
               <InterestTagInput
@@ -562,9 +668,7 @@ export default function ProfileEdit() {
                 onTopInterestsChange={setTopInterests}
               />
             </div>
-          )}
 
-          {isEditing ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {PROFILE_FIELDS.map((key) => {
                 const isSns = SNS_FIELDS.has(key)
@@ -608,6 +712,20 @@ export default function ProfileEdit() {
                         onChange={(e) => setProfile({ ...profile, birthDate: e.target.value })}
                         className="block w-full"
                       />
+                    ) : key === "gender" ? (
+                      <Select
+                        value={profile.gender ?? ""}
+                        onValueChange={(v) => setProfile({ ...profile, gender: v })}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="選択してください" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {GENDER_OPTIONS.map((opt) => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     ) : key === "lastNameRomaji" || key === "firstNameRomaji" ? (
                       <Input
                         value={profile[key] as string ?? ""}
@@ -622,78 +740,188 @@ export default function ProfileEdit() {
                       <Input
                         value={profile[key] as string ?? ""}
                         onChange={(e) => setProfile({ ...profile, [key]: e.target.value })}
-                        placeholder={`${FIELD_LABELS[key]}を入力してください`}
+                        placeholder={key === "currentOrg" ? "例: 株式会社〇〇" : `${FIELD_LABELS[key]}を入力してください`}
                       />
                     )}
 
-                    {key === "lastNameRomaji" || key === "firstNameRomaji" ? (
+                    {(key === "lastNameRomaji" || key === "firstNameRomaji") && (
                       <p className="text-xs text-gray-400">イニシャル表示に使用されます</p>
-                    ) : key === "studentId" ? (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                          非公開（固定）
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-gray-500 mr-1">公開範囲</span>
-                        <VisibilityToggle
-                          value={profile.visibility[key as keyof typeof profile.visibility] ?? "private"}
-                          onChange={(v: VisibilityLevel) =>
-                            setProfile({
-                              ...profile,
-                              visibility: {
-                                ...profile.visibility,
-                                [key]: v,
-                              },
-                            })
-                          }
-                          max={key === "line" || key === "birthDate" || !allowPublic ? "internal" : undefined}
-                          min={key === "line" || key === "discord" ? "internal" : undefined}
-                        />
-                      </div>
                     )}
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {PROFILE_FIELDS.map((key) => {
-                if (SNS_FIELDS.has(key)) return null
-                if (key === "lastNameRomaji" || key === "firstNameRomaji") return null
-                const visLevel = profile.visibility[key as keyof typeof profile.visibility]
-                if (!visLevel || visLevel === "private") return null
-                if (key === "firstName") return null
-                return (
-                  <div
-                    key={key}
-                    className={key === "bio" ? "md:col-span-2 space-y-2" : "space-y-2"}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Label>{key === "lastName" ? "氏名" : FIELD_LABELS[key]}</Label>
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${visLevel === "public" ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400" : "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400"}`}>
-                        {visLevel === "public" ? "外部公開" : "内部のみ"}
+                    {key === "studentId" && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                        非公開（固定）
                       </span>
-                    </div>
-                    {key === "bio" ? (
-                      <BioSection bio={profile.bio} />
-                    ) : key === "lastName" ? (
-                      <p className="text-sm mt-1 whitespace-nowrap">
-                        {profile.lastName} {profile.firstName}
-                      </p>
-                    ) : key === "birthDate" ? (
-                      <p className="text-sm mt-1">{profile.birthDate ? formatBirthDate(profile.birthDate) : ""}</p>
-                    ) : (
-                      <p className="text-sm mt-1">{profile[key] as string ?? ""}</p>
                     )}
                   </div>
                 )
               })}
             </div>
-          )}
+
+            {/* 公開設定セクション（一箇所にまとめる） */}
+            <div className="rounded-xl border-2 border-purple-200 dark:border-purple-800/60 p-4 space-y-4 mt-2">
+              <div>
+                <h3 className="text-base font-semibold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">公開設定</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">各情報を誰に公開するか設定してください。</p>
+              </div>
+
+              {/* 公開レベルの説明 */}
+              <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+                <div className="flex items-start gap-2">
+                  <span className="inline-block px-1.5 py-0.5 rounded-full bg-gray-500 text-white font-medium flex-shrink-0">非公開</span>
+                  <span>自分だけが閲覧できます。他のメンバーにも表示されません。</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="inline-block px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-medium flex-shrink-0">内部のみ</span>
+                  <span>Lumosメンバーだけが閲覧できます。外部向けHPには表示されません。</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="inline-block px-1.5 py-0.5 rounded-full bg-green-600 text-white font-medium flex-shrink-0">外部公開</span>
+                  <span>LumosのHP（公開サイト）にも表示されます。誰でも閲覧できます。</span>
+                </div>
+              </div>
+
+              {/* HP掲載トグル */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  const next = !allowPublic
+                  setAllowPublic(next)
+                  if (next) {
+                    // ONに戻す: 各フィールドを制約に応じた最大レベルに設定
+                    setProfile((prev) => {
+                      const vis = { ...prev.visibility }
+                      const internalOnly = new Set(["line", "birthDate"])
+                      for (const k of VISIBILITY_FIELD_KEYS) {
+                        vis[k] = internalOnly.has(k) ? "internal" : "public"
+                      }
+                      return { ...prev, visibility: vis }
+                    })
+                  } else {
+                    setProfile((prev) => {
+                      const vis = { ...prev.visibility }
+                      for (const k of VISIBILITY_FIELD_KEYS) {
+                        if (vis[k] === "public") vis[k] = "internal"
+                      }
+                      return { ...prev, visibility: vis }
+                    })
+                  }
+                }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.currentTarget.click() }}
+                className={[
+                  "w-full flex items-center justify-between gap-3 rounded-xl border-2 px-3 sm:px-4 py-3 transition-all duration-200 cursor-pointer select-none",
+                  allowPublic
+                    ? "border-green-400 bg-green-50 dark:bg-green-950/40 dark:border-green-700"
+                    : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50",
+                ].join(" ")}
+              >
+                <div className="min-w-0">
+                  <p className={["font-semibold text-sm", allowPublic ? "text-green-800 dark:text-green-300" : "text-gray-700 dark:text-gray-300"].join(" ")}>
+                    HPにメンバー情報を掲載する
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {allowPublic ? "外部公開が選択できます" : "外部公開は無効になります（ログインメンバーのみ閲覧可）"}
+                  </p>
+                </div>
+                <div className={[
+                  "w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 relative",
+                  allowPublic ? "bg-gradient-to-r from-purple-600 to-indigo-600" : "bg-gray-300 dark:bg-gray-600",
+                ].join(" ")}>
+                  <span className={[
+                    "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200",
+                    allowPublic ? "translate-x-5" : "translate-x-0.5",
+                  ].join(" ")} />
+                </div>
+              </div>
+
+              {/* フィールド別の公開設定リスト */}
+              <div className="space-y-1">
+                <div className="flex justify-end gap-6 text-xs text-gray-400 dark:text-gray-500 pr-1">
+                  <span>非公開</span>
+                  <span>内部のみ</span>
+                  <span className={allowPublic ? "" : "opacity-30"}>外部公開</span>
+                </div>
+                {VISIBILITY_DISPLAY_KEYS.map((key) => {
+                  if (key === "currentOrg" && memberType !== "卒業生") return null
+                  return (
+                    <div key={key} className="flex items-center justify-between gap-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0 shrink-1">
+                        {VISIBILITY_LABELS[key]}
+                      </span>
+                      <VisibilityToggle
+                        value={profile.visibility[key as keyof typeof profile.visibility] ?? "private"}
+                        onChange={(v: VisibilityLevel) =>
+                          setProfile({
+                            ...profile,
+                            visibility: {
+                              ...profile.visibility,
+                              [key]: v,
+                            },
+                          })
+                        }
+                        max={key === "line" || key === "birthDate" || !allowPublic ? "internal" : undefined}
+                        min={key === "line" || key === "discord" ? "internal" : undefined}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* PC用プレビュー（折りたたみ） */}
+              <div className="hidden sm:block">
+                <button
+                  onClick={() => setShowPreview(p => !p)}
+                  className="text-sm text-purple-600 dark:text-purple-400 hover:underline font-medium"
+                >
+                  {showPreview ? "▼ プレビューを閉じる" : "▶ プレビューを見る"}
+                </button>
+                {showPreview && (
+                  <div className="mt-3">
+                    <MemberPreviewToggle
+                      internalData={{ ...internalPreview, ringColor, memberType, currentOrg, role, year, bio: profile.bio, sns: internalSns, topInterests, interests }}
+                      externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: externalSns, topInterests, interests }}
+                      allowPublic={allowPublic}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
         </CardContent>
       </Card>
+
+      {/* スマホ用フローティングプレビューボタン */}
+      <button
+        onClick={() => setShowPreview(p => !p)}
+        className="sm:hidden fixed bottom-6 right-6 z-50 rounded-full bg-purple-600 text-white shadow-lg flex items-center gap-2 px-4 py-3 hover:bg-purple-700 active:scale-95 transition-all"
+        aria-label="プレビュー切り替え"
+      >
+        {showPreview ? (
+          <>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <span className="text-sm font-medium">編集に戻る</span>
+          </>
+        ) : (
+          <>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span className="text-sm font-medium">プレビュー</span>
+          </>
+        )}
+      </button>
+
+      {/* スマホ用プレビューオーバーレイ */}
+      {showPreview && (
+        <div className="sm:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-sm overflow-y-auto p-4 pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">プレビュー</h3>
+            <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>閉じる</Button>
+          </div>
+          <MemberPreviewToggle
+            internalData={{ ...internalPreview, ringColor, memberType, currentOrg, role, year, bio: profile.bio, sns: internalSns, topInterests, interests }}
+            externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: externalSns, topInterests, interests }}
+            allowPublic={allowPublic}
+          />
+        </div>
+      )}
     </>
   )
 }

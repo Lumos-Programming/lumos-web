@@ -6,5 +6,5 @@ export default async function InternalLayout({ children }: { children: React.Rea
   if (!session) {
     redirect('/login')
   }
-  return <div className="pt-20">{children}</div>
+  return <div className="internal-area">{children}</div>
 }

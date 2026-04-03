@@ -4,7 +4,9 @@ import type {Dispatch, SetStateAction} from "react"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
 import type {FormData} from "./types"
+import {GENDER_OPTIONS} from "@/types/profile"
 
 interface Step1BasicInfoProps {
   form: FormData
@@ -132,6 +134,23 @@ export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, subm
             onChange={(e) => setForm((f) => ({...f, birthDate: e.target.value}))}
             className="block w-full"
           />
+        </div>
+
+        <div className="space-y-1.5 animate-[fadeInUp_300ms_210ms_ease_both]">
+          <Label htmlFor="gender">性別</Label>
+          <Select
+            value={form.gender}
+            onValueChange={(v) => setForm((f) => ({...f, gender: v}))}
+          >
+            <SelectTrigger id="gender" className="w-full">
+              <SelectValue placeholder="選択してください" />
+            </SelectTrigger>
+            <SelectContent>
+              {GENDER_OPTIONS.map((opt) => (
+                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-1.5 animate-[fadeInUp_300ms_240ms_ease_both]">

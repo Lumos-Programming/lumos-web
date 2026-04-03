@@ -8,6 +8,7 @@ export interface ProfileVisibility {
   faculty: VisibilityLevel
   currentOrg: VisibilityLevel
   birthDate: VisibilityLevel
+  gender: VisibilityLevel
   bio: VisibilityLevel
   line: VisibilityLevel       // 最大 'internal'
   github: VisibilityLevel
@@ -34,6 +35,7 @@ export interface Profile {
   enrollments?: EnrollmentRecord[]
   currentOrg?: string      // 卒業生の現在の所属
   birthDate?: string       // YYYY-MM-DD
+  gender?: string
   bio: string
   line: string
   discord: string
@@ -46,6 +48,8 @@ export interface Profile {
   topInterests?: string[]
   visibility: ProfileVisibility
 }
+
+export const GENDER_OPTIONS = ["男性", "女性", "その他"] as const
 
 export const MEMBER_TYPES = ["学部生", "院生", "聴講生", "卒業生"] as const
 export type MemberType = typeof MEMBER_TYPES[number]

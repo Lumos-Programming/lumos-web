@@ -23,7 +23,7 @@ interface VisibilityToggleProps {
 
 export function VisibilityToggle({ value, onChange, max, min }: VisibilityToggleProps) {
   return (
-    <div className="flex rounded-full bg-gray-100 dark:bg-gray-800 p-0.5 gap-0.5">
+    <div className="flex rounded-full bg-gray-100 dark:bg-gray-800 p-0.5 gap-0.5 shrink-0">
       {LEVELS.map(({ value: level, label }) => {
         const isDisabled =
           ((max === "internal" || max === "none") && level === "public") ||
