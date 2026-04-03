@@ -20,6 +20,7 @@ export interface MemberDocument {
   enrollments?: EnrollmentRecord[]
   currentOrg?: string        // 卒業生の現在の所属
   birthDate?: string         // YYYY-MM-DD
+  gender?: string
   skills?: string[]
   github?: string
   githubId?: string
@@ -56,6 +57,7 @@ export interface MemberDocument {
     faculty: VisibilityLevel
     currentOrg: VisibilityLevel
     birthDate: VisibilityLevel
+    gender: VisibilityLevel
     bio: VisibilityLevel
     github: VisibilityLevel
     x: VisibilityLevel
@@ -98,6 +100,7 @@ export async function getOrCreateMember(
         faculty: 'public',
         currentOrg: 'public',
         birthDate: 'internal',
+        gender: 'internal',
         bio: 'public',
         github: 'public',
         x: 'public',
@@ -263,6 +266,7 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
     nickname: v.nickname === 'public' ? data.nickname || undefined : undefined,
     memberType: data.memberType,
     currentOrg: v.currentOrg === 'public' ? data.currentOrg || undefined : undefined,
+    gender: v.gender === 'public' ? data.gender || undefined : undefined,
     ringColor: data.ringColor,
     interests: data.interests ?? [],
     topInterests: data.topInterests ?? [],
@@ -307,6 +311,7 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
     nickname: v.nickname !== 'private' ? data.nickname || undefined : undefined,
     memberType: data.memberType,
     currentOrg: v.currentOrg !== 'private' ? data.currentOrg || undefined : undefined,
+    gender: v.gender !== 'private' ? data.gender || undefined : undefined,
     ringColor: data.ringColor,
     interests: data.interests ?? [],
     topInterests: data.topInterests ?? [],

@@ -8,6 +8,7 @@ export interface FormData {
   firstNameRomaji: string
   studentId: string
   birthDate: string
+  gender: string
   nickname: string
   // Step 2
   memberType: MemberType | ""
@@ -36,6 +37,7 @@ export interface VisibilityForm {
   faculty: VisibilityLevel
   currentOrg: VisibilityLevel
   birthDate: VisibilityLevel
+  gender: VisibilityLevel
   nickname: VisibilityLevel
   bio: VisibilityLevel
   github: VisibilityLevel
@@ -52,6 +54,7 @@ export const DEFAULT_FORM: FormData = {
   firstNameRomaji: "",
   studentId: "",
   birthDate: "",
+  gender: "",
   nickname: "",
   memberType: "",
   schoolYear: "",
@@ -76,6 +79,7 @@ export const DEFAULT_VISIBILITY: VisibilityForm = {
   faculty: "public",
   currentOrg: "public",
   birthDate: "internal",
+  gender: "internal",
   nickname: "public",
   bio: "public",
   github: "public",
@@ -91,6 +95,7 @@ export const VISIBILITY_LABELS: Record<keyof VisibilityForm, string> = {
   faculty: "学部/学府",
   currentOrg: "現在の所属",
   birthDate: "誕生日",
+  gender: "性別",
   nickname: "ニックネーム",
   bio: "プロフィール文",
   github: "GitHub",
@@ -101,7 +106,7 @@ export const VISIBILITY_LABELS: Record<keyof VisibilityForm, string> = {
 }
 
 export const VISIBILITY_DISPLAY_KEYS: Array<keyof VisibilityForm> = [
-  "lastName", "faculty", "currentOrg", "birthDate", "nickname", "bio", "discord", "line", "github", "x", "linkedin",
+  "lastName", "faculty", "currentOrg", "birthDate", "gender", "nickname", "bio", "discord", "line", "github", "x", "linkedin",
 ]
 
 export function getSchoolYearOptions(memberType: MemberType | ""): { label: string; note?: string } & { options: string[] } {

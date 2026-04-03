@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MarkdownEditor } from "@/components/markdown-editor"
 import { VisibilityToggle } from "@/components/ui/visibility-toggle"
 import { toast } from "@/hooks/use-toast"
@@ -14,6 +15,7 @@ import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import Link from "next/link"
 import type { Profile, VisibilityLevel } from "@/types/profile"
+import { GENDER_OPTIONS } from "@/types/profile"
 import { DEFAULT_RING_COLOR, getRingColorClass } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
 import { RingColorPicker } from "@/components/ring-color-picker"
@@ -31,6 +33,7 @@ const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "
   firstNameRomaji: "名（ローマ字）",
   currentOrg: "現在の所属",
   birthDate: "誕生日",
+  gender: "性別",
   bio: "プロフィール文",
   line: "LINE",
   discord: "Discord",
@@ -45,6 +48,7 @@ const VISIBILITY_LABELS: Record<string, string> = {
   faculty: "学部/学府",
   currentOrg: "現在の所属",
   birthDate: "誕生日",
+  gender: "性別",
   nickname: "ニックネーム",
   bio: "プロフィール文",
   discord: "Discord",
@@ -54,7 +58,7 @@ const VISIBILITY_LABELS: Record<string, string> = {
   linkedin: "LinkedIn",
 }
 
-const VISIBILITY_DISPLAY_KEYS = ["lastName", "faculty", "currentOrg", "birthDate", "nickname", "bio", "discord", "line", "github", "x", "linkedin"] as const
+const VISIBILITY_DISPLAY_KEYS = ["lastName", "faculty", "currentOrg", "birthDate", "gender", "nickname", "bio", "discord", "line", "github", "x", "linkedin"] as const
 
 const PROFILE_FIELDS = Object.keys(FIELD_LABELS) as Array<keyof Omit<Profile, "visibility" | "role" | "year" | "skills" | "enrollments">>
 
@@ -78,6 +82,7 @@ const DEFAULT_PROFILE: Profile = {
     faculty: "public",
     currentOrg: "public",
     birthDate: "internal",
+    gender: "internal",
     bio: "public",
     line: "internal",
     github: "public",
@@ -87,7 +92,7 @@ const DEFAULT_PROFILE: Profile = {
   },
 }
 
-const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "bio", "discord", "line", "github", "x", "linkedin"] as const
+const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "gender", "bio", "discord", "line", "github", "x", "linkedin"] as const
 
 export default function ProfileEdit() {
   const [showPreview, setShowPreview] = useState(false)
@@ -144,6 +149,7 @@ export default function ProfileEdit() {
             bio: data.visibility?.bio ?? "public",
             currentOrg: data.visibility?.currentOrg ?? "public",
             birthDate: data.visibility?.birthDate ?? "internal",
+            gender: data.visibility?.gender ?? "internal",
             line: data.visibility?.line ?? "internal",
             github: data.visibility?.github ?? "public",
             x: data.visibility?.x ?? "public",
@@ -188,6 +194,7 @@ export default function ProfileEdit() {
             firstNameRomaji: data.firstNameRomaji ?? "",
             bio: data.bio ?? "",
             birthDate: data.birthDate ?? "",
+            gender: data.gender ?? "",
             currentOrg: data.currentOrg ?? "",
             line: data.line ?? "",
             discord: data.discordUsername ?? "",
@@ -705,6 +712,20 @@ export default function ProfileEdit() {
                         onChange={(e) => setProfile({ ...profile, birthDate: e.target.value })}
                         className="block w-full"
                       />
+                    ) : key === "gender" ? (
+                      <Select
+                        value={profile.gender ?? ""}
+                        onValueChange={(v) => setProfile({ ...profile, gender: v })}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="選択してください" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {GENDER_OPTIONS.map((opt) => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     ) : key === "lastNameRomaji" || key === "firstNameRomaji" ? (
                       <Input
                         value={profile[key] as string ?? ""}

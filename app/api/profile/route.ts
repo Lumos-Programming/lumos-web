@@ -2,12 +2,12 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { getMember, updateMember } from "@/lib/members"
 import type { VisibilityLevel, MemberType, EnrollmentRecord, EnrollmentType } from "@/types/profile"
-import { MEMBER_TYPES, ENROLLMENT_TYPES } from "@/types/profile"
+import { MEMBER_TYPES, ENROLLMENT_TYPES, GENDER_OPTIONS } from "@/types/profile"
 import { isValidTag, MAX_TAGS, MAX_TOP_INTERESTS } from "@/types/interests"
 
 const VISIBILITY_KEYS = [
   "studentId", "nickname", "lastName", "firstName",
-  "faculty", "currentOrg", "birthDate", "bio", "line", "github", "x", "linkedin", "discord",
+  "faculty", "currentOrg", "birthDate", "gender", "bio", "line", "github", "x", "linkedin", "discord",
 ] as const
 
 const VISIBILITY_LEVELS: VisibilityLevel[] = ["private", "internal", "public"]
@@ -65,6 +65,9 @@ export async function PUT(request: Request) {
     if (MEMBER_TYPES.includes(body.memberType)) data.memberType = body.memberType as MemberType
     if (typeof body.currentOrg === "string") data.currentOrg = body.currentOrg
     if (typeof body.birthDate === "string") data.birthDate = body.birthDate
+    if (typeof body.gender === "string" && (body.gender === "" || (GENDER_OPTIONS as readonly string[]).includes(body.gender))) {
+      data.gender = body.gender
+    }
     if (typeof body.allowPublic === "boolean") data.allowPublic = body.allowPublic
 
     if (Array.isArray(body.enrollments)) {

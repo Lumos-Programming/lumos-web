@@ -141,6 +141,10 @@ export default async function ProfilePage() {
                   <p className="text-sm font-medium mt-0.5">{member.birthDate ? formatBirthDate(member.birthDate) : "未設定"}</p>
                 </div>
                 <div>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">性別</p>
+                  <p className="text-sm font-medium mt-0.5">{member.gender || "未設定"}</p>
+                </div>
+                <div>
                   <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">役職</p>
                   <p className="text-sm font-medium mt-0.5">{member.role || "未設定"}</p>
                 </div>
