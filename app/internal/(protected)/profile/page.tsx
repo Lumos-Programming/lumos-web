@@ -2,8 +2,14 @@ import { auth } from "@/lib/auth"
 import { getMember } from "@/lib/members"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageHeader } from "@/components/page-header"
+import { BioSection, InterestsSection } from "@/components/member-detail-shared"
+import { SnsChipsSection } from "@/components/sns-chips"
+import { getRingColorClass } from "@/types/member"
+import type { Member } from "@/types/member"
 
 function formatBirthDate(d: string) {
   const parts = d.split("-")
@@ -17,97 +23,140 @@ export default async function ProfilePage() {
 
   const member = await getMember(session.user.id)
 
+  const avatarUrl = member?.faceImage
+    || (member?.discordAvatar?.startsWith("http")
+      ? member.discordAvatar
+      : member?.discordAvatar
+        ? `https://cdn.discordapp.com/avatars/${session.user.id}/${member.discordAvatar}.png`
+        : "/placeholder.svg")
+
+  const displayName = member?.nickname || member?.discordUsername || "未設定"
+  const ringClass = getRingColorClass(member?.ringColor)
+
+  const social: Member["social"] = member ? {
+    github: member.github ? `https://github.com/${member.github}` : undefined,
+    x: member.x ? `https://x.com/${member.x}` : undefined,
+    discord: member.discordUsername || undefined,
+    linkedin: member.linkedin || undefined,
+  } : undefined
+
   return (
-    <div className="min-h-screen bg-purple-50 dark:bg-gradient-to-br dark:from-black dark:to-purple-900">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">プロフィール</h1>
-          <div className="flex gap-2">
-            <Button asChild variant="outline">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+      <PageHeader
+        title="プロフィール"
+        actions={
+          <>
+            <Button asChild variant="outline" size="sm">
               <Link href="/internal/settings">SNS連携設定</Link>
             </Button>
-            <Button asChild>
-              <Link href="/internal/profile/edit">プロフィールを編集</Link>
+            <Button asChild size="sm">
+              <Link href="/internal/profile/edit">編集</Link>
             </Button>
-          </div>
-        </div>
+          </>
+        }
+      />
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              {member?.discordAvatar && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={member.discordAvatar.startsWith("http") ? member.discordAvatar : `https://cdn.discordapp.com/avatars/${session.user.id}/${member.discordAvatar}.png`}
-                  alt="Discord avatar"
-                  className="w-16 h-16 rounded-full"
-                />
-              )}
-              <div>
-                <p className="text-lg font-semibold">
-                  {member?.nickname || member?.discordUsername || "未設定"}
-                </p>
-                <p className="text-sm text-gray-500">{member?.discordUsername}</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {member ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-500">学籍番号</p>
-                  <p className="text-sm">{member.studentId || "未設定"}</p>
+      {member ? (
+        <div className="space-y-4">
+          {/* Header Card */}
+          <Card className="overflow-hidden stagger-1 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
+            <div className="h-20 bg-gradient-primary" />
+            <CardContent className="relative px-6 pb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-10">
+                <div className={`w-20 h-20 relative rounded-full overflow-hidden ring-4 ring-card ${ringClass} shrink-0 shadow-lg`}>
+                  <Image src={avatarUrl} alt={displayName} fill className="object-cover" />
                 </div>
+                <div className="flex-1 pt-1 sm:pb-1">
+                  <h2 className="text-xl font-bold">{displayName}</h2>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {member.discordUsername && member.nickname && member.nickname !== member.discordUsername && (
+                      <span className="text-sm text-muted-foreground">{member.discordUsername}</span>
+                    )}
+                    {member.role && (
+                      <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                        {member.role}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Basic Info */}
+          <Card className="stagger-2 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">基本情報</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-6">
                 <div>
-                  <p className="text-xs text-gray-500">氏名</p>
-                  <p className="text-sm">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">氏名</p>
+                  <p className="text-sm font-medium mt-0.5">
                     {member.lastName || member.firstName
                       ? `${member.lastName} ${member.firstName}`
                       : "未設定"}
                   </p>
-                  {(member.lastNameRomaji || member.firstNameRomaji) && (
-                    <p className="text-xs text-gray-400">{member.lastNameRomaji} {member.firstNameRomaji}</p>
-                  )}
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">学部/学府</p>
-                  <p className="text-sm">{member.enrollments?.find(e => e.isCurrent)?.faculty || "未設定"}</p>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">学籍番号</p>
+                  <p className="text-sm font-medium mt-0.5">{member.studentId || "未設定"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">学年</p>
-                  <p className="text-sm">{member.yearByFiscal?.[String(new Date().getFullYear())] || "未設定"}</p>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">学部/学府</p>
+                  <p className="text-sm font-medium mt-0.5">{member.enrollments?.find(e => e.isCurrent)?.faculty || "未設定"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">誕生日</p>
-                  <p className="text-sm">{member.birthDate ? formatBirthDate(member.birthDate) : "未設定"}</p>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">学年</p>
+                  <p className="text-sm font-medium mt-0.5">{member.yearByFiscal?.[String(new Date().getFullYear())] || "未設定"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">役職</p>
-                  <p className="text-sm">{member.role || "未設定"}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <p className="text-xs text-gray-500">プロフィール文</p>
-                  <p className="text-sm whitespace-pre-wrap">{member.bio || "未設定"}</p>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">誕生日</p>
+                  <p className="text-sm font-medium mt-0.5">{member.birthDate ? formatBirthDate(member.birthDate) : "未設定"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">GitHub</p>
-                  <p className="text-sm">{member.github || "未連携"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">X</p>
-                  <p className="text-sm">{member.x || "未連携"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">LINE</p>
-                  <p className="text-sm">{member.line || "未連携"}</p>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">役職</p>
+                  <p className="text-sm font-medium mt-0.5">{member.role || "未設定"}</p>
                 </div>
               </div>
-            ) : (
-              <p className="text-gray-500">プロフィールが見つかりません。</p>
-            )}
+            </CardContent>
+          </Card>
+
+          {/* Bio */}
+          <Card className="stagger-3 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">プロフィール文</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BioSection bio={member.bio} />
+            </CardContent>
+          </Card>
+
+          {/* Interests */}
+          {member.interests && member.interests.length > 0 && (
+            <Card className="stagger-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
+              <CardContent className="pt-6">
+                <InterestsSection interests={member.interests} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* SNS */}
+          {social && (
+            <Card className="stagger-5 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards">
+              <CardContent className="pt-6">
+                <SnsChipsSection social={social} />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="py-16 text-center">
+            <p className="text-muted-foreground">プロフィールが見つかりません。</p>
           </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   )
 }
