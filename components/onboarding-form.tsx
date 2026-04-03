@@ -143,6 +143,7 @@ export default function OnboardingForm() {
             firstNameRomaji: data.firstNameRomaji ?? "",
             studentId: data.studentId ?? "",
             birthDate: data.birthDate ?? "",
+            gender: data.gender ?? "",
             nickname: data.nickname ?? "",
             memberType: data.memberType || cache.memberType || "",
             schoolYear: data.yearByFiscal?.[String(new Date().getFullYear())] || cache.schoolYear || "",
@@ -269,6 +270,7 @@ export default function OnboardingForm() {
           firstNameRomaji: data.firstNameRomaji,
           nickname: data.nickname,
           birthDate: data.birthDate,
+          gender: data.gender,
           bio: data.bio,
           visibility: {
             studentId: "private",
@@ -278,6 +280,7 @@ export default function OnboardingForm() {
             faculty: "public",
             currentOrg: "public",
             birthDate: "internal",
+            gender: "internal",
             bio: "public",
             line: "internal",
             github: "public",
@@ -321,6 +324,7 @@ export default function OnboardingForm() {
     } else if (!/^\d{2}[A-Z0-9]{2}\d{3}$/.test(form.studentId.trim())) {
       errors.studentId = "学籍番号の形式が正しくありません（例: 2164078 / 24HJ078）"
     }
+    if (!form.gender) errors.gender = "性別を選択してください"
     setStep1Errors(errors)
     if (Object.keys(errors).length > 0) return
 
@@ -376,6 +380,7 @@ export default function OnboardingForm() {
             faculty: "public",
             currentOrg: "public",
             birthDate: "internal",
+            gender: "internal",
             bio: "public",
             line: "internal",
             github: "public",
@@ -458,10 +463,12 @@ export default function OnboardingForm() {
             faculty: visibility.faculty,
             currentOrg: visibility.currentOrg,
             birthDate: visibility.birthDate,
+            gender: visibility.gender,
             bio: visibility.bio,
             line: visibility.line,
             github: visibility.github,
             x: visibility.x,
+            linkedin: visibility.linkedin,
             discord: visibility.discord,
           },
         }),
@@ -665,6 +672,7 @@ export default function OnboardingForm() {
           firstNameRomaji: form.firstNameRomaji,
           nickname: form.nickname,
           birthDate: form.birthDate,
+          gender: form.gender,
           bio: form.bio,
           interests: form.interests,
           topInterests: form.topInterests,
@@ -679,10 +687,12 @@ export default function OnboardingForm() {
             faculty: visibility.faculty,
             currentOrg: visibility.currentOrg,
             birthDate: visibility.birthDate,
+            gender: visibility.gender,
             bio: visibility.bio,
             line: visibility.line,
             github: visibility.github,
             x: visibility.x,
+            linkedin: visibility.linkedin,
             discord: visibility.discord,
           },
         }),
