@@ -235,10 +235,18 @@
   animation: liquid-pop 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Sidebar positioning under fixed header */
+/* Hide public header & footer when viewing internal pages */
+body:has(.internal-area) header.fixed {
+  display: none !important;
+}
+body:has(.internal-area) footer.bg-gradient-primary {
+  display: none !important;
+}
+
+/* Sidebar positioning (full viewport height) */
 [data-sidebar="sidebar"] {
-  top: 5rem;
-  height: calc(100svh - 5rem);
+  top: 0;
+  height: 100svh;
 }
 
 /* Stagger animation delays */

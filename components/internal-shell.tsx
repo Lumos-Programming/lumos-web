@@ -13,6 +13,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { VersionInfo } from "@/components/version-info"
 
 const PAGE_TITLES: Record<string, string> = {
   "/internal": "ダッシュボード",
@@ -68,8 +69,18 @@ export function InternalShell({ children, userName, userImage, memberNickname, m
             </BreadcrumbList>
           </Breadcrumb>
         </header>
-        <div className="flex-1 overflow-auto">
-          {children}
+        <div className="flex-1 overflow-auto flex flex-col">
+          <div className="flex-1">
+            {children}
+          </div>
+          <footer className="border-t py-4 px-4 mt-auto">
+            <p className="text-xs text-muted-foreground/60 text-center">
+              &copy; {new Date().getFullYear()} Lumos — 横浜国立大学プログラミングサークル
+            </p>
+            <div className="mt-1">
+              <VersionInfo />
+            </div>
+          </footer>
         </div>
       </SidebarInset>
     </SidebarProvider>
