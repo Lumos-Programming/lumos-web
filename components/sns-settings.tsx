@@ -161,7 +161,7 @@ export default function SnsSettings({
   const [xId, setXId] = useState(initialXId)
   const [line, setLine] = useState(initialLine)
   const [lineId, setLineId] = useState(initialLineId)
-  const [linkedin, setLinkedin] = useState(initialLinkedin)
+  const [, setLinkedin] = useState(initialLinkedin)
   const [linkedinId, setLinkedinId] = useState(initialLinkedinId)
   const [linkedinDisplayName, setLinkedinDisplayName] = useState(initialLinkedinDisplayName)
 
