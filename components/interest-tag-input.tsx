@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { useState, useRef, useCallback, useMemo } from "react"
 import { X, Star, Plus, Check } from "lucide-react"
 import {
   Command,
