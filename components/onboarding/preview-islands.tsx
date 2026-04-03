@@ -2,7 +2,7 @@
 
 import type {Dispatch, SetStateAction} from "react"
 import type {RingColorKey} from "@/types/member"
-import type {SnsEntry} from "@/components/member-tile-preview"
+import type {SnsEntry} from "@/components/sns-chips"
 import {
   TilePreviewGrid,
   DetailPreviewPanel,
