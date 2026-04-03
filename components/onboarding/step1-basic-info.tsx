@@ -137,12 +137,17 @@ export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, subm
         </div>
 
         <div className="space-y-1.5 animate-[fadeInUp_300ms_210ms_ease_both]">
-          <Label htmlFor="gender">性別</Label>
+          <Label htmlFor="gender">
+            性別 <span className="text-red-500">*</span>
+          </Label>
           <Select
             value={form.gender}
-            onValueChange={(v) => setForm((f) => ({...f, gender: v}))}
+            onValueChange={(v) => {
+              setForm((f) => ({...f, gender: v}))
+              if (step1Errors.gender) setStep1Errors((p) => ({...p, gender: undefined}))
+            }}
           >
-            <SelectTrigger id="gender" className="w-full">
+            <SelectTrigger id="gender" className={`w-full ${step1Errors.gender ? "border-red-400" : ""}`}>
               <SelectValue placeholder="選択してください" />
             </SelectTrigger>
             <SelectContent>
@@ -151,6 +156,7 @@ export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, subm
               ))}
             </SelectContent>
           </Select>
+          {step1Errors.gender && <p className="text-xs text-red-500">{step1Errors.gender}</p>}
         </div>
 
         <div className="space-y-1.5 animate-[fadeInUp_300ms_240ms_ease_both]">
