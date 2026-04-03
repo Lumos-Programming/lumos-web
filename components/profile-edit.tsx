@@ -9,11 +9,10 @@ import { Label } from "@/components/ui/label"
 import { MarkdownEditor } from "@/components/markdown-editor"
 import { VisibilityToggle } from "@/components/ui/visibility-toggle"
 import { toast } from "@/hooks/use-toast"
-import { cropAndResizeImage } from "@/lib/image-crop"
+import { cropAndResizeImage, resizeImage } from "@/lib/image-crop"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import Link from "next/link"
-import { BioSection } from "@/components/member-detail-shared"
 import type { Profile, VisibilityLevel } from "@/types/profile"
 import { DEFAULT_RING_COLOR, getRingColorClass } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
@@ -22,12 +21,6 @@ import { MemberPreviewToggle } from "@/components/member-tile-preview"
 import type { SnsEntry } from "@/components/member-tile-preview"
 import { LiquidSplashEffect } from "@/components/liquid-splash-effect"
 import { InterestTagInput } from "@/components/interest-tag-input"
-
-function formatBirthDate(d: string) {
-  const parts = d.split("-")
-  if (parts.length >= 3) return `${parseInt(parts[1])}月${parseInt(parts[2])}日`
-  return d
-}
 
 const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "year" | "skills" | "enrollments">, string>> = {
   studentId: "学籍番号",
@@ -97,7 +90,7 @@ const DEFAULT_PROFILE: Profile = {
 const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "bio", "discord", "line", "github", "x", "linkedin"] as const
 
 export default function ProfileEdit() {
-  const [isEditing, setIsEditing] = useState(true)
+  const [showPreview, setShowPreview] = useState(false)
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE)
   const [allowPublic, setAllowPublic] = useState(true)
   const [loading, setLoading] = useState(true)
@@ -127,7 +120,10 @@ export default function ProfileEdit() {
   const [currentOrg, setCurrentOrg] = useState("")
   const [interests, setInterests] = useState<string[]>([])
   const [topInterests, setTopInterests] = useState<string[]>([])
+  const [bannerImageUrl, setBannerImageUrl] = useState("")
+  const [bannerUploading, setBannerUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const bannerFileInputRef = useRef<HTMLInputElement>(null)
   const initialSnapshot = useRef<string>("")
 
   useEffect(() => {
@@ -172,6 +168,7 @@ export default function ProfileEdit() {
           if (data.linkedin) setLinkedinUsername(data.linkedin)
           if (data.linkedinDisplayName) setLinkedinVanity(data.linkedinDisplayName)
           if (data.faceImage) setFaceImageUrl(data.faceImage)
+          if (data.bannerImage) setBannerImageUrl(data.bannerImage)
           if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
           if (data.ringColor) setRingColor(data.ringColor)
           if (data.memberType) setMemberType(data.memberType)
@@ -289,6 +286,75 @@ export default function ProfileEdit() {
     }
   }, [cropImageSrc, croppedAreaPixels])
 
+  const handleBannerFileSelect = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ""
+
+    setBannerUploading(true)
+    try {
+      const reader = new FileReader()
+      const src = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+
+      const blob = await resizeImage(src, { maxWidth: 1200 })
+      const formData = new FormData()
+      formData.append("image", blob, "banner.webp")
+      formData.append("type", "banner")
+      const res = await fetch("/api/profile/image", { method: "POST", body: formData })
+      if (res.ok) {
+        const { url } = await res.json()
+        setBannerImageUrl(url)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast({
+          variant: "destructive",
+          title: "バナー画像のアップロードに失敗しました",
+          description: data.error || "しばらく経ってから再度お試しください。",
+        })
+      }
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "バナー画像のアップロードに失敗しました",
+        description: "ネットワークエラーが発生しました。接続を確認して再度お試しください。",
+      })
+    } finally {
+      setBannerUploading(false)
+    }
+  }, [])
+
+  const handleBannerRemove = useCallback(async () => {
+    setBannerUploading(true)
+    try {
+      const res = await fetch("/api/profile/image", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "banner" }),
+      })
+      if (res.ok) {
+        setBannerImageUrl("")
+      } else {
+        toast({
+          variant: "destructive",
+          title: "バナー画像の削除に失敗しました",
+          description: "しばらく経ってから再度お試しください。",
+        })
+      }
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "バナー画像の削除に失敗しました",
+        description: "ネットワークエラーが発生しました。接続を確認して再度お試しください。",
+      })
+    } finally {
+      setBannerUploading(false)
+    }
+  }, [])
+
   const resolveAvatar = useCallback((id: string, avatar: string): string => {
     if (!avatar) return "/placeholder.svg"
     if (avatar.startsWith("http")) return avatar
@@ -354,8 +420,7 @@ export default function ProfileEdit() {
 
     let image: string
     let hasFace = true
-    const pa = primaryAvatar
-    switch (pa) {
+    switch (primaryAvatar) {
       case "face":
         if (faceImageUrl) { image = faceImageUrl } else { image = "/assets/avatar-placeholder.svg"; hasFace = false }
         break
@@ -398,48 +463,17 @@ export default function ProfileEdit() {
 
   return (
     <>
-      {/* スライドトグル */}
-      <div className="flex justify-center mb-6">
-        <div className="flex bg-gray-200 rounded-full p-1">
-          <button
-            onClick={() => setIsEditing(true)}
-            className={`px-4 py-2 rounded-full ${isEditing ? "bg-purple-600 text-white" : "text-gray-700"}`}
-          >
-            編集モード
-          </button>
-          <button
-            onClick={() => setIsEditing(false)}
-            className={`px-4 py-2 rounded-full ${!isEditing ? "bg-purple-600 text-white" : "text-gray-700"}`}
-          >
-            プレビューモード
-          </button>
-        </div>
-      </div>
-
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-semibold">
-              {isEditing ? "編集モード" : "プレビューモード"}
-            </div>
-            {isEditing && (
-              <Button onClick={handlePublish} variant="default">
-                保存
-              </Button>
-            )}
+            <div className="text-2xl font-semibold">プロフィール編集</div>
+            <Button onClick={handlePublish} variant="default">
+              保存
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* 表示プレビュー */}
-          {isEditing && (
-            <MemberPreviewToggle
-              internalData={{ ...internalPreview, ringColor, memberType, currentOrg, role, year, bio: profile.bio, sns: internalSns, topInterests, interests }}
-              externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: externalSns, topInterests, interests }}
-              allowPublic={allowPublic}
-            />
-          )}
           {/* プロフィール画像セクション */}
-          {isEditing && (
             <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
               <Label className="text-base font-semibold">プロフィール画像</Label>
               <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -536,9 +570,55 @@ export default function ProfileEdit() {
 
               <RingColorPicker value={ringColor} onChange={setRingColor} />
             </div>
-          )}
 
-          {isEditing && (
+          {/* バナー画像セクション */}
+            <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+              <Label className="text-base font-semibold">バナー画像</Label>
+              <p className="text-xs text-muted-foreground">プロフィールカード上部に表示される背景画像です。未設定の場合はグラデーションが表示されます。</p>
+              <div className="relative h-28 rounded-xl overflow-hidden">
+                {bannerImageUrl ? (
+                  <Image
+                    src={bannerImageUrl}
+                    alt="バナー画像"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-primary" />
+                )}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  ref={bannerFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleBannerFileSelect}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => bannerFileInputRef.current?.click()}
+                  disabled={bannerUploading}
+                >
+                  {bannerUploading ? "アップロード中..." : "画像を選択"}
+                </Button>
+                {bannerImageUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBannerRemove}
+                    disabled={bannerUploading}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/40"
+                  >
+                    削除
+                  </Button>
+                )}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label className="text-base font-semibold">興味分野</Label>
               <InterestTagInput
@@ -548,10 +628,7 @@ export default function ProfileEdit() {
                 onTopInterestsChange={setTopInterests}
               />
             </div>
-          )}
 
-          {isEditing ? (
-            <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {PROFILE_FIELDS.map((key) => {
                 const isSns = SNS_FIELDS.has(key)
@@ -735,45 +812,56 @@ export default function ProfileEdit() {
                   )
                 })}
               </div>
-            </div>
-            </>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {PROFILE_FIELDS.map((key) => {
-                if (SNS_FIELDS.has(key)) return null
-                if (key === "lastNameRomaji" || key === "firstNameRomaji") return null
-                const visLevel = profile.visibility[key as keyof typeof profile.visibility]
-                if (!visLevel || visLevel === "private") return null
-                if (key === "firstName") return null
-                return (
-                  <div
-                    key={key}
-                    className={key === "bio" ? "md:col-span-2 space-y-2" : "space-y-2"}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Label>{key === "lastName" ? "氏名" : FIELD_LABELS[key]}</Label>
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${visLevel === "public" ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400" : "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400"}`}>
-                        {visLevel === "public" ? "外部公開" : "内部のみ"}
-                      </span>
-                    </div>
-                    {key === "bio" ? (
-                      <BioSection bio={profile.bio} />
-                    ) : key === "lastName" ? (
-                      <p className="text-sm mt-1 whitespace-nowrap">
-                        {profile.lastName} {profile.firstName}
-                      </p>
-                    ) : key === "birthDate" ? (
-                      <p className="text-sm mt-1">{profile.birthDate ? formatBirthDate(profile.birthDate) : ""}</p>
-                    ) : (
-                      <p className="text-sm mt-1">{profile[key] as string ?? ""}</p>
-                    )}
+
+              {/* PC用プレビュー（折りたたみ） */}
+              <div className="hidden sm:block">
+                <button
+                  onClick={() => setShowPreview(p => !p)}
+                  className="text-sm text-purple-600 dark:text-purple-400 hover:underline font-medium"
+                >
+                  {showPreview ? "▼ プレビューを閉じる" : "▶ プレビューを見る"}
+                </button>
+                {showPreview && (
+                  <div className="mt-3">
+                    <MemberPreviewToggle
+                      internalData={{ ...internalPreview, ringColor, memberType, currentOrg, role, year, bio: profile.bio, sns: internalSns, topInterests, interests }}
+                      externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: externalSns, topInterests, interests }}
+                      allowPublic={allowPublic}
+                    />
                   </div>
-                )
-              })}
+                )}
+              </div>
             </div>
-          )}
         </CardContent>
       </Card>
+
+      {/* スマホ用フローティングプレビューボタン */}
+      <button
+        onClick={() => setShowPreview(p => !p)}
+        className="sm:hidden fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center hover:bg-purple-700 active:scale-95 transition-all"
+        aria-label="プレビュー切り替え"
+      >
+        {showPreview ? (
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        )}
+      </button>
+
+      {/* スマホ用プレビューオーバーレイ */}
+      {showPreview && (
+        <div className="sm:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-sm overflow-y-auto p-4 pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">プレビュー</h3>
+            <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)}>閉じる</Button>
+          </div>
+          <MemberPreviewToggle
+            internalData={{ ...internalPreview, ringColor, memberType, currentOrg, role, year, bio: profile.bio, sns: internalSns, topInterests, interests }}
+            externalData={{ ...externalPreview, ringColor, memberType, currentOrg, bio: profile.bio, sns: externalSns, topInterests, interests }}
+            allowPublic={allowPublic}
+          />
+        </div>
+      )}
     </>
   )
 }
