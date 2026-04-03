@@ -60,8 +60,18 @@ export default async function ProfilePage() {
         <div className="space-y-4">
           {/* Header Card */}
           <Card className="stagger-1 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-backwards overflow-visible">
-            <div className="relative h-28 bg-gradient-primary rounded-t-xl">
-              <div className="absolute -bottom-10 left-6">
+            <div className="relative">
+              <div className="relative h-28 bg-gradient-primary rounded-t-xl overflow-hidden">
+                {member.bannerImage && (
+                  <Image
+                    src={member.bannerImage}
+                    alt="バナー"
+                    fill
+                    className="object-cover"
+                  />
+                )}
+              </div>
+              <div className="absolute -bottom-10 left-6 z-10">
                 <div className={`w-20 h-20 relative rounded-full overflow-hidden ring-4 ring-card ${ringClass} shrink-0 shadow-lg bg-card`}>
                   <Image src={avatarUrl} alt={displayName} fill className="object-cover" />
                 </div>
