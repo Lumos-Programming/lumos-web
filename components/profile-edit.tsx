@@ -47,6 +47,22 @@ const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "
 
 const SNS_FIELDS = new Set(["github", "x", "line", "discord"])
 
+const VISIBILITY_LABELS: Record<string, string> = {
+  lastName: "姓・名",
+  faculty: "学部/学府",
+  currentOrg: "現在の所属",
+  birthDate: "誕生日",
+  nickname: "ニックネーム",
+  bio: "プロフィール文",
+  discord: "Discord",
+  line: "LINE",
+  github: "GitHub",
+  x: "X (Twitter)",
+  linkedin: "LinkedIn",
+}
+
+const VISIBILITY_DISPLAY_KEYS = ["lastName", "faculty", "currentOrg", "birthDate", "nickname", "bio", "discord", "line", "github", "x", "linkedin"] as const
+
 const PROFILE_FIELDS = Object.keys(FIELD_LABELS) as Array<keyof Omit<Profile, "visibility" | "role" | "year" | "skills" | "enrollments">>
 
 const DEFAULT_PROFILE: Profile = {
@@ -384,66 +400,6 @@ export default function ProfileEdit() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isEditing && (
-            <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
-              <div className="flex items-start gap-2">
-                <span className="inline-block px-1.5 py-0.5 rounded-full bg-gray-500 text-white font-medium flex-shrink-0">非公開</span>
-                <span>自分だけが閲覧できます。他のメンバーにも表示されません。</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="inline-block px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-medium flex-shrink-0">内部のみ</span>
-                <span>Lumosメンバーだけが閲覧できます。外部向けHPには表示されません。</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="inline-block px-1.5 py-0.5 rounded-full bg-green-600 text-white font-medium flex-shrink-0">外部公開</span>
-                <span>LumosのHP（公開サイト）にも表示されます。誰でも閲覧できます。</span>
-              </div>
-            </div>
-          )}
-          {isEditing && (
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => {
-                const next = !allowPublic
-                setAllowPublic(next)
-                if (!next) {
-                  setProfile((prev) => {
-                    const vis = { ...prev.visibility }
-                    for (const k of VISIBILITY_FIELD_KEYS) {
-                      if (vis[k] === "public") vis[k] = "internal"
-                    }
-                    return { ...prev, visibility: vis }
-                  })
-                }
-              }}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.currentTarget.click() }}
-              className={[
-                "w-full flex items-center justify-between rounded-xl border-2 px-4 py-3 transition-all duration-200 cursor-pointer select-none",
-                allowPublic
-                  ? "border-green-400 bg-green-50 dark:bg-green-950/40 dark:border-green-700"
-                  : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50",
-              ].join(" ")}
-            >
-              <div>
-                <p className={["font-semibold text-sm", allowPublic ? "text-green-800 dark:text-green-300" : "text-gray-700 dark:text-gray-300"].join(" ")}>
-                  HPにメンバー情報を掲載する
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {allowPublic ? "外部公開が選択できます" : "外部公開は無効になります（ログインメンバーのみ閲覧可）"}
-                </p>
-              </div>
-              <div className={[
-                "w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 relative",
-                allowPublic ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600",
-              ].join(" ")}>
-                <span className={[
-                  "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200",
-                  allowPublic ? "translate-x-5" : "translate-x-0.5",
-                ].join(" ")} />
-              </div>
-            </div>
-          )}
           {/* 表示プレビュー */}
           {isEditing && (
             <MemberPreviewToggle
@@ -565,6 +521,7 @@ export default function ProfileEdit() {
           )}
 
           {isEditing ? (
+            <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {PROFILE_FIELDS.map((key) => {
                 const isSns = SNS_FIELDS.has(key)
@@ -626,37 +583,120 @@ export default function ProfileEdit() {
                       />
                     )}
 
-                    {key === "lastNameRomaji" || key === "firstNameRomaji" ? (
+                    {(key === "lastNameRomaji" || key === "firstNameRomaji") && (
                       <p className="text-xs text-gray-400">イニシャル表示に使用されます</p>
-                    ) : key === "studentId" ? (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                          非公開（固定）
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-gray-500 mr-1">公開範囲</span>
-                        <VisibilityToggle
-                          value={profile.visibility[key as keyof typeof profile.visibility] ?? "private"}
-                          onChange={(v: VisibilityLevel) =>
-                            setProfile({
-                              ...profile,
-                              visibility: {
-                                ...profile.visibility,
-                                [key]: v,
-                              },
-                            })
-                          }
-                          max={key === "line" || key === "birthDate" || !allowPublic ? "internal" : undefined}
-                          min={key === "line" || key === "discord" ? "internal" : undefined}
-                        />
-                      </div>
+                    )}
+                    {key === "studentId" && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                        非公開（固定）
+                      </span>
                     )}
                   </div>
                 )
               })}
             </div>
+
+            {/* 公開設定セクション（一箇所にまとめる） */}
+            <div className="rounded-xl border-2 border-purple-200 dark:border-purple-800/60 p-4 space-y-4 mt-2">
+              <div>
+                <h3 className="text-base font-semibold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">公開設定</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">各情報を誰に公開するか設定してください。</p>
+              </div>
+
+              {/* 公開レベルの説明 */}
+              <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+                <div className="flex items-start gap-2">
+                  <span className="inline-block px-1.5 py-0.5 rounded-full bg-gray-500 text-white font-medium flex-shrink-0">非公開</span>
+                  <span>自分だけが閲覧できます。他のメンバーにも表示されません。</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="inline-block px-1.5 py-0.5 rounded-full bg-indigo-600 text-white font-medium flex-shrink-0">内部のみ</span>
+                  <span>Lumosメンバーだけが閲覧できます。外部向けHPには表示されません。</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="inline-block px-1.5 py-0.5 rounded-full bg-green-600 text-white font-medium flex-shrink-0">外部公開</span>
+                  <span>LumosのHP（公開サイト）にも表示されます。誰でも閲覧できます。</span>
+                </div>
+              </div>
+
+              {/* HP掲載トグル */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  const next = !allowPublic
+                  setAllowPublic(next)
+                  if (!next) {
+                    setProfile((prev) => {
+                      const vis = { ...prev.visibility }
+                      for (const k of VISIBILITY_FIELD_KEYS) {
+                        if (vis[k] === "public") vis[k] = "internal"
+                      }
+                      return { ...prev, visibility: vis }
+                    })
+                  }
+                }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.currentTarget.click() }}
+                className={[
+                  "w-full flex items-center justify-between gap-3 rounded-xl border-2 px-3 sm:px-4 py-3 transition-all duration-200 cursor-pointer select-none",
+                  allowPublic
+                    ? "border-green-400 bg-green-50 dark:bg-green-950/40 dark:border-green-700"
+                    : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50",
+                ].join(" ")}
+              >
+                <div className="min-w-0">
+                  <p className={["font-semibold text-sm", allowPublic ? "text-green-800 dark:text-green-300" : "text-gray-700 dark:text-gray-300"].join(" ")}>
+                    HPにメンバー情報を掲載する
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {allowPublic ? "外部公開が選択できます" : "外部公開は無効になります（ログインメンバーのみ閲覧可）"}
+                  </p>
+                </div>
+                <div className={[
+                  "w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 relative",
+                  allowPublic ? "bg-gradient-to-r from-purple-600 to-indigo-600" : "bg-gray-300 dark:bg-gray-600",
+                ].join(" ")}>
+                  <span className={[
+                    "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200",
+                    allowPublic ? "translate-x-5" : "translate-x-0.5",
+                  ].join(" ")} />
+                </div>
+              </div>
+
+              {/* フィールド別の公開設定リスト */}
+              <div className="space-y-1">
+                <div className="flex justify-end gap-6 text-xs text-gray-400 dark:text-gray-500 pr-1">
+                  <span>非公開</span>
+                  <span>内部のみ</span>
+                  <span className={allowPublic ? "" : "opacity-30"}>外部公開</span>
+                </div>
+                {VISIBILITY_DISPLAY_KEYS.map((key) => {
+                  if (key === "currentOrg" && memberType !== "卒業生") return null
+                  return (
+                    <div key={key} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {VISIBILITY_LABELS[key]}
+                      </span>
+                      <VisibilityToggle
+                        value={profile.visibility[key as keyof typeof profile.visibility] ?? "private"}
+                        onChange={(v: VisibilityLevel) =>
+                          setProfile({
+                            ...profile,
+                            visibility: {
+                              ...profile.visibility,
+                              [key]: v,
+                            },
+                          })
+                        }
+                        max={key === "line" || key === "birthDate" || !allowPublic ? "internal" : undefined}
+                        min={key === "line" || key === "discord" ? "internal" : undefined}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            </>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {PROFILE_FIELDS.map((key) => {
