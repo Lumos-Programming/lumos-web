@@ -128,6 +128,7 @@ export default function ProfileEdit() {
   const [interests, setInterests] = useState<string[]>([])
   const [topInterests, setTopInterests] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const initialSnapshot = useRef<string>("")
 
   useEffect(() => {
     fetch("/api/profile")
@@ -177,7 +178,7 @@ export default function ProfileEdit() {
           if (data.currentOrg) setCurrentOrg(data.currentOrg)
           if (data.interests) setInterests(data.interests)
           if (data.topInterests) setTopInterests(data.topInterests)
-          setProfile({
+          const loadedProfile: Profile = {
             studentId: data.studentId ?? "",
             nickname: data.nickname ?? "",
             lastName: data.lastName ?? "",
@@ -192,12 +193,40 @@ export default function ProfileEdit() {
             github: data.github ?? "",
             x: data.x ?? "",
             visibility: vis,
+          }
+          setProfile(loadedProfile)
+          initialSnapshot.current = JSON.stringify({
+            profile: loadedProfile,
+            allowPublic: typeof data.allowPublic === "boolean" ? data.allowPublic : !!(VISIBILITY_FIELD_KEYS.some((k) => vis[k] === "public")),
+            primaryAvatar: data.primaryAvatar ?? "face",
+            ringColor: data.ringColor ?? DEFAULT_RING_COLOR,
+            interests: data.interests ?? [],
+            topInterests: data.topInterests ?? [],
+            memberType: data.memberType ?? "",
+            currentOrg: data.currentOrg ?? "",
           })
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
+
+  const currentSnapshot = useMemo(() =>
+    JSON.stringify({ profile, allowPublic, primaryAvatar, ringColor, interests, topInterests, memberType, currentOrg }),
+    [profile, allowPublic, primaryAvatar, ringColor, interests, topInterests, memberType, currentOrg]
+  )
+
+  const isDirty = !loading && initialSnapshot.current !== "" && currentSnapshot !== initialSnapshot.current
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [isDirty])
 
   const handlePublish = async () => {
     try {
@@ -208,6 +237,7 @@ export default function ProfileEdit() {
       })
 
       if (response.ok) {
+        initialSnapshot.current = currentSnapshot
         alert("プロフィールが保存されました！")
       } else {
         alert("保存に失敗しました。もう一度お試しください。")
