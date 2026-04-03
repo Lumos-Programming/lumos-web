@@ -105,8 +105,8 @@ export function Step5Visibility({form, allowPublic, setAllowPublic, visibility, 
             if (key === "currentOrg" && form.memberType !== "卒業生") return null
             return (
               <div key={key}
-                   className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                   className="flex items-center justify-between gap-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0 shrink-1">
                   {VISIBILITY_LABELS[key]}
                 </span>
                 <VisibilityToggle
