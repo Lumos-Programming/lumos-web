@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { MarkdownEditor } from "@/components/markdown-editor"
 import { VisibilityToggle } from "@/components/ui/visibility-toggle"
 import { toast } from "@/hooks/use-toast"
-import { cropAndResizeImage, resizeImage } from "@/lib/image-crop"
+import { cropAndResizeImage } from "@/lib/image-crop"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import Link from "next/link"
@@ -122,6 +122,10 @@ export default function ProfileEdit() {
   const [topInterests, setTopInterests] = useState<string[]>([])
   const [bannerImageUrl, setBannerImageUrl] = useState("")
   const [bannerUploading, setBannerUploading] = useState(false)
+  const [bannerCropSrc, setBannerCropSrc] = useState<string | null>(null)
+  const [bannerCrop, setBannerCrop] = useState({ x: 0, y: 0 })
+  const [bannerZoom, setBannerZoom] = useState(1)
+  const [bannerCroppedArea, setBannerCroppedArea] = useState<Area | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const bannerFileInputRef = useRef<HTMLInputElement>(null)
   const initialSnapshot = useRef<string>("")
@@ -286,21 +290,24 @@ export default function ProfileEdit() {
     }
   }, [cropImageSrc, croppedAreaPixels])
 
-  const handleBannerFileSelect = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleBannerFileSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ""
+    const reader = new FileReader()
+    reader.onload = () => {
+      setBannerCropSrc(reader.result as string)
+      setBannerCrop({ x: 0, y: 0 })
+      setBannerZoom(1)
+    }
+    reader.readAsDataURL(file)
+  }, [])
 
+  const handleBannerCropConfirm = useCallback(async () => {
+    if (!bannerCropSrc || !bannerCroppedArea) return
     setBannerUploading(true)
     try {
-      const reader = new FileReader()
-      const src = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
-
-      const blob = await resizeImage(src, { maxWidth: 1200 })
+      const blob = await cropAndResizeImage(bannerCropSrc, bannerCroppedArea, { maxSize: 1200 })
       const formData = new FormData()
       formData.append("image", blob, "banner.webp")
       formData.append("type", "banner")
@@ -308,6 +315,7 @@ export default function ProfileEdit() {
       if (res.ok) {
         const { url } = await res.json()
         setBannerImageUrl(url)
+        setBannerCropSrc(null)
       } else {
         const data = await res.json().catch(() => ({}))
         toast({
@@ -325,7 +333,7 @@ export default function ProfileEdit() {
     } finally {
       setBannerUploading(false)
     }
-  }, [])
+  }, [bannerCropSrc, bannerCroppedArea])
 
   const handleBannerRemove = useCallback(async () => {
     setBannerUploading(true)
@@ -617,6 +625,31 @@ export default function ProfileEdit() {
                   </Button>
                 )}
               </div>
+
+              {/* Banner Crop UI */}
+              {bannerCropSrc && (
+                <div className="space-y-3">
+                  <div className="relative w-full" style={{ height: 200 }}>
+                    <Cropper
+                      image={bannerCropSrc}
+                      crop={bannerCrop}
+                      zoom={bannerZoom}
+                      aspect={16 / 5}
+                      onCropChange={setBannerCrop}
+                      onZoomChange={setBannerZoom}
+                      onCropComplete={(_, area) => setBannerCroppedArea(area)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground flex-shrink-0">ズーム</span>
+                    <input type="range" min={1} max={3} step={0.1} value={bannerZoom} onChange={(e) => setBannerZoom(Number(e.target.value))} className="flex-1" />
+                  </div>
+                  <div className="flex gap-2 justify-center">
+                    <Button variant="ghost" size="sm" onClick={() => setBannerCropSrc(null)}>キャンセル</Button>
+                    <Button size="sm" onClick={handleBannerCropConfirm} disabled={bannerUploading}>{bannerUploading ? "アップロード中..." : "切り抜き"}</Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
