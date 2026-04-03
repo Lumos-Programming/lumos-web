@@ -15,11 +15,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const NAV_ITEMS = [
-  { href: "/internal", icon: LayoutDashboard, label: "ダッシュボード", exact: true },
+  { href: "/internal", icon: LayoutDashboard, label: "ホーム", exact: true },
   { href: "/internal/members", icon: Users, label: "メンバー" },
   { href: "/internal/events", icon: CalendarDays, label: "イベント" },
   { href: "/internal/profile", icon: UserCircle, label: "プロフィール" },
@@ -35,6 +36,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ userName, userImage, memberNickname, memberRole }: AppSidebarProps) {
   const pathname = usePathname()
+  const { setOpenMobile } = useSidebar()
 
   return (
     <Sidebar collapsible="icon">
@@ -70,7 +72,7 @@ export function AppSidebar({ userName, userImage, memberNickname, memberRole }: 
                       isActive={isActive}
                       tooltip={item.label}
                     >
-                      <Link href={item.href}>
+                      <Link href={item.href} onClick={() => setOpenMobile(false)}>
                         <item.icon />
                         <span>{item.label}</span>
                       </Link>
@@ -86,7 +88,7 @@ export function AppSidebar({ userName, userImage, memberNickname, memberRole }: 
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="サイトに戻る">
-              <Link href="/" className="text-sidebar-foreground/60 hover:text-sidebar-foreground">
+              <Link href="/" onClick={() => setOpenMobile(false)} className="text-sidebar-foreground/60 hover:text-sidebar-foreground">
                 <ExternalLink />
                 <span>サイトに戻る</span>
               </Link>

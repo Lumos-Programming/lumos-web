@@ -81,7 +81,7 @@ export default async function InternalPage() {
           <h1 className="text-2xl md:text-3xl font-bold mt-1 tracking-tight">
             {getGreeting()}、{displayName}さん
           </h1>
-          <p className="text-white/70 mt-2 text-sm">Lumos メンバーダッシュボード</p>
+          <p className="text-white/70 mt-2 text-sm">Lumos メンバー専用ポータル</p>
         </div>
       </div>
 
