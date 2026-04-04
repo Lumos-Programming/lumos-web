@@ -18,6 +18,7 @@ export interface FormData {
   enrollmentType: EnrollmentType | ""
   transferYear: string
   // 院生のみ：学部時代の情報
+  graduationYear: string    // 卒業年度（卒業生のみ）
   hasUndergrad: boolean | null   // null=未選択
   undergradFaculty: string
   undergradAdmissionYear: string
@@ -62,6 +63,7 @@ export const DEFAULT_FORM: FormData = {
   admissionYear: "",
   enrollmentType: "",
   transferYear: "",
+  graduationYear: "",
   hasUndergrad: null,
   undergradFaculty: "",
   undergradAdmissionYear: "",

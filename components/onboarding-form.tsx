@@ -5,6 +5,7 @@ import {useRouter, useSearchParams} from "next/navigation"
 import {toast} from "@/hooks/use-toast"
 import {cropAndResizeImage} from "@/lib/image-crop"
 import type {EnrollmentType} from "@/types/profile"
+import {GRADUATE_SCHOOLS} from "@/types/profile"
 import {DEFAULT_RING_COLOR} from "@/types/member"
 import type {RingColorKey} from "@/types/member"
 import type {SnsEntry} from "@/components/member-tile-preview"
@@ -117,7 +118,8 @@ export default function OnboardingForm() {
             faculty: string;
             admissionYear: string;
             enrollmentType: string;
-            transferYear?: string
+            transferYear?: string;
+            graduationYear?: string
           }
           const enrollments: EnrollmentEntry[] = data.enrollments ?? []
           const currentEnrollment = enrollments.find((e) => e.isCurrent)
@@ -151,6 +153,7 @@ export default function OnboardingForm() {
             admissionYear: currentEnrollment?.admissionYear || cache.admissionYear || "",
             enrollmentType: ((currentEnrollment?.enrollmentType || cache.enrollmentType || "") as EnrollmentType | ""),
             transferYear: currentEnrollment?.transferYear || cache.transferYear || "",
+            graduationYear: currentEnrollment?.graduationYear || cache.graduationYear || "",
             hasUndergrad: hasUndergrad ?? cache.hasUndergrad ?? null,
             undergradFaculty: undergradEnrollment?.faculty || cache.undergradFaculty || "",
             undergradAdmissionYear: undergradEnrollment?.admissionYear || cache.undergradAdmissionYear || "",
@@ -353,6 +356,7 @@ export default function OnboardingForm() {
         admissionYear: data.admissionYear,
         enrollmentType: data.enrollmentType || "入学",
         ...(data.transferYear ? {transferYear: data.transferYear} : {}),
+        ...(data.graduationYear ? {graduationYear: data.graduationYear} : {}),
         isCurrent: true,
       }] : []),
       ...((data.memberType === "院生" || data.memberType === "卒業生") && data.hasUndergrad && data.undergradFaculty ? [{
@@ -402,8 +406,11 @@ export default function OnboardingForm() {
     if (form.memberType && form.memberType !== "卒業生" && !form.schoolYear) errors.schoolYear = "学年を選択してください"
     if (!form.faculty) errors.faculty = "学部/学府を選択してください"
     if (!form.admissionYear) errors.admissionYear = "入学年度を選択してください"
-    // 院生・卒業生で hasUndergrad=true の場合
-    if ((form.memberType === "院生" || form.memberType === "卒業生") && form.hasUndergrad === true) {
+    if (form.memberType === "卒業生" && !form.graduationYear) errors.graduationYear = "卒業年度を選択してください"
+    // 院生、または卒業生かつ学府選択時で hasUndergrad=true の場合
+    const showUndergradSection = form.memberType === "院生" ||
+      (form.memberType === "卒業生" && (GRADUATE_SCHOOLS as readonly string[]).includes(form.faculty))
+    if (showUndergradSection && form.hasUndergrad === true) {
       if (!form.undergradFaculty) errors.undergradFaculty = "所属学部を選択してください"
       if (!form.undergradAdmissionYear) errors.undergradAdmissionYear = "入学年度を選択してください"
     }

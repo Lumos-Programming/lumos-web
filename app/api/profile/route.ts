@@ -84,6 +84,9 @@ export async function PUT(request: Request) {
         if (typeof entry.transferYear === "string" && entry.transferYear) {
           record.transferYear = entry.transferYear
         }
+        if (typeof entry.graduationYear === "string" && entry.graduationYear) {
+          record.graduationYear = entry.graduationYear
+        }
         return record
       })
     }

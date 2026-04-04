@@ -22,6 +22,7 @@ export interface EnrollmentRecord {
   admissionYear: string
   enrollmentType: EnrollmentType
   transferYear?: string   // 編入時のみ
+  graduationYear?: string // 卒業年度（卒業生のみ）
   isCurrent: boolean
 }
 

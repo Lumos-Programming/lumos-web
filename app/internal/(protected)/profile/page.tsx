@@ -148,6 +148,15 @@ export default async function ProfilePage() {
                   <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">役職</p>
                   <p className="text-sm font-medium mt-0.5">{member.role || "未設定"}</p>
                 </div>
+                {member.memberType === "卒業生" && (() => {
+                  const gradYear = member.enrollments?.find(e => e.isCurrent)?.graduationYear
+                  return gradYear ? (
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">卒業年度</p>
+                      <p className="text-sm font-medium mt-0.5">{gradYear}年度</p>
+                    </div>
+                  ) : null
+                })()}
                 {member.memberType === "卒業生" && (
                   <div>
                     <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">現在の所属</p>
