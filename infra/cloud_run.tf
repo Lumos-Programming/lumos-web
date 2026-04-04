@@ -53,6 +53,15 @@ resource "google_cloud_run_service" "web" {
 
         # --- secrets (per-environment) ---
         env {
+          name = "AUTH_SECRET"
+          value_from {
+            secret_key_ref {
+              name = google_secret_manager_secret.per_env["auth-secret-${each.key}"].secret_id
+              key  = "latest"
+            }
+          }
+        }
+        env {
           name = "AUTH_GITHUB_SECRET"
           value_from {
             secret_key_ref {

@@ -5,6 +5,7 @@
 # Secrets that exist per environment (dev / stg / prd)
 locals {
   per_env_secrets = [
+    "auth-secret",
     "github-oauth-secret",
     "x-oauth-secret",
     "line-oauth-secret",
