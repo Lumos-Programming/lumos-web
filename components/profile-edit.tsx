@@ -704,7 +704,7 @@ export default function ProfileEdit() {
                         value={profile.bio}
                         onChange={(val) => setProfile({ ...profile, bio: val })}
                         height={200}
-                        placeholder={"## 👋 こんにちは！\n\nコーヒーを燃料に動くタイプの人間です。\n\n**好きなこと**\n- 🖥️ Webアプリを作ること\n- 📚 技術書を積むこと（読むとは言ってない）\n\n> 「動くコードは正義」がモットーです。"}
+                        placeholder={"経営学部3年の山田です！\n\n**趣味**\n- カラオケ 🎤（ヒトカラも全然いく派）\n- 筋トレ 💪（最近ベンチプレス60kg達成しました）\n- Netflix（おすすめあったら教えてください！）\n\n最近友達とWeb開発や機械学習の勉強を始めました！いろいろ作ってみたいです、よろしくお願いします！"}
                       />
                     ) : key === "birthDate" ? (
                       <Input

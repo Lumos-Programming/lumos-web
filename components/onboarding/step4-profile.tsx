@@ -42,8 +42,8 @@ export function Step4Profile({form, setForm, submitting, onNext, onBack}: Step4P
           <MarkdownEditor
             value={form.bio}
             onChange={(val) => setForm((f) => ({...f, bio: val}))}
-            height={200}
-            placeholder={"## 👋 こんにちは！\n\nコーヒーを燃料に動くタイプの人間です。\n\n**好きなこと**\n- 🖥️ Webアプリを作ること（そして壊すこと）\n- 📚 技術書を積むこと（読むとは言ってない）\n- 🎮 深夜のゲーム（翌朝の後悔付き）\n\n> 「動くコードは正義」がモットーです。\n\nよろしくお願いします！"}
+            height={300}
+            placeholder={"経営学部3年の山田です！\n\n**趣味**\n- カラオケ 🎤（ヒトカラも全然いく派）\n- 筋トレ 💪（最近ベンチプレス60kg達成しました）\n- Netflix（おすすめあったら教えてください！）\n\n最近友達とWeb開発や機械学習の勉強を始めました！いろいろ作ってみたいです、よろしくお願いします！"}
           />
         </div>
 
