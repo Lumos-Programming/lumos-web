@@ -4,7 +4,7 @@ import type {Dispatch, SetStateAction} from "react"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
-import {MEMBER_TYPES, ENROLLMENT_TYPES, ADMISSION_YEARS, FACULTIES, getFacultyOptions} from "@/types/profile"
+import {MEMBER_TYPES, ENROLLMENT_TYPES, ADMISSION_YEARS, FACULTIES, GRADUATE_SCHOOLS, getFacultyOptions} from "@/types/profile"
 import type {FormData} from "./types"
 import {getSchoolYearOptions} from "./types"
 
@@ -43,6 +43,7 @@ export function Step2Enrollment({form, setFormStep2, step2Errors, setStep2Errors
                     memberType: type,
                     schoolYear: "",
                     faculty: "",
+                    graduationYear: "",
                     currentOrg: ""
                   }))
                   setStep2Errors((p) => ({...p, memberType: undefined, faculty: undefined}))
@@ -103,7 +104,19 @@ export function Step2Enrollment({form, setFormStep2, step2Errors, setStep2Errors
                 id="faculty"
                 value={form.faculty}
                 onChange={(e) => {
-                  setFormStep2((f) => ({...f, faculty: e.target.value}))
+                  const val = e.target.value
+                  setFormStep2((f) => {
+                    const updated = {...f, faculty: val}
+                    // 卒業生が学部を選んだ場合、学部在籍情報をリセット
+                    if (f.memberType === "卒業生" && !(GRADUATE_SCHOOLS as readonly string[]).includes(val)) {
+                      updated.hasUndergrad = null
+                      updated.undergradFaculty = ""
+                      updated.undergradAdmissionYear = ""
+                      updated.undergradEnrollmentType = ""
+                      updated.undergradTransferYear = ""
+                    }
+                    return updated
+                  })
                   if (step2Errors.faculty) setStep2Errors((p) => ({...p, faculty: undefined}))
                 }}
                 className={[
@@ -191,6 +204,30 @@ export function Step2Enrollment({form, setFormStep2, step2Errors, setStep2Errors
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* 卒業生のみ：卒業年度 */}
+        {form.memberType === "卒業生" && (
+          <div className="space-y-1.5 animate-[fadeInUp_300ms_ease_both]">
+            <Label>卒業年度 <span className="text-red-500">*</span></Label>
+            <select
+              value={form.graduationYear}
+              onChange={(e) => {
+                setFormStep2((f) => ({...f, graduationYear: e.target.value}))
+                if (step2Errors.graduationYear) setStep2Errors((p) => ({...p, graduationYear: undefined}))
+              }}
+              className={[
+                "block w-full border rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white dark:bg-gray-800 dark:text-gray-100",
+                step2Errors.graduationYear ? "border-red-400" : "border-input dark:border-gray-700",
+              ].join(" ")}
+            >
+              <option value="">年度を選択</option>
+              {ADMISSION_YEARS.map((y) => (
+                <option key={y} value={y}>{y}年度</option>
+              ))}
+            </select>
+            {step2Errors.graduationYear && <p className="text-xs text-red-500">{step2Errors.graduationYear}</p>}
           </div>
         )}
 
@@ -331,8 +368,8 @@ export function Step2Enrollment({form, setFormStep2, step2Errors, setStep2Errors
           </div>
         )}
 
-        {/* 卒業生のみ：学部在籍確認 + 学部時代の情報 */}
-        {form.memberType === "卒業生" && (
+        {/* 卒業生かつ学府卒の場合のみ：学部在籍確認 + 学部時代の情報 */}
+        {form.memberType === "卒業生" && (GRADUATE_SCHOOLS as readonly string[]).includes(form.faculty) && (
           <div
             className="space-y-4 animate-[fadeInUp_300ms_ease_both] border-t border-gray-100 dark:border-gray-800 pt-4 mt-2">
             <div className="space-y-1.5">
