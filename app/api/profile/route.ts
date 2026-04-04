@@ -100,9 +100,6 @@ export async function PUT(request: Request) {
     ) {
       data.yearByFiscal = body.yearByFiscal as Record<string, string>
     }
-    if (Array.isArray(body.skills) && body.skills.every((s: unknown) => typeof s === "string")) {
-      data.skills = body.skills
-    }
     const VALID_PRIMARY_AVATARS = ["face", "discord", "line", "default"] as const
     if (typeof body.primaryAvatar === "string" && (VALID_PRIMARY_AVATARS as readonly string[]).includes(body.primaryAvatar)) {
       data.primaryAvatar = body.primaryAvatar as typeof VALID_PRIMARY_AVATARS[number]

@@ -21,7 +21,6 @@ export interface MemberDocument {
   currentOrg?: string        // 卒業生の現在の所属
   birthDate?: string         // YYYY-MM-DD
   gender?: string
-  skills?: string[]
   github?: string
   githubId?: string
   githubAvatar?: string
@@ -260,7 +259,6 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
     department: v.faculty === 'public' ? currentFaculty : '',
     year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? '',
     bio: v.bio === 'public' ? data.bio : '',
-    skills: data.skills ?? [],
     image: resolvePrimaryAvatar(discordId, data),
     social: Object.keys(social).length > 0 ? social : undefined,
     nickname: v.nickname === 'public' ? data.nickname || undefined : undefined,
@@ -303,7 +301,6 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
     department: v.faculty !== 'private' ? currentFaculty : '',
     year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? '',
     bio: v.bio !== 'private' ? data.bio : '',
-    skills: data.skills ?? [],
     image: resolveDiscordAvatar(discordId, data.discordAvatar),
     faceImage: data.faceImage || undefined,
     snsAvatar,

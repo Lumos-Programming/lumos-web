@@ -24,7 +24,7 @@ import type { SnsEntry } from "@/components/member-tile-preview"
 import { LiquidSplashEffect } from "@/components/liquid-splash-effect"
 import { InterestTagInput } from "@/components/interest-tag-input"
 
-const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "year" | "skills" | "enrollments">, string>> = {
+const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "year" | "enrollments">, string>> = {
   studentId: "学籍番号",
   nickname: "ニックネーム",
   lastName: "姓",
@@ -60,7 +60,7 @@ const VISIBILITY_LABELS: Record<string, string> = {
 
 const VISIBILITY_DISPLAY_KEYS = ["lastName", "faculty", "currentOrg", "birthDate", "gender", "nickname", "bio", "discord", "line", "github", "x", "linkedin"] as const
 
-const PROFILE_FIELDS = Object.keys(FIELD_LABELS) as Array<keyof Omit<Profile, "visibility" | "role" | "year" | "skills" | "enrollments">>
+const PROFILE_FIELDS = Object.keys(FIELD_LABELS) as Array<keyof Omit<Profile, "visibility" | "role" | "year" | "enrollments">>
 
 const DEFAULT_PROFILE: Profile = {
   studentId: "",
