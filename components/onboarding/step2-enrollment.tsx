@@ -60,6 +60,11 @@ export function Step2Enrollment({form, setFormStep2, step2Errors, setStep2Errors
             ))}
           </div>
           {step2Errors.memberType && <p className="text-xs text-red-500">{step2Errors.memberType}</p>}
+          {form.memberType === "その他" && (
+            <div className="mt-2 rounded-lg border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-900/30 px-4 py-3 text-sm text-teal-800 dark:text-teal-300">
+              研究生・科目等履修生・聴講生などが該当します。
+            </div>
+          )}
         </div>
 
         {/* 学年 */}

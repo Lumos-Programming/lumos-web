@@ -16,7 +16,7 @@ export type Member = {
     website?: string
   }
   nickname?: string          // ニックネーム（visibility に従う）
-  memberType?: string        // 学部生/院生/聴講生/卒業生
+  memberType?: string        // 学部生/院生/その他/卒業生
   currentOrg?: string        // 卒業生の現在の所属
   gender?: string            // 性別
   ringColor?: string         // リングカラーキー
@@ -48,7 +48,7 @@ export function getRingColorClass(key?: string): string {
 /**
  * バッジに表示するラベルを返す。
  * 学部生/院生 → 学年テキストそのまま（例: "学部3年", "修士2年"）
- * 聴講生 → "聴講生 X年"
+ * その他 → "その他 X年"
  * 卒業生 → "卒業生"
  */
 export function getMemberTypeBadgeLabel(memberType?: string, year?: string): string {
@@ -57,8 +57,8 @@ export function getMemberTypeBadgeLabel(memberType?: string, year?: string): str
     case "学部生":
     case "院生":
       return year || memberType
-    case "聴講生":
-      return year ? `聴講生 ${year}` : memberType
+    case "その他":
+      return year ? `その他 ${year}` : memberType
     default:
       return memberType
   }
@@ -76,7 +76,7 @@ export function getMemberTypeBadgeClass(type: string): string {
     case "学部生": return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
     case "院生":   return "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
     case "卒業生": return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-    case "聴講生": return "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300"
+    case "その他": return "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300"
     default:       return "bg-gray-100 text-gray-600"
   }
 }
