@@ -7,6 +7,7 @@ import HeaderAuth from "@/components/header-auth"
 import Footer from "@/components/footer"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { DevWarning } from "@/components/dev-warning"
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ["latin"],
@@ -69,6 +70,7 @@ export default function RootLayout({
           <main className="flex-grow">{children}</main>
           <Footer />
           <Toaster />
+          <DevWarning />
         </ThemeProvider>
       </body>
     </html>
