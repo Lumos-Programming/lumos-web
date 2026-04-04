@@ -17,13 +17,14 @@ export async function GET(request: NextRequest) {
   cookieStore.delete('oauth_link_discord_id')
   cookieStore.delete('oauth_link_redirect')
 
+  const origin = process.env.AUTH_URL ?? request.nextUrl.origin
+
   if (!code || !state || state !== savedState || !discordId) {
-    return NextResponse.redirect(new URL('/internal/settings?error=line_link_failed', request.nextUrl.origin))
+    return NextResponse.redirect(new URL('/internal/settings?error=line_link_failed', origin))
   }
 
   try {
-    const baseUrl = process.env.AUTH_URL ?? request.nextUrl.origin
-    const tokenResponse = await exchangeCodeForTokenFull('line', code, getCallbackUrl('line', baseUrl))
+    const tokenResponse = await exchangeCodeForTokenFull('line', code, getCallbackUrl('line', origin))
     const user = await fetchProviderUser('line', tokenResponse.access_token)
 
     await updateMemberSns(discordId, {
@@ -37,12 +38,12 @@ export async function GET(request: NextRequest) {
         : undefined,
     })
 
-    const successUrl = new URL(redirectTo, request.nextUrl.origin)
+    const successUrl = new URL(redirectTo, origin)
     successUrl.searchParams.set('success', 'line_linked')
     return NextResponse.redirect(successUrl.toString())
   } catch (e) {
     console.error('LINE link callback error:', e)
-    const errorUrl = new URL(redirectTo, request.nextUrl.origin)
+    const errorUrl = new URL(redirectTo, origin)
     errorUrl.searchParams.set('error', 'line_link_failed')
     return NextResponse.redirect(errorUrl.toString())
   }

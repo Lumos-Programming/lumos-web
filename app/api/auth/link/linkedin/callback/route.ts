@@ -17,15 +17,16 @@ export async function GET(request: NextRequest) {
   cookieStore.delete('oauth_link_discord_id')
   cookieStore.delete('oauth_link_redirect')
 
+  const origin = process.env.AUTH_URL ?? request.nextUrl.origin
+
   if (!code || !state || state !== savedState || !discordId) {
-    const errorUrl = new URL(redirectTo, request.nextUrl.origin)
+    const errorUrl = new URL(redirectTo, origin)
     errorUrl.searchParams.set('error', 'linkedin_link_failed')
     return NextResponse.redirect(errorUrl.toString())
   }
 
   try {
-    const baseUrl = process.env.AUTH_URL ?? request.nextUrl.origin
-    const token = await exchangeCodeForToken('linkedin', code, getCallbackUrl('linkedin', baseUrl))
+    const token = await exchangeCodeForToken('linkedin', code, getCallbackUrl('linkedin', origin))
     const user = await fetchProviderUser('linkedin', token)
 
     await updateMemberSns(discordId, {
@@ -38,12 +39,12 @@ export async function GET(request: NextRequest) {
       ...(user.lastName ? { linkedinLastName: user.lastName } : {}),
     })
 
-    const successUrl = new URL(redirectTo, request.nextUrl.origin)
+    const successUrl = new URL(redirectTo, origin)
     successUrl.searchParams.set('success', 'linkedin_linked')
     return NextResponse.redirect(successUrl.toString())
   } catch (e) {
     console.error('LinkedIn link callback error:', e)
-    const errorUrl = new URL(redirectTo, request.nextUrl.origin)
+    const errorUrl = new URL(redirectTo, origin)
     errorUrl.searchParams.set('error', 'linkedin_link_failed')
     return NextResponse.redirect(errorUrl.toString())
   }
