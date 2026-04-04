@@ -14,7 +14,6 @@ export interface MemberTileData {
   sub?: string
   department: string
   image: string
-  hasFace: boolean
   memberType?: string
   year?: string
   currentOrg?: string
@@ -48,7 +47,6 @@ export function InternalTilePreview({ data, label }: { data: MemberTileData; lab
         currentOrg={data.currentOrg}
         topInterests={data.topInterests}
         preview={true}
-        showFacePlaceholder={!data.hasFace}
       />
     </div>
   )
@@ -73,7 +71,6 @@ export function ExternalTilePreview({ data, label, allowPublic }: { data: Member
             topInterests={data.topInterests}
             avatarSize="md"
             preview={true}
-            showFacePlaceholder={!data.hasFace}
           />
         </div>
         {!allowPublic && (

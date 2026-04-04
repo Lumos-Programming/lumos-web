@@ -408,8 +408,7 @@ export default function ProfileEdit() {
 
     const dept = v.faculty !== "private" ? faculty : ""
     const mainImage = faceImageUrl || "/assets/avatar-placeholder.svg"
-    const hasFace = !!faceImageUrl
-    return { main, sub, department: dept, image: mainImage, hasFace, snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined }
+    return { main, sub, department: dept, image: mainImage, snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined }
   }, [profile, faculty, faceImageUrl, discordAvatarUrl, getInitials])
 
   const externalPreview = useMemo(() => {
@@ -435,10 +434,9 @@ export default function ProfileEdit() {
     const dept = v.faculty === "public" ? faculty : ""
 
     let image: string
-    let hasFace = true
     switch (primaryAvatar) {
       case "face":
-        if (faceImageUrl) { image = faceImageUrl } else { image = "/assets/avatar-placeholder.svg"; hasFace = false }
+        image = faceImageUrl || "/assets/avatar-placeholder.svg"
         break
       case "discord":
         image = discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : "/assets/avatar-placeholder.svg"
@@ -448,9 +446,8 @@ export default function ProfileEdit() {
         break
       default:
         image = "/assets/avatar-placeholder.svg"
-        hasFace = false
     }
-    return { main, sub, role, department: dept, year, image, hasFace }
+    return { main, sub, role, department: dept, year, image }
   }, [profile, faculty, year, role, faceImageUrl, primaryAvatar, discordAvatarUrl, lineAvatar, getInitials])
 
   const buildSnsEntries = useCallback((level: "public" | "internal") => {
