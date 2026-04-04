@@ -18,9 +18,9 @@ resource "google_cloud_run_service" "web" {
   template {
     metadata {
       annotations = {
-        "autoscaling.knative.dev/maxScale"      = "100"
-        "run.googleapis.com/startup-cpu-boost"   = "true"
-        "run.googleapis.com/client-name"         = "terraform"
+        "autoscaling.knative.dev/maxScale"     = "100"
+        "run.googleapis.com/startup-cpu-boost" = "true"
+        "run.googleapis.com/client-name"       = "terraform"
       }
     }
 
@@ -120,7 +120,7 @@ resource "google_cloud_run_service" "web" {
   }
 
   traffic {
-    percent       = 100
+    percent         = 100
     latest_revision = true
   }
 
