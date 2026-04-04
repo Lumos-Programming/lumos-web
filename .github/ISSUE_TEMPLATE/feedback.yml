@@ -3,13 +3,17 @@ description: サービスへのフィードバックや改善提案
 title: "[Feedback] "
 labels: ["feedback"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        該当する項目のみ入力してください。全て任意項目です。
   - type: textarea
     id: content
     attributes:
       label: フィードバック内容
       description: サービスに対するご意見・ご感想をお聞かせください
     validations:
-      required: true
+      required: false
   - type: input
     id: url
     attributes:
