@@ -94,17 +94,6 @@ export function socialToSnsEntries(social?: {
 }): SnsEntry[] {
   if (!social) return []
   const entries: SnsEntry[] = []
-  if (social.line) {
-    entries.push({ platform: "line", username: social.line })
-  }
-  if (social.github) {
-    const username = social.github.replace(/^https?:\/\/(www\.)?github\.com\//, "").replace(/\/$/, "")
-    entries.push({ platform: "github", username, url: social.github })
-  }
-  if (social.x) {
-    const username = social.x.replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//, "").replace(/\/$/, "")
-    entries.push({ platform: "x", username, url: social.x })
-  }
   if (social.discord) {
     const isUrl = social.discord.startsWith("http")
     entries.push({
@@ -112,6 +101,17 @@ export function socialToSnsEntries(social?: {
       username: isUrl ? "Discord" : social.discord,
       url: isUrl ? social.discord : undefined,
     })
+  }
+  if (social.line) {
+    entries.push({ platform: "line", username: social.line })
+  }
+  if (social.x) {
+    const username = social.x.replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//, "").replace(/\/$/, "")
+    entries.push({ platform: "x", username, url: social.x })
+  }
+  if (social.github) {
+    const username = social.github.replace(/^https?:\/\/(www\.)?github\.com\//, "").replace(/\/$/, "")
+    entries.push({ platform: "github", username, url: social.github })
   }
   if (social.linkedin) {
     const username = social.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "")
