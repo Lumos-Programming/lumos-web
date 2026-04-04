@@ -1,7 +1,23 @@
 "use client"
 
 import { useState, useRef, useCallback, useMemo } from "react"
-import { X, Star, Plus, Check } from "lucide-react"
+import { X, Star, Plus, Check, GripVertical } from "lucide-react"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import {
   Command,
   CommandInput,
@@ -22,6 +38,77 @@ import {
   isValidTag,
   TAG_MAX_LENGTH,
 } from "@/types/interests"
+
+// --- Sortable chip ---
+
+interface SortableChipProps {
+  tag: string
+  isTop: boolean
+  onToggleTop: () => void
+  onRemove: () => void
+}
+
+function SortableChip({ tag, isTop, onToggleTop, onRemove }: SortableChipProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: tag })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+  }
+
+  return (
+    <span
+      ref={setNodeRef}
+      style={style}
+      className={[
+        "inline-flex items-center gap-1 text-xs font-medium pl-1 pr-1 py-1.5 rounded-full transition-all duration-200 select-none",
+        isDragging ? "opacity-80 shadow-lg" : "",
+        isTop
+          ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 ring-2 ring-purple-300 dark:ring-purple-700 shadow-sm"
+          : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+      ].join(" ")}
+    >
+      <button
+        type="button"
+        className="flex-shrink-0 touch-none cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+      </button>
+      {isTop && (
+        <Star
+          className="w-3.5 h-3.5 flex-shrink-0 text-purple-500 dark:text-purple-400"
+          fill="currentColor"
+        />
+      )}
+      <button
+        type="button"
+        onClick={onToggleTop}
+        className="cursor-pointer hover:underline"
+      >
+        {tag}
+      </button>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="flex-shrink-0 ml-0.5 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+      >
+        <X className="w-3 h-3" />
+      </button>
+    </span>
+  )
+}
+
+// --- Main component ---
 
 interface InterestTagInputProps {
   value: string[]
@@ -44,6 +131,43 @@ export function InterestTagInput({
 
   const selected = useMemo(() => new Set(value), [value])
 
+  // Display order: Top 3 first (in topInterests order), then the rest (preserving value order)
+  const topSet = useMemo(() => new Set(topInterests), [topInterests])
+  const sortedTags = useMemo(() => {
+    const top = topInterests.filter((t) => value.includes(t))
+    const rest = value.filter((t) => !topSet.has(t))
+    return [...top, ...rest]
+  }, [value, topInterests, topSet])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+
+      const oldIndex = sortedTags.indexOf(active.id as string)
+      const newIndex = sortedTags.indexOf(over.id as string)
+      if (oldIndex === -1 || newIndex === -1) return
+
+      // Reorder sortedTags
+      const reordered = [...sortedTags]
+      const [moved] = reordered.splice(oldIndex, 1)
+      reordered.splice(newIndex, 0, moved)
+
+      // First MAX_TOP_INTERESTS items become topInterests
+      const newTop = reordered.slice(0, MAX_TOP_INTERESTS).filter((t) => value.includes(t))
+      const newValue = reordered.filter((t) => value.includes(t))
+
+      onChange(newValue)
+      onTopInterestsChange(newTop)
+    },
+    [sortedTags, value, onChange, onTopInterestsChange]
+  )
+
   const toggleTag = useCallback(
     (tag: string) => {
       if (selected.has(tag)) {
@@ -54,6 +178,10 @@ export function InterestTagInput({
       } else {
         if (value.length >= maxTags) return
         onChange([...value, tag])
+        // Auto-add to Top 3 if there's room
+        if (topInterests.length < MAX_TOP_INTERESTS) {
+          onTopInterestsChange([...topInterests, tag])
+        }
       }
     },
     [value, onChange, topInterests, onTopInterestsChange, maxTags, selected]
@@ -73,9 +201,11 @@ export function InterestTagInput({
     (tag: string) => {
       if (topInterests.includes(tag)) {
         onTopInterestsChange(topInterests.filter((t) => t !== tag))
-      } else {
-        if (topInterests.length >= MAX_TOP_INTERESTS) return
+      } else if (topInterests.length < MAX_TOP_INTERESTS) {
         onTopInterestsChange([...topInterests, tag])
+      } else {
+        // Replace the last Top 3 entry with the clicked tag
+        onTopInterestsChange([...topInterests.slice(0, -1), tag])
       }
     },
     [topInterests, onTopInterestsChange]
@@ -102,59 +232,32 @@ export function InterestTagInput({
   return (
     <div className="space-y-3">
       {/* Selected tags display */}
-      {value.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {value.map((tag) => {
-            const isTop = topInterests.includes(tag)
-            return (
-              <span
-                key={tag}
-                className={[
-                  "inline-flex items-center gap-1 text-xs font-medium pl-2.5 pr-1 py-1 rounded-full transition-all duration-200",
-                  isTop
-                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700"
-                    : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-                ].join(" ")}
-              >
-                <button
-                  type="button"
-                  onClick={() => toggleTop(tag)}
-                  disabled={!isTop && topInterests.length >= MAX_TOP_INTERESTS}
-                  className={[
-                    "flex-shrink-0 transition-colors",
-                    isTop
-                      ? "text-purple-500 dark:text-purple-400"
-                      : topInterests.length >= MAX_TOP_INTERESTS
-                        ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
-                        : "text-gray-400 dark:text-gray-500 hover:text-purple-500 dark:hover:text-purple-400",
-                  ].join(" ")}
-                  title={isTop ? "Top 3から外す" : "Top 3に追加"}
-                >
-                  <Star
-                    className="w-3 h-3"
-                    fill={isTop ? "currentColor" : "none"}
-                  />
-                </button>
-                <span>{tag}</span>
-                <button
-                  type="button"
-                  onClick={() => removeTag(tag)}
-                  className="flex-shrink-0 ml-0.5 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )
-          })}
-        </div>
+      {sortedTags.length > 0 && (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={sortedTags} strategy={horizontalListSortingStrategy}>
+            <div className="flex flex-wrap gap-2">
+              {sortedTags.map((tag) => (
+                <SortableChip
+                  key={tag}
+                  tag={tag}
+                  isTop={topSet.has(tag)}
+                  onToggleTop={() => toggleTop(tag)}
+                  onRemove={() => removeTag(tag)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* Top 3 hint */}
       {value.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          <Star className="w-3 h-3 inline -mt-0.5 mr-0.5" />
-          をクリックしてTop 3を選択すると、メンバー一覧のタイルに表示されます
-          （{topInterests.length}/{MAX_TOP_INTERESTS}）
+          ドラッグで並び替え・タップで Top 3 を変更（{topInterests.length}/{MAX_TOP_INTERESTS}）
         </p>
       )}
 
@@ -237,6 +340,9 @@ export function InterestTagInput({
                       const tag = search.trim()
                       if (isValidTag(tag) && !selected.has(tag) && value.length < maxTags) {
                         onChange([...value, tag])
+                        if (topInterests.length < MAX_TOP_INTERESTS) {
+                          onTopInterestsChange([...topInterests, tag])
+                        }
                         setSearch("")
                       }
                     }}
