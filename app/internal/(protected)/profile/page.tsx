@@ -33,13 +33,23 @@ export default async function ProfilePage() {
   const displayName = member?.nickname || member?.discordUsername || "未設定"
   const ringClass = getRingColorClass(member?.ringColor)
 
+  const discordAvatarResolved = member?.discordAvatar?.startsWith("http")
+    ? member.discordAvatar
+    : member?.discordAvatar
+      ? `https://cdn.discordapp.com/avatars/${session.user.id}/${member.discordAvatar}.png`
+      : undefined
+
   const social: Member["social"] = member ? {
     github: member.github ? `https://github.com/${member.github}` : undefined,
+    githubAvatar: member.githubAvatar || undefined,
     x: member.x ? `https://x.com/${member.x}` : undefined,
+    xAvatar: member.xAvatar || undefined,
     discord: `https://discord.com/users/${session.user.id}`,
     discordUsername: member.discordUsername || member.discordHandle || undefined,
+    discordAvatar: discordAvatarResolved,
     linkedin: member.linkedin || undefined,
     line: member.line || undefined,
+    lineAvatar: member.lineAvatar || undefined,
   } : undefined
 
   return (

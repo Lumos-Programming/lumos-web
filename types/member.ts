@@ -10,11 +10,15 @@ export type Member = {
   snsAvatar?: string   // Discord or LINE アバター (内部メンバー表示用)
   social?: {
     x?: string
+    xAvatar?: string
     github?: string
+    githubAvatar?: string
     discord?: string
     discordUsername?: string
+    discordAvatar?: string
     linkedin?: string
     line?: string
+    lineAvatar?: string
     website?: string
   }
   nickname?: string          // ニックネーム（visibility に従う）

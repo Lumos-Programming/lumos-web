@@ -84,15 +84,21 @@ export function SnsChip({ entry }: { entry: SnsEntry }) {
 }
 
 /** Convert Member.social object to SnsEntry array */
-export function socialToSnsEntries(social?: {
+type SocialInput = {
   x?: string
+  xAvatar?: string
   github?: string
+  githubAvatar?: string
   discord?: string
   discordUsername?: string
+  discordAvatar?: string
   linkedin?: string
   line?: string
+  lineAvatar?: string
   website?: string
-}): SnsEntry[] {
+}
+
+export function socialToSnsEntries(social?: SocialInput): SnsEntry[] {
   if (!social) return []
   const entries: SnsEntry[] = []
   if (social.discord) {
@@ -101,18 +107,19 @@ export function socialToSnsEntries(social?: {
       platform: "discord",
       username: social.discordUsername || (isUrl ? "Discord" : social.discord),
       url: isUrl ? social.discord : undefined,
+      avatarUrl: social.discordAvatar,
     })
   }
   if (social.line) {
-    entries.push({ platform: "line", username: social.line })
+    entries.push({ platform: "line", username: social.line, avatarUrl: social.lineAvatar })
   }
   if (social.x) {
     const username = social.x.replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//, "").replace(/\/$/, "")
-    entries.push({ platform: "x", username, url: social.x })
+    entries.push({ platform: "x", username, url: social.x, avatarUrl: social.xAvatar })
   }
   if (social.github) {
     const username = social.github.replace(/^https?:\/\/(www\.)?github\.com\//, "").replace(/\/$/, "")
-    entries.push({ platform: "github", username, url: social.github })
+    entries.push({ platform: "github", username, url: social.github, avatarUrl: social.githubAvatar })
   }
   if (social.linkedin) {
     const username = social.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "")
@@ -121,7 +128,7 @@ export function socialToSnsEntries(social?: {
   return entries
 }
 
-export function SnsChipsSection({ social, snsEntries }: { social?: { x?: string; github?: string; discord?: string; discordUsername?: string; linkedin?: string; line?: string; website?: string }; snsEntries?: SnsEntry[] }) {
+export function SnsChipsSection({ social, snsEntries }: { social?: SocialInput; snsEntries?: SnsEntry[] }) {
   const entries = snsEntries ?? socialToSnsEntries(social)
   if (entries.length === 0) return null
   return (
