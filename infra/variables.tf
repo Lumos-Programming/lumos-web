@@ -32,7 +32,7 @@ variable "cloud_run_env_vars" {
       LINE_PUSH_TARGET_ID   = "C39f62528b0c75c22e5feb50620989bd3"
     }
     stg = {
-      AUTH_GITHUB_ID        = "Ov23liN6oGK1lfbZm3P2"
+      AUTH_GITHUB_ID        = "Ov23li6SPPesKvJDqXiO"
       AUTH_X_ID             = "MktOVXFWdWNFZzN5VzI2TXJFZ2Q6MTpjaQ"
       AUTH_LINE_ID          = "2009694131"
       AUTH_LINKEDIN_ID      = "86hiyrhp1dyb83"
