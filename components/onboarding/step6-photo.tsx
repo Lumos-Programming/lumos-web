@@ -35,29 +35,43 @@ interface Step6PhotoProps {
 }
 
 export function Step6Photo({
-  faceImageUrl, ringColor, setRingColor,
-  cropImageSrc, setCropImageSrc, crop, setCrop, zoom, setZoom, setCroppedAreaPixels,
-  imageUploading, blobAnimating, setBlobAnimating,
-  fileInputRef, handleFileSelect, handleCropConfirm,
-  isFinalStep, submitting, onComplete, onNextStep, onBack,
-}: Step6PhotoProps) {
+                             faceImageUrl, ringColor, setRingColor,
+                             cropImageSrc, setCropImageSrc, crop, setCrop, zoom, setZoom, setCroppedAreaPixels,
+                             imageUploading, blobAnimating, setBlobAnimating,
+                             fileInputRef, handleFileSelect, handleCropConfirm,
+                             isFinalStep, submitting, onComplete, onNextStep, onBack,
+                           }: Step6PhotoProps) {
   return (
     <div className="p-8">
       <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">プロフィール顔写真を設定</h2>
-        <p className="text-muted-foreground mt-1 text-sm">{isFinalStep ? "最後のステップです！" : "あと少しで完了です！"}</p>
+        <h2
+          className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">プロフィール顔写真を設定</h2>
+        <p
+          className="text-muted-foreground mt-1 text-sm">{isFinalStep ? "最後のステップです！" : "あと少しで完了です！"}</p>
       </div>
 
       <div className="space-y-6 animate-[fadeInUp_300ms_60ms_ease_both]">
-        {/* 背景説明 */}
-        <div
-          className="rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 px-4 py-3 space-y-1.5">
-          <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
-            顔がわかる写真を設定しませんか？
-          </p>
-          <p className="text-xs text-purple-700 dark:text-purple-300 leading-relaxed">
-            Lumosではメンバー同士が「顔が見える」関係を大切にしています。内部メンバーページであなたの顔写真が表示されるので、イベントやプロジェクトで初めて会うときもスムーズです。
-          </p>
+        {/* 背景説明 + 公開範囲の補足 */}
+        <div className="space-y-2">
+          <div
+            className="rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 px-4 py-3 space-y-1.5">
+            <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+              顔がわかる写真を設定しませんか？
+            </p>
+            <p className="text-xs text-purple-700 dark:text-purple-300 leading-relaxed">
+              Lumosメンバーページでは、プロフィール顔写真の設定を推奨しています。<br/>メンバー一覧ページで他のメンバーの顔ぶれを確認できるだけでなく、対面イベントやキャンパスですれ違ったときに声をかけてもらいやすくなります。
+            </p>
+          </div>
+          <div
+            className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-2.5">
+            <svg className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" viewBox="0 0 16 16"
+                 fill="currentColor">
+              <path
+                d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/>
+            </svg>
+            <p
+              className="text-xs text-blue-700 dark:text-blue-300">プロフィール顔写真の公開範囲は自由に設定できます。</p>
+          </div>
         </div>
 
         {/* Face image preview + floating sample bubbles */}
@@ -153,7 +167,7 @@ export function Step6Photo({
             ))}
             {/* Main preview circle */}
             {blobAnimating && (
-              <LiquidSplashEffect width={256} height={256} onComplete={() => setBlobAnimating(false)} />
+              <LiquidSplashEffect width={256} height={256} onComplete={() => setBlobAnimating(false)}/>
             )}
             <div
               className={`w-32 h-32 relative rounded-full overflow-hidden ring-4 ${getRingColorClass(ringColor)} z-10 ${blobAnimating ? "animate-liquid-pop" : ""}`}>
