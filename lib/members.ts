@@ -235,10 +235,22 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
       : getInitials(data) || data.discordUsername
 
   const social: Member['social'] = {}
-  if (v.github === 'public' && data.github) social.github = `https://github.com/${data.github}`
-  if (v.x === 'public' && data.x) social.x = `https://x.com/${data.x}`
+  if (v.github === 'public' && data.github) {
+    social.github = `https://github.com/${data.github}`
+    if (data.githubAvatar) social.githubAvatar = data.githubAvatar
+  }
+  if (v.x === 'public' && data.x) {
+    social.x = `https://x.com/${data.x}`
+    if (data.xAvatar) social.xAvatar = data.xAvatar
+  }
   if (v.linkedin === 'public' && data.linkedin) social.linkedin = data.linkedin
-  if (v.discord === 'public' && data.discordHandle) social.discord = `https://discord.com/users/${discordId}`
+  // 外部向け: Discord chipには @discordHandle を表示
+  if (v.discord === 'public' && data.discordHandle) {
+    social.discord = `https://discord.com/users/${discordId}`
+    social.discordUsername = `@${data.discordHandle}`
+    const avatar = resolveDiscordAvatar(discordId, data.discordAvatar)
+    if (avatar !== '/placeholder.svg') social.discordAvatar = avatar
+  }
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
 
@@ -272,10 +284,26 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
       : getInitials(data) || data.discordUsername
 
   const social: Member['social'] = {}
-  if (v.github !== 'private' && data.github) social.github = `https://github.com/${data.github}`
-  if (v.x !== 'private' && data.x) social.x = `https://x.com/${data.x}`
+  if (v.github !== 'private' && data.github) {
+    social.github = `https://github.com/${data.github}`
+    if (data.githubAvatar) social.githubAvatar = data.githubAvatar
+  }
+  if (v.x !== 'private' && data.x) {
+    social.x = `https://x.com/${data.x}`
+    if (data.xAvatar) social.xAvatar = data.xAvatar
+  }
   if (v.linkedin !== 'private' && data.linkedin) social.linkedin = data.linkedin
-  if (v.discord !== 'private') social.discord = `https://discord.com/users/${discordId}`
+  // 内部向け: Discord chipには discordUsername（表示名）を優先表示
+  if (v.discord !== 'private') {
+    social.discord = `https://discord.com/users/${discordId}`
+    social.discordUsername = data.discordUsername || data.discordHandle
+    const avatar = resolveDiscordAvatar(discordId, data.discordAvatar)
+    if (avatar !== '/placeholder.svg') social.discordAvatar = avatar
+  }
+  if (v.line !== 'private' && data.line) {
+    social.line = data.line
+    if (data.lineAvatar) social.lineAvatar = data.lineAvatar
+  }
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
 

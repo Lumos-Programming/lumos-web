@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 
 export interface SnsEntry {
@@ -57,7 +60,57 @@ export const SNS_BRAND: Record<SnsEntry["platform"], { bg: string; text: string;
   linkedin: { bg: "bg-[#0A66C2]",                 text: "text-white", prefixAt: false, Logo: LinkedInLogo },
 }
 
+function LinePopup({ entry, onClose }: { entry: SnsEntry; onClose: () => void }) {
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose()
+  }, [onClose])
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [handleKeyDown])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" />
+      <div
+        className="relative bg-card border rounded-2xl shadow-2xl p-6 flex flex-col items-center gap-4 animate-in zoom-in-95 fade-in duration-200 max-w-xs w-full mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        {entry.avatarUrl ? (
+          <div className="w-24 h-24 relative rounded-full overflow-hidden ring-4 ring-[#06C755]/20">
+            <Image src={entry.avatarUrl} alt={entry.username} fill className="object-cover" />
+          </div>
+        ) : (
+          <div className="w-24 h-24 rounded-full bg-[#06C755] flex items-center justify-center ring-4 ring-[#06C755]/20">
+            <LineLogo className="w-12 h-12 text-white" />
+          </div>
+        )}
+        <div className="text-center">
+          <p className="font-semibold text-lg">{entry.username}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">LINE</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-full mt-1 py-2 rounded-lg bg-[#06C755] hover:bg-[#05a848] text-white text-sm font-medium transition-colors"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function SnsChip({ entry }: { entry: SnsEntry }) {
+  const [showLinePopup, setShowLinePopup] = useState(false)
   const brand = SNS_BRAND[entry.platform]
   const inner = (
     <>
@@ -72,7 +125,18 @@ export function SnsChip({ entry }: { entry: SnsEntry }) {
       </span>
     </>
   )
-  const className = `inline-flex items-center gap-1.5 rounded-full pl-1.5 pr-2.5 py-1 ${brand.bg} ${brand.text} ${entry.url ? "hover:opacity-80 transition-opacity" : ""}`
+  const className = `inline-flex items-center gap-1.5 rounded-full pl-1.5 pr-2.5 py-1 ${brand.bg} ${brand.text} hover:opacity-80 transition-opacity cursor-pointer`
+
+  if (entry.platform === "line") {
+    return (
+      <>
+        <button onClick={() => setShowLinePopup(true)} className={className}>
+          {inner}
+        </button>
+        {showLinePopup && <LinePopup entry={entry} onClose={() => setShowLinePopup(false)} />}
+      </>
+    )
+  }
   if (entry.url) {
     return (
       <a href={entry.url} target="_blank" rel="noopener noreferrer" className={className}>
@@ -80,34 +144,46 @@ export function SnsChip({ entry }: { entry: SnsEntry }) {
       </a>
     )
   }
-  return <div className={className}>{inner}</div>
+  return <div className={`${className} cursor-default`}>{inner}</div>
 }
 
 /** Convert Member.social object to SnsEntry array */
-export function socialToSnsEntries(social?: {
+type SocialInput = {
   x?: string
+  xAvatar?: string
   github?: string
+  githubAvatar?: string
   discord?: string
+  discordUsername?: string
+  discordAvatar?: string
   linkedin?: string
+  line?: string
+  lineAvatar?: string
   website?: string
-}): SnsEntry[] {
+}
+
+export function socialToSnsEntries(social?: SocialInput): SnsEntry[] {
   if (!social) return []
   const entries: SnsEntry[] = []
-  if (social.github) {
-    const username = social.github.replace(/^https?:\/\/(www\.)?github\.com\//, "").replace(/\/$/, "")
-    entries.push({ platform: "github", username, url: social.github })
-  }
-  if (social.x) {
-    const username = social.x.replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//, "").replace(/\/$/, "")
-    entries.push({ platform: "x", username, url: social.x })
-  }
   if (social.discord) {
     const isUrl = social.discord.startsWith("http")
     entries.push({
       platform: "discord",
-      username: isUrl ? "Discord" : social.discord,
+      username: social.discordUsername || (isUrl ? "Discord" : social.discord),
       url: isUrl ? social.discord : undefined,
+      avatarUrl: social.discordAvatar,
     })
+  }
+  if (social.line) {
+    entries.push({ platform: "line", username: social.line, avatarUrl: social.lineAvatar })
+  }
+  if (social.x) {
+    const username = social.x.replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//, "").replace(/\/$/, "")
+    entries.push({ platform: "x", username, url: social.x, avatarUrl: social.xAvatar })
+  }
+  if (social.github) {
+    const username = social.github.replace(/^https?:\/\/(www\.)?github\.com\//, "").replace(/\/$/, "")
+    entries.push({ platform: "github", username, url: social.github, avatarUrl: social.githubAvatar })
   }
   if (social.linkedin) {
     const username = social.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "")
@@ -116,7 +192,7 @@ export function socialToSnsEntries(social?: {
   return entries
 }
 
-export function SnsChipsSection({ social, snsEntries }: { social?: { x?: string; github?: string; discord?: string; linkedin?: string; website?: string }; snsEntries?: SnsEntry[] }) {
+export function SnsChipsSection({ social, snsEntries }: { social?: SocialInput; snsEntries?: SnsEntry[] }) {
   const entries = snsEntries ?? socialToSnsEntries(social)
   if (entries.length === 0) return null
   return (
