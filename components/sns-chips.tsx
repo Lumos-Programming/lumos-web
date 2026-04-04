@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
+import { normalizeLinkedInUrl } from "@/lib/linkedin"
 
 export interface SnsEntry {
   platform: "github" | "x" | "discord" | "linkedin" | "line"
@@ -186,8 +187,10 @@ export function socialToSnsEntries(social?: SocialInput): SnsEntry[] {
     entries.push({ platform: "github", username, url: social.github, avatarUrl: social.githubAvatar })
   }
   if (social.linkedin) {
-    const username = social.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "")
-    entries.push({ platform: "linkedin", username, url: social.linkedin })
+    const normalized = normalizeLinkedInUrl(social.linkedin)
+    const url = normalized ?? social.linkedin
+    const username = url.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "")
+    entries.push({ platform: "linkedin", username, url })
   }
   return entries
 }
