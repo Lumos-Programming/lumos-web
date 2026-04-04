@@ -7,6 +7,7 @@ import {
   TilePreviewGrid,
   DetailPreviewPanel,
   SingleDetailPreview,
+  InternalTilePreview,
 } from "@/components/member-tile-preview"
 import type {FormData} from "./types"
 
@@ -27,7 +28,29 @@ interface PreviewIslandStep4Props {
 
 export function PreviewIslandStep4({form, ringColor, onbInternalPreview, onbInternalSns}: PreviewIslandStep4Props) {
   return (
-    <div className="w-full max-w-lg relative z-10 mt-4">
+    <div className="w-full max-w-lg relative z-10 mt-4 space-y-4">
+      {/* Tile preview */}
+      <div
+        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-gray-800/50 p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-5 rounded-full bg-gradient-to-b from-amber-400 to-orange-500"/>
+          <h3 className="text-base font-bold text-gray-800 dark:text-gray-200">タイルプレビュー</h3>
+        </div>
+        <div className="flex justify-center">
+          <div className="w-48">
+            <InternalTilePreview
+              data={{
+                ...onbInternalPreview,
+                ringColor,
+                memberType: form.memberType || undefined,
+                currentOrg: form.currentOrg || undefined,
+                topInterests: form.topInterests,
+              }}
+            />
+          </div>
+        </div>
+      </div>
+      {/* Detail preview */}
       <div
         className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-gray-800/50 p-6 space-y-4">
         <div className="flex items-center gap-2">
@@ -42,7 +65,8 @@ export function PreviewIslandStep4({form, ringColor, onbInternalPreview, onbInte
             currentOrg: form.currentOrg || undefined,
             bio: form.bio,
             sns: onbInternalSns,
-            interests: form.interests
+            interests: form.interests,
+            topInterests: form.topInterests,
           }}
         />
       </div>
@@ -124,13 +148,15 @@ export function PreviewIslandStep5({
               ...onbInternalPreview,
               ringColor,
               memberType: form.memberType || undefined,
-              currentOrg: form.currentOrg || undefined
+              currentOrg: form.currentOrg || undefined,
+              topInterests: form.topInterests,
             }}
             externalData={{
               ...onbExternalPreview,
               ringColor,
               memberType: form.memberType || undefined,
-              currentOrg: form.currentOrg || undefined
+              currentOrg: form.currentOrg || undefined,
+              topInterests: form.topInterests,
             }}
             allowPublic={allowPublic}
           />
@@ -142,7 +168,9 @@ export function PreviewIslandStep5({
               memberType: form.memberType || undefined,
               currentOrg: form.currentOrg || undefined,
               bio: form.bio,
-              sns: onbInternalSns
+              sns: onbInternalSns,
+              interests: form.interests,
+              topInterests: form.topInterests,
             }}
             externalData={{
               ...onbExternalPreview,
@@ -150,7 +178,9 @@ export function PreviewIslandStep5({
               memberType: form.memberType || undefined,
               currentOrg: form.currentOrg || undefined,
               bio: form.bio,
-              sns: onbExternalSns
+              sns: onbExternalSns,
+              interests: form.interests,
+              topInterests: form.topInterests,
             }}
             allowPublic={allowPublic}
           />
