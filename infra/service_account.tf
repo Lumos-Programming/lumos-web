@@ -33,3 +33,15 @@ resource "google_project_iam_member" "cloud_run_firebase" {
   member  = "serviceAccount:${google_service_account.cloud_run[each.key].email}"
 }
 
+# ---------------------------------------------------------------------------
+# gh-actions SA → Cloud Run SA の actAs 権限
+# Cloud Run デプロイ時に service_account_name を指定するために必要
+# ---------------------------------------------------------------------------
+resource "google_service_account_iam_member" "gh_actions_act_as_cloud_run" {
+  for_each = toset(local.cloud_run_envs)
+
+  service_account_id = google_service_account.cloud_run[each.key].name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:gh-actions@${var.project_id}.iam.gserviceaccount.com"
+}
+
