@@ -336,6 +336,11 @@ body:has(.internal-area) footer.bg-gradient-primary {
   animation: gradient-shift 8s ease-in-out infinite;
 }
 
+/* Markdown editor: ensure placeholder is fully visible */
+.w-md-editor-text {
+  min-height: 100% !important;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .animate-spring-up, .animate-soft-pulse, .animate-accent-bar, .animate-gradient,
