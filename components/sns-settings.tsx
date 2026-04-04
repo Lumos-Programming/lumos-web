@@ -93,12 +93,12 @@ function ProviderCard({
   }
 
   return (
-    <div className="flex items-center justify-between p-4 border rounded-xl bg-card hover:shadow-md transition-all duration-200">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between gap-2 p-4 border rounded-xl bg-card hover:shadow-md transition-all duration-200">
+      <div className="flex items-center gap-3 min-w-0">
         <div className={`w-10 h-10 ${brandColor} rounded-xl flex items-center justify-center text-white shrink-0`}>
           {icon}
         </div>
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-medium text-sm">{name}</p>
             {isConnected && (
@@ -108,13 +108,13 @@ function ProviderCard({
             )}
           </div>
           {isConnected ? (
-            <p className="text-xs text-muted-foreground">{prefixAt ? `@${connectedUser}` : connectedUser}</p>
+            <p className="text-xs text-muted-foreground truncate">{prefixAt ? `@${connectedUser}` : connectedUser}</p>
           ) : (
             <p className="text-xs text-muted-foreground/60">未連携</p>
           )}
         </div>
       </div>
-      <div>
+      <div className="shrink-0">
         {isConnected ? (
           reconnectOnly ? (
             <button onClick={onConnect} className="text-xs text-muted-foreground hover:text-foreground border border-border hover:border-foreground/30 rounded-lg px-3 py-1.5 transition-all duration-200">
@@ -204,12 +204,12 @@ function LinkedInCard({ url, onSaved, onDeleted }: { url: string; onSaved: (url:
 
   return (
     <div className="p-4 border rounded-xl bg-card hover:shadow-md transition-all duration-200">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 bg-[#0A66C2] rounded-xl flex items-center justify-center text-white shrink-0">
             <LinkedInIcon className="w-5 h-5" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               <p className="font-medium text-sm">LinkedIn</p>
               {isSet && !editing && (
@@ -219,30 +219,21 @@ function LinkedInCard({ url, onSaved, onDeleted }: { url: string; onSaved: (url:
               )}
             </div>
             {isSet && !editing ? (
-              <p className="text-xs text-muted-foreground">{displayUrl}</p>
+              <p className="text-xs text-muted-foreground">linkedin.com/in/<wbr /><span className="inline-block float-right">{displayUrl.replace(/^linkedin\.com\/in\//, "")}</span></p>
             ) : !editing ? (
               <p className="text-xs text-muted-foreground/60">未設定</p>
             ) : null}
           </div>
         </div>
         {!editing && (
-          <div className="flex items-center gap-2">
+          <div className="shrink-0">
             {isSet ? (
-              <>
-                <button
-                  onClick={() => { setInputValue(url); setEditing(true) }}
-                  className="text-xs text-muted-foreground hover:text-foreground border border-border hover:border-foreground/30 rounded-lg px-3 py-1.5 transition-all duration-200"
-                >
-                  編集
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="text-xs text-red-500 hover:text-red-600 border border-red-200 dark:border-red-900 hover:border-red-400 dark:hover:border-red-700 rounded-lg px-3 py-1.5 transition-all duration-200 disabled:opacity-50"
-                >
-                  {deleting ? "削除中..." : "削除"}
-                </button>
-              </>
+              <button
+                onClick={() => { setInputValue(url); setEditing(true) }}
+                className="text-xs text-muted-foreground hover:text-foreground border border-border hover:border-foreground/30 rounded-lg px-3 py-1.5 transition-all duration-200"
+              >
+                編集
+              </button>
             ) : (
               <button
                 onClick={() => { setInputValue(""); setEditing(true) }}
@@ -273,20 +264,33 @@ function LinkedInCard({ url, onSaved, onDeleted }: { url: string; onSaved: (url:
             <a href="https://www.linkedin.com/in/me" target="_blank" rel="noopener noreferrer" className="text-[#0A66C2] hover:underline">こちら</a>
             で表示されるページのURLを入力してください
           </p>
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => { setInputValue(url); setEditing(false) }}
-              className="text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-1.5 transition-all duration-200"
-            >
-              キャンセル
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="text-xs bg-[#0A66C2] hover:bg-[#004182] text-white rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
-            >
-              {saving ? "保存中..." : "保存"}
-            </button>
+          <div className="flex justify-between">
+            {isSet ? (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="text-xs text-red-500 hover:text-red-600 border border-red-200 dark:border-red-900 hover:border-red-400 dark:hover:border-red-700 rounded-lg px-3 py-1.5 transition-all duration-200 disabled:opacity-50"
+              >
+                {deleting ? "削除中..." : "削除"}
+              </button>
+            ) : (
+              <div />
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setInputValue(url); setEditing(false) }}
+                className="text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-1.5 transition-all duration-200"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="text-xs bg-[#0A66C2] hover:bg-[#004182] text-white rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
+              >
+                {saving ? "保存中..." : "保存"}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -348,24 +352,24 @@ export default function SnsSettings({
       )}
 
       {/* Discord */}
-      <div className="flex items-center justify-between p-4 border rounded-xl bg-card hover:shadow-md transition-all duration-200">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-2 p-4 border rounded-xl bg-card hover:shadow-md transition-all duration-200">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 bg-[#5865F2] rounded-xl flex items-center justify-center text-white shrink-0">
             <DiscordIcon className="w-5 h-5"/>
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               <p className="font-medium text-sm">Discord</p>
               <span className="flex items-center justify-center w-4 h-4 rounded-full bg-green-500">
                 <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">@{discordUsername}</p>
+            <p className="text-xs text-muted-foreground truncate">@{discordUsername}</p>
           </div>
         </div>
         <div>
           <span className="text-xs text-muted-foreground/60 border border-border rounded-lg px-3 py-1.5 cursor-not-allowed">
-            ログイン連携済み
+            連携済み
           </span>
         </div>
       </div>
