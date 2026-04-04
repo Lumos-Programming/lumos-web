@@ -24,9 +24,9 @@ export function InternalShell({ children, userName, userImage, memberNickname, m
         memberRole={memberRole}
       />
       <SidebarInset>
-        <header className="relative flex h-16 shrink-0 items-center border-b px-4">
+        <header className="flex h-16 shrink-0 items-center border-b px-4">
           <SidebarTrigger className="-ml-1 shrink-0" />
-          <Link href="/internal" className="internal-logo-link absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
+          <Link href="/internal" className="internal-logo-link mx-auto flex items-center gap-2 sm:gap-3 min-w-0">
             <Image
               src="/assets/Lumoslogo.png"
               alt="Lumos"
@@ -34,10 +34,12 @@ export function InternalShell({ children, userName, userImage, memberNickname, m
               height={40}
               className="shrink-0"
             />
-            <span className="text-lg font-bold tracking-tight text-foreground whitespace-nowrap">
+            <span className="text-sm sm:text-lg font-bold tracking-tight text-foreground whitespace-nowrap">
               メンバー専用ポータル
             </span>
           </Link>
+          {/* SidebarTrigger と同幅のスペーサーで中央揃えを実現 */}
+          <div className="w-7 -mr-1 shrink-0" />
         </header>
         <div className="flex-1 overflow-auto flex flex-col">
           <div className="flex-1">
