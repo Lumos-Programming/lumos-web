@@ -238,7 +238,11 @@ export function profileToMember(discordId: string, data: MemberDocument): Member
   if (v.github === 'public' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x === 'public' && data.x) social.x = `https://x.com/${data.x}`
   if (v.linkedin === 'public' && data.linkedin) social.linkedin = data.linkedin
-  if (v.discord === 'public' && data.discordHandle) social.discord = `https://discord.com/users/${discordId}`
+  // 外部向け: Discord chipには @discordHandle を表示
+  if (v.discord === 'public' && data.discordHandle) {
+    social.discord = `https://discord.com/users/${discordId}`
+    social.discordUsername = `@${data.discordHandle}`
+  }
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
 
@@ -275,7 +279,11 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
   if (v.github !== 'private' && data.github) social.github = `https://github.com/${data.github}`
   if (v.x !== 'private' && data.x) social.x = `https://x.com/${data.x}`
   if (v.linkedin !== 'private' && data.linkedin) social.linkedin = data.linkedin
-  if (v.discord !== 'private') social.discord = `https://discord.com/users/${discordId}`
+  // 内部向け: Discord chipには discordUsername（表示名）を優先表示
+  if (v.discord !== 'private') {
+    social.discord = `https://discord.com/users/${discordId}`
+    social.discordUsername = data.discordUsername || data.discordHandle
+  }
   if (v.line !== 'private' && data.line) social.line = data.line
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''

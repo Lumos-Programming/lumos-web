@@ -12,6 +12,7 @@ export type Member = {
     x?: string
     github?: string
     discord?: string
+    discordUsername?: string
     linkedin?: string
     line?: string
     website?: string

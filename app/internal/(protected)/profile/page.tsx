@@ -37,6 +37,7 @@ export default async function ProfilePage() {
     github: member.github ? `https://github.com/${member.github}` : undefined,
     x: member.x ? `https://x.com/${member.x}` : undefined,
     discord: `https://discord.com/users/${session.user.id}`,
+    discordUsername: member.discordUsername || member.discordHandle || undefined,
     linkedin: member.linkedin || undefined,
     line: member.line || undefined,
   } : undefined
