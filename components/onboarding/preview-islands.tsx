@@ -20,7 +20,6 @@ interface PreviewIslandStep4Props {
     department: string
     year: string
     image: string
-    hasFace: boolean
     snsAvatar?: string
   }
   onbInternalSns: SnsEntry[]
@@ -86,7 +85,6 @@ interface PreviewIslandStep5Props {
     department: string
     year: string
     image: string
-    hasFace: boolean
     snsAvatar?: string
   }
   onbExternalPreview: {
@@ -95,7 +93,6 @@ interface PreviewIslandStep5Props {
     department: string
     year: string
     image: string
-    hasFace: boolean
   }
   onbInternalSns: SnsEntry[]
   onbExternalSns: SnsEntry[]

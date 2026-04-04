@@ -14,7 +14,6 @@ export interface MemberTileProps {
   topInterests?: string[]
   avatarSize?: "sm" | "md"
   preview?: boolean
-  showFacePlaceholder?: boolean
   onClick?: () => void
 }
 
@@ -31,7 +30,6 @@ export function MemberTile({
   topInterests,
   avatarSize = "sm",
   preview = false,
-  showFacePlaceholder = false,
   onClick,
 }: MemberTileProps) {
   const ringClass = getRingColorClass(ringColor)
@@ -48,11 +46,6 @@ export function MemberTile({
             fill
             className="object-cover"
           />
-          {showFacePlaceholder && (
-            <div className="absolute inset-0 flex items-end justify-center bg-black/20">
-              <span className="text-[10px] text-white bg-black/50 px-1 rounded mb-1">あとで設定</span>
-            </div>
-          )}
         </div>
         {snsAvatar && (
           <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">

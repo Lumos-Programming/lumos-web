@@ -24,7 +24,6 @@ interface Step7AvatarProps {
     department: string
     year: string
     image: string
-    hasFace: boolean
   }
   submitting: boolean
   onComplete: () => void

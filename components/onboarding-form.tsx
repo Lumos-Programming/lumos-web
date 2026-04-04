@@ -521,14 +521,12 @@ export default function OnboardingForm() {
 
     const dept = v.faculty !== "private" ? form.faculty : ""
     const mainImage = faceImageUrl || "/assets/avatar-placeholder.svg"
-    const hasFace = !!faceImageUrl
     return {
       main,
       sub,
       department: dept,
       year: form.schoolYear,
       image: mainImage,
-      hasFace,
       snsAvatar: discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined
     }
   }, [visibility, form.lastName, form.firstName, form.nickname, form.faculty, form.schoolYear, faceImageUrl, discordAvatarUrl, getOnbInitials])
@@ -556,15 +554,9 @@ export default function OnboardingForm() {
     const dept = v.faculty === "public" ? form.faculty : ""
 
     let image: string
-    let hasFace = true
     switch (primaryAvatar) {
       case "face":
-        if (faceImageUrl) {
-          image = faceImageUrl
-        } else {
-          image = "/assets/avatar-placeholder.svg";
-          hasFace = false
-        }
+        image = faceImageUrl || "/assets/avatar-placeholder.svg"
         break
       case "discord":
         image = discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : "/assets/avatar-placeholder.svg"
@@ -574,9 +566,8 @@ export default function OnboardingForm() {
         break
       default:
         image = "/assets/avatar-placeholder.svg"
-        hasFace = false
     }
-    return {main, sub, department: dept, year: form.schoolYear, image, hasFace}
+    return {main, sub, department: dept, year: form.schoolYear, image}
   }, [visibility, form.lastName, form.firstName, form.nickname, form.faculty, form.schoolYear, faceImageUrl, primaryAvatar, discordAvatarUrl, lineAvatar, getOnbInitials])
 
   const buildOnbSnsEntries = useCallback((level: "public" | "internal") => {
