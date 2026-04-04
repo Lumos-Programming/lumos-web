@@ -41,7 +41,7 @@ export function InternalShell({ children, userName, userImage, memberNickname, m
           {/* SidebarTrigger と同幅のスペーサーで中央揃えを実現 */}
           <div className="w-7 -mr-1 shrink-0" />
         </header>
-        <div className="flex-1 overflow-auto flex flex-col">
+        <div className="flex-1 overflow-x-hidden overflow-y-auto flex flex-col">
           <div className="flex-1">
             {children}
           </div>
