@@ -4,6 +4,7 @@ import type {Dispatch, SetStateAction} from "react"
 import {MarkdownEditor} from "@/components/markdown-editor"
 import {Button} from "@/components/ui/button"
 import {Label} from "@/components/ui/label"
+import {Star} from "lucide-react"
 import {InterestTagInput} from "@/components/interest-tag-input"
 import type {FormData} from "./types"
 
@@ -28,6 +29,10 @@ export function Step4Profile({form, setForm, submitting, onNext, onBack}: Step4P
         <div className="space-y-2">
           <Label className="text-base font-semibold">興味分野</Label>
           <p className="text-xs text-muted-foreground">興味のある分野や技術をタグとして登録できます。</p>
+          <div className="flex items-start gap-2 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 px-3 py-2">
+            <Star className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" fill="currentColor" />
+            <p className="text-xs text-purple-700 dark:text-purple-300">最初に選んだ3つが自動で Top 3 に設定され、メンバー一覧のタイルに表示されます。タグをタップして入れ替えできます。</p>
+          </div>
           <InterestTagInput
             value={form.interests}
             onChange={(tags) => setForm((f) => ({...f, interests: tags}))}
