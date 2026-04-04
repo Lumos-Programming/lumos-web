@@ -11,6 +11,7 @@ import type {RingColorKey} from "@/types/member"
 import type {SnsEntry} from "@/components/member-tile-preview"
 import type {Area} from "react-easy-crop"
 
+import { normalizeLinkedInUrl } from "@/lib/linkedin"
 import type {FormData, VisibilityForm} from "./onboarding/types"
 import {
   DEFAULT_FORM,
@@ -34,6 +35,8 @@ export default function OnboardingForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  const isPreview = process.env.NODE_ENV === "development" && searchParams.get("preview") !== null
+
   const initialStep = (() => {
     const s = parseInt(searchParams.get("step") ?? "1", 10)
     return s >= 1 && s <= 7 ? s : 1
@@ -56,15 +59,13 @@ export default function OnboardingForm() {
   const [xUsername, setXUsername] = useState("")
   const [xLinked, setXLinked] = useState(false)
   const [xAvatar, setXAvatar] = useState("")
-  const [linkedinUsername, setLinkedinUsername] = useState("")
-  const [linkedinDisplayName, setLinkedinVanity] = useState("")
-  const [linkedinLinked, setLinkedinLinked] = useState(false)
-  const [linkedinAvatar, setLinkedinAvatar] = useState("")
+  const [linkedinUrl, setLinkedinUrl] = useState("")
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [step1Errors, setStep1Errors] = useState<Partial<Record<keyof FormData, string>>>({})
   const [step2Errors, setStep2Errors] = useState<Partial<Record<keyof FormData, string>>>({})
   const [step3Error, setStep3Error] = useState("")
+  const [linkedinError, setLinkedinError] = useState("")
   const [slideAnimating, setSlideAnimating] = useState(false)
   const [discordId, setDiscordId] = useState("")
   const [discordAvatar, setDiscordAvatar] = useState("")
@@ -180,10 +181,7 @@ export default function OnboardingForm() {
           setXLinked(!!data.xId)
           setXUsername(data.x ?? "")
           setXAvatar(data.xAvatar ?? "")
-          setLinkedinLinked(!!data.linkedinId)
-          setLinkedinUsername(data.linkedin ?? "")
-          setLinkedinVanity(data.linkedinDisplayName ?? "")
-          setLinkedinAvatar(data.linkedinAvatar ?? "")
+          setLinkedinUrl(data.linkedin ?? "")
         }
       })
       .catch(console.error)
@@ -229,26 +227,12 @@ export default function OnboardingForm() {
           }
         })
         .catch(console.error)
-    } else if (success === "linkedin_linked") {
-      setLinkedinLinked(true)
-      fetch("/api/profile")
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.linkedin) {
-            setLinkedinUsername(data.linkedin);
-            setLinkedinVanity(data.linkedinDisplayName ?? "");
-            setLinkedinAvatar(data.linkedinAvatar ?? "")
-          }
-        })
-        .catch(console.error)
     } else if (error === "line_link_failed") {
       setStep3Error("LINE連携に失敗しました。もう一度お試しください。")
     } else if (error === "github_link_failed") {
       setStep3Error("GitHub連携に失敗しました。もう一度お試しください。")
     } else if (error === "x_link_failed") {
       setStep3Error("X連携に失敗しました。もう一度お試しください。")
-    } else if (error === "linkedin_link_failed") {
-      setStep3Error("LinkedIn連携に失敗しました。もう一度お試しください。")
     }
 
     if (success || error) {
@@ -256,7 +240,11 @@ export default function OnboardingForm() {
       const url = new URL(window.location.href)
       url.searchParams.delete("success")
       url.searchParams.delete("error")
-      router.replace(url.pathname + (step ? `?step=${step}` : ""))
+      const params = new URLSearchParams()
+      if (step) params.set("step", String(step))
+      if (isPreview) params.set("preview", "")
+      const qs = params.toString()
+      router.replace(url.pathname + (qs ? `?${qs}` : ""))
     }
   }, [searchParams, router])
 
@@ -304,7 +292,7 @@ export default function OnboardingForm() {
     prevStepRef.current = currentStep
     setSlideAnimating(true)
     setCurrentStep(next)
-    router.replace(`?step=${next}`)
+    router.replace(`?step=${next}${isPreview ? "&preview" : ""}`)
     setTimeout(() => setSlideAnimating(false), 400)
   }
 
@@ -431,12 +419,43 @@ export default function OnboardingForm() {
     goToStep(3)
   }
 
-  const handleStep3Next = () => {
+  const handleLinkedinBlur = useCallback(() => {
+    if (!linkedinUrl.trim()) {
+      setLinkedinError("")
+      return
+    }
+    const normalized = normalizeLinkedInUrl(linkedinUrl)
+    if (normalized) {
+      setLinkedinUrl(normalized)
+      setLinkedinError("")
+    } else {
+      setLinkedinError("LinkedInのプロフィールURLを入力してください（例: https://linkedin.com/in/username）")
+    }
+  }, [linkedinUrl])
+
+  const handleStep3Next = async () => {
     if (!lineLinked) {
       setStep3Error("LINEアカウントの連携は必須です")
       return
     }
     setStep3Error("")
+    // Validate & normalize LinkedIn URL if provided
+    if (linkedinUrl.trim()) {
+      const normalized = normalizeLinkedInUrl(linkedinUrl)
+      if (!normalized) {
+        setLinkedinError("LinkedInのプロフィールURLを入力してください（例: https://linkedin.com/in/username）")
+        return
+      }
+      setLinkedinUrl(normalized)
+      setLinkedinError("")
+      try {
+        await fetch("/api/settings/sns", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ linkedin: normalized }),
+        })
+      } catch { /* non-blocking */ }
+    }
     goToStep(4)
   }
 
@@ -601,15 +620,16 @@ export default function OnboardingForm() {
         url: `https://x.com/${xUsername}`,
         avatarUrl: xAvatar || undefined
       })
-    if (check(v.linkedin) && linkedinUsername)
+    if (check(v.linkedin) && linkedinUrl) {
+      const vanity = linkedinUrl.match(/linkedin\.com\/in\/([^/?#]+)/)?.[1] ?? "LinkedIn"
       entries.push({
         platform: "linkedin",
-        username: linkedinDisplayName || "LinkedIn",
-        url: linkedinUsername,
-        avatarUrl: linkedinAvatar || undefined
+        username: vanity,
+        url: linkedinUrl,
       })
+    }
     return entries
-  }, [visibility, githubUsername, githubAvatar, xUsername, xAvatar, discordId, discordUsername, discordAvatarUrl, lineUsername, lineAvatar, linkedinUsername, linkedinDisplayName, linkedinAvatar])
+  }, [visibility, githubUsername, githubAvatar, xUsername, xAvatar, discordId, discordUsername, discordAvatarUrl, lineUsername, lineAvatar, linkedinUrl])
 
   const onbInternalSns = useMemo(() => buildOnbSnsEntries("internal"), [buildOnbSnsEntries])
   const onbExternalSns = useMemo(() => buildOnbSnsEntries("public"), [buildOnbSnsEntries])
@@ -695,6 +715,12 @@ export default function OnboardingForm() {
           },
         }),
       })
+      if (isPreview) {
+        // Preview mode: skip marking onboarding as complete, just show the complete page
+        try { localStorage.removeItem(step2CacheKey) } catch { /* ignore */ }
+        router.push("/internal/onboarding/complete?preview")
+        return
+      }
       const res = await fetch("/api/onboarding", {method: "POST"})
       if (res.ok) {
         try {
@@ -816,9 +842,10 @@ export default function OnboardingForm() {
                 xLinked={xLinked}
                 xUsername={xUsername}
                 xAvatar={xAvatar}
-                linkedinLinked={linkedinLinked}
-                linkedinDisplayName={linkedinDisplayName}
-                linkedinAvatar={linkedinAvatar}
+                linkedinUrl={linkedinUrl}
+                onLinkedinUrlChange={(v) => { setLinkedinUrl(v); setLinkedinError("") }}
+                linkedinError={linkedinError}
+                onLinkedinBlur={handleLinkedinBlur}
                 step3Error={step3Error}
                 onNext={handleStep3Next}
                 onBack={() => goToStep(2)}

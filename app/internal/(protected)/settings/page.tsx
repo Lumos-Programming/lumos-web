@@ -9,14 +9,12 @@ const SUCCESS_MESSAGES: Record<string, string> = {
   github_linked: "GitHubと連携しました。",
   x_linked: "Xと連携しました。",
   line_linked: "LINEと連携しました。",
-  linkedin_linked: "LinkedInと連携しました。",
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
   github_link_failed: "GitHub連携に失敗しました。もう一度お試しください。",
   x_link_failed: "X連携に失敗しました。もう一度お試しください。",
   line_link_failed: "LINE連携に失敗しました。もう一度お試しください。",
-  linkedin_link_failed: "LinkedIn連携に失敗しました。もう一度お試しください。",
 }
 
 export default async function SettingPage({
@@ -55,8 +53,6 @@ export default async function SettingPage({
                 line={member?.line ?? ""}
                 lineId={member?.lineId ?? ""}
                 linkedin={member?.linkedin ?? ""}
-                linkedinId={member?.linkedinId ?? ""}
-                linkedinDisplayName={member?.linkedinDisplayName ?? ""}
                 successMessage={success ? SUCCESS_MESSAGES[success] : undefined}
                 errorMessage={error ? ERROR_MESSAGES[error] : undefined}
               />

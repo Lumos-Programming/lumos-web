@@ -13,9 +13,10 @@ interface Step3SnsProps {
   xLinked: boolean
   xUsername: string
   xAvatar: string
-  linkedinLinked: boolean
-  linkedinDisplayName: string
-  linkedinAvatar: string
+  linkedinUrl: string
+  onLinkedinUrlChange: (url: string) => void
+  linkedinError: string
+  onLinkedinBlur: () => void
   step3Error: string
   onNext: () => void
   onBack: () => void
@@ -25,7 +26,8 @@ export function Step3Sns({
   lineLinked, lineUsername, lineAvatar,
   githubLinked, githubUsername, githubAvatar,
   xLinked, xUsername, xAvatar,
-  linkedinLinked, linkedinDisplayName, linkedinAvatar,
+  linkedinUrl, onLinkedinUrlChange,
+  linkedinError, onLinkedinBlur,
   step3Error, onNext, onBack,
 }: Step3SnsProps) {
   return (
@@ -176,49 +178,41 @@ export function Step3Sns({
           </div>
         </div>
 
-        {/* LinkedIn — optional */}
+        {/* LinkedIn — optional (URL手動入力) */}
         <div
           className={[
             "rounded-xl border p-4 transition-all duration-300",
-            linkedinLinked
+            linkedinUrl
               ? "border-green-400 bg-green-50 dark:bg-green-950/40 dark:border-green-700"
               : "border-gray-200 dark:border-gray-700",
           ].join(" ")}
         >
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="relative flex items-center w-14 flex-shrink-0">
-                <div className="w-9 h-9 rounded-full bg-[#0A66C2] flex items-center justify-center">
-                  <LinkedInIcon className="w-4 h-4 text-white"/>
-                </div>
-                {linkedinLinked && linkedinAvatar && (
-                  <div
-                    className="absolute left-5 w-9 h-9 rounded-full overflow-hidden ring-2 ring-white dark:ring-gray-900">
-                    <img src={linkedinAvatar} alt="" className="w-full h-full object-cover"/>
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0">
-                <span className="font-medium text-gray-900 dark:text-gray-100">LinkedIn</span>
-                {linkedinLinked && (
-                  <p
-                    className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">{linkedinDisplayName || "連携済み"}</p>
-                )}
-              </div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-9 h-9 rounded-full bg-[#0A66C2] flex items-center justify-center flex-shrink-0">
+              <LinkedInIcon className="w-4 h-4 text-white"/>
             </div>
-            <a
-              href="/api/auth/link/linkedin?redirectTo=/internal/onboarding%3Fstep%3D3"
-              className={[
-                "flex-shrink-0 flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors",
-                linkedinLinked
-                  ? "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                  : "bg-[#0A66C2] hover:bg-[#004182] text-white",
-              ].join(" ")}
-            >
-              <LinkedInIcon className="w-3.5 h-3.5"/>
-              {linkedinLinked ? "再連携" : "連携する"}
-            </a>
+            <div className="min-w-0">
+              <span className="font-medium text-gray-900 dark:text-gray-100">LinkedIn</span>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                LinkedIn プロフィールURL（任意）
+              </p>
+            </div>
           </div>
+          <input
+            type="url"
+            value={linkedinUrl}
+            onChange={(e) => onLinkedinUrlChange(e.target.value)}
+            onBlur={onLinkedinBlur}
+            placeholder="https://linkedin.com/in/username"
+            className={`w-full rounded-lg border bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 ${linkedinError ? "border-red-500 focus:ring-red-500" : "border-gray-200 dark:border-gray-700 focus:ring-[#0A66C2]/50 focus:border-[#0A66C2]"}`}
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            <a href="https://www.linkedin.com/in/me" target="_blank" rel="noopener noreferrer" className="text-[#0A66C2] hover:underline">こちら</a>
+            で表示されるページのURLを入力してください
+          </p>
+          {linkedinError && (
+            <p className="text-xs text-red-500 mt-1">{linkedinError}</p>
+          )}
         </div>
 
         {step3Error && (

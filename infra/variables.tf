@@ -23,7 +23,7 @@ variable "cloud_run_env_vars" {
       AUTH_GITHUB_ID        = "Ov23liN6oGK1lfbZm3P2"
       AUTH_X_ID             = "eW5jSnZRbEFBLWJMY1Z3NTFmVXQ6MTpjaQ"
       AUTH_LINE_ID          = "2009690509"
-      AUTH_LINKEDIN_ID      = "86hiyrhp1dyb83"
+
       AUTH_DISCORD_ID       = "1489548152779309197"
       AUTH_URL              = "https://dev.lumos-ynu.jp"
       FIRESTORE_DATABASE_ID = "development"
@@ -35,7 +35,7 @@ variable "cloud_run_env_vars" {
       AUTH_GITHUB_ID        = "Ov23li6SPPesKvJDqXiO"
       AUTH_X_ID             = "MktOVXFWdWNFZzN5VzI2TXJFZ2Q6MTpjaQ"
       AUTH_LINE_ID          = "2009694131"
-      AUTH_LINKEDIN_ID      = "86hiyrhp1dyb83"
+
       AUTH_DISCORD_ID       = "1377983265948041228"
       AUTH_URL              = "https://stg.lumos-ynu.jp"
       FIRESTORE_DATABASE_ID = "staging"
@@ -47,7 +47,7 @@ variable "cloud_run_env_vars" {
       AUTH_GITHUB_ID        = "Ov23liaSCNoELzDDQ71W"
       AUTH_X_ID             = "UUthQmxHVlY1anFBU0VtWmQxUmU6MTpjaQ"
       AUTH_LINE_ID          = "1661094871"
-      AUTH_LINKEDIN_ID      = "86hiyrhp1dyb83"
+
       AUTH_DISCORD_ID       = "933021504319422544"
       AUTH_URL              = "https://lumos-ynu.jp"
       FIRESTORE_DATABASE_ID = "" // this should use default db (default)

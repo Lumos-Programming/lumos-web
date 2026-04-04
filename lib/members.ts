@@ -30,13 +30,7 @@ export interface MemberDocument {
   line?: string
   lineId?: string
   lineAvatar?: string
-  linkedin?: string            // Profile URL (from /rest/identityMe basicInfo.profileUrl)
-  linkedinId?: string           // App-scoped member ID (from /rest/identityMe id)
-  linkedinVanity?: string       // Vanity slug e.g. "shion1305" (resolved from profileUrl redirect)
-  linkedinDisplayName?: string  // Display name from /v2/userinfo (name)
-  linkedinFirstName?: string    // First name from /v2/userinfo (given_name)
-  linkedinLastName?: string     // Last name from /v2/userinfo (family_name)
-  linkedinAvatar?: string
+  linkedin?: string            // LinkedIn profile URL (manually entered)
   lineAccessToken?: string
   lineRefreshToken?: string
   lineTokenExpiresAt?: number   // Unix timestamp (seconds)
@@ -156,7 +150,7 @@ export async function getMemberInternal(discordId: string): Promise<Member | nul
 
 export async function updateMember(
   discordId: string,
-  data: Partial<Omit<MemberDocument, 'discordUsername' | 'discordAvatar' | 'github' | 'githubId' | 'x' | 'xId' | 'linkedin' | 'linkedinId' | 'line' | 'lineId' | 'createdAt' | 'updatedAt'>>
+  data: Partial<Omit<MemberDocument, 'discordUsername' | 'discordAvatar' | 'github' | 'githubId' | 'x' | 'xId' | 'line' | 'lineId' | 'createdAt' | 'updatedAt'>>
 ): Promise<void> {
   const db = getDb()
   await db.collection('members').doc(discordId).update({
@@ -167,7 +161,7 @@ export async function updateMember(
 
 export async function updateMemberSns(
   discordId: string,
-  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'githubAvatar' | 'x' | 'xId' | 'xAvatar' | 'linkedin' | 'linkedinId' | 'linkedinVanity' | 'linkedinDisplayName' | 'linkedinFirstName' | 'linkedinLastName' | 'linkedinAvatar' | 'line' | 'lineId' | 'lineAvatar' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
+  data: Partial<Pick<MemberDocument, 'github' | 'githubId' | 'githubAvatar' | 'x' | 'xId' | 'xAvatar' | 'linkedin' | 'line' | 'lineId' | 'lineAvatar' | 'lineAccessToken' | 'lineRefreshToken' | 'lineTokenExpiresAt'>>
 ): Promise<void> {
   const db = getDb()
   await db.collection('members').doc(discordId).update({
@@ -184,19 +178,15 @@ export async function deleteMemberSnsField(
   const updates: Record<string, unknown> = {
     updatedAt: FieldValue.serverTimestamp(),
     [provider]: FieldValue.delete(),
-    [`${provider}Id`]: FieldValue.delete(),
-    [`${provider}Avatar`]: FieldValue.delete(),
+  }
+  if (provider !== 'linkedin') {
+    updates[`${provider}Id`] = FieldValue.delete()
+    updates[`${provider}Avatar`] = FieldValue.delete()
   }
   if (provider === 'line') {
     updates.lineAccessToken = FieldValue.delete()
     updates.lineRefreshToken = FieldValue.delete()
     updates.lineTokenExpiresAt = FieldValue.delete()
-  }
-  if (provider === 'linkedin') {
-    updates.linkedinVanity = FieldValue.delete()
-    updates.linkedinDisplayName = FieldValue.delete()
-    updates.linkedinFirstName = FieldValue.delete()
-    updates.linkedinLastName = FieldValue.delete()
   }
   await db.collection('members').doc(discordId).update(updates)
 }

@@ -45,21 +45,3 @@ resource "google_secret_manager_secret_iam_member" "per_env_accessor" {
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.cloud_run[each.value.env].email}"
 }
-
-# Secrets shared across all environments
-resource "google_secret_manager_secret" "linkedin_oauth" {
-  secret_id = "lumos-ynu-linkedin-oauth-secret"
-  project   = var.project_id
-
-  replication {
-    auto {}
-  }
-}
-
-resource "google_secret_manager_secret_iam_member" "linkedin_accessor" {
-  for_each = toset(local.cloud_run_envs)
-
-  secret_id = google_secret_manager_secret.linkedin_oauth.id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.cloud_run[each.key].email}"
-}

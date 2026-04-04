@@ -3,6 +3,7 @@
 import {useState} from "react"
 import {useRouter} from "next/navigation"
 import { Check } from "lucide-react"
+import { normalizeLinkedInUrl } from "@/lib/linkedin"
 
 interface Props {
   discordUsername: string
@@ -13,8 +14,6 @@ interface Props {
   line: string
   lineId: string
   linkedin: string
-  linkedinId: string
-  linkedinDisplayName: string
   successMessage?: string
   errorMessage?: string
 }
@@ -140,6 +139,161 @@ function ProviderCard({
   )
 }
 
+function LinkedInCard({ url, onSaved, onDeleted }: { url: string; onSaved: (url: string) => void; onDeleted: () => void }) {
+  const [editing, setEditing] = useState(false)
+  const [inputValue, setInputValue] = useState(url)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState("")
+
+  const isSet = !!url
+  const displayUrl = url.replace(/^https?:\/\/(www\.)?/, "")
+
+  const handleBlur = () => {
+    if (!inputValue.trim()) {
+      setError("")
+      return
+    }
+    const normalized = normalizeLinkedInUrl(inputValue)
+    if (normalized) {
+      setInputValue(normalized)
+      setError("")
+    } else {
+      setError("LinkedInのプロフィールURLを入力してください（例: https://linkedin.com/in/username）")
+    }
+  }
+
+  const handleSave = async () => {
+    const normalized = normalizeLinkedInUrl(inputValue)
+    if (!normalized) {
+      setError("LinkedInのプロフィールURLを入力してください（例: https://linkedin.com/in/username）")
+      return
+    }
+    setSaving(true)
+    const res = await fetch("/api/settings/sns", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ linkedin: normalized }),
+    })
+    setSaving(false)
+    if (res.ok) {
+      onSaved(normalized)
+      setEditing(false)
+      setError("")
+    } else {
+      alert("保存に失敗しました。")
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm("LinkedInのURLを削除しますか？")) return
+    setDeleting(true)
+    const res = await fetch("/api/settings/sns", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider: "linkedin" }),
+    })
+    setDeleting(false)
+    if (res.ok) {
+      setInputValue("")
+      onDeleted()
+    } else {
+      alert("削除に失敗しました。")
+    }
+  }
+
+  return (
+    <div className="p-4 border rounded-xl bg-card hover:shadow-md transition-all duration-200">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[#0A66C2] rounded-xl flex items-center justify-center text-white shrink-0">
+            <LinkedInIcon className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-sm">LinkedIn</p>
+              {isSet && !editing && (
+                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-green-500 animate-in zoom-in-50 duration-300">
+                  <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                </span>
+              )}
+            </div>
+            {isSet && !editing ? (
+              <p className="text-xs text-muted-foreground">{displayUrl}</p>
+            ) : !editing ? (
+              <p className="text-xs text-muted-foreground/60">未設定</p>
+            ) : null}
+          </div>
+        </div>
+        {!editing && (
+          <div className="flex items-center gap-2">
+            {isSet ? (
+              <>
+                <button
+                  onClick={() => { setInputValue(url); setEditing(true) }}
+                  className="text-xs text-muted-foreground hover:text-foreground border border-border hover:border-foreground/30 rounded-lg px-3 py-1.5 transition-all duration-200"
+                >
+                  編集
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="text-xs text-red-500 hover:text-red-600 border border-red-200 dark:border-red-900 hover:border-red-400 dark:hover:border-red-700 rounded-lg px-3 py-1.5 transition-all duration-200 disabled:opacity-50"
+                >
+                  {deleting ? "削除中..." : "削除"}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => { setInputValue(""); setEditing(true) }}
+                className="flex items-center gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                <LinkedInIcon className="w-4 h-4" />
+                URLを入力
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+      {editing && (
+        <div className="mt-3 space-y-2 animate-in fade-in-50 slide-in-from-top-1 duration-200">
+          <input
+            type="url"
+            value={inputValue}
+            onChange={(e) => { setInputValue(e.target.value); setError("") }}
+            onBlur={handleBlur}
+            placeholder="https://linkedin.com/in/username"
+            className={`w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 ${error ? "border-red-500 focus:ring-red-500" : "border-border focus:ring-[#0A66C2]/50 focus:border-[#0A66C2]"}`}
+            autoFocus
+          />
+          {error && (
+            <p className="text-xs text-red-500">{error}</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            <a href="https://www.linkedin.com/in/me" target="_blank" rel="noopener noreferrer" className="text-[#0A66C2] hover:underline">こちら</a>
+            で表示されるページのURLを入力してください
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => { setInputValue(url); setEditing(false) }}
+              className="text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-1.5 transition-all duration-200"
+            >
+              キャンセル
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="text-xs bg-[#0A66C2] hover:bg-[#004182] text-white rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
+            >
+              {saving ? "保存中..." : "保存"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function SnsSettings({
   discordUsername,
   github: initialGithub,
@@ -149,8 +303,6 @@ export default function SnsSettings({
   line: initialLine,
   lineId: initialLineId,
   linkedin: initialLinkedin,
-  linkedinId: initialLinkedinId,
-  linkedinDisplayName: initialLinkedinDisplayName,
   successMessage,
   errorMessage,
 }: Props) {
@@ -161,11 +313,9 @@ export default function SnsSettings({
   const [xId, setXId] = useState(initialXId)
   const [line, setLine] = useState(initialLine)
   const [lineId, setLineId] = useState(initialLineId)
-  const [, setLinkedin] = useState(initialLinkedin)
-  const [linkedinId, setLinkedinId] = useState(initialLinkedinId)
-  const [linkedinDisplayName, setLinkedinDisplayName] = useState(initialLinkedinDisplayName)
+  const [linkedinUrl, setLinkedinUrl] = useState(initialLinkedin)
 
-  const disconnect = async (provider: "github" | "x" | "line" | "linkedin") => {
+  const disconnect = async (provider: "github" | "x" | "line") => {
     const res = await fetch("/api/settings/sns", {
       method: "DELETE",
       headers: {"Content-Type": "application/json"},
@@ -175,7 +325,6 @@ export default function SnsSettings({
       if (provider === "github") { setGithub(""); setGithubId("") }
       if (provider === "x") { setX(""); setXId("") }
       if (provider === "line") { setLine(""); setLineId("") }
-      if (provider === "linkedin") { setLinkedin(""); setLinkedinId(""); setLinkedinDisplayName("") }
       router.refresh()
     } else {
       alert("解除に失敗しました。")
@@ -274,21 +423,10 @@ export default function SnsSettings({
       />
 
       {/* LinkedIn */}
-      <ProviderCard
-        name="LinkedIn"
-        connectedUser={linkedinDisplayName || "連携済み"}
-        isConnected={!!linkedinId}
-        prefixAt={false}
-        onConnect={() => { window.location.href = "/api/auth/link/linkedin" }}
-        onDisconnect={() => disconnect("linkedin")}
-        brandColor="bg-[#0A66C2]"
-        icon={<LinkedInIcon className="w-5 h-5"/>}
-        connectButton={
-          <span className="flex items-center gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-            <LinkedInIcon className="w-4 h-4"/>
-            LinkedInで連携
-          </span>
-        }
+      <LinkedInCard
+        url={linkedinUrl}
+        onSaved={(url) => { setLinkedinUrl(url); router.refresh() }}
+        onDeleted={() => { setLinkedinUrl(""); router.refresh() }}
       />
     </div>
   )
