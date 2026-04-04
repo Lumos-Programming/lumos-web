@@ -106,9 +106,7 @@ export default function ProfileEdit() {
   const [lineLinked, setLineLinked] = useState(false)
   const [githubAvatar, setGithubAvatar] = useState("")
   const [xAvatar, setXAvatar] = useState("")
-  const [linkedinAvatar, setLinkedinAvatar] = useState("")
-  const [linkedinUsername, setLinkedinUsername] = useState("")
-  const [linkedinDisplayName, setLinkedinVanity] = useState("")
+  const [linkedinUrl, setLinkedinUrl] = useState("")
   const [faceImageUrl, setFaceImageUrl] = useState("")
   const [primaryAvatar, setPrimaryAvatar] = useState<"face" | "discord" | "line" | "default">("face")
   const [ringColor, setRingColor] = useState<RingColorKey>(DEFAULT_RING_COLOR)
@@ -174,9 +172,7 @@ export default function ProfileEdit() {
           setLineLinked(!!data.lineId)
           if (data.githubAvatar) setGithubAvatar(data.githubAvatar)
           if (data.xAvatar) setXAvatar(data.xAvatar)
-          if (data.linkedinAvatar) setLinkedinAvatar(data.linkedinAvatar)
-          if (data.linkedin) setLinkedinUsername(data.linkedin)
-          if (data.linkedinDisplayName) setLinkedinVanity(data.linkedinDisplayName)
+          if (data.linkedin) setLinkedinUrl(data.linkedin)
           if (data.faceImage) setFaceImageUrl(data.faceImage)
           if (data.bannerImage) setBannerImageUrl(data.bannerImage)
           if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
@@ -462,10 +458,12 @@ export default function ProfileEdit() {
       entries.push({ platform: "github", username: profile.github, url: `https://github.com/${profile.github}`, avatarUrl: githubAvatar || undefined })
     if (check(v.x) && profile.x)
       entries.push({ platform: "x", username: profile.x, url: `https://x.com/${profile.x}`, avatarUrl: xAvatar || undefined })
-    if (check(v.linkedin) && linkedinUsername)
-      entries.push({ platform: "linkedin", username: linkedinDisplayName || "LinkedIn", url: linkedinUsername, avatarUrl: linkedinAvatar || undefined })
+    if (check(v.linkedin) && linkedinUrl) {
+      const vanity = linkedinUrl.match(/linkedin\.com\/in\/([^/?#]+)/)?.[1] ?? "LinkedIn"
+      entries.push({ platform: "linkedin", username: vanity, url: linkedinUrl })
+    }
     return entries
-  }, [profile, discordId, githubAvatar, xAvatar, discordAvatarUrl, lineAvatar, linkedinAvatar, linkedinUsername, linkedinDisplayName])
+  }, [profile, discordId, githubAvatar, xAvatar, discordAvatarUrl, lineAvatar, linkedinUrl])
 
   const internalSns = useMemo(() => buildSnsEntries("internal"), [buildSnsEntries])
   const externalSns = useMemo(() => buildSnsEntries("public"), [buildSnsEntries])

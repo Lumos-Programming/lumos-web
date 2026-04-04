@@ -89,15 +89,6 @@ resource "google_cloud_run_service" "web" {
           }
         }
         env {
-          name = "AUTH_LINKEDIN_SECRET"
-          value_from {
-            secret_key_ref {
-              name = google_secret_manager_secret.linkedin_oauth.secret_id
-              key  = "latest"
-            }
-          }
-        }
-        env {
           name = "AUTH_DISCORD_SECRET"
           value_from {
             secret_key_ref {

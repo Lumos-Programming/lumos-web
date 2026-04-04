@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'crypto'
 
-export type OAuthLinkProvider = 'github' | 'x' | 'line' | 'linkedin'
+export type OAuthLinkProvider = 'github' | 'x' | 'line'
 
 interface ProviderConfig {
   authUrl: string
@@ -37,14 +37,6 @@ export const PROVIDER_CONFIGS: Record<OAuthLinkProvider, ProviderConfig> = {
     clientIdEnv: 'AUTH_LINE_ID',
     clientSecretEnv: 'AUTH_LINE_SECRET',
     scope: 'profile',
-  },
-  linkedin: {
-    authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
-    tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
-    userUrl: 'https://api.linkedin.com/rest/identityMe',
-    clientIdEnv: 'AUTH_LINKEDIN_ID',
-    clientSecretEnv: 'AUTH_LINKEDIN_SECRET',
-    scope: 'openid profile r_profile_basicinfo',
   },
 }
 
@@ -175,12 +167,9 @@ export async function exchangeCodeForTokenFull(
 export async function fetchProviderUser(
   provider: OAuthLinkProvider,
   accessToken: string
-): Promise<{ id: string; username: string; avatar?: string; vanityName?: string; displayName?: string; firstName?: string; lastName?: string }> {
+): Promise<{ id: string; username: string; avatar?: string }> {
   const config = PROVIDER_CONFIGS[provider]
   const headers: Record<string, string> = { Authorization: `Bearer ${accessToken}` }
-  if (provider === 'linkedin') {
-    headers['LinkedIn-Version'] = '202510'
-  }
   const res = await fetch(config.userUrl, { headers })
   const data = await res.json()
 
@@ -202,49 +191,6 @@ export async function fetchProviderUser(
   }
   if (provider === 'line') {
     return { id: data.userId, username: data.displayName, avatar: data.pictureUrl }
-  }
-  if (provider === 'linkedin') {
-    // 1. /rest/identityMe — profileUrl, avatar, id
-    const basicInfo = data.basicInfo
-    if (!basicInfo) {
-      console.error('LinkedIn identityMe unexpected response:', JSON.stringify(data))
-      throw new Error('LinkedIn identityMe returned no basicInfo')
-    }
-    const avatar: string | undefined = basicInfo.profilePicture?.croppedImage?.downloadUrl
-
-    // profileUrl is a temporary redirect URL — follow it to get the vanity slug
-    let vanityName = ''
-    const profileUrl: string | undefined = basicInfo.profileUrl
-    if (profileUrl) {
-      try {
-        const redirectRes = await fetch(profileUrl, { redirect: 'manual' })
-        const location = redirectRes.headers.get('location') ?? ''
-        const match = location.match(/linkedin\.com\/in\/([^/?#]+)/)
-        if (match) vanityName = match[1]
-      } catch {
-        // fallback: vanity name unavailable
-      }
-    }
-
-    // 2. /v2/userinfo — non-localized name, given_name, family_name
-    let displayName: string | undefined
-    let firstName: string | undefined
-    let lastName: string | undefined
-    try {
-      const uiRes = await fetch('https://api.linkedin.com/v2/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      if (uiRes.ok) {
-        const ui = await uiRes.json()
-        displayName = ui.name
-        firstName = ui.given_name
-        lastName = ui.family_name
-      }
-    } catch {
-      // name is optional, continue without it
-    }
-
-    return { id: String(data.id), username: profileUrl ?? '', avatar, vanityName: vanityName || undefined, displayName, firstName, lastName }
   }
   throw new Error(`Unknown provider: ${provider}`)
 }
