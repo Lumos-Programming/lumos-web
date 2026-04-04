@@ -89,10 +89,14 @@ export function socialToSnsEntries(social?: {
   github?: string
   discord?: string
   linkedin?: string
+  line?: string
   website?: string
 }): SnsEntry[] {
   if (!social) return []
   const entries: SnsEntry[] = []
+  if (social.line) {
+    entries.push({ platform: "line", username: social.line })
+  }
   if (social.github) {
     const username = social.github.replace(/^https?:\/\/(www\.)?github\.com\//, "").replace(/\/$/, "")
     entries.push({ platform: "github", username, url: social.github })
@@ -116,7 +120,7 @@ export function socialToSnsEntries(social?: {
   return entries
 }
 
-export function SnsChipsSection({ social, snsEntries }: { social?: { x?: string; github?: string; discord?: string; linkedin?: string; website?: string }; snsEntries?: SnsEntry[] }) {
+export function SnsChipsSection({ social, snsEntries }: { social?: { x?: string; github?: string; discord?: string; linkedin?: string; line?: string; website?: string }; snsEntries?: SnsEntry[] }) {
   const entries = snsEntries ?? socialToSnsEntries(social)
   if (entries.length === 0) return null
   return (

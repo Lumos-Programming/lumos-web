@@ -38,6 +38,7 @@ export default async function ProfilePage() {
     x: member.x ? `https://x.com/${member.x}` : undefined,
     discord: `https://discord.com/users/${session.user.id}`,
     linkedin: member.linkedin || undefined,
+    line: member.line || undefined,
   } : undefined
 
   return (

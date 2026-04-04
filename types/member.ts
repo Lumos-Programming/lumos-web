@@ -13,6 +13,7 @@ export type Member = {
     github?: string
     discord?: string
     linkedin?: string
+    line?: string
     website?: string
   }
   nickname?: string          // ニックネーム（visibility に従う）

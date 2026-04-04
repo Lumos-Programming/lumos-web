@@ -276,6 +276,7 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
   if (v.x !== 'private' && data.x) social.x = `https://x.com/${data.x}`
   if (v.linkedin !== 'private' && data.linkedin) social.linkedin = data.linkedin
   if (v.discord !== 'private') social.discord = `https://discord.com/users/${discordId}`
+  if (v.line !== 'private' && data.line) social.line = data.line
 
   const currentFaculty = data.enrollments?.find(e => e.isCurrent)?.faculty ?? ''
 
