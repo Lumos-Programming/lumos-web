@@ -11,7 +11,7 @@ const MEMBER_TYPE_FILTERS = [
   { key: "all", label: "すべて" },
   { key: "学部生", label: "学部生" },
   { key: "院生", label: "院生" },
-  { key: "聴講生", label: "聴講生" },
+  { key: "その他", label: "その他" },
   { key: "卒業生", label: "卒業生" },
 ]
 

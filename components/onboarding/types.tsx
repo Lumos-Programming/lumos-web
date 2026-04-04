@@ -117,7 +117,7 @@ export function getSchoolYearOptions(memberType: MemberType | ""): { label: stri
       return {label: "学年", options: ["学部1年", "学部2年", "学部3年", "学部4年"]}
     case "院生":
       return {label: "学年", options: ["修士1年", "修士2年", "博士1年", "博士2年", "博士3年"]}
-    case "聴講生":
+    case "その他":
       return {
         label: "学年",
         note: "在籍した年数を選択してください",

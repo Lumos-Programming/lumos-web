@@ -52,7 +52,7 @@ export interface Profile {
 
 export const GENDER_OPTIONS = ["男性", "女性", "その他"] as const
 
-export const MEMBER_TYPES = ["学部生", "院生", "聴講生", "卒業生"] as const
+export const MEMBER_TYPES = ["学部生", "院生", "その他", "卒業生"] as const
 export type MemberType = typeof MEMBER_TYPES[number]
 
 export const ENROLLMENT_TYPES = ["入学", "編入"] as const
@@ -72,7 +72,7 @@ export function getFacultyOptions(memberType: MemberType | ""): { label: string;
       return { label: "所属学部", options: FACULTIES }
     case "院生":
       return { label: "所属学府", options: GRADUATE_SCHOOLS }
-    case "聴講生":
+    case "その他":
       return { label: "所属学部/学府", options: [...FACULTIES, ...GRADUATE_SCHOOLS] }
     case "卒業生":
       return { label: "最終所属学部/学府", options: [...FACULTIES, ...GRADUATE_SCHOOLS] }
