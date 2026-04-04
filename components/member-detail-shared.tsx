@@ -41,24 +41,6 @@ export function InterestsSection({ interests }: { interests?: string[] }) {
   )
 }
 
-// --- SkillsSection ---
-
-export function SkillsSection({ skills }: { skills: string[] }) {
-  if (skills.length === 0) return null
-  return (
-    <div className="mb-4">
-      <h4 className="font-bold text-sm text-muted-foreground mb-2">スキル</h4>
-      <div className="flex flex-wrap gap-2">
-        {skills.map((skill, index) => (
-          <span key={index} className="bg-secondary text-primary text-xs px-2 py-1 rounded-full">
-            {skill}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 // --- MemberDetailContent ---
 
 export function MemberDetailContent({ member, showSnsAvatar }: { member: Member; showSnsAvatar?: boolean }) {
@@ -98,7 +80,6 @@ export function MemberDetailContent({ member, showSnsAvatar }: { member: Member;
             <BioSection bio={member.bio} />
           </div>
           <InterestsSection interests={member.interests} />
-          <SkillsSection skills={member.skills} />
           <SnsChipsSection social={member.social} />
         </div>
       </div>

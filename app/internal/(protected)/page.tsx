@@ -10,7 +10,7 @@ const QUICK_ACTIONS = [
     href: "/internal/profile/edit",
     icon: Pencil,
     label: "プロフィール編集",
-    description: "自己紹介やスキルを更新",
+    description: "自己紹介や興味タグを更新",
     gradient: "from-purple-500 to-indigo-500",
   },
   {
@@ -54,7 +54,6 @@ function getProfileCompletionItems(member: Record<string, unknown> | null): Comp
     { label: "ニックネーム", done: !!member.nickname },
     { label: "氏名", done: !!member.lastName },
     { label: "プロフィール文", done: !!member.bio },
-    { label: "スキル", done: !!(member.skills && (member.skills as string[]).length > 0) },
     { label: "顔写真", done: !!member.faceImage },
     { label: "SNS連携", done: !!member.github || !!member.x || !!member.line },
     { label: "興味分野", done: !!(member.interests && (member.interests as string[]).length > 0) },
