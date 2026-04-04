@@ -98,6 +98,12 @@ function LinePopup({ entry, onClose }: { entry: SnsEntry; onClose: () => void })
           <p className="font-semibold text-lg">{entry.username}</p>
           <p className="text-xs text-muted-foreground mt-0.5">LINE</p>
         </div>
+        <button
+          onClick={onClose}
+          className="w-full mt-1 py-2 rounded-lg bg-[#06C755] hover:bg-[#05a848] text-white text-sm font-medium transition-colors"
+        >
+          OK
+        </button>
       </div>
     </div>
   )
