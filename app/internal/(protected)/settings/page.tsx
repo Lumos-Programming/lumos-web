@@ -20,11 +20,11 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function SettingPage({
   searchParams,
 }: {
-  searchParams?: { success?: string; error?: string }
+  searchParams?: Promise<{ success?: string; error?: string }>
 }) {
   const session = await auth()
   const member = await getMember(session!.user!.id)
-  const { success, error } = searchParams ?? {}
+  const { success, error } = (await searchParams) ?? {}
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto animate-spring-up">

@@ -11,8 +11,10 @@ import { SnsChipsSection } from "@/components/sns-chips"
 export function BioSection({ bio, clamp }: { bio?: string; clamp?: boolean }) {
   if (bio) {
     return (
-      <div className={`prose prose-sm dark:prose-invert max-w-none text-foreground ${clamp ? "line-clamp-3 text-xs text-gray-600 dark:text-gray-400" : ""}`}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{bio}</ReactMarkdown>
+      <div className="overflow-hidden">
+        <div className={`prose prose-sm dark:prose-invert max-w-none text-foreground overflow-x-auto ${clamp ? "line-clamp-3 text-xs text-gray-600 dark:text-gray-400" : ""}`}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{bio}</ReactMarkdown>
+        </div>
       </div>
     )
   }
