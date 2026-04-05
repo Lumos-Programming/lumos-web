@@ -21,7 +21,8 @@ export function Step4Profile({form, setForm, submitting, onNext, onBack}: Step4P
   return (
     <div className="p-8">
       <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">プロフィール</h2>
+        <h2
+          className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">プロフィール</h2>
         <p className="text-muted-foreground mt-1 text-sm">興味分野とプロフィール文を設定しましょう。</p>
       </div>
 
@@ -30,9 +31,12 @@ export function Step4Profile({form, setForm, submitting, onNext, onBack}: Step4P
         <div className="space-y-2">
           <Label className="text-base font-semibold">興味分野</Label>
           <p className="text-xs text-muted-foreground">興味のある分野や技術をタグとして登録できます。</p>
-          <div className="flex items-start gap-2 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 px-3 py-2">
-            <Star className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0" fill="currentColor" />
-            <p className="text-xs text-purple-700 dark:text-purple-300">最大${MAX_TOP_INTERESTS}つまでメンバー一覧に表示できます。タグをタップして入れ替えできます。</p>
+          <div
+            className="flex items-start gap-2 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 px-3 py-2">
+            <Star className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0"
+                  fill="currentColor"/>
+            <p
+              className="text-xs text-purple-700 dark:text-purple-300">最大{MAX_TOP_INTERESTS}つまでメンバー一覧に表示できます。タグをタップして入れ替えできます。</p>
           </div>
           <InterestTagInput
             value={form.interests}

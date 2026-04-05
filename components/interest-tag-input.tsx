@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useMemo, useLayoutEffect } from "react"
 import { X, Star, Plus, GripVertical } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   DndContext,
   closestCenter,
@@ -43,6 +44,7 @@ import {
 
 function useFlip(containerRef: React.RefObject<HTMLDivElement | null>) {
   const prevRectsRef = useRef<Map<string, DOMRect> | null>(null)
+  const rafHandlesRef = useRef<number[]>([])
 
   const snapshot = useCallback(() => {
     const el = containerRef.current
@@ -55,6 +57,7 @@ function useFlip(containerRef: React.RefObject<HTMLDivElement | null>) {
     prevRectsRef.current = map
   }, [containerRef])
 
+  // Runs every render; early-returns when no snapshot is pending
   useLayoutEffect(() => {
     const prev = prevRectsRef.current
     if (!prev) return
@@ -62,6 +65,10 @@ function useFlip(containerRef: React.RefObject<HTMLDivElement | null>) {
 
     const el = containerRef.current
     if (!el) return
+
+    // Cancel any in-flight animations from a previous cycle
+    for (const id of rafHandlesRef.current) cancelAnimationFrame(id)
+    rafHandlesRef.current = []
 
     for (const child of Array.from(el.children) as HTMLElement[]) {
       const key = child.dataset.sortableId
@@ -73,23 +80,27 @@ function useFlip(containerRef: React.RefObject<HTMLDivElement | null>) {
       const dy = oldRect.top - newRect.top
       if (dx === 0 && dy === 0) continue
 
-      // Temporarily override dnd-kit's inline styles
       const prevTransition = child.style.transition
       const prevTransform = child.style.transform
       child.style.transition = "none"
       child.style.transform = `translate(${dx}px, ${dy}px)`
-      requestAnimationFrame(() => {
+      const rafId = requestAnimationFrame(() => {
         child.style.transition = "transform 200ms ease"
         child.style.transform = prevTransform || ""
-        // Restore dnd-kit's transition after animation
-        const onEnd = () => {
+        child.addEventListener("transitionend", () => {
           child.style.transition = prevTransition
-          child.removeEventListener("transitionend", onEnd)
-        }
-        child.addEventListener("transitionend", onEnd)
+        }, { once: true })
       })
+      rafHandlesRef.current.push(rafId)
     }
   })
+
+  // Cleanup on unmount
+  useLayoutEffect(() => {
+    return () => {
+      for (const id of rafHandlesRef.current) cancelAnimationFrame(id)
+    }
+  }, [])
 
   return snapshot
 }
@@ -123,13 +134,13 @@ function SortableChip({ tag, isTop, onToggleTop, onRemove }: SortableChipProps) 
       ref={setNodeRef}
       style={style}
       data-sortable-id={tag}
-      className={[
+      className={cn(
         "inline-flex items-center gap-1 text-xs font-medium pl-1 pr-1 py-1.5 rounded-full select-none",
         isDragging ? "opacity-80 shadow-lg" : "transition-colors duration-200",
         isTop
           ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 ring-2 ring-purple-300 dark:ring-purple-700 shadow-sm"
           : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-      ].join(" ")}
+      )}
     >
       <button
         type="button"
@@ -289,6 +300,25 @@ export function InterestTagInput({
   const showCustomAdd =
     canAddCustom && !hasExactPresetMatch && !hasExactSelectedMatch
 
+  // Popover height estimate: CommandInput(~44) + CommandList(300) + sideOffset(4) + padding(8)
+  const POPOVER_HEIGHT_ESTIMATE = 356
+  const SCROLL_BOTTOM_MARGIN = 20
+
+  const handleOpenChange = useCallback((v: boolean) => {
+    setOpen(v)
+    if (v) {
+      requestAnimationFrame(() => {
+        const el = triggerRef.current
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        const overflow = rect.bottom + POPOVER_HEIGHT_ESTIMATE - window.innerHeight + SCROLL_BOTTOM_MARGIN
+        if (overflow > 0) {
+          window.scrollBy({ top: overflow, behavior: "smooth" })
+        }
+      })
+    }
+  }, [])
+
   return (
     <div className="space-y-3">
       {/* Selected tags display */}
@@ -314,41 +344,27 @@ export function InterestTagInput({
         </DndContext>
       )}
 
-      {/* Top 3 hint */}
+      {/* Top hint */}
       {value.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          ドラッグで並び替え・タップで Top 3 を変更（{topInterests.length}/{MAX_TOP_INTERESTS}）
+          ドラッグで並び替え・タップで Top を変更（{topInterests.length}/{MAX_TOP_INTERESTS}）
         </p>
       )}
 
       {/* Tag selector */}
-      <Popover open={open} onOpenChange={(v) => {
-        setOpen(v)
-        if (v && triggerRef.current) {
-          // Wait for popover to render, then ensure its bottom is visible
-          requestAnimationFrame(() => {
-            const rect = triggerRef.current!.getBoundingClientRect()
-            // trigger bottom + sideOffset(4) + CommandList(300) + CommandInput(~44) + padding
-            const popoverBottom = rect.bottom + 4 + 300 + 44 + 8
-            const overflow = popoverBottom - window.innerHeight + 20
-            if (overflow > 0) {
-              window.scrollBy({ top: overflow, behavior: "smooth" })
-            }
-          })
-        }
-      }}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <button
             ref={triggerRef}
             type="button"
-            className={[
+            className={cn(
               "w-full flex items-center gap-2 rounded-md border border-input px-3 py-2 text-sm",
               "bg-white dark:bg-gray-800 text-left",
               "hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-ring transition-colors",
               value.length >= maxTags
                 ? "opacity-50 cursor-not-allowed"
                 : "cursor-pointer",
-            ].join(" ")}
+            )}
             disabled={value.length >= maxTags}
           >
             <Plus className="w-4 h-4 text-muted-foreground flex-shrink-0" />
