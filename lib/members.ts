@@ -114,7 +114,7 @@ export async function getOrCreateMember(
   }
 }
 
-export async function getMembers(): Promise<Member[]> {
+export async function getPublicMembers(): Promise<Member[]> {
   const db = getDb()
   const snap = await db.collection('members')
     .where('onboardingCompleted', '==', true)
