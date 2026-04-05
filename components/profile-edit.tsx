@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo, type ChangeEvent } from "react"
 import Image from "next/image"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -592,17 +592,14 @@ export default function ProfileEdit() {
 
   return (
     <>
+      {saved && (
+        <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-50 dark:bg-green-950/30 px-4 py-2.5 text-sm text-green-700 dark:text-green-400 animate-[fadeInUp_300ms_ease_both] mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          全ての変更が保存されました
+        </div>
+      )}
       <Card>
-        <CardHeader className="space-y-3">
-          <div className="text-2xl font-semibold">プロフィール編集</div>
-          {saved && (
-            <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-50 dark:bg-green-950/30 px-4 py-2.5 text-sm text-green-700 dark:text-green-400 animate-[fadeInUp_300ms_ease_both]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-              全ての変更が保存されました
-            </div>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="pt-6 space-y-6">
           {/* プロフィール画像セクション */}
             <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
               <Label className="text-base font-semibold">プロフィール画像</Label>
