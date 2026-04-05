@@ -19,12 +19,12 @@ const currentProjects = [
     {
         id: 2,
         title: "機械学習プロジェクト",
-        description: "プロジェクトの説明を入力してください。現在取り組んでいる内容や目標を記述します。",
-        image: "/assets/lumoslogo.png",
-        status: "進行中",
-        technologies: ["Python", "TensorFlow", "PyTorch"],
+        description: "「何ができるのか」から「何を創り出すか」へ ― 機械学習をアクティブに体感し、新たな価値を生み出そう！",
+        image: "https://storage.googleapis.com/lumos-web-profile-data/20260405_MLProject_TN_v1.jpg",
+        status: "計画中",
+        technologies: ["Python", "PyTorch"],
         leaderId: 3,
-        leaderName: "Kazuma",
+        leaderName: "坪井 一馬",
     },
     {
         id: 3,
