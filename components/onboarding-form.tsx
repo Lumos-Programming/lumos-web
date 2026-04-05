@@ -11,8 +11,9 @@ import type {RingColorKey} from "@/types/member"
 import type {SnsEntry} from "@/components/member-tile-preview"
 import type {Area} from "react-easy-crop"
 
-import { normalizeLinkedInUrl } from "@/lib/linkedin"
+import {normalizeLinkedInUrl} from "@/lib/linkedin"
 import type {FormData, VisibilityForm} from "./onboarding/types"
+import {VISIBILITY_DISPLAY_KEYS} from "./onboarding/types"
 import {
   DEFAULT_FORM,
   DEFAULT_VISIBILITY,
@@ -166,7 +167,17 @@ export default function OnboardingForm() {
             topInterests: data.topInterests ?? [],
             bio: data.bio ?? "",
           })
-          if (typeof data.allowPublic === "boolean") setAllowPublic(data.allowPublic)
+          if (typeof data.allowPublic === "boolean") {
+            setAllowPublic(data.allowPublic)
+            if (!data.allowPublic) {
+              const vis = {...visibility}
+              let changed = false
+              for (const k of VISIBILITY_DISPLAY_KEYS) {
+                if (vis[k] === "public") { vis[k] = "internal"; changed = true }
+              }
+              if (changed) setVisibility(vis)
+            }
+          }
           if (data.discordId) setDiscordId(data.discordId)
           if (data.discordUsername) setDiscordUsername(data.discordUsername)
           if (data.discordAvatar) setDiscordAvatar(data.discordAvatar)
@@ -356,7 +367,7 @@ export default function OnboardingForm() {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           memberType: data.memberType,
-          ...(data.memberType !== "卒業生" && data.studentId ? { studentId: data.studentId } : {}),
+          ...(data.memberType !== "卒業生" && data.studentId ? {studentId: data.studentId} : {}),
           yearByFiscal: data.schoolYear ? {[String(new Date().getFullYear())]: data.schoolYear} : undefined,
           currentOrg: data.currentOrg,
           enrollments,
@@ -454,10 +465,11 @@ export default function OnboardingForm() {
       try {
         await fetch("/api/settings/sns", {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ linkedin: normalized }),
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({linkedin: normalized}),
         })
-      } catch { /* non-blocking */ }
+      } catch { /* non-blocking */
+      }
     }
     goToStep(4)
   }
@@ -720,7 +732,10 @@ export default function OnboardingForm() {
       })
       if (isPreview) {
         // Preview mode: skip marking onboarding as complete, just show the complete page
-        try { localStorage.removeItem(step2CacheKey) } catch { /* ignore */ }
+        try {
+          localStorage.removeItem(step2CacheKey)
+        } catch { /* ignore */
+        }
         router.push("/internal/onboarding/complete?preview")
         return
       }
@@ -791,7 +806,7 @@ export default function OnboardingForm() {
   }
 
   if (showWelcome) {
-    return <WelcomeScreen welcomeFading={welcomeFading} onDismiss={dismissWelcome} />
+    return <WelcomeScreen welcomeFading={welcomeFading} onDismiss={dismissWelcome}/>
   }
 
 
@@ -805,7 +820,7 @@ export default function OnboardingForm() {
         className="absolute bottom-[-10%] left-[-5%] w-64 h-64 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none"/>
 
       <div className={`w-full relative z-10 transition-all duration-300 max-w-lg`}>
-        <StepIndicator stepLabels={stepLabels} currentStep={currentStep} progressPercent={progressPercent} />
+        <StepIndicator stepLabels={stepLabels} currentStep={currentStep} progressPercent={progressPercent}/>
 
         {/* Card with active step */}
         <div
@@ -846,7 +861,10 @@ export default function OnboardingForm() {
                 xUsername={xUsername}
                 xAvatar={xAvatar}
                 linkedinUrl={linkedinUrl}
-                onLinkedinUrlChange={(v) => { setLinkedinUrl(v); setLinkedinError("") }}
+                onLinkedinUrlChange={(v) => {
+                  setLinkedinUrl(v);
+                  setLinkedinError("")
+                }}
                 linkedinError={linkedinError}
                 onLinkedinBlur={handleLinkedinBlur}
                 step3Error={step3Error}
