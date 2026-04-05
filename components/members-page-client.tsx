@@ -1,45 +1,38 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { MemberDetailContent } from "@/components/member-detail-shared"
-import { MemberTile } from "@/components/member-tile"
-import type { Member } from "@/types/member"
-import { getTileDisplay } from "@/types/member"
+import { useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { MemberDetailContent } from "@/components/member-detail-shared";
+import { MemberTile } from "@/components/member-tile";
+import type { Member } from "@/types/member";
+import { getTileDisplay } from "@/types/member";
 
 interface Props {
-  members: Member[]
+  members: Member[];
 }
 
 export default function MembersPageClient({ members }: Props) {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
-
-  // クエリパラメータからメンバーを選択
-  useEffect(() => {
-    const memberId = searchParams.get("member")
-    if (memberId) {
-      const found = members.find((m) => m.id === memberId)
-      setSelectedMember(found ?? null)
-    }
-  }, [searchParams, members])
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const memberId = searchParams.get("member");
+  const selectedMember = useMemo(() => {
+    if (!memberId) return null;
+    return members.find((m) => m.id === memberId) ?? null;
+  }, [memberId, members]);
 
   const handleSelect = (member: Member) => {
-    setSelectedMember(member)
-    const params = new URLSearchParams(searchParams.toString())
-    params.set("member", member.id)
-    router.replace(`?${params.toString()}`, { scroll: false })
-  }
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("member", member.id);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   const handleClose = () => {
-    setSelectedMember(null)
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete("member")
-    const qs = params.toString()
-    router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false })
-  }
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("member");
+    const qs = params.toString();
+    router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false });
+  };
 
   return (
     <>
@@ -48,7 +41,9 @@ export default function MembersPageClient({ members }: Props) {
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px] z-0"></div>
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="animate-fade-in-up text-3xl md:text-5xl font-bold mb-6">メンバー紹介</h1>
+            <h1 className="animate-fade-in-up text-3xl md:text-5xl font-bold mb-6">
+              メンバー紹介
+            </h1>
             <p className="animate-fade-in-up-300 text-xl font-medium">
               Lumosを運営するメンバーたち。イベントの計画・運営を行っています。
             </p>
@@ -80,11 +75,14 @@ export default function MembersPageClient({ members }: Props) {
       </section>
 
       {/* Member Detail Modal */}
-      <Dialog open={!!selectedMember} onOpenChange={(open) => !open && handleClose()}>
+      <Dialog
+        open={!!selectedMember}
+        onOpenChange={(open) => !open && handleClose()}
+      >
         <DialogContent className="sm:max-w-2xl">
           {selectedMember && <MemberDetailContent member={selectedMember} />}
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }
