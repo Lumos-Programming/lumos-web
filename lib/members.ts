@@ -116,7 +116,10 @@ export async function getOrCreateMember(
 
 export async function getMembers(): Promise<Member[]> {
   const db = getDb()
-  const snap = await db.collection('members').where('onboardingCompleted', '==', true).get()
+  const snap = await db.collection('members')
+    .where('onboardingCompleted', '==', true)
+    .where('allowPublic', '==', true)
+    .get()
 
   return snap.docs.map((doc) => {
     const data = doc.data() as MemberDocument
