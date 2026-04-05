@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useRef, useCallback, useMemo } from "react"
-import { X, Star, Plus, Check, GripVertical } from "lucide-react"
+import { useState, useRef, useCallback, useMemo, useLayoutEffect } from "react"
+import { X, Star, Plus, GripVertical } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   DndContext,
   closestCenter,
@@ -15,7 +16,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  horizontalListSortingStrategy,
+  rectSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import {
@@ -39,6 +40,71 @@ import {
   TAG_MAX_LENGTH,
 } from "@/types/interests"
 
+// --- FLIP animation for programmatic reorder ---
+
+function useFlip(containerRef: React.RefObject<HTMLDivElement | null>) {
+  const prevRectsRef = useRef<Map<string, DOMRect> | null>(null)
+  const rafHandlesRef = useRef<number[]>([])
+
+  const snapshot = useCallback(() => {
+    const el = containerRef.current
+    if (!el) return
+    const map = new Map<string, DOMRect>()
+    for (const child of Array.from(el.children) as HTMLElement[]) {
+      const key = child.dataset.sortableId
+      if (key) map.set(key, child.getBoundingClientRect())
+    }
+    prevRectsRef.current = map
+  }, [containerRef])
+
+  // Runs every render; early-returns when no snapshot is pending
+  useLayoutEffect(() => {
+    const prev = prevRectsRef.current
+    if (!prev) return
+    prevRectsRef.current = null
+
+    const el = containerRef.current
+    if (!el) return
+
+    // Cancel any in-flight animations from a previous cycle
+    for (const id of rafHandlesRef.current) cancelAnimationFrame(id)
+    rafHandlesRef.current = []
+
+    for (const child of Array.from(el.children) as HTMLElement[]) {
+      const key = child.dataset.sortableId
+      if (!key) continue
+      const oldRect = prev.get(key)
+      if (!oldRect) continue
+      const newRect = child.getBoundingClientRect()
+      const dx = oldRect.left - newRect.left
+      const dy = oldRect.top - newRect.top
+      if (dx === 0 && dy === 0) continue
+
+      const prevTransition = child.style.transition
+      const prevTransform = child.style.transform
+      child.style.transition = "none"
+      child.style.transform = `translate(${dx}px, ${dy}px)`
+      const rafId = requestAnimationFrame(() => {
+        child.style.transition = "transform 200ms ease"
+        child.style.transform = prevTransform || ""
+        child.addEventListener("transitionend", () => {
+          child.style.transition = prevTransition
+        }, { once: true })
+      })
+      rafHandlesRef.current.push(rafId)
+    }
+  })
+
+  // Cleanup on unmount
+  useLayoutEffect(() => {
+    return () => {
+      for (const id of rafHandlesRef.current) cancelAnimationFrame(id)
+    }
+  }, [])
+
+  return snapshot
+}
+
 // --- Sortable chip ---
 
 interface SortableChipProps {
@@ -59,22 +125,22 @@ function SortableChip({ tag, isTop, onToggleTop, onRemove }: SortableChipProps) 
   } = useSortable({ id: tag })
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : undefined,
+    transform: CSS.Translate.toString(transform),
+    transition: isDragging ? "none" : transition,
   }
 
   return (
     <span
       ref={setNodeRef}
       style={style}
-      className={[
-        "inline-flex items-center gap-1 text-xs font-medium pl-1 pr-1 py-1.5 rounded-full transition-all duration-200 select-none",
-        isDragging ? "opacity-80 shadow-lg" : "",
+      data-sortable-id={tag}
+      className={cn(
+        "inline-flex items-center gap-1 text-xs font-medium pl-1 pr-1 py-1.5 rounded-full select-none",
+        isDragging ? "opacity-80 shadow-lg" : "transition-colors duration-200",
         isTop
           ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 ring-2 ring-purple-300 dark:ring-purple-700 shadow-sm"
           : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-      ].join(" ")}
+      )}
     >
       <button
         type="button"
@@ -128,6 +194,8 @@ export function InterestTagInput({
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const chipsRef = useRef<HTMLDivElement>(null)
+  const flipSnapshot = useFlip(chipsRef)
 
   const selected = useMemo(() => new Set(value), [value])
 
@@ -170,6 +238,7 @@ export function InterestTagInput({
 
   const toggleTag = useCallback(
     (tag: string) => {
+      flipSnapshot()
       if (selected.has(tag)) {
         onChange(value.filter((t) => t !== tag))
         if (topInterests.includes(tag)) {
@@ -184,21 +253,23 @@ export function InterestTagInput({
         }
       }
     },
-    [value, onChange, topInterests, onTopInterestsChange, maxTags, selected]
+    [value, onChange, topInterests, onTopInterestsChange, maxTags, selected, flipSnapshot]
   )
 
   const removeTag = useCallback(
     (tag: string) => {
+      flipSnapshot()
       onChange(value.filter((t) => t !== tag))
       if (topInterests.includes(tag)) {
         onTopInterestsChange(topInterests.filter((t) => t !== tag))
       }
     },
-    [value, onChange, topInterests, onTopInterestsChange]
+    [value, onChange, topInterests, onTopInterestsChange, flipSnapshot]
   )
 
   const toggleTop = useCallback(
     (tag: string) => {
+      flipSnapshot()
       if (topInterests.includes(tag)) {
         onTopInterestsChange(topInterests.filter((t) => t !== tag))
       } else if (topInterests.length < MAX_TOP_INTERESTS) {
@@ -208,7 +279,7 @@ export function InterestTagInput({
         onTopInterestsChange([...topInterests.slice(0, -1), tag])
       }
     },
-    [topInterests, onTopInterestsChange]
+    [topInterests, onTopInterestsChange, flipSnapshot]
   )
 
   const canAddCustom =
@@ -229,6 +300,25 @@ export function InterestTagInput({
   const showCustomAdd =
     canAddCustom && !hasExactPresetMatch && !hasExactSelectedMatch
 
+  // Popover height estimate: CommandInput(~44) + CommandList(300) + sideOffset(4) + padding(8)
+  const POPOVER_HEIGHT_ESTIMATE = 356
+  const SCROLL_BOTTOM_MARGIN = 20
+
+  const handleOpenChange = useCallback((v: boolean) => {
+    setOpen(v)
+    if (v) {
+      requestAnimationFrame(() => {
+        const el = triggerRef.current
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        const overflow = rect.bottom + POPOVER_HEIGHT_ESTIMATE - window.innerHeight + SCROLL_BOTTOM_MARGIN
+        if (overflow > 0) {
+          window.scrollBy({ top: overflow, behavior: "smooth" })
+        }
+      })
+    }
+  }, [])
+
   return (
     <div className="space-y-3">
       {/* Selected tags display */}
@@ -238,8 +328,8 @@ export function InterestTagInput({
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={sortedTags} strategy={horizontalListSortingStrategy}>
-            <div className="flex flex-wrap gap-2">
+          <SortableContext items={sortedTags} strategy={rectSortingStrategy}>
+            <div ref={chipsRef} className="flex flex-wrap gap-2">
               {sortedTags.map((tag) => (
                 <SortableChip
                   key={tag}
@@ -254,27 +344,27 @@ export function InterestTagInput({
         </DndContext>
       )}
 
-      {/* Top 3 hint */}
+      {/* Top hint */}
       {value.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          ドラッグで並び替え・タップで Top 3 を変更（{topInterests.length}/{MAX_TOP_INTERESTS}）
+          ドラッグで並び替え・タップで Top を変更（{topInterests.length}/{MAX_TOP_INTERESTS}）
         </p>
       )}
 
       {/* Tag selector */}
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <button
             ref={triggerRef}
             type="button"
-            className={[
+            className={cn(
               "w-full flex items-center gap-2 rounded-md border border-input px-3 py-2 text-sm",
               "bg-white dark:bg-gray-800 text-left",
               "hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-ring transition-colors",
               value.length >= maxTags
                 ? "opacity-50 cursor-not-allowed"
                 : "cursor-pointer",
-            ].join(" ")}
+            )}
             disabled={value.length >= maxTags}
           >
             <Plus className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -298,7 +388,7 @@ export function InterestTagInput({
               value={search}
               onValueChange={setSearch}
             />
-            <CommandList>
+            <CommandList className="h-[300px]">
               <CommandEmpty>
                 {search.trim() && !isValidTag(search.trim()) ? (
                   <span className="text-xs text-red-500">
@@ -311,27 +401,24 @@ export function InterestTagInput({
                   </span>
                 )}
               </CommandEmpty>
-              {INTEREST_TAGS.map((category) => (
-                <CommandGroup key={category.category} heading={category.category}>
-                  {category.tags.map((tag) => (
-                    <CommandItem
-                      key={tag}
-                      value={tag}
-                      onSelect={() => toggleTag(tag)}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2 w-full">
-                        {selected.has(tag) ? (
-                          <Check className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-                        ) : (
-                          <div className="w-4 h-4 flex-shrink-0" />
-                        )}
-                        <span>{tag}</span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              ))}
+              {INTEREST_TAGS.map((category) => {
+                const available = category.tags.filter((tag) => !selected.has(tag))
+                if (available.length === 0) return null
+                return (
+                  <CommandGroup key={category.category} heading={category.category}>
+                    {available.map((tag) => (
+                      <CommandItem
+                        key={tag}
+                        value={tag}
+                        onSelect={() => toggleTag(tag)}
+                        className="cursor-pointer"
+                      >
+                        {tag}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )
+              })}
               {showCustomAdd && (
                 <CommandGroup heading="カスタムタグ">
                   <CommandItem

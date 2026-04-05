@@ -72,7 +72,7 @@ export const INTEREST_TAGS: InterestCategory[] = [
 const TAG_PATTERN = /^[\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u3400-\u4DBFー/\\.+#\- ]+$/
 
 export const MAX_TAGS = 15
-export const MAX_TOP_INTERESTS = 3
+export const MAX_TOP_INTERESTS = 5
 export const TAG_MIN_LENGTH = 1
 export const TAG_MAX_LENGTH = 20
 
