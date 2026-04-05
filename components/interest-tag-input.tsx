@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback, useMemo, useEffect } from "react"
+import { useState, useRef, useCallback, useMemo, useLayoutEffect } from "react"
 import { X, Star, Plus, GripVertical } from "lucide-react"
 import {
   DndContext,
@@ -39,6 +39,61 @@ import {
   TAG_MAX_LENGTH,
 } from "@/types/interests"
 
+// --- FLIP animation for programmatic reorder ---
+
+function useFlip(containerRef: React.RefObject<HTMLDivElement | null>) {
+  const prevRectsRef = useRef<Map<string, DOMRect> | null>(null)
+
+  const snapshot = useCallback(() => {
+    const el = containerRef.current
+    if (!el) return
+    const map = new Map<string, DOMRect>()
+    for (const child of Array.from(el.children) as HTMLElement[]) {
+      const key = child.dataset.sortableId
+      if (key) map.set(key, child.getBoundingClientRect())
+    }
+    prevRectsRef.current = map
+  }, [containerRef])
+
+  useLayoutEffect(() => {
+    const prev = prevRectsRef.current
+    if (!prev) return
+    prevRectsRef.current = null
+
+    const el = containerRef.current
+    if (!el) return
+
+    for (const child of Array.from(el.children) as HTMLElement[]) {
+      const key = child.dataset.sortableId
+      if (!key) continue
+      const oldRect = prev.get(key)
+      if (!oldRect) continue
+      const newRect = child.getBoundingClientRect()
+      const dx = oldRect.left - newRect.left
+      const dy = oldRect.top - newRect.top
+      if (dx === 0 && dy === 0) continue
+
+      // Temporarily override dnd-kit's inline styles
+      const prevTransition = child.style.transition
+      const prevTransform = child.style.transform
+      child.style.transition = "none"
+      child.style.transform = `translate(${dx}px, ${dy}px)`
+      requestAnimationFrame(() => {
+        child.style.transition = "transform 200ms ease"
+        child.style.transform = prevTransform || ""
+        // Restore dnd-kit's transition after animation
+        const onEnd = () => {
+          child.style.transition = prevTransition
+          child.removeEventListener("transitionend", onEnd)
+        }
+        child.addEventListener("transitionend", onEnd)
+      })
+    }
+  })
+
+  return snapshot
+}
+
 // --- Sortable chip ---
 
 interface SortableChipProps {
@@ -67,9 +122,10 @@ function SortableChip({ tag, isTop, onToggleTop, onRemove }: SortableChipProps) 
     <span
       ref={setNodeRef}
       style={style}
+      data-sortable-id={tag}
       className={[
         "inline-flex items-center gap-1 text-xs font-medium pl-1 pr-1 py-1.5 rounded-full select-none",
-        isDragging ? "opacity-80 shadow-lg" : "transition-all duration-200",
+        isDragging ? "opacity-80 shadow-lg" : "transition-colors duration-200",
         isTop
           ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 ring-2 ring-purple-300 dark:ring-purple-700 shadow-sm"
           : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
@@ -127,6 +183,8 @@ export function InterestTagInput({
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const chipsRef = useRef<HTMLDivElement>(null)
+  const flipSnapshot = useFlip(chipsRef)
 
   const selected = useMemo(() => new Set(value), [value])
 
@@ -169,6 +227,7 @@ export function InterestTagInput({
 
   const toggleTag = useCallback(
     (tag: string) => {
+      flipSnapshot()
       if (selected.has(tag)) {
         onChange(value.filter((t) => t !== tag))
         if (topInterests.includes(tag)) {
@@ -183,21 +242,23 @@ export function InterestTagInput({
         }
       }
     },
-    [value, onChange, topInterests, onTopInterestsChange, maxTags, selected]
+    [value, onChange, topInterests, onTopInterestsChange, maxTags, selected, flipSnapshot]
   )
 
   const removeTag = useCallback(
     (tag: string) => {
+      flipSnapshot()
       onChange(value.filter((t) => t !== tag))
       if (topInterests.includes(tag)) {
         onTopInterestsChange(topInterests.filter((t) => t !== tag))
       }
     },
-    [value, onChange, topInterests, onTopInterestsChange]
+    [value, onChange, topInterests, onTopInterestsChange, flipSnapshot]
   )
 
   const toggleTop = useCallback(
     (tag: string) => {
+      flipSnapshot()
       if (topInterests.includes(tag)) {
         onTopInterestsChange(topInterests.filter((t) => t !== tag))
       } else if (topInterests.length < MAX_TOP_INTERESTS) {
@@ -207,7 +268,7 @@ export function InterestTagInput({
         onTopInterestsChange([...topInterests.slice(0, -1), tag])
       }
     },
-    [topInterests, onTopInterestsChange]
+    [topInterests, onTopInterestsChange, flipSnapshot]
   )
 
   const canAddCustom =
@@ -238,7 +299,7 @@ export function InterestTagInput({
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={sortedTags} strategy={rectSortingStrategy}>
-            <div className="flex flex-wrap gap-2">
+            <div ref={chipsRef} className="flex flex-wrap gap-2">
               {sortedTags.map((tag) => (
                 <SortableChip
                   key={tag}
