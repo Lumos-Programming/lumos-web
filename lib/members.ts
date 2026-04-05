@@ -116,7 +116,7 @@ export async function getOrCreateMember(
 
 export async function getMembers(): Promise<Member[]> {
   const db = getDb()
-  const snap = await db.collection('members').get()
+  const snap = await db.collection('members').where('onboardingCompleted', '==', true).get()
 
   return snap.docs.map((doc) => {
     const data = doc.data() as MemberDocument
@@ -126,7 +126,7 @@ export async function getMembers(): Promise<Member[]> {
 
 export async function getMembersInternal(): Promise<Member[]> {
   const db = getDb()
-  const snap = await db.collection('members').get()
+  const snap = await db.collection('members').where('onboardingCompleted', '==', true).get()
 
   return snap.docs.map((doc) => {
     const data = doc.data() as MemberDocument
