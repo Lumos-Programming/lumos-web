@@ -459,7 +459,8 @@ export default function ProfileEdit() {
     if (check(v.x) && profile.x)
       entries.push({ platform: "x", username: profile.x, url: `https://x.com/${profile.x}`, avatarUrl: xAvatar || undefined })
     if (check(v.linkedin) && linkedinUrl) {
-      const vanity = linkedinUrl.match(/linkedin\.com\/in\/([^/?#]+)/)?.[1] ?? "LinkedIn"
+      const rawVanity = linkedinUrl.match(/linkedin\.com\/in\/([^/?#]+)/)?.[1] ?? "LinkedIn"
+      const vanity = decodeURIComponent(rawVanity)
       entries.push({ platform: "linkedin", username: vanity, url: linkedinUrl })
     }
     return entries

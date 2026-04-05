@@ -189,7 +189,8 @@ export function socialToSnsEntries(social?: SocialInput): SnsEntry[] {
   if (social.linkedin) {
     const normalized = normalizeLinkedInUrl(social.linkedin)
     const url = normalized ?? social.linkedin
-    const username = url.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "")
+    const raw = url.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "")
+    const username = decodeURIComponent(raw)
     entries.push({ platform: "linkedin", username, url })
   }
   return entries
