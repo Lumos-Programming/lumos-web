@@ -25,14 +25,14 @@ import { MemberPreviewToggle } from "@/components/member-tile-preview"
 import type { SnsEntry } from "@/components/member-tile-preview"
 import { LiquidSplashEffect } from "@/components/liquid-splash-effect"
 import { InterestTagInput } from "@/components/interest-tag-input"
+import { useSidebar } from "@/components/ui/sidebar"
 
 const FIELD_LABELS: Partial<Record<keyof Omit<Profile, "visibility" | "role" | "year" | "enrollments">, string>> = {
-  studentId: "学籍番号",
-  nickname: "ニックネーム",
   lastName: "姓",
   firstName: "名",
   lastNameRomaji: "姓（ローマ字）",
   firstNameRomaji: "名（ローマ字）",
+  nickname: "ニックネーム",
   currentOrg: "現在の所属",
   birthDate: "誕生日",
   gender: "性別",
@@ -106,6 +106,7 @@ type EnrollmentCache = {
 }
 
 export default function ProfileEdit() {
+  const { state: sidebarState, isMobile } = useSidebar()
   const [showPreview, setShowPreview] = useState(false)
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE)
   const [allowPublic, setAllowPublic] = useState(true)
@@ -151,7 +152,9 @@ export default function ProfileEdit() {
   const [bannerCroppedArea, setBannerCroppedArea] = useState<Area | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const bannerFileInputRef = useRef<HTMLInputElement>(null)
-  const initialSnapshot = useRef<string>("")
+  const [initialSnapshot, setInitialSnapshot] = useState<string>("")
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   // 種別ごとの所属情報キャッシュ（種別切り替え時に退避・復元）
   const enrollmentCacheRef = useRef<Partial<Record<string, EnrollmentCache>>>({})
@@ -238,7 +241,7 @@ export default function ProfileEdit() {
             visibility: vis,
           }
           setProfile(loadedProfile)
-          initialSnapshot.current = JSON.stringify({
+          setInitialSnapshot(JSON.stringify({
             profile: loadedProfile,
             allowPublic: typeof data.allowPublic === "boolean" ? data.allowPublic : !!(VISIBILITY_FIELD_KEYS.some((k) => vis[k] === "public")),
             primaryAvatar: data.primaryAvatar ?? "face",
@@ -253,12 +256,14 @@ export default function ProfileEdit() {
             enrollmentType: currentEnrollment?.enrollmentType ?? "",
             transferYear: currentEnrollment?.transferYear ?? "",
             graduationYear: currentEnrollment?.graduationYear ?? "",
-            hasUndergrad: undergradEnrollment ? true : (data.enrollments?.length > 0 ? false : null),
+            hasUndergrad: (data.memberType === "院生" || (data.memberType === "卒業生" && (GRADUATE_SCHOOLS as readonly string[]).includes(currentEnrollment?.faculty ?? "")))
+              ? (undergradEnrollment ? true : (data.enrollments?.length > 0 ? false : null))
+              : null,
             undergradFaculty: undergradEnrollment?.faculty ?? "",
             undergradAdmissionYear: undergradEnrollment?.admissionYear ?? "",
             undergradEnrollmentType: undergradEnrollment?.enrollmentType ?? "",
             undergradTransferYear: undergradEnrollment?.transferYear ?? "",
-          })
+          }))
         }
       })
       .catch(console.error)
@@ -270,7 +275,7 @@ export default function ProfileEdit() {
     [profile, allowPublic, primaryAvatar, ringColor, interests, topInterests, memberType, currentOrg, year, faculty, admissionYear, enrollmentType, transferYear, graduationYear, hasUndergrad, undergradFaculty, undergradAdmissionYear, undergradEnrollmentType, undergradTransferYear]
   )
 
-  const isDirty = !loading && initialSnapshot.current !== "" && currentSnapshot !== initialSnapshot.current
+  const isDirty = !loading && initialSnapshot !== "" && currentSnapshot !== initialSnapshot
 
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -284,6 +289,7 @@ export default function ProfileEdit() {
   }, [isDirty])
 
   const handlePublish = async () => {
+    setSaving(true)
     try {
       const response = await fetch("/api/profile", {
         method: "PUT",
@@ -324,14 +330,18 @@ export default function ProfileEdit() {
       })
 
       if (response.ok) {
-        initialSnapshot.current = currentSnapshot
-        alert("プロフィールが保存されました！")
+        setInitialSnapshot(currentSnapshot)
+        setSaved(true)
+        setTimeout(() => setSaved(false), 4000)
+        window.scrollTo({ top: 0, behavior: "smooth" })
       } else {
-        alert("保存に失敗しました。もう一度お試しください。")
+        toast({ variant: "destructive", title: "保存に失敗しました", description: "もう一度お試しください。" })
       }
     } catch (error) {
       console.error("エラーが発生しました: ", error)
-      alert("エラーが発生しました。もう一度お試しください。")
+      toast({ variant: "destructive", title: "エラーが発生しました", description: "もう一度お試しください。" })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -558,13 +568,14 @@ export default function ProfileEdit() {
   return (
     <>
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="text-2xl font-semibold">プロフィール編集</div>
-            <Button onClick={handlePublish} variant="default">
-              保存
-            </Button>
-          </div>
+        <CardHeader className="space-y-3">
+          <div className="text-2xl font-semibold">プロフィール編集</div>
+          {saved && (
+            <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-50 dark:bg-green-950/30 px-4 py-2.5 text-sm text-green-700 dark:text-green-400 animate-[fadeInUp_300ms_ease_both]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              全ての変更が保存されました
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-6">
           {/* プロフィール画像セクション */}
@@ -800,6 +811,21 @@ export default function ProfileEdit() {
                   ))}
                 </div>
               </div>
+
+              {/* 学籍番号（卒業生以外） */}
+              {memberType && memberType !== "卒業生" && (
+                <div className="space-y-1.5">
+                  <Label>学籍番号</Label>
+                  <Input
+                    value={profile.studentId}
+                    onChange={(e) => setProfile({ ...profile, studentId: e.target.value.toUpperCase() })}
+                    placeholder="2164078 / 24HJ078"
+                  />
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                    非公開
+                  </span>
+                </div>
+              )}
 
               {/* 学年 */}
               {memberType && memberType !== "卒業生" && (() => {
@@ -1120,11 +1146,6 @@ export default function ProfileEdit() {
                     {(key === "lastNameRomaji" || key === "firstNameRomaji") && (
                       <p className="text-xs text-gray-400">イニシャル表示に使用されます</p>
                     )}
-                    {key === "studentId" && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                        非公開（固定）
-                      </span>
-                    )}
                   </div>
                 )
               })}
@@ -1267,10 +1288,39 @@ export default function ProfileEdit() {
         </CardContent>
       </Card>
 
+      {/* フローティング保存バー */}
+      <div
+        className={`fixed bottom-0 right-0 z-40 transition-all duration-300 ${isDirty ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"}`}
+        style={{ left: isMobile ? 0 : `var(--sidebar-width${sidebarState === "collapsed" ? "-icon" : ""})` }}
+      >
+        <div className="max-w-4xl mx-auto px-4 md:px-6 pb-4">
+          <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-700 px-5 py-3 shadow-2xl shadow-black/20">
+            <div className="flex items-center gap-2.5 text-sm text-gray-200">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-yellow-500 text-white text-xs font-bold shrink-0">!</span>
+              未保存の変更があります
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white hover:bg-white/10" onClick={() => window.location.reload()}>
+                リセット
+              </Button>
+              <Button size="sm" onClick={handlePublish} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white min-w-[100px]">
+                {saving ? (
+                  <span className="flex items-center gap-1">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-white animate-[pulse_1s_ease_0ms_infinite]" />
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-white animate-[pulse_1s_ease_150ms_infinite]" />
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-white animate-[pulse_1s_ease_300ms_infinite]" />
+                  </span>
+                ) : "変更を保存"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* スマホ用フローティングプレビューボタン */}
       <button
         onClick={() => setShowPreview(p => !p)}
-        className="sm:hidden fixed bottom-6 right-6 z-50 rounded-full bg-purple-600 text-white shadow-lg flex items-center gap-2 px-4 py-3 hover:bg-purple-700 active:scale-95 transition-all"
+        className={`sm:hidden fixed right-6 z-50 rounded-full bg-purple-600 text-white shadow-lg flex items-center gap-2 px-4 py-3 hover:bg-purple-700 active:scale-95 transition-all ${isDirty ? "bottom-20" : "bottom-6"}`}
         aria-label="プレビュー切り替え"
       >
         {showPreview ? (
