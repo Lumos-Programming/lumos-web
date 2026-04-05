@@ -288,6 +288,31 @@ export default function ProfileEdit() {
     return () => window.removeEventListener("beforeunload", handler)
   }, [isDirty])
 
+  const handleReset = useCallback(() => {
+    if (!initialSnapshot) return
+    const snap = JSON.parse(initialSnapshot)
+    setProfile(snap.profile)
+    setAllowPublic(snap.allowPublic)
+    setPrimaryAvatar(snap.primaryAvatar)
+    setRingColor(snap.ringColor)
+    setInterests(snap.interests)
+    setTopInterests(snap.topInterests)
+    setMemberType(snap.memberType)
+    setCurrentOrg(snap.currentOrg)
+    setYear(snap.year)
+    setFaculty(snap.faculty)
+    setAdmissionYear(snap.admissionYear)
+    setEnrollmentType(snap.enrollmentType)
+    setTransferYear(snap.transferYear)
+    setGraduationYear(snap.graduationYear)
+    setHasUndergrad(snap.hasUndergrad)
+    setUndergradFaculty(snap.undergradFaculty)
+    setUndergradAdmissionYear(snap.undergradAdmissionYear)
+    setUndergradEnrollmentType(snap.undergradEnrollmentType)
+    setUndergradTransferYear(snap.undergradTransferYear)
+    enrollmentCacheRef.current = {}
+  }, [initialSnapshot])
+
   const handlePublish = async () => {
     setSaving(true)
     try {
@@ -1300,7 +1325,7 @@ export default function ProfileEdit() {
               未保存の変更があります
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white hover:bg-white/10" onClick={() => window.location.reload()}>
+              <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white hover:bg-white/10" onClick={handleReset}>
                 リセット
               </Button>
               <Button size="sm" onClick={handlePublish} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white min-w-[100px]">
