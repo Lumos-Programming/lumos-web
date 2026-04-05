@@ -12,7 +12,7 @@ export function BioSection({ bio, clamp }: { bio?: string; clamp?: boolean }) {
   if (bio) {
     return (
       <div className="overflow-hidden">
-        <div className={`prose prose-sm dark:prose-invert max-w-none text-foreground overflow-x-auto prose-table:table-fixed prose-td:break-words prose-pre:whitespace-pre-wrap prose-pre:break-words prose-code:break-all ${clamp ? "line-clamp-3 text-xs text-gray-600 dark:text-gray-400" : ""}`}>
+        <div className={`prose prose-sm dark:prose-invert max-w-none text-foreground prose-table:table-fixed prose-td:break-words prose-pre:whitespace-pre-wrap prose-pre:break-words prose-code:break-all ${clamp ? "line-clamp-3 text-xs text-gray-600 dark:text-gray-400 overflow-hidden" : "overflow-x-auto"}`}>
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{bio}</ReactMarkdown>
         </div>
       </div>

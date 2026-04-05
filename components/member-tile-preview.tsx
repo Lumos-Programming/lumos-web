@@ -91,20 +91,13 @@ function DetailPreview({ data, label, allowPublic }: { data: MemberDetailData; l
   return (
     <div className="space-y-2">
       {label && <p className="text-xs text-muted-foreground text-center">{label}</p>}
-      <div className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+      <div className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-clip">
         <div className={isDisabled ? "opacity-40" : ""}>
           {/* 上部: 画像 + 名前・属性・興味・SNS */}
-          <div className="flex gap-4 p-4">
+          <div className="flex gap-3 p-4">
             <div className="shrink-0">
-              <div className="relative w-fit">
-                <div className={`w-16 h-16 sm:w-20 sm:h-20 relative rounded-lg overflow-hidden ring-2 ${getRingColorClass(data.ringColor)}`}>
-                  <Image src={data.image} alt="詳細プレビュー" fill className="object-cover" />
-                </div>
-                {data.snsAvatar && (
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
-                    <Image src={data.snsAvatar} alt="" fill className="object-cover" />
-                  </div>
-                )}
+              <div className={`w-16 h-16 sm:w-20 sm:h-20 relative rounded-lg overflow-hidden ring-2 ${getRingColorClass(data.ringColor)}`}>
+                <Image src={data.image} alt="詳細プレビュー" fill className="object-cover" />
               </div>
             </div>
             <div className="min-w-0 flex-1">
@@ -125,28 +118,30 @@ function DetailPreview({ data, label, allowPublic }: { data: MemberDetailData; l
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                 {dept}
               </p>
-              {data.interests && data.interests.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                  {data.interests.map((tag) => (
-                    <span key={tag} className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-[10px] px-1.5 py-0.5 rounded-full">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {data.sns && data.sns.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-1.5">
-                  {data.sns.map((entry) => (
-                    <SnsChip key={entry.platform} entry={entry} />
-                  ))}
-                </div>
-              )}
             </div>
           </div>
-          {/* 下部: Bio（区切り線付き） */}
+          {/* 興味分野 */}
+          {data.interests && data.interests.length > 0 && (
+            <div className="px-4 pb-3 flex flex-wrap gap-1">
+              {data.interests.map((tag) => (
+                <span key={tag} className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-[10px] px-1.5 py-0.5 rounded-full">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          {/* SNS */}
+          {data.sns && data.sns.length > 0 && (
+            <div className="px-4 pb-3 flex flex-wrap gap-1.5">
+              {data.sns.map((entry) => (
+                <SnsChip key={entry.platform} entry={entry} />
+              ))}
+            </div>
+          )}
+          {/* Bio（区切り線付き） */}
           {data.bio && (
             <div className="border-t mx-4 mb-4 pt-3">
-              <BioSection bio={data.bio} clamp />
+              <BioSection bio={data.bio} />
             </div>
           )}
         </div>
