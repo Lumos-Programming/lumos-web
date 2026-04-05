@@ -8,7 +8,7 @@ export const members: Member[] = [
     department: "環境情報学府",
     year: "1年",
     bio: "システムの力で楽しいもの、便利なものを作るのが趣味。みんなでレッツプログラミング！",
-    skills: ["JavaScript", "Python", "C", "Linux", "応用情報技術者", "情報処理安全確保支援士（合格）"],
+
     image: "https://storage.googleapis.com/lumos-web-profile-data/tivo0921.jpg",
     social: {
       x: "https://x.com/tivo0921",
@@ -24,7 +24,7 @@ export const members: Member[] = [
     department: "環境情報学府",
     year: "2年",
     bio: "プロフィールを入力してください",
-    skills: ["DevSecOps", "インフラ全般", "応用情報技術者", "情報処理安全確保支援士"],
+
     image: "https://storage.googleapis.com/lumos-web-profile-data/shion1305.webp",
     social: {
       x: "https://x.com/shion1305",
@@ -40,7 +40,7 @@ export const members: Member[] = [
     department: "環境情報学府",
     year: "2年",
     bio: "",
-    skills: [],
+
     image: "/assets/lumoslogo.png",
     social: {
       x: "",
@@ -56,7 +56,7 @@ export const members: Member[] = [
     department: "理工学部",
     year: "4年",
     bio: "プロフィールを入力してください",
-    skills: [],
+
     image: "/assets/lumoslogo.png",
     social: {
       x: "",
