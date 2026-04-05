@@ -54,20 +54,22 @@ export function MemberDetailContent({ member }: { member: Member }) {
       {/* 上部: 画像 + 名前・属性・興味・SNS */}
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
         {/* 画像コンテナ */}
-        <div className="relative shrink-0 self-center sm:self-start pb-2 pr-2">
-          <div className={`w-28 h-28 sm:w-32 sm:h-32 relative rounded-lg overflow-hidden ring-2 ${ringColor}`}>
-            <Image
-              src={faceImage || "/placeholder.svg"}
-              alt={`${member.name}の写真`}
-              fill
-              className="object-cover"
-            />
-          </div>
-          {member.snsAvatar && (
-            <div className="absolute bottom-0 right-0 w-9 h-9 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
-              <Image src={member.snsAvatar} alt="" fill className="object-cover" />
+        <div className="shrink-0 self-center sm:self-start">
+          <div className="relative w-fit">
+            <div className={`w-28 h-28 sm:w-32 sm:h-32 relative rounded-lg overflow-hidden ring-2 ${ringColor}`}>
+              <Image
+                src={faceImage || "/placeholder.svg"}
+                alt={`${member.name}の写真`}
+                fill
+                className="object-cover"
+              />
             </div>
-          )}
+            {member.snsAvatar && (
+              <div className="absolute -bottom-1.5 -right-1.5 w-9 h-9 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
+                <Image src={member.snsAvatar} alt="" fill className="object-cover" />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 右側: 名前 + 属性 + 興味 + SNS */}

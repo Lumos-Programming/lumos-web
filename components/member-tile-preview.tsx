@@ -95,15 +95,17 @@ function DetailPreview({ data, label, allowPublic }: { data: MemberDetailData; l
         <div className={isDisabled ? "opacity-40" : ""}>
           {/* 上部: 画像 + 名前・属性・興味・SNS */}
           <div className="flex gap-4 p-4">
-            <div className="relative shrink-0 pb-1 pr-1">
-              <div className={`w-16 h-16 sm:w-20 sm:h-20 relative rounded-lg overflow-hidden ring-2 ${getRingColorClass(data.ringColor)}`}>
-                <Image src={data.image} alt="詳細プレビュー" fill className="object-cover" />
-              </div>
-              {data.snsAvatar && (
-                <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
-                  <Image src={data.snsAvatar} alt="" fill className="object-cover" />
+            <div className="shrink-0">
+              <div className="relative w-fit">
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 relative rounded-lg overflow-hidden ring-2 ${getRingColorClass(data.ringColor)}`}>
+                  <Image src={data.image} alt="詳細プレビュー" fill className="object-cover" />
                 </div>
-              )}
+                {data.snsAvatar && (
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
+                    <Image src={data.snsAvatar} alt="" fill className="object-cover" />
+                  </div>
+                )}
+              </div>
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-base font-bold text-gray-900 dark:text-gray-100 truncate">{data.main}</p>
