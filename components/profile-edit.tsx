@@ -357,7 +357,7 @@ export default function ProfileEdit() {
       if (response.ok) {
         setInitialSnapshot(currentSnapshot)
         setSaved(true)
-        setTimeout(() => setSaved(false), 4000)
+        setTimeout(() => setSaved(false), 10000)
         window.scrollTo({ top: 0, behavior: "smooth" })
       } else {
         toast({ variant: "destructive", title: "保存に失敗しました", description: "もう一度お試しください。" })
