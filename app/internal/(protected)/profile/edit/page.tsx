@@ -1,5 +1,5 @@
-import ProfileEdit from "@/components/profile-edit"
-import { PageHeader } from "@/components/page-header"
+import ProfileEdit from "@/components/profile-edit";
+import { PageHeader } from "@/components/page-header";
 
 export default async function ProfileEditPage() {
   return (
@@ -7,5 +7,5 @@ export default async function ProfileEditPage() {
       <PageHeader title="プロフィール編集" />
       <ProfileEdit />
     </div>
-  )
+  );
 }

@@ -1,16 +1,15 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { AlertCircle, CheckCircle, Mail, MapPin, Phone } from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle, CheckCircle, Mail, MapPin, Phone } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -18,66 +17,68 @@ export default function ContactPage() {
     email: "",
     subject: "",
     message: "",
-  })
+  });
 
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = "お名前を入力してください"
+      newErrors.name = "お名前を入力してください";
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = "メールアドレスを入力してください"
+      newErrors.email = "メールアドレスを入力してください";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "有効なメールアドレスを入力してください"
+      newErrors.email = "有効なメールアドレスを入力してください";
     }
 
     if (!formData.message.trim()) {
-      newErrors.message = "お問い合わせ内容を入力してください"
+      newErrors.message = "お問い合わせ内容を入力してください";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
     // Clear error when user types
     if (errors[name]) {
       setErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return newErrors
-      })
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
     }
-  }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (validateForm()) {
-      setIsSubmitting(true)
+      setIsSubmitting(true);
 
       // Simulate form submission
       setTimeout(() => {
-        setIsSubmitting(false)
-        setIsSubmitted(true)
+        setIsSubmitting(false);
+        setIsSubmitted(true);
         setFormData({
           name: "",
           email: "",
           subject: "",
           message: "",
-        })
-      }, 1500)
+        });
+      }, 1500);
     }
-  }
+  };
 
   return (
     <>
@@ -86,9 +87,12 @@ export default function ContactPage() {
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px] z-0"></div>
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="animate-fade-in-up text-3xl md:text-5xl font-bold mb-6">お問い合わせ</h1>
+            <h1 className="animate-fade-in-up text-3xl md:text-5xl font-bold mb-6">
+              お問い合わせ
+            </h1>
             <p className="animate-fade-in-up-300 text-xl font-medium">
-              Lumosに関するご質問やお問い合わせ、入会希望は以下のメールアドレスにご連絡ください。<br></br>
+              Lumosに関するご質問やお問い合わせ、入会希望は以下のメールアドレスにご連絡ください。
+              <br></br>
             </p>
           </div>
         </div>
@@ -141,13 +145,14 @@ export default function ContactPage() {
       </section>
       */}
 
-
       {/* Contact Form Section */}
       <section className="section-padding bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold mb-6 text-foreground">お問い合わせフォーム</h2>
+              <h2 className="text-2xl font-bold mb-6 text-foreground">
+                お問い合わせフォーム
+              </h2>
 
               {isSubmitted ? (
                 <Alert className="bg-green-50 border-green-200 text-green-800 mb-6">
@@ -192,7 +197,9 @@ export default function ContactPage() {
                       placeholder="example@ynu.ac.jp"
                       className={errors.email ? "border-destructive" : ""}
                       aria-invalid={errors.email ? "true" : "false"}
-                      aria-describedby={errors.email ? "email-error" : undefined}
+                      aria-describedby={
+                        errors.email ? "email-error" : undefined
+                      }
                     />
                     {errors.email && (
                       <p id="email-error" className="text-destructive text-sm">
@@ -202,7 +209,9 @@ export default function ContactPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="subject" className="text-foreground">件名</Label>
+                    <Label htmlFor="subject" className="text-foreground">
+                      件名
+                    </Label>
                     <Input
                       id="subject"
                       name="subject"
@@ -214,7 +223,8 @@ export default function ContactPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="message" className="text-foreground">
-                      お問い合わせ内容 <span className="text-destructive">*</span>
+                      お問い合わせ内容{" "}
+                      <span className="text-destructive">*</span>
                     </Label>
                     <Textarea
                       id="message"
@@ -225,10 +235,15 @@ export default function ContactPage() {
                       rows={6}
                       className={errors.message ? "border-destructive" : ""}
                       aria-invalid={errors.message ? "true" : "false"}
-                      aria-describedby={errors.message ? "message-error" : undefined}
+                      aria-describedby={
+                        errors.message ? "message-error" : undefined
+                      }
                     />
                     {errors.message && (
-                      <p id="message-error" className="text-destructive text-sm">
+                      <p
+                        id="message-error"
+                        className="text-destructive text-sm"
+                      >
                         {errors.message}
                       </p>
                     )}
@@ -237,7 +252,9 @@ export default function ContactPage() {
                   {Object.keys(errors).length > 0 && (
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>入力内容に誤りがあります。修正してください。</AlertDescription>
+                      <AlertDescription>
+                        入力内容に誤りがあります。修正してください。
+                      </AlertDescription>
                     </Alert>
                   )}
 
@@ -253,15 +270,21 @@ export default function ContactPage() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold mb-6 text-foreground">お問い合わせ先</h2>
+              <h2 className="text-2xl font-bold mb-6 text-foreground">
+                お問い合わせ先
+              </h2>
               <div className="space-y-8">
                 <Card className="border-border bg-card">
                   <CardContent className="p-6">
                     <div className="flex items-start">
                       <Mail className="h-5 w-5 text-accent-foreground mr-3 mt-1" />
                       <div>
-                        <h3 className="font-bold text-foreground">メールアドレス</h3>
-                        <p className="text-muted-foreground">lumos.ynu.programming@gmail.com</p>
+                        <h3 className="font-bold text-foreground">
+                          メールアドレス
+                        </h3>
+                        <p className="text-muted-foreground">
+                          lumos.ynu.programming@gmail.com
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -282,7 +305,6 @@ export default function ContactPage() {
                     </div>
                   </CardContent>
                 </Card>
-
               </div>
             </div>
           </div>
@@ -302,5 +324,5 @@ export default function ContactPage() {
       </section>
       */}
     </>
-  )
+  );
 }

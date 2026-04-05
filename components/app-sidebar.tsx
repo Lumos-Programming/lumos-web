@@ -1,8 +1,15 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, CalendarDays, UserCircle, Settings, ExternalLink } from "lucide-react"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Users,
+  CalendarDays,
+  UserCircle,
+  Settings,
+  ExternalLink,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,8 +23,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+} from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const NAV_ITEMS = [
   { href: "/internal", icon: LayoutDashboard, label: "ホーム", exact: true },
@@ -25,18 +32,23 @@ const NAV_ITEMS = [
   { href: "/internal/events", icon: CalendarDays, label: "イベント" },
   { href: "/internal/profile", icon: UserCircle, label: "プロフィール" },
   { href: "/internal/settings", icon: Settings, label: "設定" },
-]
+];
 
 interface AppSidebarProps {
-  userName: string
-  userImage?: string
-  memberNickname?: string
-  memberRole?: string
+  userName: string;
+  userImage?: string;
+  memberNickname?: string;
+  memberRole?: string;
 }
 
-export function AppSidebar({ userName, userImage, memberNickname, memberRole }: AppSidebarProps) {
-  const pathname = usePathname()
-  const { setOpenMobile } = useSidebar()
+export function AppSidebar({
+  userName,
+  userImage,
+  memberNickname,
+  memberRole,
+}: AppSidebarProps) {
+  const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
 
   return (
     <Sidebar collapsible="icon">
@@ -49,9 +61,13 @@ export function AppSidebar({ userName, userImage, memberNickname, memberRole }: 
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold truncate">{memberNickname || userName}</span>
+            <span className="text-sm font-semibold truncate">
+              {memberNickname || userName}
+            </span>
             {memberRole && (
-              <span className="text-[11px] text-sidebar-foreground/50 truncate">{memberRole}</span>
+              <span className="text-[11px] text-sidebar-foreground/50 truncate">
+                {memberRole}
+              </span>
             )}
           </div>
         </div>
@@ -64,7 +80,7 @@ export function AppSidebar({ userName, userImage, memberNickname, memberRole }: 
               {NAV_ITEMS.map((item) => {
                 const isActive = item.exact
                   ? pathname === item.href
-                  : pathname.startsWith(item.href)
+                  : pathname.startsWith(item.href);
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
@@ -72,13 +88,16 @@ export function AppSidebar({ userName, userImage, memberNickname, memberRole }: 
                       isActive={isActive}
                       tooltip={item.label}
                     >
-                      <Link href={item.href} onClick={() => setOpenMobile(false)}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setOpenMobile(false)}
+                      >
                         <item.icon />
                         <span>{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                )
+                );
               })}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -88,7 +107,11 @@ export function AppSidebar({ userName, userImage, memberNickname, memberRole }: 
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="サイトに戻る">
-              <Link href="/" onClick={() => setOpenMobile(false)} className="text-sidebar-foreground/60 hover:text-sidebar-foreground">
+              <Link
+                href="/"
+                onClick={() => setOpenMobile(false)}
+                className="text-sidebar-foreground/60 hover:text-sidebar-foreground"
+              >
                 <ExternalLink />
                 <span>サイトに戻る</span>
               </Link>
@@ -98,5 +121,5 @@ export function AppSidebar({ userName, userImage, memberNickname, memberRole }: 
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

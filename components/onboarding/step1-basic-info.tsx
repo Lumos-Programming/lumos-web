@@ -1,28 +1,47 @@
-"use client"
+"use client";
 
-import type {Dispatch, SetStateAction} from "react"
-import {Button} from "@/components/ui/button"
-import {Input} from "@/components/ui/input"
-import {Label} from "@/components/ui/label"
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
-import type {FormData} from "./types"
-import {GENDER_OPTIONS} from "@/types/profile"
+import type { Dispatch, SetStateAction } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { FormData } from "./types";
+import { GENDER_OPTIONS } from "@/types/profile";
 
 interface Step1BasicInfoProps {
-  form: FormData
-  setForm: Dispatch<SetStateAction<FormData>>
-  step1Errors: Partial<Record<keyof FormData, string>>
-  setStep1Errors: Dispatch<SetStateAction<Partial<Record<keyof FormData, string>>>>
-  submitting: boolean
-  onNext: () => void
+  form: FormData;
+  setForm: Dispatch<SetStateAction<FormData>>;
+  step1Errors: Partial<Record<keyof FormData, string>>;
+  setStep1Errors: Dispatch<
+    SetStateAction<Partial<Record<keyof FormData, string>>>
+  >;
+  submitting: boolean;
+  onNext: () => void;
 }
 
-export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, submitting, onNext}: Step1BasicInfoProps) {
+export function Step1BasicInfo({
+  form,
+  setForm,
+  step1Errors,
+  setStep1Errors,
+  submitting,
+  onNext,
+}: Step1BasicInfoProps) {
   return (
     <div className="p-8">
       <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">ようこそ、Lumosへ</h1>
-        <p className="text-muted-foreground mt-1 text-sm">まず、基本的な情報を入力してください。</p>
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">
+          ようこそ、Lumosへ
+        </h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          まず、基本的な情報を入力してください。
+        </p>
       </div>
 
       <div className="space-y-5">
@@ -35,13 +54,16 @@ export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, subm
               id="lastName"
               value={form.lastName}
               onChange={(e) => {
-                setForm((f) => ({...f, lastName: e.target.value}))
-                if (step1Errors.lastName) setStep1Errors((p) => ({...p, lastName: undefined}))
+                setForm((f) => ({ ...f, lastName: e.target.value }));
+                if (step1Errors.lastName)
+                  setStep1Errors((p) => ({ ...p, lastName: undefined }));
               }}
               placeholder="山田"
               className={step1Errors.lastName ? "border-red-400" : ""}
             />
-            {step1Errors.lastName && <p className="text-xs text-red-500">{step1Errors.lastName}</p>}
+            {step1Errors.lastName && (
+              <p className="text-xs text-red-500">{step1Errors.lastName}</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="firstName">
@@ -51,13 +73,16 @@ export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, subm
               id="firstName"
               value={form.firstName}
               onChange={(e) => {
-                setForm((f) => ({...f, firstName: e.target.value}))
-                if (step1Errors.firstName) setStep1Errors((p) => ({...p, firstName: undefined}))
+                setForm((f) => ({ ...f, firstName: e.target.value }));
+                if (step1Errors.firstName)
+                  setStep1Errors((p) => ({ ...p, firstName: undefined }));
               }}
               placeholder="太郎"
               className={step1Errors.firstName ? "border-red-400" : ""}
             />
-            {step1Errors.firstName && <p className="text-xs text-red-500">{step1Errors.firstName}</p>}
+            {step1Errors.firstName && (
+              <p className="text-xs text-red-500">{step1Errors.firstName}</p>
+            )}
           </div>
         </div>
 
@@ -70,19 +95,24 @@ export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, subm
               id="lastNameRomaji"
               value={form.lastNameRomaji}
               onChange={(e) => {
-                const v = e.target.value.replace(/[^A-Za-z\s-]/g, "")
-                const capitalized = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase()
-                setForm((f) => ({...f, lastNameRomaji: capitalized}))
-                if (step1Errors.lastNameRomaji) setStep1Errors((p) => ({
-                  ...p,
-                  lastNameRomaji: undefined
-                }))
+                const v = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+                const capitalized =
+                  v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+                setForm((f) => ({ ...f, lastNameRomaji: capitalized }));
+                if (step1Errors.lastNameRomaji)
+                  setStep1Errors((p) => ({
+                    ...p,
+                    lastNameRomaji: undefined,
+                  }));
               }}
               placeholder="Yamada"
               className={step1Errors.lastNameRomaji ? "border-red-400" : ""}
             />
-            {step1Errors.lastNameRomaji &&
-              <p className="text-xs text-red-500">{step1Errors.lastNameRomaji}</p>}
+            {step1Errors.lastNameRomaji && (
+              <p className="text-xs text-red-500">
+                {step1Errors.lastNameRomaji}
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="firstNameRomaji">
@@ -92,19 +122,24 @@ export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, subm
               id="firstNameRomaji"
               value={form.firstNameRomaji}
               onChange={(e) => {
-                const v = e.target.value.replace(/[^A-Za-z\s-]/g, "")
-                const capitalized = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase()
-                setForm((f) => ({...f, firstNameRomaji: capitalized}))
-                if (step1Errors.firstNameRomaji) setStep1Errors((p) => ({
-                  ...p,
-                  firstNameRomaji: undefined
-                }))
+                const v = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+                const capitalized =
+                  v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+                setForm((f) => ({ ...f, firstNameRomaji: capitalized }));
+                if (step1Errors.firstNameRomaji)
+                  setStep1Errors((p) => ({
+                    ...p,
+                    firstNameRomaji: undefined,
+                  }));
               }}
               placeholder="Taro"
               className={step1Errors.firstNameRomaji ? "border-red-400" : ""}
             />
-            {step1Errors.firstNameRomaji &&
-              <p className="text-xs text-red-500">{step1Errors.firstNameRomaji}</p>}
+            {step1Errors.firstNameRomaji && (
+              <p className="text-xs text-red-500">
+                {step1Errors.firstNameRomaji}
+              </p>
+            )}
           </div>
         </div>
 
@@ -114,7 +149,9 @@ export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, subm
             id="birthDate"
             type="date"
             value={form.birthDate}
-            onChange={(e) => setForm((f) => ({...f, birthDate: e.target.value}))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, birthDate: e.target.value }))
+            }
             className="block w-full"
           />
         </div>
@@ -126,20 +163,28 @@ export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, subm
           <Select
             value={form.gender}
             onValueChange={(v) => {
-              setForm((f) => ({...f, gender: v}))
-              if (step1Errors.gender) setStep1Errors((p) => ({...p, gender: undefined}))
+              setForm((f) => ({ ...f, gender: v }));
+              if (step1Errors.gender)
+                setStep1Errors((p) => ({ ...p, gender: undefined }));
             }}
           >
-            <SelectTrigger id="gender" className={`w-full ${step1Errors.gender ? "border-red-400" : ""}`}>
+            <SelectTrigger
+              id="gender"
+              className={`w-full ${step1Errors.gender ? "border-red-400" : ""}`}
+            >
               <SelectValue placeholder="選択してください" />
             </SelectTrigger>
             <SelectContent>
               {GENDER_OPTIONS.map((opt) => (
-                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                <SelectItem key={opt} value={opt}>
+                  {opt}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {step1Errors.gender && <p className="text-xs text-red-500">{step1Errors.gender}</p>}
+          {step1Errors.gender && (
+            <p className="text-xs text-red-500">{step1Errors.gender}</p>
+          )}
         </div>
 
         <div className="space-y-1.5 animate-[fadeInUp_300ms_240ms_ease_both]">
@@ -147,18 +192,23 @@ export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, subm
           <Input
             id="nickname"
             value={form.nickname}
-            onChange={(e) => setForm((f) => ({...f, nickname: e.target.value}))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, nickname: e.target.value }))
+            }
             placeholder="タロウ"
           />
         </div>
       </div>
 
       <div className="mt-8 flex justify-end animate-[fadeInUp_300ms_300ms_ease_both]">
-        <Button onClick={onNext} disabled={submitting}
-                className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-200/50 dark:shadow-purple-900/30">
+        <Button
+          onClick={onNext}
+          disabled={submitting}
+          className="px-8 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-200/50 dark:shadow-purple-900/30"
+        >
           {submitting ? "保存中..." : "次へ →"}
         </Button>
       </div>
     </div>
-  )
+  );
 }

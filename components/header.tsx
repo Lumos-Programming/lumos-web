@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useEffect, type ReactNode } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Menu, X } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState, useEffect, type ReactNode } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Menu, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "ホーム", href: "/" },
@@ -14,19 +14,19 @@ const navigation = [
   { name: "プロジェクト紹介", href: "/projects" },
   { name: "お知らせ", href: "/news" },
   // { name: "お問い合わせ", href: "/contact" },
-]
+];
 
 export default function Header({ authSlot }: { authSlot?: ReactNode }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <header
@@ -37,7 +37,12 @@ export default function Header({ authSlot }: { authSlot?: ReactNode }) {
     >
       <nav className="container mx-auto px-4 md:px-6 flex items-center justify-between py-4">
         <div className="flex items-center">
-          <Image src="/assets/Lumoslogo.png" alt={"Lumoslogo"} width={50} height={50} />
+          <Image
+            src="/assets/Lumoslogo.png"
+            alt={"Lumoslogo"}
+            width={50}
+            height={50}
+          />
           <Link href="/" className="text-2xl font-bold text-primary">
             Lumos
           </Link>
@@ -101,14 +106,12 @@ export default function Header({ authSlot }: { authSlot?: ReactNode }) {
                     </Link>
                   ))}
                 </div>
-                {authSlot && (
-                  <div className="mt-8">{authSlot}</div>
-                )}
+                {authSlot && <div className="mt-8">{authSlot}</div>}
               </div>
             </div>
           </div>
         </div>
       )}
     </header>
-  )
+  );
 }

@@ -8,8 +8,8 @@
 #   supported_envs:
 #   - all
 registries:
-- type: standard
-  ref: v4.489.0 # renovate: depName=aquaproj/aqua-registry
+  - type: standard
+    ref: v4.489.0 # renovate: depName=aquaproj/aqua-registry
 packages:
-- name: casey/just@1.48.1
-- name: hashicorp/terraform@v1.14.8
+  - name: casey/just@1.48.1
+  - name: hashicorp/terraform@v1.14.8

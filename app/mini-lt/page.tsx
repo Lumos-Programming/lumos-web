@@ -1,32 +1,36 @@
-import { getWeekData } from '@/lib/firebase'
-import { getNextEventWeekId, formatWeekDate, getWeekLabel } from '@/lib/mini-lt/utils'
-import { auth } from '@/lib/auth'
-import { LTCard } from '@/components/mini-lt/LTCard'
-import { WeekNavigator } from '@/components/mini-lt/WeekNavigator'
-import { Header } from '@/components/mini-lt/Header'
-import { DiscordEventSection } from '@/components/mini-lt/DiscordEventSection'
-import { Badge } from '@/components/mini-lt/ui'
-import Link from 'next/link'
+import { getWeekData } from "@/lib/firebase";
+import {
+  getNextEventWeekId,
+  formatWeekDate,
+  getWeekLabel,
+} from "@/lib/mini-lt/utils";
+import { auth } from "@/lib/auth";
+import { LTCard } from "@/components/mini-lt/LTCard";
+import { WeekNavigator } from "@/components/mini-lt/WeekNavigator";
+import { Header } from "@/components/mini-lt/Header";
+import { DiscordEventSection } from "@/components/mini-lt/DiscordEventSection";
+import { Badge } from "@/components/mini-lt/ui";
+import Link from "next/link";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string }>
+  searchParams: Promise<{ week?: string }>;
 }) {
-  const params = await searchParams
-  const nextEventWeekId = getNextEventWeekId()
-  const weekId = params.week || nextEventWeekId
-  const data = await getWeekData(weekId)
-  const nextEventDate = formatWeekDate(nextEventWeekId)
+  const params = await searchParams;
+  const nextEventWeekId = getNextEventWeekId();
+  const weekId = params.week || nextEventWeekId;
+  const data = await getWeekData(weekId);
+  const nextEventDate = formatWeekDate(nextEventWeekId);
 
   // Get label for the current week
-  const weekLabel = getWeekLabel(weekId)
+  const weekLabel = getWeekLabel(weekId);
 
   // Get current user ID if logged in
-  const session = await auth()
-  const currentUserId = session?.user?.id
+  const session = await auth();
+  const currentUserId = session?.user?.id;
 
   return (
     <main>
@@ -76,10 +80,18 @@ export default async function HomePage({
                 資料なし・5分だけでも大歓迎です ✨
               </p>
               <div className="flex flex-wrap gap-2 justify-center mb-4 text-xs">
-                <span className="bg-white px-3 py-1 rounded-full text-gray-700">🔰 初心者歓迎</span>
-                <span className="bg-white px-3 py-1 rounded-full text-gray-700">📄 資料なしOK</span>
-                <span className="bg-white px-3 py-1 rounded-full text-gray-700">⏱️ 5分でもOK</span>
-                <span className="bg-white px-3 py-1 rounded-full text-gray-700">💭 雑談ベース</span>
+                <span className="bg-white px-3 py-1 rounded-full text-gray-700">
+                  🔰 初心者歓迎
+                </span>
+                <span className="bg-white px-3 py-1 rounded-full text-gray-700">
+                  📄 資料なしOK
+                </span>
+                <span className="bg-white px-3 py-1 rounded-full text-gray-700">
+                  ⏱️ 5分でもOK
+                </span>
+                <span className="bg-white px-3 py-1 rounded-full text-gray-700">
+                  💭 雑談ベース
+                </span>
               </div>
               <Link href="/mini-lt/submit">
                 <button className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-8 py-3 rounded-xl font-bold hover:shadow-xl transition-all hover:scale-105 flex items-center gap-2 mx-auto">
@@ -109,7 +121,9 @@ export default async function HomePage({
             <p className="text-lg font-semibold text-gray-700 mb-1">
               {weekLabel}はまだ誰も登録していません
             </p>
-            <p className="text-sm text-muted-foreground">あなたが最初の一人になりませんか？</p>
+            <p className="text-sm text-muted-foreground">
+              あなたが最初の一人になりませんか？
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -147,5 +161,5 @@ export default async function HomePage({
         </button>
       </Link>
     </main>
-  )
+  );
 }
