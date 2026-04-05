@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { MemberDetailContent } from "@/components/member-detail-shared"
 import { MemberTile } from "@/components/member-tile"
@@ -12,7 +13,33 @@ interface Props {
 }
 
 export default function MembersPageClient({ members }: Props) {
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+
+  // クエリパラメータからメンバーを選択
+  useEffect(() => {
+    const memberId = searchParams.get("member")
+    if (memberId) {
+      const found = members.find((m) => m.id === memberId)
+      setSelectedMember(found ?? null)
+    }
+  }, [searchParams, members])
+
+  const handleSelect = (member: Member) => {
+    setSelectedMember(member)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("member", member.id)
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }
+
+  const handleClose = () => {
+    setSelectedMember(null)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("member")
+    const qs = params.toString()
+    router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false })
+  }
 
   return (
     <>
@@ -45,7 +72,7 @@ export default function MembersPageClient({ members }: Props) {
                 currentOrg={member.currentOrg}
                 topInterests={member.topInterests}
                 avatarSize="md"
-                onClick={() => setSelectedMember(member)}
+                onClick={() => handleSelect(member)}
               />
             ))}
           </div>
@@ -53,8 +80,8 @@ export default function MembersPageClient({ members }: Props) {
       </section>
 
       {/* Member Detail Modal */}
-      <Dialog open={!!selectedMember} onOpenChange={(open) => !open && setSelectedMember(null)}>
-        <DialogContent className="sm:max-w-[600px]">
+      <Dialog open={!!selectedMember} onOpenChange={(open) => !open && handleClose()}>
+        <DialogContent className="sm:max-w-2xl">
           {selectedMember && <MemberDetailContent member={selectedMember} />}
         </DialogContent>
       </Dialog>
