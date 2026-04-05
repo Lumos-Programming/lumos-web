@@ -226,14 +226,14 @@ export function InterestTagInput({
       const [moved] = reordered.splice(oldIndex, 1)
       reordered.splice(newIndex, 0, moved)
 
-      // First MAX_TOP_INTERESTS items become topInterests
-      const newTop = reordered.slice(0, MAX_TOP_INTERESTS).filter((t) => value.includes(t))
+      // Preserve top membership, only update order
+      const newTop = reordered.filter((t) => topInterests.includes(t))
       const newValue = reordered.filter((t) => value.includes(t))
 
       onChange(newValue)
       onTopInterestsChange(newTop)
     },
-    [sortedTags, value, onChange, onTopInterestsChange]
+    [sortedTags, value, topInterests, onChange, onTopInterestsChange]
   )
 
   const toggleTag = useCallback(
