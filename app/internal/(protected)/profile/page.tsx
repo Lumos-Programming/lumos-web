@@ -10,12 +10,7 @@ import {BioSection, InterestsSection} from "@/components/member-detail-shared"
 import {SnsChipsSection} from "@/components/sns-chips"
 import {getRingColorClass} from "@/types/member"
 import type {Member} from "@/types/member"
-
-function formatBirthDate(d: string) {
-  const parts = d.split("-")
-  if (parts.length >= 3) return `${parseInt(parts[1])}月${parseInt(parts[2])}日`
-  return d
-}
+import {formatBirthDate} from "@/lib/date"
 
 export default async function ProfilePage() {
   const session = await auth()

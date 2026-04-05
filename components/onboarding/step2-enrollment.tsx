@@ -60,6 +60,24 @@ export function Step2Enrollment({form, setFormStep2, step2Errors, setStep2Errors
             ))}
           </div>
           {step2Errors.memberType && <p className="text-xs text-red-500">{step2Errors.memberType}</p>}
+          {form.memberType && form.memberType !== "卒業生" && (
+            <div className="mt-3 space-y-1.5">
+              <Label htmlFor="studentId">
+                学籍番号 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="studentId"
+                value={form.studentId}
+                onChange={(e) => {
+                  setFormStep2((f) => ({...f, studentId: e.target.value.toUpperCase()}))
+                  if (step2Errors.studentId) setStep2Errors((p) => ({...p, studentId: undefined}))
+                }}
+                placeholder="2164078 / 24HJ078"
+                className={step2Errors.studentId ? "border-red-400" : ""}
+              />
+              {step2Errors.studentId && <p className="text-xs text-red-500">{step2Errors.studentId}</p>}
+            </div>
+          )}
           {form.memberType === "その他" && (
             <div className="mt-2 rounded-lg border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-900/30 px-4 py-3 text-sm text-teal-800 dark:text-teal-300">
               研究生・科目等履修生・聴講生などが該当します。

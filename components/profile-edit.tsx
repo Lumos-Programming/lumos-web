@@ -14,8 +14,10 @@ import { cropAndResizeImage } from "@/lib/image-crop"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import Link from "next/link"
-import type { Profile, VisibilityLevel } from "@/types/profile"
-import { GENDER_OPTIONS } from "@/types/profile"
+import type { Profile, VisibilityLevel, MemberType } from "@/types/profile"
+import { GENDER_OPTIONS, MEMBER_TYPES, ENROLLMENT_TYPES, ADMISSION_YEARS, FACULTIES, GRADUATE_SCHOOLS, getFacultyOptions } from "@/types/profile"
+import type { EnrollmentType } from "@/types/profile"
+import { getSchoolYearOptions } from "@/components/onboarding/types"
 import { DEFAULT_RING_COLOR, getRingColorClass } from "@/types/member"
 import type { RingColorKey } from "@/types/member"
 import { RingColorPicker } from "@/components/ring-color-picker"
@@ -94,6 +96,15 @@ const DEFAULT_PROFILE: Profile = {
 
 const VISIBILITY_FIELD_KEYS = ["nickname", "lastName", "firstName", "faculty", "currentOrg", "birthDate", "gender", "bio", "discord", "line", "github", "x", "linkedin"] as const
 
+type EnrollmentCache = {
+  year: string; faculty: string; admissionYear: string
+  enrollmentType: EnrollmentType | ""; transferYear: string
+  graduationYear: string; currentOrg: string
+  hasUndergrad: boolean | null; undergradFaculty: string
+  undergradAdmissionYear: string; undergradEnrollmentType: EnrollmentType | ""
+  undergradTransferYear: string
+}
+
 export default function ProfileEdit() {
   const [showPreview, setShowPreview] = useState(false)
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE)
@@ -119,8 +130,17 @@ export default function ProfileEdit() {
   const [faculty, setFaculty] = useState("")
   const [year, setYear] = useState("")
   const [role, setRole] = useState("")
-  const [memberType, setMemberType] = useState("")
+  const [memberType, setMemberType] = useState<MemberType | "">("")
   const [currentOrg, setCurrentOrg] = useState("")
+  const [admissionYear, setAdmissionYear] = useState("")
+  const [enrollmentType, setEnrollmentType] = useState<EnrollmentType | "">("")
+  const [transferYear, setTransferYear] = useState("")
+  const [graduationYear, setGraduationYear] = useState("")
+  const [hasUndergrad, setHasUndergrad] = useState<boolean | null>(null)
+  const [undergradFaculty, setUndergradFaculty] = useState("")
+  const [undergradAdmissionYear, setUndergradAdmissionYear] = useState("")
+  const [undergradEnrollmentType, setUndergradEnrollmentType] = useState<EnrollmentType | "">("")
+  const [undergradTransferYear, setUndergradTransferYear] = useState("")
   const [interests, setInterests] = useState<string[]>([])
   const [topInterests, setTopInterests] = useState<string[]>([])
   const [bannerImageUrl, setBannerImageUrl] = useState("")
@@ -132,6 +152,9 @@ export default function ProfileEdit() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const bannerFileInputRef = useRef<HTMLInputElement>(null)
   const initialSnapshot = useRef<string>("")
+
+  // 種別ごとの所属情報キャッシュ（種別切り替え時に退避・復元）
+  const enrollmentCacheRef = useRef<Partial<Record<string, EnrollmentCache>>>({})
 
   useEffect(() => {
     fetch("/api/profile")
@@ -161,8 +184,24 @@ export default function ProfileEdit() {
             const hasPublic = VISIBILITY_FIELD_KEYS.some((k) => vis[k] === "public")
             setAllowPublic(hasPublic)
           }
-          const currentFaculty = data.enrollments?.find((e: { isCurrent?: boolean }) => e.isCurrent)?.faculty ?? ""
-          setFaculty(currentFaculty)
+          const currentEnrollment = data.enrollments?.find((e: { isCurrent?: boolean }) => e.isCurrent)
+          setFaculty(currentEnrollment?.faculty ?? "")
+          setAdmissionYear(currentEnrollment?.admissionYear ?? "")
+          setEnrollmentType((currentEnrollment?.enrollmentType as EnrollmentType) ?? "")
+          setTransferYear(currentEnrollment?.transferYear ?? "")
+          setGraduationYear(currentEnrollment?.graduationYear ?? "")
+          const undergradEnrollment = data.enrollments?.find((e: { isCurrent?: boolean }) => !e.isCurrent)
+          if (data.memberType === "院生" || (data.memberType === "卒業生" && (GRADUATE_SCHOOLS as readonly string[]).includes(currentEnrollment?.faculty ?? ""))) {
+            if (undergradEnrollment) {
+              setHasUndergrad(true)
+              setUndergradFaculty(undergradEnrollment.faculty ?? "")
+              setUndergradAdmissionYear(undergradEnrollment.admissionYear ?? "")
+              setUndergradEnrollmentType((undergradEnrollment.enrollmentType as EnrollmentType) ?? "")
+              setUndergradTransferYear(undergradEnrollment.transferYear ?? "")
+            } else if (data.enrollments?.length > 0) {
+              setHasUndergrad(false)
+            }
+          }
           const fiscalYear = new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1
           setYear(data.yearByFiscal?.[String(fiscalYear)] ?? "")
           setRole(data.role ?? "")
@@ -177,7 +216,7 @@ export default function ProfileEdit() {
           if (data.bannerImage) setBannerImageUrl(data.bannerImage)
           if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar)
           if (data.ringColor) setRingColor(data.ringColor)
-          if (data.memberType) setMemberType(data.memberType)
+          if (data.memberType && (MEMBER_TYPES as readonly string[]).includes(data.memberType)) setMemberType(data.memberType as MemberType)
           if (data.currentOrg) setCurrentOrg(data.currentOrg)
           if (data.interests) setInterests(data.interests)
           if (data.topInterests) setTopInterests(data.topInterests)
@@ -208,6 +247,17 @@ export default function ProfileEdit() {
             topInterests: data.topInterests ?? [],
             memberType: data.memberType ?? "",
             currentOrg: data.currentOrg ?? "",
+            year: data.yearByFiscal?.[String(fiscalYear)] ?? "",
+            faculty: currentEnrollment?.faculty ?? "",
+            admissionYear: currentEnrollment?.admissionYear ?? "",
+            enrollmentType: currentEnrollment?.enrollmentType ?? "",
+            transferYear: currentEnrollment?.transferYear ?? "",
+            graduationYear: currentEnrollment?.graduationYear ?? "",
+            hasUndergrad: undergradEnrollment ? true : (data.enrollments?.length > 0 ? false : null),
+            undergradFaculty: undergradEnrollment?.faculty ?? "",
+            undergradAdmissionYear: undergradEnrollment?.admissionYear ?? "",
+            undergradEnrollmentType: undergradEnrollment?.enrollmentType ?? "",
+            undergradTransferYear: undergradEnrollment?.transferYear ?? "",
           })
         }
       })
@@ -216,8 +266,8 @@ export default function ProfileEdit() {
   }, [])
 
   const currentSnapshot = useMemo(() =>
-    JSON.stringify({ profile, allowPublic, primaryAvatar, ringColor, interests, topInterests, memberType, currentOrg }),
-    [profile, allowPublic, primaryAvatar, ringColor, interests, topInterests, memberType, currentOrg]
+    JSON.stringify({ profile, allowPublic, primaryAvatar, ringColor, interests, topInterests, memberType, currentOrg, year, faculty, admissionYear, enrollmentType, transferYear, graduationYear, hasUndergrad, undergradFaculty, undergradAdmissionYear, undergradEnrollmentType, undergradTransferYear }),
+    [profile, allowPublic, primaryAvatar, ringColor, interests, topInterests, memberType, currentOrg, year, faculty, admissionYear, enrollmentType, transferYear, graduationYear, hasUndergrad, undergradFaculty, undergradAdmissionYear, undergradEnrollmentType, undergradTransferYear]
   )
 
   const isDirty = !loading && initialSnapshot.current !== "" && currentSnapshot !== initialSnapshot.current
@@ -238,7 +288,39 @@ export default function ProfileEdit() {
       const response = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profile, allowPublic, primaryAvatar, ringColor, interests, topInterests }),
+        body: JSON.stringify({
+          ...profile,
+          allowPublic,
+          primaryAvatar,
+          ringColor,
+          interests,
+          topInterests,
+          memberType,
+          currentOrg: memberType === "卒業生" ? currentOrg : "",
+          ...(memberType !== "卒業生" && year ? {
+            yearByFiscal: { [String(new Date().getMonth() >= 3 ? new Date().getFullYear() : new Date().getFullYear() - 1)]: year },
+          } : {}),
+          ...(() => {
+            const entries = [
+              ...(faculty ? [{
+                faculty,
+                admissionYear,
+                enrollmentType: enrollmentType || "入学",
+                ...(transferYear ? { transferYear } : {}),
+                ...(graduationYear ? { graduationYear } : {}),
+                isCurrent: true,
+              }] : []),
+              ...((memberType === "院生" || (memberType === "卒業生" && (GRADUATE_SCHOOLS as readonly string[]).includes(faculty))) && hasUndergrad && undergradFaculty ? [{
+                faculty: undergradFaculty,
+                admissionYear: undergradAdmissionYear,
+                enrollmentType: undergradEnrollmentType || "入学",
+                ...(undergradTransferYear ? { transferYear: undergradTransferYear } : {}),
+                isCurrent: false,
+              }] : []),
+            ]
+            return entries.length > 0 ? { enrollments: entries } : {}
+          })(),
+        }),
       })
 
       if (response.ok) {
@@ -666,8 +748,299 @@ export default function ProfileEdit() {
               />
             </div>
 
+            {/* 所属情報セクション */}
+            <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+              <Label className="text-base font-semibold">所属情報</Label>
+
+              {/* 種別 */}
+              <div className="space-y-1.5">
+                <Label>種別</Label>
+                <div className="flex gap-2 flex-wrap">
+                  {MEMBER_TYPES.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => {
+                        if (type === memberType) return
+                        // 現在の種別の情報をキャッシュに退避
+                        if (memberType) {
+                          enrollmentCacheRef.current[memberType] = {
+                            year, faculty, admissionYear, enrollmentType, transferYear,
+                            graduationYear, currentOrg,
+                            hasUndergrad, undergradFaculty, undergradAdmissionYear,
+                            undergradEnrollmentType, undergradTransferYear,
+                          }
+                        }
+                        // キャッシュから復元、なければ空
+                        const cached = enrollmentCacheRef.current[type]
+                        setMemberType(type)
+                        setYear(cached?.year ?? "")
+                        setFaculty(cached?.faculty ?? "")
+                        setAdmissionYear(cached?.admissionYear ?? "")
+                        setEnrollmentType(cached?.enrollmentType ?? "")
+                        setTransferYear(cached?.transferYear ?? "")
+                        setGraduationYear(cached?.graduationYear ?? "")
+                        setCurrentOrg(cached?.currentOrg ?? "")
+                        setProfile((p) => ({ ...p, currentOrg: cached?.currentOrg ?? "" }))
+                        setHasUndergrad(cached?.hasUndergrad ?? null)
+                        setUndergradFaculty(cached?.undergradFaculty ?? "")
+                        setUndergradAdmissionYear(cached?.undergradAdmissionYear ?? "")
+                        setUndergradEnrollmentType(cached?.undergradEnrollmentType ?? "")
+                        setUndergradTransferYear(cached?.undergradTransferYear ?? "")
+                      }}
+                      className={[
+                        "px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200",
+                        memberType === type
+                          ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-600"
+                          : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400",
+                      ].join(" ")}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 学年 */}
+              {memberType && memberType !== "卒業生" && (() => {
+                const { label, note, options } = getSchoolYearOptions(memberType)
+                const now = new Date()
+                const fiscalYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
+                return (
+                  <div className="space-y-1.5">
+                    <Label>{fiscalYear}年度での{label}</Label>
+                    {note && <p className="text-xs text-muted-foreground">{note}</p>}
+                    <select
+                      value={year}
+                      onChange={(e) => setYear(e.target.value)}
+                      className="block w-full border rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white dark:bg-gray-800 dark:text-gray-100 border-input dark:border-gray-700"
+                    >
+                      <option value="">選択してください</option>
+                      {options.map((y) => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                  </div>
+                )
+              })()}
+
+              {/* 学部/学府 */}
+              {memberType && (() => {
+                const { label, options } = getFacultyOptions(memberType)
+                return (
+                  <div className="space-y-1.5">
+                    <Label>{label}</Label>
+                    <select
+                      value={faculty}
+                      onChange={(e) => setFaculty(e.target.value)}
+                      className="block w-full border rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white dark:bg-gray-800 dark:text-gray-100 border-input dark:border-gray-700"
+                    >
+                      <option value="">選択してください</option>
+                      {options.map((f) => (
+                        <option key={f} value={f}>{f}</option>
+                      ))}
+                    </select>
+                  </div>
+                )
+              })()}
+
+              {/* 入学年度 + 入学/編入 */}
+              {memberType && (
+                <div className="space-y-1.5">
+                  <Label>{memberType === "院生" ? "横浜国立大学大学院への入学年度" : "横浜国立大学への入学年度"}</Label>
+                  <div className="flex gap-2">
+                    <select
+                      value={admissionYear}
+                      onChange={(e) => setAdmissionYear(e.target.value)}
+                      className="flex-1 border rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white dark:bg-gray-800 dark:text-gray-100 border-input dark:border-gray-700"
+                    >
+                      <option value="">年度を選択</option>
+                      {ADMISSION_YEARS.map((y) => (
+                        <option key={y} value={y}>{y}年度</option>
+                      ))}
+                    </select>
+                    <div className="flex gap-1">
+                      {ENROLLMENT_TYPES.map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => {
+                            setEnrollmentType(type)
+                            setTransferYear(type === "編入" ? "3" : "")
+                          }}
+                          className={[
+                            "px-4 py-2 rounded-md text-sm font-medium border transition-all duration-200",
+                            enrollmentType === type
+                              ? "bg-purple-600 text-white border-purple-600"
+                              : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400",
+                          ].join(" ")}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 編入年次 */}
+              {enrollmentType === "編入" && (
+                <div className="flex items-center gap-3">
+                  <Label className="whitespace-nowrap text-sm">編入年次</Label>
+                  <div className="flex gap-2">
+                    {["2", "3", "4"].map((y) => (
+                      <button
+                        key={y}
+                        type="button"
+                        onClick={() => setTransferYear(y)}
+                        className={[
+                          "w-12 py-1.5 rounded-full text-sm font-medium border transition-all duration-200",
+                          transferYear === y
+                            ? "bg-purple-600 text-white border-purple-600"
+                            : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400",
+                        ].join(" ")}
+                      >
+                        {y}年
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 卒業生のみ：卒業年度 */}
+              {memberType === "卒業生" && (
+                <div className="space-y-1.5">
+                  <Label>卒業年度</Label>
+                  <select
+                    value={graduationYear}
+                    onChange={(e) => setGraduationYear(e.target.value)}
+                    className="block w-full border rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white dark:bg-gray-800 dark:text-gray-100 border-input dark:border-gray-700"
+                  >
+                    <option value="">年度を選択</option>
+                    {ADMISSION_YEARS.map((y) => (
+                      <option key={y} value={y}>{y}年度</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* 院生 or 卒業生（学府卒）：学部進学確認 + 学部時代の情報 */}
+              {(memberType === "院生" || (memberType === "卒業生" && (GRADUATE_SCHOOLS as readonly string[]).includes(faculty))) && (
+                <div className="space-y-4 border-t border-gray-100 dark:border-gray-800 pt-4 mt-2">
+                  <div className="space-y-1.5">
+                    <Label>{memberType === "院生" ? "学部から進学しましたか？" : "学部に在籍しましたか？"}</Label>
+                    <div className="flex gap-2">
+                      {([true, false] as const).map((val) => (
+                        <button
+                          key={String(val)}
+                          type="button"
+                          onClick={() => {
+                            setHasUndergrad(val)
+                            if (!val) {
+                              setUndergradFaculty("")
+                              setUndergradAdmissionYear("")
+                              setUndergradEnrollmentType("")
+                              setUndergradTransferYear("")
+                            }
+                          }}
+                          className={[
+                            "px-5 py-2 rounded-full text-sm font-medium border transition-all duration-200",
+                            hasUndergrad === val
+                              ? "bg-purple-600 text-white border-purple-600"
+                              : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400",
+                          ].join(" ")}
+                        >
+                          {val ? "はい" : "いいえ"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {hasUndergrad === true && (
+                    <div className="space-y-4">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">学部での所属</p>
+
+                      <div className="space-y-1.5">
+                        <Label>所属学部</Label>
+                        <select
+                          value={undergradFaculty}
+                          onChange={(e) => setUndergradFaculty(e.target.value)}
+                          className="block w-full border rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white dark:bg-gray-800 dark:text-gray-100 border-input dark:border-gray-700"
+                        >
+                          <option value="">選択してください</option>
+                          {FACULTIES.map((f) => (
+                            <option key={f} value={f}>{f}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label>学部への入学年度</Label>
+                        <div className="flex gap-2">
+                          <select
+                            value={undergradAdmissionYear}
+                            onChange={(e) => setUndergradAdmissionYear(e.target.value)}
+                            className="flex-1 border rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white dark:bg-gray-800 dark:text-gray-100 border-input dark:border-gray-700"
+                          >
+                            <option value="">年度を選択</option>
+                            {ADMISSION_YEARS.map((y) => (
+                              <option key={y} value={y}>{y}年度</option>
+                            ))}
+                          </select>
+                          <div className="flex gap-1">
+                            {ENROLLMENT_TYPES.map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={() => {
+                                  setUndergradEnrollmentType(type)
+                                  setUndergradTransferYear(type === "編入" ? "3" : "")
+                                }}
+                                className={[
+                                  "px-4 py-2 rounded-md text-sm font-medium border transition-all duration-200",
+                                  undergradEnrollmentType === type
+                                    ? "bg-purple-600 text-white border-purple-600"
+                                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400",
+                                ].join(" ")}
+                              >
+                                {type}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {undergradEnrollmentType === "編入" && (
+                        <div className="flex items-center gap-3">
+                          <Label className="whitespace-nowrap text-sm">編入年次</Label>
+                          <div className="flex gap-2">
+                            {["2", "3", "4"].map((y) => (
+                              <button
+                                key={y}
+                                type="button"
+                                onClick={() => setUndergradTransferYear(y)}
+                                className={[
+                                  "w-12 py-1.5 rounded-full text-sm font-medium border transition-all duration-200",
+                                  undergradTransferYear === y
+                                    ? "bg-purple-600 text-white border-purple-600"
+                                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400",
+                                ].join(" ")}
+                              >
+                                {y}年
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {PROFILE_FIELDS.map((key) => {
+                if (key === "currentOrg" && memberType !== "卒業生") return null
                 const isSns = SNS_FIELDS.has(key)
                 return (
                   <div
@@ -736,7 +1109,10 @@ export default function ProfileEdit() {
                     ) : (
                       <Input
                         value={profile[key] as string ?? ""}
-                        onChange={(e) => setProfile({ ...profile, [key]: e.target.value })}
+                        onChange={(e) => {
+                          setProfile({ ...profile, [key]: e.target.value })
+                          if (key === "currentOrg") setCurrentOrg(e.target.value)
+                        }}
                         placeholder={key === "currentOrg" ? "例: 株式会社〇〇" : `${FIELD_LABELS[key]}を入力してください`}
                       />
                     )}

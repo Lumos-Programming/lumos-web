@@ -330,6 +330,7 @@ export function profileToMemberInternal(discordId: string, data: MemberDocument)
     memberType: data.memberType,
     currentOrg: v.currentOrg !== 'private' ? data.currentOrg || undefined : undefined,
     gender: v.gender !== 'private' ? data.gender || undefined : undefined,
+    birthDate: v.birthDate !== 'private' ? data.birthDate || undefined : undefined,
     ringColor: data.ringColor,
     interests: data.interests ?? [],
     topInterests: data.topInterests ?? [],

@@ -109,23 +109,6 @@ export function Step1BasicInfo({form, setForm, step1Errors, setStep1Errors, subm
         </div>
 
         <div className="space-y-1.5 animate-[fadeInUp_300ms_120ms_ease_both]">
-          <Label htmlFor="studentId">
-            学籍番号 <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="studentId"
-            value={form.studentId}
-            onChange={(e) => {
-              setForm((f) => ({...f, studentId: e.target.value.toUpperCase()}))
-              if (step1Errors.studentId) setStep1Errors((p) => ({...p, studentId: undefined}))
-            }}
-            placeholder="2164078 / 24HJ078"
-            className={step1Errors.studentId ? "border-red-400" : ""}
-          />
-          {step1Errors.studentId && <p className="text-xs text-red-500">{step1Errors.studentId}</p>}
-        </div>
-
-        <div className="space-y-1.5 animate-[fadeInUp_300ms_180ms_ease_both]">
           <Label htmlFor="birthDate">誕生日</Label>
           <Input
             id="birthDate"

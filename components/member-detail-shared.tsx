@@ -5,6 +5,7 @@ import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/di
 import type { Member } from "@/types/member"
 import { getRingColorClass, getMemberTypeBadgeClass, getMemberTypeBadgeLabel, getTileDisplay } from "@/types/member"
 import { SnsChipsSection } from "@/components/sns-chips"
+import { formatBirthDate } from "@/lib/date"
 
 // --- BioSection ---
 
@@ -87,6 +88,11 @@ export function MemberDetailContent({ member }: { member: Member }) {
             </DialogDescription>
           </DialogHeader>
           <div className="mt-3 space-y-3">
+            {member.birthDate && (
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">誕生日:</span> {formatBirthDate(member.birthDate)}
+              </p>
+            )}
             <InterestsSection interests={member.interests} />
             <SnsChipsSection social={member.social} />
           </div>
