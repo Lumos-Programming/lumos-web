@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useRef, useCallback, useMemo } from "react"
-import { X, Star, Plus, Check, GripVertical } from "lucide-react"
+import { useState, useRef, useCallback, useMemo, useEffect } from "react"
+import { X, Star, Plus, GripVertical } from "lucide-react"
 import {
   DndContext,
   closestCenter,
@@ -15,7 +15,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  horizontalListSortingStrategy,
+  rectSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import {
@@ -59,9 +59,8 @@ function SortableChip({ tag, isTop, onToggleTop, onRemove }: SortableChipProps) 
   } = useSortable({ id: tag })
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : undefined,
+    transform: CSS.Translate.toString(transform),
+    transition: isDragging ? "none" : transition,
   }
 
   return (
@@ -69,8 +68,8 @@ function SortableChip({ tag, isTop, onToggleTop, onRemove }: SortableChipProps) 
       ref={setNodeRef}
       style={style}
       className={[
-        "inline-flex items-center gap-1 text-xs font-medium pl-1 pr-1 py-1.5 rounded-full transition-all duration-200 select-none",
-        isDragging ? "opacity-80 shadow-lg" : "",
+        "inline-flex items-center gap-1 text-xs font-medium pl-1 pr-1 py-1.5 rounded-full select-none",
+        isDragging ? "opacity-80 shadow-lg" : "transition-all duration-200",
         isTop
           ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 ring-2 ring-purple-300 dark:ring-purple-700 shadow-sm"
           : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
@@ -238,7 +237,7 @@ export function InterestTagInput({
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={sortedTags} strategy={horizontalListSortingStrategy}>
+          <SortableContext items={sortedTags} strategy={rectSortingStrategy}>
             <div className="flex flex-wrap gap-2">
               {sortedTags.map((tag) => (
                 <SortableChip
@@ -262,7 +261,21 @@ export function InterestTagInput({
       )}
 
       {/* Tag selector */}
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={(v) => {
+        setOpen(v)
+        if (v && triggerRef.current) {
+          // Wait for popover to render, then ensure its bottom is visible
+          requestAnimationFrame(() => {
+            const rect = triggerRef.current!.getBoundingClientRect()
+            // trigger bottom + sideOffset(4) + CommandList(300) + CommandInput(~44) + padding
+            const popoverBottom = rect.bottom + 4 + 300 + 44 + 8
+            const overflow = popoverBottom - window.innerHeight + 20
+            if (overflow > 0) {
+              window.scrollBy({ top: overflow, behavior: "smooth" })
+            }
+          })
+        }
+      }}>
         <PopoverTrigger asChild>
           <button
             ref={triggerRef}
@@ -298,7 +311,7 @@ export function InterestTagInput({
               value={search}
               onValueChange={setSearch}
             />
-            <CommandList>
+            <CommandList className="h-[300px]">
               <CommandEmpty>
                 {search.trim() && !isValidTag(search.trim()) ? (
                   <span className="text-xs text-red-500">
@@ -311,27 +324,24 @@ export function InterestTagInput({
                   </span>
                 )}
               </CommandEmpty>
-              {INTEREST_TAGS.map((category) => (
-                <CommandGroup key={category.category} heading={category.category}>
-                  {category.tags.map((tag) => (
-                    <CommandItem
-                      key={tag}
-                      value={tag}
-                      onSelect={() => toggleTag(tag)}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2 w-full">
-                        {selected.has(tag) ? (
-                          <Check className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-                        ) : (
-                          <div className="w-4 h-4 flex-shrink-0" />
-                        )}
-                        <span>{tag}</span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              ))}
+              {INTEREST_TAGS.map((category) => {
+                const available = category.tags.filter((tag) => !selected.has(tag))
+                if (available.length === 0) return null
+                return (
+                  <CommandGroup key={category.category} heading={category.category}>
+                    {available.map((tag) => (
+                      <CommandItem
+                        key={tag}
+                        value={tag}
+                        onSelect={() => toggleTag(tag)}
+                        className="cursor-pointer"
+                      >
+                        {tag}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )
+              })}
               {showCustomAdd && (
                 <CommandGroup heading="カスタムタグ">
                   <CommandItem
