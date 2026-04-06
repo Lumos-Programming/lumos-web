@@ -12,7 +12,7 @@ interface Props {
   members: Member[];
 }
 
-export default function MemberList({ members }: Props) {
+export default function InternalMemberList({ members }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const memberId = searchParams.get("member");
@@ -46,8 +46,8 @@ export default function MemberList({ members }: Props) {
             <MemberTile
               {...getTileDisplay(member)}
               department={member.department}
-              image={member.publicImage}
-              snsAvatar={member.snsAvatar}
+              primaryAvatar={member.publicImage}
+              secondaryAvatar={member.snsAvatar}
               ringColor={member.ringColor}
               memberType={member.memberType}
               year={member.year}

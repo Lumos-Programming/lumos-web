@@ -726,8 +726,8 @@ export default function ProfileEdit() {
       main,
       sub,
       department: dept,
-      image: mainImage,
-      snsAvatar:
+      primaryAvatar: mainImage,
+      secondaryAvatar:
         discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined,
     };
   }, [profile, faculty, faceImageUrl, discordAvatarUrl, getInitials]);
@@ -756,24 +756,24 @@ export default function ProfileEdit() {
 
     const dept = v.faculty === "public" ? faculty : "";
 
-    let image: string;
+    let avatar: string;
     switch (primaryAvatar) {
       case "face":
-        image = faceImageUrl || "/assets/lumos_logo-full.png";
+        avatar = faceImageUrl || "/assets/lumos_logo-full.png";
         break;
       case "discord":
-        image =
+        avatar =
           discordAvatarUrl !== "/placeholder.svg"
             ? discordAvatarUrl
             : "/assets/lumos_logo-full.png";
         break;
       case "line":
-        image = lineAvatar || "/assets/lumos_logo-full.png";
+        avatar = lineAvatar || "/assets/lumos_logo-full.png";
         break;
       default:
-        image = "/assets/lumos_logo-full.png";
+        avatar = "/assets/lumos_logo-full.png";
     }
-    return { main, sub, role, department: dept, year, image };
+    return { main, sub, role, department: dept, year, primaryAvatar: avatar };
   }, [
     profile,
     faculty,

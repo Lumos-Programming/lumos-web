@@ -17,12 +17,12 @@ export interface MemberTileData {
   main: string;
   sub?: string;
   department: string;
-  image: string;
+  primaryAvatar: string;
   memberType?: string;
   year?: string;
   currentOrg?: string;
   ringColor?: string;
-  snsAvatar?: string;
+  secondaryAvatar?: string;
   topInterests?: string[];
 }
 
@@ -51,8 +51,8 @@ export function InternalTilePreview({
         main={data.main}
         sub={data.sub}
         department={data.department}
-        image={data.image}
-        snsAvatar={data.snsAvatar}
+        primaryAvatar={data.primaryAvatar}
+        secondaryAvatar={data.secondaryAvatar}
         ringColor={data.ringColor}
         memberType={data.memberType}
         year={data.year}
@@ -84,8 +84,8 @@ export function ExternalTilePreview({
             main={data.main}
             sub={data.sub}
             department={data.department}
-            image={data.image}
-            snsAvatar={data.snsAvatar}
+            primaryAvatar={data.primaryAvatar}
+            secondaryAvatar={data.secondaryAvatar}
             ringColor={data.ringColor}
             memberType={data.memberType}
             year={data.year}
@@ -137,7 +137,7 @@ function DetailPreview({
                 className={`w-16 h-16 sm:w-20 sm:h-20 relative rounded-lg overflow-hidden ring-2 ${getRingColorClass(data.ringColor)}`}
               >
                 <Image
-                  src={data.image}
+                  src={data.primaryAvatar}
                   alt="詳細プレビュー"
                   fill
                   className="object-cover"

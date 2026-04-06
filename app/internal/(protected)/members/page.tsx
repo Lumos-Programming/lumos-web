@@ -1,8 +1,8 @@
 import { getMembersInternal } from "@/lib/members";
 import { PageHeader } from "@/components/page-header";
-import { MemberSearch } from "@/components/member-search";
+import { InternalMemberSearch } from "@/components/internal-member-search";
 
-export default async function MembersPage() {
+export default async function InternalMembersPage() {
   const members = await getMembersInternal();
 
   return (
@@ -11,7 +11,7 @@ export default async function MembersPage() {
         title="メンバー一覧"
         description={`${members.length}名のメンバー`}
       />
-      <MemberSearch members={members} />
+      <InternalMemberSearch members={members} />
     </div>
   );
 }

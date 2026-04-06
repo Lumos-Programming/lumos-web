@@ -19,8 +19,8 @@ interface PreviewIslandStep4Props {
     sub?: string;
     department: string;
     year: string;
-    image: string;
-    snsAvatar?: string;
+    primaryAvatar: string;
+    secondaryAvatar?: string;
   };
   onbInternalSns: SnsEntry[];
 }
@@ -91,15 +91,15 @@ interface PreviewIslandStep5Props {
     sub?: string;
     department: string;
     year: string;
-    image: string;
-    snsAvatar?: string;
+    primaryAvatar: string;
+    secondaryAvatar?: string;
   };
   onbExternalPreview: {
     main: string;
     sub?: string;
     department: string;
     year: string;
-    image: string;
+    primaryAvatar: string;
   };
   onbInternalSns: SnsEntry[];
   onbExternalSns: SnsEntry[];

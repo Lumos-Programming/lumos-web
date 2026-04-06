@@ -260,7 +260,7 @@ function resolveDiscordAvatar(
 
 const DEFAULT_AVATAR = "/assets/lumos_logo-full.png";
 
-function resolvePrimaryAvatar(discordId: string, data: MemberDocument): string {
+function resolvePublicImage(discordId: string, data: MemberDocument): string {
   const pa = data.primaryAvatar ?? "face";
   switch (pa) {
     case "face":
@@ -322,7 +322,7 @@ export function profileToMember(
     department: v.faculty === "public" ? currentFaculty : "",
     year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? "",
     bio: v.bio === "public" ? data.bio : "",
-    publicImage: resolvePrimaryAvatar(discordId, data),
+    publicImage: resolvePublicImage(discordId, data),
     social: Object.keys(social).length > 0 ? social : undefined,
     nickname: v.nickname === "public" ? data.nickname || undefined : undefined,
     memberType: data.memberType,
@@ -387,7 +387,7 @@ export function profileToMemberInternal(
     department: v.faculty !== "private" ? currentFaculty : "",
     year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? "",
     bio: v.bio !== "private" ? data.bio : "",
-    publicImage: resolvePrimaryAvatar(discordId, data),
+    publicImage: data.faceImage || DEFAULT_AVATAR,
     faceImage: data.faceImage || undefined,
     snsAvatar,
     social: Object.keys(social).length > 0 ? social : undefined,

@@ -25,7 +25,7 @@ interface Step7AvatarProps {
     sub?: string;
     department: string;
     year: string;
-    image: string;
+    primaryAvatar: string;
   };
   submitting: boolean;
   onComplete: () => void;
@@ -73,7 +73,7 @@ export function Step7Avatar({
               allowPublic={true}
               data={{
                 ...onbExternalPreview,
-                image: (() => {
+                primaryAvatar: (() => {
                   switch (primaryAvatar) {
                     case "face":
                       return faceImageUrl || "/assets/lumos_logo-full.png";
