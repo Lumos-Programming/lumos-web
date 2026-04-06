@@ -881,9 +881,21 @@ export default function ProfileEdit() {
       )}
       <Card>
         <CardContent className="pt-6 space-y-6">
-          {/* プロフィール画像セクション */}
+          {/* 顔写真セクション */}
           <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-            <Label className="text-base font-semibold">プロフィール画像</Label>
+            <Label className="text-base font-semibold">
+              プロフィール顔写真
+            </Label>
+            <div className="rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 px-4 py-3 space-y-1.5">
+              <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                顔がわかる写真を設定しませんか？
+              </p>
+              <p className="text-xs text-purple-700 dark:text-purple-300 leading-relaxed">
+                Lumosメンバーページでは、プロフィール顔写真の設定を推奨しています。
+                <br />
+                メンバー一覧ページで他のメンバーの顔ぶれを確認できるだけでなく、対面イベントやキャンパスですれ違ったときに声をかけてもらいやすくなります。
+              </p>
+            </div>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <div
                 className="relative flex-shrink-0 flex items-center justify-center overflow-visible"
@@ -975,69 +987,72 @@ export default function ProfileEdit() {
               </div>
             )}
 
-            {/* Primary avatar selection */}
-            <div className="space-y-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                公開ページの表示画像
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  {
-                    value: "face" as const,
-                    label: "顔写真",
-                    src: faceImageUrl || "/placeholder.svg",
-                    enabled: true,
-                  },
-                  {
-                    value: "discord" as const,
-                    label: "Discord",
-                    src: discordAvatarHash
-                      ? discordAvatarHash.startsWith("http")
-                        ? discordAvatarHash
-                        : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatarHash}.png`
-                      : "/placeholder.svg",
-                    enabled: !!discordAvatarHash,
-                  },
-                  {
-                    value: "line" as const,
-                    label: "LINE",
-                    src: lineAvatar || "/placeholder.svg",
-                    enabled: lineLinked && !!lineAvatar,
-                  },
-                  {
-                    value: "default" as const,
-                    label: "なし",
-                    src: "/placeholder.svg",
-                    enabled: true,
-                  },
-                ].map(({ value, label, src, enabled }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    disabled={!enabled}
-                    onClick={() => setPrimaryAvatar(value)}
-                    className={[
-                      "flex items-center gap-2 rounded-lg border-2 p-2 transition-all duration-200 text-left",
-                      primaryAvatar === value
-                        ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 dark:border-purple-600"
-                        : "border-gray-200 dark:border-gray-700",
-                      !enabled
-                        ? "opacity-40 cursor-not-allowed"
-                        : "cursor-pointer hover:border-purple-300",
-                    ].join(" ")}
-                  >
-                    <div className="w-8 h-8 relative rounded-full overflow-hidden flex-shrink-0">
-                      <Image src={src} alt="" fill className="object-cover" />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <RingColorPicker value={ringColor} onChange={setRingColor} />
+          </div>
+
+          {/* 公開ページの表示画像セクション */}
+          <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <Label className="text-base font-semibold">
+              公開ページの表示画像
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              公開ページやメンバー一覧に表示される画像を選択します。
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                {
+                  value: "face" as const,
+                  label: "顔写真",
+                  src: faceImageUrl || "/placeholder.svg",
+                  enabled: true,
+                },
+                {
+                  value: "discord" as const,
+                  label: "Discord",
+                  src: discordAvatarHash
+                    ? discordAvatarHash.startsWith("http")
+                      ? discordAvatarHash
+                      : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatarHash}.png`
+                    : "/placeholder.svg",
+                  enabled: !!discordAvatarHash,
+                },
+                {
+                  value: "line" as const,
+                  label: "LINE",
+                  src: lineAvatar || "/placeholder.svg",
+                  enabled: lineLinked && !!lineAvatar,
+                },
+                {
+                  value: "default" as const,
+                  label: "なし",
+                  src: "/placeholder.svg",
+                  enabled: true,
+                },
+              ].map(({ value, label, src, enabled }) => (
+                <button
+                  key={value}
+                  type="button"
+                  disabled={!enabled}
+                  onClick={() => setPrimaryAvatar(value)}
+                  className={[
+                    "flex items-center gap-2 rounded-lg border-2 p-2 transition-all duration-200 text-left",
+                    primaryAvatar === value
+                      ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 dark:border-purple-600"
+                      : "border-gray-200 dark:border-gray-700",
+                    !enabled
+                      ? "opacity-40 cursor-not-allowed"
+                      : "cursor-pointer hover:border-purple-300",
+                  ].join(" ")}
+                >
+                  <div className="w-8 h-8 relative rounded-full overflow-hidden flex-shrink-0">
+                    <Image src={src} alt="" fill className="object-cover" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {label}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* バナー画像セクション */}
