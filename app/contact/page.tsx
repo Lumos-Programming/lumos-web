@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, CheckCircle, Mail, MapPin, Phone } from "lucide-react";
+import { AlertCircle, CheckCircle, Mail, MapPin } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function ContactPage() {
