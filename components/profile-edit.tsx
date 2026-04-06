@@ -986,6 +986,8 @@ export default function ProfileEdit() {
                 </div>
               </div>
             )}
+
+            <RingColorPicker value={ringColor} onChange={setRingColor} />
           </div>
 
           {/* 公開ページの表示画像セクション */}
@@ -1051,8 +1053,6 @@ export default function ProfileEdit() {
                 </button>
               ))}
             </div>
-
-            <RingColorPicker value={ringColor} onChange={setRingColor} />
           </div>
 
           {/* バナー画像セクション */}
