@@ -1759,6 +1759,9 @@ export default function ProfileEdit() {
               {VISIBILITY_DISPLAY_KEYS.map((key) => {
                 if (key === "currentOrg" && memberType !== "卒業生")
                   return null;
+                const isSnsField = SNS_FIELDS.has(key) || key === "linkedin";
+                const isSnsUnlinked =
+                  isSnsField && !(profile[key as keyof Profile] as string);
                 const isCombinedName = key === "lastName";
                 const visibilityValue = isCombinedName
                   ? profile.visibility.lastName === profile.visibility.firstName
@@ -1775,31 +1778,37 @@ export default function ProfileEdit() {
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0 shrink-1">
                       {VISIBILITY_LABELS[key]}
                     </span>
-                    <VisibilityToggle
-                      value={visibilityValue}
-                      onChange={(v: VisibilityLevel) =>
-                        setProfile({
-                          ...profile,
-                          visibility: isCombinedName
-                            ? {
-                                ...profile.visibility,
-                                lastName: v,
-                                firstName: v,
-                              }
-                            : { ...profile.visibility, [key]: v },
-                        })
-                      }
-                      max={
-                        key === "line" || key === "birthDate" || !allowPublic
-                          ? "internal"
-                          : undefined
-                      }
-                      min={
-                        key === "line" || key === "discord"
-                          ? "internal"
-                          : undefined
-                      }
-                    />
+                    {isSnsUnlinked ? (
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        未連携
+                      </span>
+                    ) : (
+                      <VisibilityToggle
+                        value={visibilityValue}
+                        onChange={(v: VisibilityLevel) =>
+                          setProfile({
+                            ...profile,
+                            visibility: isCombinedName
+                              ? {
+                                  ...profile.visibility,
+                                  lastName: v,
+                                  firstName: v,
+                                }
+                              : { ...profile.visibility, [key]: v },
+                          })
+                        }
+                        max={
+                          key === "line" || key === "birthDate" || !allowPublic
+                            ? "internal"
+                            : undefined
+                        }
+                        min={
+                          key === "line" || key === "discord"
+                            ? "internal"
+                            : undefined
+                        }
+                      />
+                    )}
                   </div>
                 );
               })}
