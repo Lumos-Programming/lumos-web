@@ -258,19 +258,19 @@ function resolveDiscordAvatar(
   return `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`;
 }
 
-function resolvePrimaryAvatar(discordId: string, data: MemberDocument): string {
+const DEFAULT_AVATAR = "/assets/lumos_logo-full.png";
+
+function resolvePublicImage(discordId: string, data: MemberDocument): string {
   const pa = data.primaryAvatar ?? "face";
   switch (pa) {
     case "face":
-      return (
-        data.faceImage || resolveDiscordAvatar(discordId, data.discordAvatar)
-      );
+      return data.faceImage || DEFAULT_AVATAR;
     case "discord":
       return resolveDiscordAvatar(discordId, data.discordAvatar);
     case "line":
-      return data.lineAvatar || "/placeholder.svg";
+      return data.lineAvatar || DEFAULT_AVATAR;
     case "default":
-      return "/placeholder.svg";
+      return DEFAULT_AVATAR;
   }
 }
 
@@ -322,7 +322,7 @@ export function profileToMember(
     department: v.faculty === "public" ? currentFaculty : "",
     year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? "",
     bio: v.bio === "public" ? data.bio : "",
-    image: resolvePrimaryAvatar(discordId, data),
+    publicImage: resolvePublicImage(discordId, data),
     social: Object.keys(social).length > 0 ? social : undefined,
     nickname: v.nickname === "public" ? data.nickname || undefined : undefined,
     memberType: data.memberType,
@@ -387,7 +387,7 @@ export function profileToMemberInternal(
     department: v.faculty !== "private" ? currentFaculty : "",
     year: data.yearByFiscal?.[String(new Date().getFullYear())] ?? "",
     bio: v.bio !== "private" ? data.bio : "",
-    image: resolveDiscordAvatar(discordId, data.discordAvatar),
+    publicImage: data.faceImage || DEFAULT_AVATAR,
     faceImage: data.faceImage || undefined,
     snsAvatar,
     social: Object.keys(social).length > 0 ? social : undefined,

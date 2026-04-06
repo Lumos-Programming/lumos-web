@@ -210,7 +210,7 @@ export function Step6Photo({
               className={`w-32 h-32 relative rounded-full overflow-hidden ring-4 ${getRingColorClass(ringColor)} z-10 ${blobAnimating ? "animate-liquid-pop" : ""}`}
             >
               <Image
-                src={faceImageUrl || "/placeholder.svg"}
+                src={faceImageUrl || "/assets/lumos_logo-full.png"}
                 alt="プロフィール画像"
                 fill
                 className="object-cover"

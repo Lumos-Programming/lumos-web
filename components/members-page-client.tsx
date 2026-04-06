@@ -60,7 +60,7 @@ export default function MembersPageClient({ members }: Props) {
                 key={member.id}
                 {...getTileDisplay(member)}
                 department={member.department}
-                image={member.image || "/placeholder.svg"}
+                primaryAvatar={member.publicImage}
                 ringColor={member.ringColor}
                 memberType={member.memberType}
                 year={member.year}

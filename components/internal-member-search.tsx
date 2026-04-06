@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { badgeVariants } from "@/components/ui/badge";
-import MemberList from "@/components/member-list";
+import InternalMemberList from "@/components/internal-member-list";
 import type { Member } from "@/types/member";
 
 const MEMBER_TYPE_FILTERS = [
@@ -19,7 +19,7 @@ interface MemberSearchProps {
   members: Member[];
 }
 
-export function MemberSearch({ members }: MemberSearchProps) {
+export function InternalMemberSearch({ members }: MemberSearchProps) {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
 
@@ -73,7 +73,7 @@ export function MemberSearch({ members }: MemberSearchProps) {
 
       {/* Results */}
       <div className="animate-spring-up stagger-tight-2 fill-mode-backwards">
-        <MemberList members={filtered} />
+        <InternalMemberList members={filtered} />
       </div>
     </div>
   );

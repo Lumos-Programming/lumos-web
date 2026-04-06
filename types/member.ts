@@ -5,7 +5,7 @@ export type Member = {
   department: string;
   year: string;
   bio: string;
-  image: string;
+  publicImage: string; // primaryAvatar設定に基づく表示画像
   faceImage?: string; // GCS URL (顔写真)
   snsAvatar?: string; // Discord or LINE アバター (内部メンバー表示用)
   social?: {

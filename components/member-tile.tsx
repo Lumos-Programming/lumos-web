@@ -9,8 +9,8 @@ export interface MemberTileProps {
   main: string;
   sub?: string;
   department: string;
-  image: string;
-  snsAvatar?: string;
+  primaryAvatar: string;
+  secondaryAvatar?: string;
   ringColor?: string;
   memberType?: string;
   year?: string;
@@ -25,8 +25,8 @@ export function MemberTile({
   main,
   sub,
   department,
-  image,
-  snsAvatar,
+  primaryAvatar,
+  secondaryAvatar,
   ringColor,
   memberType,
   year,
@@ -48,15 +48,15 @@ export function MemberTile({
           className={`${sizeClass} relative rounded-full overflow-hidden ring-2 ${ringClass} transition-all duration-300 ${!preview ? "group-hover:ring-4 group-hover:shadow-lg group-hover:scale-105" : ""}`}
         >
           <Image
-            src={image}
+            src={primaryAvatar}
             alt={`${main}の写真`}
             fill
             className="object-cover"
           />
         </div>
-        {snsAvatar && (
+        {secondaryAvatar && (
           <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
-            <Image src={snsAvatar} alt="" fill className="object-cover" />
+            <Image src={secondaryAvatar} alt="" fill className="object-cover" />
           </div>
         )}
       </div>

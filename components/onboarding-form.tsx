@@ -660,14 +660,14 @@ export default function OnboardingForm() {
     }
 
     const dept = v.faculty !== "private" ? form.faculty : "";
-    const mainImage = faceImageUrl || "/assets/avatar-placeholder.svg";
+    const mainImage = faceImageUrl || "/assets/lumos_logo-full.png";
     return {
       main,
       sub,
       department: dept,
       year: form.schoolYear,
-      image: mainImage,
-      snsAvatar:
+      primaryAvatar: mainImage,
+      secondaryAvatar:
         discordAvatarUrl !== "/placeholder.svg" ? discordAvatarUrl : undefined,
     };
   }, [
@@ -706,24 +706,30 @@ export default function OnboardingForm() {
 
     const dept = v.faculty === "public" ? form.faculty : "";
 
-    let image: string;
+    let avatar: string;
     switch (primaryAvatar) {
       case "face":
-        image = faceImageUrl || "/assets/avatar-placeholder.svg";
+        avatar = faceImageUrl || "/assets/lumos_logo-full.png";
         break;
       case "discord":
-        image =
+        avatar =
           discordAvatarUrl !== "/placeholder.svg"
             ? discordAvatarUrl
-            : "/assets/avatar-placeholder.svg";
+            : "/assets/lumos_logo-full.png";
         break;
       case "line":
-        image = lineAvatar || "/assets/avatar-placeholder.svg";
+        avatar = lineAvatar || "/assets/lumos_logo-full.png";
         break;
       default:
-        image = "/assets/avatar-placeholder.svg";
+        avatar = "/assets/lumos_logo-full.png";
     }
-    return { main, sub, department: dept, year: form.schoolYear, image };
+    return {
+      main,
+      sub,
+      department: dept,
+      year: form.schoolYear,
+      primaryAvatar: avatar,
+    };
   }, [
     visibility,
     form.lastName,
