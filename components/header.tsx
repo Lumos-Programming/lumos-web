@@ -30,7 +30,7 @@ export default function Header({ authSlot }: { authSlot?: ReactNode }) {
   return (
     <header
       className={cn(
-        "fixed w-full z-50 transition-all duration-300",
+        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
         scrolled ? "bg-white/95 backdrop-blur-md shadow-md" : "bg-white",
       )}
     >
@@ -62,10 +62,10 @@ export default function Header({ authSlot }: { authSlot?: ReactNode }) {
         </div>
 
         {/* Mobile menu button */}
-        <div className="flex md:hidden">
+        <div className="flex md:hidden ml-auto">
           <button
             type="button"
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-foreground"
+            className="inline-flex items-center justify-center rounded-md p-2.5 text-foreground"
             onClick={() => setMobileMenuOpen(true)}
           >
             <span className="sr-only">メニューを開く</span>
