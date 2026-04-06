@@ -7,6 +7,15 @@ import type {
 } from "@/types/profile";
 import { FieldValue } from "firebase-admin/firestore";
 
+export const PUBLIC_IMAGE_OPTIONS = [
+  "face",
+  "discord",
+  "line",
+  "custom",
+  "default",
+] as const;
+export type PublicImageOption = (typeof PUBLIC_IMAGE_OPTIONS)[number];
+
 export interface MemberDocument {
   discordUsername: string; // Display name (token.name)
   discordHandle?: string; // Discord username (@handle)
@@ -40,7 +49,8 @@ export interface MemberDocument {
   lineTokenExpiresAt?: number; // Unix timestamp (seconds)
   faceImage?: string; // GCS URL (顔写真)
   bannerImage?: string; // GCS URL (プロフィールバナー画像)
-  primaryAvatar?: "face" | "discord" | "line" | "default"; // 公開ページ用
+  customPublicImage?: string; // GCS URL (カスタム公開画像)
+  publicImageOption?: PublicImageOption; // 公開ページ用
   ringColor?: string; // リングカラーキー
   interests?: string[]; // 興味分野タグ
   topInterests?: string[]; // 一覧カード表示用 (max 3)
@@ -261,7 +271,7 @@ function resolveDiscordAvatar(
 const DEFAULT_AVATAR = "/assets/lumos_logo-full.png";
 
 function resolvePublicImage(discordId: string, data: MemberDocument): string {
-  const pa = data.primaryAvatar ?? "face";
+  const pa = data.publicImageOption ?? "face";
   switch (pa) {
     case "face":
       return data.faceImage || DEFAULT_AVATAR;
@@ -269,6 +279,8 @@ function resolvePublicImage(discordId: string, data: MemberDocument): string {
       return resolveDiscordAvatar(discordId, data.discordAvatar);
     case "line":
       return data.lineAvatar || DEFAULT_AVATAR;
+    case "custom":
+      return data.customPublicImage || DEFAULT_AVATAR;
     case "default":
       return DEFAULT_AVATAR;
   }

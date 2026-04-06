@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     const type = (formData.get("type") as string) || "face";
-    if (type !== "face" && type !== "banner") {
+    if (type !== "face" && type !== "banner" && type !== "custom") {
       return NextResponse.json(
         { error: "無効な画像タイプです" },
         { status: 400 },
@@ -44,8 +44,14 @@ export async function POST(request: Request) {
     const maxBytes = type === "banner" ? 5 * 1024 * 1024 : 2 * 1024 * 1024;
     const buffer = await validateImageUpload(file, { maxBytes });
 
-    const folder = type === "banner" ? "banners" : "profiles";
-    const field = type === "banner" ? "bannerImage" : "faceImage";
+    const folder =
+      type === "banner" ? "banners" : type === "custom" ? "icons" : "profiles";
+    const field =
+      type === "banner"
+        ? "bannerImage"
+        : type === "custom"
+          ? "customPublicImage"
+          : "faceImage";
 
     const url = await uploadToGCS(buffer, `${folder}/${randomUUID()}.webp`, {
       contentType: file.type,

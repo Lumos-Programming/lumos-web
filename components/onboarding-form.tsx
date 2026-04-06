@@ -17,6 +17,7 @@ import { DEFAULT_RING_COLOR } from "@/types/member";
 import type { RingColorKey } from "@/types/member";
 import type { SnsEntry } from "@/components/member-tile-preview";
 import type { Area } from "react-easy-crop";
+import type { PublicImageOption } from "@/lib/members";
 
 import { normalizeLinkedInUrl } from "@/lib/linkedin";
 import type { FormData, VisibilityForm } from "./onboarding/types";
@@ -92,9 +93,9 @@ export default function OnboardingForm() {
   const [discordUsername, setDiscordUsername] = useState("");
   // Step 6 — image
   const [faceImageUrl, setFaceImageUrl] = useState("");
-  const [primaryAvatar, setPrimaryAvatar] = useState<
-    "face" | "discord" | "line" | "default"
-  >("face");
+  const [customPublicImageUrl, setCustomPublicImageUrl] = useState("");
+  const [publicImageOption, setPublicImageOption] =
+    useState<PublicImageOption>("face");
   const [ringColor, setRingColor] = useState<RingColorKey>(DEFAULT_RING_COLOR);
   const [previewView, setPreviewView] = useState<"tile" | "detail">("tile");
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
@@ -236,7 +237,11 @@ export default function OnboardingForm() {
           if (data.discordUsername) setDiscordUsername(data.discordUsername);
           if (data.discordAvatar) setDiscordAvatar(data.discordAvatar);
           if (data.faceImage) setFaceImageUrl(data.faceImage);
-          if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar);
+          if (data.customPublicImage)
+            setCustomPublicImageUrl(data.customPublicImage);
+          setPublicImageOption(
+            data.publicImageOption || (data.faceImage ? "face" : "discord"),
+          );
           if (data.ringColor) setRingColor(data.ringColor);
           setLineLinked(!!data.lineId);
           setLineUsername(data.line ?? "");
@@ -707,7 +712,7 @@ export default function OnboardingForm() {
     const dept = v.faculty === "public" ? form.faculty : "";
 
     let avatar: string;
-    switch (primaryAvatar) {
+    switch (publicImageOption) {
       case "face":
         avatar = faceImageUrl || "/assets/lumos_logo-full.png";
         break;
@@ -719,6 +724,9 @@ export default function OnboardingForm() {
         break;
       case "line":
         avatar = lineAvatar || "/assets/lumos_logo-full.png";
+        break;
+      case "custom":
+        avatar = customPublicImageUrl || "/assets/lumos_logo-full.png";
         break;
       default:
         avatar = "/assets/lumos_logo-full.png";
@@ -738,7 +746,8 @@ export default function OnboardingForm() {
     form.faculty,
     form.schoolYear,
     faceImageUrl,
-    primaryAvatar,
+    customPublicImageUrl,
+    publicImageOption,
     discordAvatarUrl,
     lineAvatar,
     getOnbInitials,
@@ -884,7 +893,7 @@ export default function OnboardingForm() {
           interests: form.interests,
           topInterests: form.topInterests,
           allowPublic,
-          primaryAvatar,
+          publicImageOption,
           ringColor,
           visibility: {
             studentId: "private",
@@ -1110,8 +1119,10 @@ export default function OnboardingForm() {
               <Step7Avatar
                 form={form}
                 faceImageUrl={faceImageUrl}
-                primaryAvatar={primaryAvatar}
-                setPrimaryAvatar={setPrimaryAvatar}
+                customPublicImageUrl={customPublicImageUrl}
+                setCustomPublicImageUrl={setCustomPublicImageUrl}
+                publicImageOption={publicImageOption}
+                setPublicImageOption={setPublicImageOption}
                 ringColor={ringColor}
                 discordId={discordId}
                 discordAvatar={discordAvatar}

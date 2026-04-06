@@ -21,6 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { VisibilityToggle } from "@/components/ui/visibility-toggle";
 import { toast } from "@/hooks/use-toast";
@@ -40,6 +47,7 @@ import {
 } from "@/types/profile";
 import type { EnrollmentType } from "@/types/profile";
 import { getSchoolYearOptions } from "@/components/onboarding/types";
+import type { PublicImageOption } from "@/lib/members";
 import { DEFAULT_RING_COLOR, getRingColorClass } from "@/types/member";
 import type { RingColorKey } from "@/types/member";
 import { RingColorPicker } from "@/components/ring-color-picker";
@@ -167,6 +175,181 @@ type EnrollmentCache = {
   undergradTransferYear: string;
 };
 
+function CustomImageDialog({
+  open,
+  onOpenChange,
+  customPublicImageUrl,
+  setCustomPublicImageUrl,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  customPublicImageUrl: string;
+  setCustomPublicImageUrl: (url: string) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropPos, setCropPos] = useState({ x: 0, y: 0 });
+  const [cropZoom, setCropZoom] = useState(1);
+  const [croppedArea, setCroppedArea] = useState<Area | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }, []);
+
+  const handleConfirm = useCallback(async () => {
+    if (!cropSrc || !croppedArea) return;
+    setUploading(true);
+    try {
+      const blob = await cropAndResizeImage(cropSrc, croppedArea, {
+        maxSize: 1024,
+      });
+      const formData = new FormData();
+      formData.append("image", blob, "custom.webp");
+      formData.append("type", "custom");
+      const res = await fetch("/api/profile/image", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        setCustomPublicImageUrl(url);
+        setCropSrc(null);
+        onOpenChange(false);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast({
+          variant: "destructive",
+          title: "アップロードに失敗しました",
+          description: data.error || "しばらく経ってから再度お試しください。",
+        });
+      }
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "アップロードに失敗しました",
+        description:
+          "ネットワークエラーが発生しました。接続を確認して再度お試しください。",
+      });
+    } finally {
+      setUploading(false);
+    }
+  }, [cropSrc, croppedArea, setCustomPublicImageUrl, onOpenChange]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>カスタム公開画像</DialogTitle>
+          <DialogDescription>
+            顔写真とは別に、公開ページ用の画像を設定できます
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* 現在の画像プレビュー + 選択ボタン */}
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 relative rounded-full overflow-hidden flex-shrink-0 border-2 border-gray-200 dark:border-gray-700">
+              <Image
+                src={customPublicImageUrl || "/assets/lumos_logo-full.png"}
+                alt="カスタム画像"
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFile}
+              />
+              <div className="flex gap-2">
+                {customPublicImageUrl && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    この画像を使う
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {customPublicImageUrl ? "別の画像を選択" : "画像を選択"}
+                </Button>
+              </div>
+              {!cropSrc && !customPublicImageUrl && (
+                <p className="text-xs text-muted-foreground">
+                  JPG, PNG, WebP に対応（2MB以下）
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* クロップUI */}
+          {cropSrc && (
+            <div className="space-y-3">
+              <div
+                className="relative w-full rounded-lg overflow-hidden"
+                style={{ height: 280 }}
+              >
+                <Cropper
+                  image={cropSrc}
+                  crop={cropPos}
+                  zoom={cropZoom}
+                  aspect={1}
+                  cropShape="round"
+                  onCropChange={setCropPos}
+                  onZoomChange={setCropZoom}
+                  onCropComplete={(_, area) => setCroppedArea(area)}
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground flex-shrink-0">
+                  ズーム
+                </span>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  value={cropZoom}
+                  onChange={(e) => setCropZoom(Number(e.target.value))}
+                  className="flex-1"
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCropSrc(null)}
+                >
+                  やり直す
+                </Button>
+                <Button size="sm" onClick={handleConfirm} disabled={uploading}>
+                  {uploading ? "アップロード中..." : "この画像を使う"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function ProfileEdit() {
   const { state: sidebarState, isMobile } = useSidebar();
   const [showPreview, setShowPreview] = useState(true);
@@ -182,9 +365,10 @@ export default function ProfileEdit() {
   const [xAvatar, setXAvatar] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [faceImageUrl, setFaceImageUrl] = useState("");
-  const [primaryAvatar, setPrimaryAvatar] = useState<
-    "face" | "discord" | "line" | "default"
-  >("face");
+  const [customPublicImageUrl, setCustomPublicImageUrl] = useState("");
+  const [customImageDialogOpen, setCustomImageDialogOpen] = useState(false);
+  const [publicImageOption, setPublicImageOption] =
+    useState<PublicImageOption>("face");
   const [ringColor, setRingColor] = useState<RingColorKey>(DEFAULT_RING_COLOR);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -305,8 +489,12 @@ export default function ProfileEdit() {
           if (data.xAvatar) setXAvatar(data.xAvatar);
           if (data.linkedin) setLinkedinUrl(data.linkedin);
           if (data.faceImage) setFaceImageUrl(data.faceImage);
+          if (data.customPublicImage)
+            setCustomPublicImageUrl(data.customPublicImage);
           if (data.bannerImage) setBannerImageUrl(data.bannerImage);
-          if (data.primaryAvatar) setPrimaryAvatar(data.primaryAvatar);
+          setPublicImageOption(
+            data.publicImageOption || (data.faceImage ? "face" : "discord"),
+          );
           if (data.ringColor) setRingColor(data.ringColor);
           if (
             data.memberType &&
@@ -341,7 +529,8 @@ export default function ProfileEdit() {
                 typeof data.allowPublic === "boolean"
                   ? data.allowPublic
                   : !!VISIBILITY_FIELD_KEYS.some((k) => vis[k] === "public"),
-              primaryAvatar: data.primaryAvatar ?? "face",
+              publicImageOption: data.publicImageOption ?? "face",
+              customPublicImageUrl: data.customPublicImage ?? "",
               ringColor: data.ringColor ?? DEFAULT_RING_COLOR,
               interests: data.interests ?? [],
               topInterests: data.topInterests ?? [],
@@ -383,7 +572,8 @@ export default function ProfileEdit() {
       JSON.stringify({
         profile,
         allowPublic,
-        primaryAvatar,
+        publicImageOption,
+        customPublicImageUrl,
         ringColor,
         interests,
         topInterests,
@@ -404,7 +594,8 @@ export default function ProfileEdit() {
     [
       profile,
       allowPublic,
-      primaryAvatar,
+      publicImageOption,
+      customPublicImageUrl,
       ringColor,
       interests,
       topInterests,
@@ -443,7 +634,8 @@ export default function ProfileEdit() {
     const snap = JSON.parse(initialSnapshot);
     setProfile(snap.profile);
     setAllowPublic(snap.allowPublic);
-    setPrimaryAvatar(snap.primaryAvatar);
+    setPublicImageOption(snap.publicImageOption);
+    setCustomPublicImageUrl(snap.customPublicImageUrl);
     setRingColor(snap.ringColor);
     setInterests(snap.interests);
     setTopInterests(snap.topInterests);
@@ -472,7 +664,7 @@ export default function ProfileEdit() {
         body: JSON.stringify({
           ...profile,
           allowPublic,
-          primaryAvatar,
+          publicImageOption,
           ringColor,
           interests,
           topInterests,
@@ -757,7 +949,7 @@ export default function ProfileEdit() {
     const dept = v.faculty === "public" ? faculty : "";
 
     let avatar: string;
-    switch (primaryAvatar) {
+    switch (publicImageOption) {
       case "face":
         avatar = faceImageUrl || "/assets/lumos_logo-full.png";
         break;
@@ -770,6 +962,9 @@ export default function ProfileEdit() {
       case "line":
         avatar = lineAvatar || "/assets/lumos_logo-full.png";
         break;
+      case "custom":
+        avatar = customPublicImageUrl || "/assets/lumos_logo-full.png";
+        break;
       default:
         avatar = "/assets/lumos_logo-full.png";
     }
@@ -780,7 +975,8 @@ export default function ProfileEdit() {
     year,
     role,
     faceImageUrl,
-    primaryAvatar,
+    customPublicImageUrl,
+    publicImageOption,
     discordAvatarUrl,
     lineAvatar,
     getInitials,
@@ -1003,9 +1199,9 @@ export default function ProfileEdit() {
               {[
                 {
                   value: "face" as const,
-                  label: "顔写真",
+                  label: "プロフィール顔写真",
                   src: faceImageUrl || "/assets/lumos_logo-full.png",
-                  enabled: true,
+                  enabled: !!faceImageUrl,
                 },
                 {
                   value: "discord" as const,
@@ -1024,6 +1220,12 @@ export default function ProfileEdit() {
                   enabled: lineLinked && !!lineAvatar,
                 },
                 {
+                  value: "custom" as const,
+                  label: "カスタム",
+                  src: customPublicImageUrl || "/assets/lumos_logo-full.png",
+                  enabled: true,
+                },
+                {
                   value: "default" as const,
                   label: "なし",
                   src: "/assets/lumos_logo-full.png",
@@ -1034,10 +1236,13 @@ export default function ProfileEdit() {
                   key={value}
                   type="button"
                   disabled={!enabled}
-                  onClick={() => setPrimaryAvatar(value)}
+                  onClick={() => {
+                    setPublicImageOption(value);
+                    if (value === "custom") setCustomImageDialogOpen(true);
+                  }}
                   className={[
                     "flex items-center gap-2 rounded-lg border-2 p-2 transition-all duration-200 text-left",
-                    primaryAvatar === value
+                    publicImageOption === value
                       ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 dark:border-purple-600"
                       : "border-gray-200 dark:border-gray-700",
                     !enabled
@@ -1054,6 +1259,25 @@ export default function ProfileEdit() {
                 </button>
               ))}
             </div>
+
+            {/* カスタム選択済み時の変更ボタン */}
+            {publicImageOption === "custom" && customPublicImageUrl && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setCustomImageDialogOpen(true)}
+              >
+                カスタム画像を変更
+              </Button>
+            )}
+
+            <CustomImageDialog
+              open={customImageDialogOpen}
+              onOpenChange={setCustomImageDialogOpen}
+              customPublicImageUrl={customPublicImageUrl}
+              setCustomPublicImageUrl={setCustomPublicImageUrl}
+            />
           </div>
 
           {/* バナー画像セクション */}
