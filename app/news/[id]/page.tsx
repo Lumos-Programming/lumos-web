@@ -1,41 +1,41 @@
-import Link from "next/link"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Calendar, Tag } from "lucide-react"
-import { notFound } from "next/navigation"
-import { newsArticles } from "../news-data"
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Calendar, Tag } from "lucide-react";
+import { notFound } from "next/navigation";
+import { newsArticles } from "../news-data";
 
 export async function generateStaticParams() {
   return newsArticles.map((article) => ({
     id: String(article.id),
-  }))
+  }));
 }
 
 export async function generateMetadata({
-  params
+  params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = await params
-  const article = newsArticles.find((a) => a.id === parseInt(id, 10))
+  const { id } = await params;
+  const article = newsArticles.find((a) => a.id === parseInt(id, 10));
   return {
     title: article?.title || "ニュース詳細",
-  }
+  };
 }
 
-export const revalidate = 3600
+export const revalidate = 3600;
 
 export default async function NewsDetailPage({
-  params
+  params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = await params
-  const articleId = parseInt(id, 10)
-  const article = newsArticles.find((a) => a.id === articleId)
+  const { id } = await params;
+  const articleId = parseInt(id, 10);
+  const article = newsArticles.find((a) => a.id === articleId);
 
   if (!article) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -44,11 +44,16 @@ export default async function NewsDetailPage({
       <section className="pt-32 pb-16 md:pt-40 md:pb-24 bg-primary text-white">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-3xl mx-auto">
-            <Link href="/news" className="inline-flex items-center text-white/80 hover:text-white mb-6">
+            <Link
+              href="/news"
+              className="inline-flex items-center text-white/80 hover:text-white mb-6"
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
               お知らせ一覧に戻る
             </Link>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">{article.title}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              {article.title}
+            </h1>
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center">
                 <Calendar className="mr-2 h-4 w-4" />
@@ -56,7 +61,9 @@ export default async function NewsDetailPage({
               </div>
               <div className="flex items-center">
                 <Tag className="mr-2 h-4 w-4" />
-                <span className="bg-accent/20 text-white px-2 py-0.5 rounded-full">{article.category}</span>
+                <span className="bg-accent/20 text-white px-2 py-0.5 rounded-full">
+                  {article.category}
+                </span>
               </div>
             </div>
           </div>
@@ -77,7 +84,10 @@ export default async function NewsDetailPage({
               />
             </div>
 
-            <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
+            <div
+              className="prose prose-lg max-w-none"
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
 
             <div className="mt-12 pt-8 border-t">
               <Button asChild variant="outline">
@@ -91,5 +101,5 @@ export default async function NewsDetailPage({
         </div>
       </section>
     </>
-  )
+  );
 }
