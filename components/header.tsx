@@ -27,10 +27,22 @@ export default function Header({ authSlot }: { authSlot?: ReactNode }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // メニュー開閉時のボディスクロール制御
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   return (
     <header
       className={cn(
-        "fixed w-full z-50 transition-all duration-300",
+        "fixed w-full z-40 transition-all duration-300",
         scrolled ? "bg-white/95 backdrop-blur-md shadow-md" : "bg-white",
       )}
     >
@@ -76,39 +88,30 @@ export default function Header({ authSlot }: { authSlot?: ReactNode }) {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-white">
-          <div className="fixed inset-0 flex">
-            <div className="relative w-full">
-              <div className="flex h-16 items-center justify-between px-4">
-                <Link href="/" className="text-2xl font-bold text-primary">
-                  Lumos
-                </Link>
-                <button
-                  type="button"
-                  className="-m-2.5 rounded-md p-2.5 text-foreground"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <span className="sr-only">メニューを閉じる</span>
-                  <X className="h-6 w-6" aria-hidden="true" />
-                </button>
-              </div>
-              <div className="mt-6 flow-root px-6">
-                <div className="space-y-6 py-6">
-                  {navigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="block text-base font-medium text-foreground hover:text-accent-foreground transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-                {authSlot && <div className="mt-8">{authSlot}</div>}
-              </div>
-            </div>
+        <div className="fixed inset-0 top-16 z-50 bg-white md:hidden overflow-y-auto">
+          <div className="flex justify-end p-4 md:hidden">
+            <button
+              type="button"
+              className="-m-2.5 rounded-md p-2.5 text-foreground"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="sr-only">メニューを閉じる</span>
+              <X className="h-6 w-6" aria-hidden="true" />
+            </button>
           </div>
+          <div className="space-y-6 px-6 py-6">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="block text-base font-medium text-foreground hover:text-accent-foreground transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+          {authSlot && <div className="px-6 pb-6">{authSlot}</div>}
         </div>
       )}
     </header>
