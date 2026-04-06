@@ -12,6 +12,7 @@ import {
 } from "@/components/member-detail-shared";
 import { SnsChipsSection } from "@/components/sns-chips";
 import { getRingColorClass } from "@/types/member";
+import { Cake } from "lucide-react";
 import type { Member } from "@/types/member";
 import { formatBirthDate } from "@/lib/date";
 
@@ -188,7 +189,8 @@ export default async function ProfilePage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium flex items-center gap-1">
+                    <Cake className="w-3.5 h-3.5" />
                     誕生日
                   </p>
                   <p className="text-sm font-medium mt-0.5">

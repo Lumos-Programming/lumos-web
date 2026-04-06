@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Cake } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -123,8 +124,8 @@ export function MemberDetailContent({ member }: { member: Member }) {
           </DialogHeader>
           <div className="mt-3 space-y-3">
             {member.birthDate && (
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">誕生日:</span>{" "}
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                <Cake className="w-4 h-4 text-gray-400" />
                 {formatBirthDate(member.birthDate)}
               </p>
             )}
