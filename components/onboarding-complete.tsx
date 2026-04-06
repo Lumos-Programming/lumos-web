@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Image from "next/image"
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 const MESSAGES = [
   "Hello, World! のその先へ。",
@@ -17,88 +17,94 @@ const MESSAGES = [
   "npm install lumos-member --save",
   "あなたのコードが世界を変える日も近い…かも？",
   "本番環境へデプロイしましょう。",
-]
+];
 
 function useTypingLoop(active: boolean) {
-  const [text, setText] = useState("")
+  const [text, setText] = useState("");
 
   useEffect(() => {
-    if (!active) return
+    if (!active) return;
 
-    let cancelled = false
-    let timeout: ReturnType<typeof setTimeout>
-    const sleep = (ms: number) => new Promise<void>((r) => { timeout = setTimeout(r, ms) })
+    let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout>;
+    const sleep = (ms: number) =>
+      new Promise<void>((r) => {
+        timeout = setTimeout(r, ms);
+      });
 
     async function loop() {
-      let idx = 0
+      let idx = 0;
       while (!cancelled) {
-        const msg = MESSAGES[idx % MESSAGES.length]
+        const msg = MESSAGES[idx % MESSAGES.length];
         for (let i = 1; i <= msg.length; i++) {
-          if (cancelled) return
-          setText(msg.slice(0, i))
-          await sleep(30 + Math.random() * 20)
+          if (cancelled) return;
+          setText(msg.slice(0, i));
+          await sleep(30 + Math.random() * 20);
         }
-        await sleep(1500)
+        await sleep(1500);
         for (let i = msg.length - 1; i >= 0; i--) {
-          if (cancelled) return
-          setText(msg.slice(0, i))
-          await sleep(15)
+          if (cancelled) return;
+          setText(msg.slice(0, i));
+          await sleep(15);
         }
-        await sleep(300)
-        idx++
+        await sleep(300);
+        idx++;
       }
     }
 
-    loop()
-    return () => { cancelled = true; clearTimeout(timeout) }
-  }, [active])
+    loop();
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [active]);
 
-  return text
+  return text;
 }
 
 export default function OnboardingComplete() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const isPreview = searchParams.get("preview") !== null
-  const [progress, setProgress] = useState(0)
-  const [countdown, setCountdown] = useState(5)
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isPreview = searchParams.get("preview") !== null;
+  const [progress, setProgress] = useState(0);
+  const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
-    const start = performance.now()
-    const duration = 1500
-    let raf: number
+    const start = performance.now();
+    const duration = 1500;
+    let raf: number;
     const tick = (now: number) => {
-      const t = Math.min((now - start) / duration, 1)
-      const eased = 1 - Math.pow(1 - t, 3)
-      setProgress(eased * 100)
-      if (t < 1) raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [])
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setProgress(eased * 100);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
-  const logoP = clamp01(progress / 40)
-  const bodyP = clamp01((progress - 30) / 40)
-  const buttonP = clamp01((progress - 60) / 30)
-  const startTyping = bodyP > 0.9
+  const logoP = clamp01(progress / 40);
+  const bodyP = clamp01((progress - 30) / 40);
+  const buttonP = clamp01((progress - 60) / 30);
+  const startTyping = bodyP > 0.9;
 
-  const typedText = useTypingLoop(startTyping)
+  const typedText = useTypingLoop(startTyping);
 
   useEffect(() => {
-    if (progress < 99 || isPreview) return
+    if (progress < 99 || isPreview) return;
     const interval = setInterval(() => {
-      setCountdown((c) => c - 1)
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [progress, isPreview])
+      setCountdown((c) => c - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [progress, isPreview]);
 
   useEffect(() => {
     if (countdown <= 0 && !isPreview) {
-      router.push("/internal")
+      router.push("/internal");
     }
-  }, [countdown, router, isPreview])
+  }, [countdown, router, isPreview]);
 
-  const navigate = useCallback(() => router.push("/internal"), [router])
+  const navigate = useCallback(() => router.push("/internal"), [router]);
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#0d0f1a] overflow-hidden">
@@ -106,7 +112,8 @@ export default function OnboardingComplete() {
       <div
         className="absolute w-[500px] h-[500px] rounded-full pointer-events-none"
         style={{
-          background: "radial-gradient(circle, rgba(130,120,200,0.12) 0%, transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(130,120,200,0.12) 0%, transparent 70%)",
           opacity: logoP,
           transform: `scale(${0.6 + logoP * 0.4})`,
         }}
@@ -172,7 +179,9 @@ export default function OnboardingComplete() {
             className="group inline-flex items-center gap-2 px-10 py-3.5 rounded-full text-base font-semibold text-[#0d0f1a] bg-white hover:bg-gray-100 active:scale-[0.97] transition-all duration-200 shadow-lg shadow-black/25"
           >
             はじめる
-            <span className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+            <span className="transition-transform duration-200 group-hover:translate-x-0.5">
+              →
+            </span>
           </button>
           <div className="mt-4 h-5 text-center">
             {isPreview ? (
@@ -188,14 +197,20 @@ export default function OnboardingComplete() {
 
       <style jsx>{`
         @keyframes blink {
-          0%, 50% { opacity: 1; }
-          51%, 100% { opacity: 0; }
+          0%,
+          50% {
+            opacity: 1;
+          }
+          51%,
+          100% {
+            opacity: 0;
+          }
         }
       `}</style>
     </div>
-  )
+  );
 }
 
 function clamp01(v: number) {
-  return Math.max(0, Math.min(1, v))
+  return Math.max(0, Math.min(1, v));
 }

@@ -1,8 +1,13 @@
-import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Code, Users, Calendar, Award, CheckCircle, Clock, MapPin } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Code,
+  Users,
+  Calendar,
+  Award,
+  CheckCircle,
+  Clock,
+  MapPin,
+} from "lucide-react";
 
 export default function AboutPage() {
   return (
@@ -12,7 +17,9 @@ export default function AboutPage() {
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px] z-0"></div>
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="animate-fade-in-up text-3xl md:text-5xl font-bold mb-6">サークル紹介</h1>
+            <h1 className="animate-fade-in-up text-3xl md:text-5xl font-bold mb-6">
+              サークル紹介
+            </h1>
             <p className="animate-fade-in-up-300 text-xl font-medium">
               Lumosは横浜国⽴⼤学の公認プログラミングサークルです。プログラミングに興味がある⼈が集まり、様々な活動を⾏っています。
             </p>
@@ -36,7 +43,9 @@ export default function AboutPage() {
               <div className="flex items-start gap-4">
                 <CheckCircle className="mt-1 text-gradient-orange" />
                 <p className="text-foreground">
-                  <span className="font-semibold">プログラミングのスキル習得：</span>
+                  <span className="font-semibold">
+                    プログラミングのスキル習得：
+                  </span>
                   LT会や学習会を通じて、プログラミングのスキル向上を目指します。
                 </p>
               </div>
@@ -51,7 +60,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-
 
       {/* //写真付きバージョン
       <section className="py-16 md:py-24">
@@ -103,7 +111,9 @@ export default function AboutPage() {
       <section className="section-padding bg-secondary">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className="text-3xl font-bold mb-6 text-foreground">活動内容</h2>
+            <h2 className="text-3xl font-bold mb-6 text-foreground">
+              活動内容
+            </h2>
             <p className="text-lg text-muted-foreground">
               Lumosでは以下の活動を通して、プログラミングの勉強、メンバーの交流を行っています。
             </p>
@@ -115,7 +125,9 @@ export default function AboutPage() {
                 <div className="mb-4">
                   <Code className="h-10 w-10 text-accent-foreground" />
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-foreground">各種ハンズオン学習会</h3>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  各種ハンズオン学習会
+                </h3>
                 <p className="text-muted-foreground mb-4">
                   初心者向けの言語学習会や第一歩を踏み出すための小規模なプロジェクトを開催しています。
                 </p>
@@ -135,7 +147,9 @@ export default function AboutPage() {
                 <div className="mb-4">
                   <Users className="h-10 w-10 text-accent-foreground" />
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-foreground">交流イベント</h3>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  交流イベント
+                </h3>
                 <p className="text-muted-foreground mb-4">
                   ピザパーティーやBBQなどの対面イベントを開催し、メンバー同士の親睦を深めます。Lumosメンバーならだれでも参加することができます。
                 </p>
@@ -175,7 +189,9 @@ export default function AboutPage() {
                 <div className="mb-4">
                   <Award className="h-10 w-10 text-accent-foreground" />
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-foreground">プロジェクト活動</h3>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  プロジェクト活動
+                </h3>
                 <p className="text-muted-foreground mb-4">
                   だれでも自由にプロジェクトを立ち上げることができ、メンバーと協力しながらプロジェクトを進めます。
                 </p>
@@ -192,7 +208,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-
 
       {/* Achievements Section */}
       {/*
@@ -277,9 +292,12 @@ export default function AboutPage() {
       {/* Join Us Section */}
       <section className="py-16 md:py-24 bg-secondary">
         <div className="container mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-3xl font-bold mb-6 text-foreground">Lumosに入ってみませんか？</h2>
+          <h2 className="text-3xl font-bold mb-6 text-foreground">
+            Lumosに入ってみませんか？
+          </h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto text-muted-foreground">
-            プログラミングができなくても大丈夫！<br />
+            プログラミングができなくても大丈夫！
+            <br />
             プログラミングに興味がある初心者から経験者まで誰でも大歓迎です。
           </p>
           {/*
@@ -290,5 +308,5 @@ export default function AboutPage() {
         </div>
       </section>
     </>
-  )
+  );
 }

@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { Search } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { badgeVariants } from "@/components/ui/badge"
-import MemberList from "@/components/member-list"
-import type { Member } from "@/types/member"
+import { useState, useMemo } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { badgeVariants } from "@/components/ui/badge";
+import MemberList from "@/components/member-list";
+import type { Member } from "@/types/member";
 
 const MEMBER_TYPE_FILTERS = [
   { key: "all", label: "すべて" },
@@ -13,31 +13,31 @@ const MEMBER_TYPE_FILTERS = [
   { key: "院生", label: "院生" },
   { key: "その他", label: "その他" },
   { key: "卒業生", label: "卒業生" },
-]
+];
 
 interface MemberSearchProps {
-  members: Member[]
+  members: Member[];
 }
 
 export function MemberSearch({ members }: MemberSearchProps) {
-  const [query, setQuery] = useState("")
-  const [typeFilter, setTypeFilter] = useState("all")
+  const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   const filtered = useMemo(() => {
-    let result = members
+    let result = members;
     if (typeFilter !== "all") {
-      result = result.filter((m) => m.memberType === typeFilter)
+      result = result.filter((m) => m.memberType === typeFilter);
     }
     if (query.trim()) {
-      const q = query.trim().toLowerCase()
+      const q = query.trim().toLowerCase();
       result = result.filter(
         (m) =>
           m.name.toLowerCase().includes(q) ||
-          (m.nickname && m.nickname.toLowerCase().includes(q))
-      )
+          (m.nickname && m.nickname.toLowerCase().includes(q)),
+      );
     }
-    return result
-  }, [members, query, typeFilter])
+    return result;
+  }, [members, query, typeFilter]);
 
   return (
     <div className="space-y-4">
@@ -52,7 +52,11 @@ export function MemberSearch({ members }: MemberSearchProps) {
             className="pl-9 focus-visible:shadow-md transition-shadow duration-200"
           />
         </div>
-        <div className="flex gap-1.5 flex-wrap" role="group" aria-label="メンバー種別フィルター">
+        <div
+          className="flex gap-1.5 flex-wrap"
+          role="group"
+          aria-label="メンバー種別フィルター"
+        >
           {MEMBER_TYPE_FILTERS.map((f) => (
             <button
               key={f.key}
@@ -72,5 +76,5 @@ export function MemberSearch({ members }: MemberSearchProps) {
         <MemberList members={filtered} />
       </div>
     </div>
-  )
+  );
 }

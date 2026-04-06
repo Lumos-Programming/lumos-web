@@ -1,44 +1,38 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { MemberDetailContent } from "@/components/member-detail-shared"
-import { MemberTile } from "@/components/member-tile"
-import type { Member } from "@/types/member"
-import { getTileDisplay } from "@/types/member"
+import { useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { MemberDetailContent } from "@/components/member-detail-shared";
+import { MemberTile } from "@/components/member-tile";
+import type { Member } from "@/types/member";
+import { getTileDisplay } from "@/types/member";
 
 interface Props {
-  members: Member[]
+  members: Member[];
 }
 
 export default function MemberList({ members }: Props) {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
-
-  useEffect(() => {
-    const memberId = searchParams.get("member")
-    if (memberId) {
-      const found = members.find((m) => m.id === memberId)
-      setSelectedMember(found ?? null)
-    }
-  }, [searchParams, members])
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const memberId = searchParams.get("member");
+  const selectedMember = useMemo(() => {
+    if (!memberId) return null;
+    return members.find((m) => m.id === memberId) ?? null;
+  }, [memberId, members]);
 
   const handleSelect = (member: Member) => {
-    setSelectedMember(member)
-    const params = new URLSearchParams(searchParams.toString())
-    params.set("member", member.id)
-    router.replace(`?${params.toString()}`, { scroll: false })
-  }
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("member", member.id);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   const handleClose = () => {
-    setSelectedMember(null)
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete("member")
-    const qs = params.toString()
-    router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false })
-  }
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("member");
+    const qs = params.toString();
+    router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false });
+  };
 
   return (
     <>
@@ -65,11 +59,14 @@ export default function MemberList({ members }: Props) {
         ))}
       </div>
 
-      <Dialog open={!!selectedMember} onOpenChange={(open) => !open && handleClose()}>
+      <Dialog
+        open={!!selectedMember}
+        onOpenChange={(open) => !open && handleClose()}
+      >
         <DialogContent className="sm:max-w-2xl">
           {selectedMember && <MemberDetailContent member={selectedMember} />}
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

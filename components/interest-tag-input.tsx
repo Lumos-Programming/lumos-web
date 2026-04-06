@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState, useRef, useCallback, useMemo, useLayoutEffect } from "react"
-import { X, Star, Plus, GripVertical } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState, useRef, useCallback, useMemo, useLayoutEffect } from "react";
+import { X, Star, Plus, GripVertical } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   DndContext,
   closestCenter,
@@ -11,14 +11,14 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-} from "@dnd-kit/core"
+} from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
   rectSortingStrategy,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Command,
   CommandInput,
@@ -26,95 +26,104 @@ import {
   CommandGroup,
   CommandItem,
   CommandEmpty,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 import {
   INTEREST_TAGS,
   MAX_TAGS,
   MAX_TOP_INTERESTS,
   isValidTag,
   TAG_MAX_LENGTH,
-} from "@/types/interests"
+} from "@/types/interests";
 
 // --- FLIP animation for programmatic reorder ---
 
 function useFlip(containerRef: React.RefObject<HTMLDivElement | null>) {
-  const prevRectsRef = useRef<Map<string, DOMRect> | null>(null)
-  const rafHandlesRef = useRef<number[]>([])
+  const prevRectsRef = useRef<Map<string, DOMRect> | null>(null);
+  const rafHandlesRef = useRef<number[]>([]);
 
   const snapshot = useCallback(() => {
-    const el = containerRef.current
-    if (!el) return
-    const map = new Map<string, DOMRect>()
+    const el = containerRef.current;
+    if (!el) return;
+    const map = new Map<string, DOMRect>();
     for (const child of Array.from(el.children) as HTMLElement[]) {
-      const key = child.dataset.sortableId
-      if (key) map.set(key, child.getBoundingClientRect())
+      const key = child.dataset.sortableId;
+      if (key) map.set(key, child.getBoundingClientRect());
     }
-    prevRectsRef.current = map
-  }, [containerRef])
+    prevRectsRef.current = map;
+  }, [containerRef]);
 
   // Runs every render; early-returns when no snapshot is pending
   useLayoutEffect(() => {
-    const prev = prevRectsRef.current
-    if (!prev) return
-    prevRectsRef.current = null
+    const prev = prevRectsRef.current;
+    if (!prev) return;
+    prevRectsRef.current = null;
 
-    const el = containerRef.current
-    if (!el) return
+    const el = containerRef.current;
+    if (!el) return;
 
     // Cancel any in-flight animations from a previous cycle
-    for (const id of rafHandlesRef.current) cancelAnimationFrame(id)
-    rafHandlesRef.current = []
+    for (const id of rafHandlesRef.current) cancelAnimationFrame(id);
+    rafHandlesRef.current = [];
 
     for (const child of Array.from(el.children) as HTMLElement[]) {
-      const key = child.dataset.sortableId
-      if (!key) continue
-      const oldRect = prev.get(key)
-      if (!oldRect) continue
-      const newRect = child.getBoundingClientRect()
-      const dx = oldRect.left - newRect.left
-      const dy = oldRect.top - newRect.top
-      if (dx === 0 && dy === 0) continue
+      const key = child.dataset.sortableId;
+      if (!key) continue;
+      const oldRect = prev.get(key);
+      if (!oldRect) continue;
+      const newRect = child.getBoundingClientRect();
+      const dx = oldRect.left - newRect.left;
+      const dy = oldRect.top - newRect.top;
+      if (dx === 0 && dy === 0) continue;
 
-      const prevTransition = child.style.transition
-      const prevTransform = child.style.transform
-      child.style.transition = "none"
-      child.style.transform = `translate(${dx}px, ${dy}px)`
+      const prevTransition = child.style.transition;
+      const prevTransform = child.style.transform;
+      child.style.transition = "none";
+      child.style.transform = `translate(${dx}px, ${dy}px)`;
       const rafId = requestAnimationFrame(() => {
-        child.style.transition = "transform 200ms ease"
-        child.style.transform = prevTransform || ""
-        child.addEventListener("transitionend", () => {
-          child.style.transition = prevTransition
-        }, { once: true })
-      })
-      rafHandlesRef.current.push(rafId)
+        child.style.transition = "transform 200ms ease";
+        child.style.transform = prevTransform || "";
+        child.addEventListener(
+          "transitionend",
+          () => {
+            child.style.transition = prevTransition;
+          },
+          { once: true },
+        );
+      });
+      rafHandlesRef.current.push(rafId);
     }
-  })
+  });
 
   // Cleanup on unmount
   useLayoutEffect(() => {
     return () => {
-      for (const id of rafHandlesRef.current) cancelAnimationFrame(id)
-    }
-  }, [])
+      for (const id of rafHandlesRef.current) cancelAnimationFrame(id);
+    };
+  }, []);
 
-  return snapshot
+  return snapshot;
 }
 
 // --- Sortable chip ---
 
 interface SortableChipProps {
-  tag: string
-  isTop: boolean
-  onToggleTop: () => void
-  onRemove: () => void
+  tag: string;
+  isTop: boolean;
+  onToggleTop: () => void;
+  onRemove: () => void;
 }
 
-function SortableChip({ tag, isTop, onToggleTop, onRemove }: SortableChipProps) {
+function SortableChip({
+  tag,
+  isTop,
+  onToggleTop,
+  onRemove,
+}: SortableChipProps) {
   const {
     attributes,
     listeners,
@@ -122,12 +131,12 @@ function SortableChip({ tag, isTop, onToggleTop, onRemove }: SortableChipProps) 
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: tag })
+  } = useSortable({ id: tag });
 
   const style = {
     transform: CSS.Translate.toString(transform),
     transition: isDragging ? "none" : transition,
-  }
+  };
 
   return (
     <span
@@ -171,17 +180,17 @@ function SortableChip({ tag, isTop, onToggleTop, onRemove }: SortableChipProps) 
         <X className="w-3 h-3" />
       </button>
     </span>
-  )
+  );
 }
 
 // --- Main component ---
 
 interface InterestTagInputProps {
-  value: string[]
-  onChange: (tags: string[]) => void
-  topInterests: string[]
-  onTopInterestsChange: (top: string[]) => void
-  maxTags?: number
+  value: string[];
+  onChange: (tags: string[]) => void;
+  topInterests: string[];
+  onTopInterestsChange: (top: string[]) => void;
+  maxTags?: number;
 }
 
 export function InterestTagInput({
@@ -191,133 +200,147 @@ export function InterestTagInput({
   onTopInterestsChange,
   maxTags = MAX_TAGS,
 }: InterestTagInputProps) {
-  const [open, setOpen] = useState(false)
-  const [search, setSearch] = useState("")
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const chipsRef = useRef<HTMLDivElement>(null)
-  const flipSnapshot = useFlip(chipsRef)
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const chipsRef = useRef<HTMLDivElement>(null);
+  const flipSnapshot = useFlip(chipsRef);
 
-  const selected = useMemo(() => new Set(value), [value])
+  const selected = useMemo(() => new Set(value), [value]);
 
   // Display order: Top 3 first (in topInterests order), then the rest (preserving value order)
-  const topSet = useMemo(() => new Set(topInterests), [topInterests])
+  const topSet = useMemo(() => new Set(topInterests), [topInterests]);
   const sortedTags = useMemo(() => {
-    const top = topInterests.filter((t) => value.includes(t))
-    const rest = value.filter((t) => !topSet.has(t))
-    return [...top, ...rest]
-  }, [value, topInterests, topSet])
+    const top = topInterests.filter((t) => value.includes(t));
+    const rest = value.filter((t) => !topSet.has(t));
+    return [...top, ...rest];
+  }, [value, topInterests, topSet]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  )
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      const { active, over } = event
-      if (!over || active.id === over.id) return
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
 
-      const oldIndex = sortedTags.indexOf(active.id as string)
-      const newIndex = sortedTags.indexOf(over.id as string)
-      if (oldIndex === -1 || newIndex === -1) return
+      const oldIndex = sortedTags.indexOf(active.id as string);
+      const newIndex = sortedTags.indexOf(over.id as string);
+      if (oldIndex === -1 || newIndex === -1) return;
 
       // Reorder sortedTags
-      const reordered = [...sortedTags]
-      const [moved] = reordered.splice(oldIndex, 1)
-      reordered.splice(newIndex, 0, moved)
+      const reordered = [...sortedTags];
+      const [moved] = reordered.splice(oldIndex, 1);
+      reordered.splice(newIndex, 0, moved);
 
       // Preserve top membership, only update order
-      const newTop = reordered.filter((t) => topInterests.includes(t))
-      const newValue = reordered.filter((t) => value.includes(t))
+      const newTop = reordered.filter((t) => topInterests.includes(t));
+      const newValue = reordered.filter((t) => value.includes(t));
 
-      onChange(newValue)
-      onTopInterestsChange(newTop)
+      onChange(newValue);
+      onTopInterestsChange(newTop);
     },
-    [sortedTags, value, topInterests, onChange, onTopInterestsChange]
-  )
+    [sortedTags, value, topInterests, onChange, onTopInterestsChange],
+  );
 
   const toggleTag = useCallback(
     (tag: string) => {
-      flipSnapshot()
+      flipSnapshot();
       if (selected.has(tag)) {
-        onChange(value.filter((t) => t !== tag))
+        onChange(value.filter((t) => t !== tag));
         if (topInterests.includes(tag)) {
-          onTopInterestsChange(topInterests.filter((t) => t !== tag))
+          onTopInterestsChange(topInterests.filter((t) => t !== tag));
         }
       } else {
-        if (value.length >= maxTags) return
-        onChange([...value, tag])
+        if (value.length >= maxTags) return;
+        onChange([...value, tag]);
         // Auto-add to Top 3 if there's room
         if (topInterests.length < MAX_TOP_INTERESTS) {
-          onTopInterestsChange([...topInterests, tag])
+          onTopInterestsChange([...topInterests, tag]);
         }
       }
     },
-    [value, onChange, topInterests, onTopInterestsChange, maxTags, selected, flipSnapshot]
-  )
+    [
+      value,
+      onChange,
+      topInterests,
+      onTopInterestsChange,
+      maxTags,
+      selected,
+      flipSnapshot,
+    ],
+  );
 
   const removeTag = useCallback(
     (tag: string) => {
-      flipSnapshot()
-      onChange(value.filter((t) => t !== tag))
+      flipSnapshot();
+      onChange(value.filter((t) => t !== tag));
       if (topInterests.includes(tag)) {
-        onTopInterestsChange(topInterests.filter((t) => t !== tag))
+        onTopInterestsChange(topInterests.filter((t) => t !== tag));
       }
     },
-    [value, onChange, topInterests, onTopInterestsChange, flipSnapshot]
-  )
+    [value, onChange, topInterests, onTopInterestsChange, flipSnapshot],
+  );
 
   const toggleTop = useCallback(
     (tag: string) => {
-      flipSnapshot()
+      flipSnapshot();
       if (topInterests.includes(tag)) {
-        onTopInterestsChange(topInterests.filter((t) => t !== tag))
+        onTopInterestsChange(topInterests.filter((t) => t !== tag));
       } else if (topInterests.length < MAX_TOP_INTERESTS) {
-        onTopInterestsChange([...topInterests, tag])
+        onTopInterestsChange([...topInterests, tag]);
       } else {
         // Replace the last Top 3 entry with the clicked tag
-        onTopInterestsChange([...topInterests.slice(0, -1), tag])
+        onTopInterestsChange([...topInterests.slice(0, -1), tag]);
       }
     },
-    [topInterests, onTopInterestsChange, flipSnapshot]
-  )
+    [topInterests, onTopInterestsChange, flipSnapshot],
+  );
 
   const canAddCustom =
     search.trim().length > 0 &&
     !selected.has(search.trim()) &&
     isValidTag(search.trim()) &&
-    value.length < maxTags
+    value.length < maxTags;
 
   // Check if search matches any preset
-  const searchTrimmed = search.trim().toLowerCase()
+  const searchTrimmed = search.trim().toLowerCase();
   const hasExactPresetMatch = INTEREST_TAGS.some((cat) =>
-    cat.tags.some((t) => t.toLowerCase() === searchTrimmed)
-  )
+    cat.tags.some((t) => t.toLowerCase() === searchTrimmed),
+  );
   const hasExactSelectedMatch = value.some(
-    (t) => t.toLowerCase() === searchTrimmed
-  )
+    (t) => t.toLowerCase() === searchTrimmed,
+  );
 
   const showCustomAdd =
-    canAddCustom && !hasExactPresetMatch && !hasExactSelectedMatch
+    canAddCustom && !hasExactPresetMatch && !hasExactSelectedMatch;
 
   // Popover height estimate: CommandInput(~44) + CommandList(300) + sideOffset(4) + padding(8)
-  const POPOVER_HEIGHT_ESTIMATE = 356
-  const SCROLL_BOTTOM_MARGIN = 20
+  const POPOVER_HEIGHT_ESTIMATE = 356;
+  const SCROLL_BOTTOM_MARGIN = 20;
 
   const handleOpenChange = useCallback((v: boolean) => {
-    setOpen(v)
+    setOpen(v);
     if (v) {
       requestAnimationFrame(() => {
-        const el = triggerRef.current
-        if (!el) return
-        const rect = el.getBoundingClientRect()
-        const overflow = rect.bottom + POPOVER_HEIGHT_ESTIMATE - window.innerHeight + SCROLL_BOTTOM_MARGIN
+        const el = triggerRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const overflow =
+          rect.bottom +
+          POPOVER_HEIGHT_ESTIMATE -
+          window.innerHeight +
+          SCROLL_BOTTOM_MARGIN;
         if (overflow > 0) {
-          window.scrollBy({ top: overflow, behavior: "smooth" })
+          window.scrollBy({ top: overflow, behavior: "smooth" });
         }
-      })
+      });
     }
-  }, [])
+  }, []);
 
   return (
     <div className="space-y-3">
@@ -347,7 +370,8 @@ export function InterestTagInput({
       {/* Top hint */}
       {value.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          ドラッグで並び替え・タップで Top を変更（{topInterests.length}/{MAX_TOP_INTERESTS}）
+          ドラッグで並び替え・タップで Top を変更（{topInterests.length}/
+          {MAX_TOP_INTERESTS}）
         </p>
       )}
 
@@ -402,10 +426,15 @@ export function InterestTagInput({
                 )}
               </CommandEmpty>
               {INTEREST_TAGS.map((category) => {
-                const available = category.tags.filter((tag) => !selected.has(tag))
-                if (available.length === 0) return null
+                const available = category.tags.filter(
+                  (tag) => !selected.has(tag),
+                );
+                if (available.length === 0) return null;
                 return (
-                  <CommandGroup key={category.category} heading={category.category}>
+                  <CommandGroup
+                    key={category.category}
+                    heading={category.category}
+                  >
                     {available.map((tag) => (
                       <CommandItem
                         key={tag}
@@ -417,29 +446,31 @@ export function InterestTagInput({
                       </CommandItem>
                     ))}
                   </CommandGroup>
-                )
+                );
               })}
               {showCustomAdd && (
                 <CommandGroup heading="カスタムタグ">
                   <CommandItem
                     value={`__custom__${search.trim()}`}
                     onSelect={() => {
-                      const tag = search.trim()
-                      if (isValidTag(tag) && !selected.has(tag) && value.length < maxTags) {
-                        onChange([...value, tag])
+                      const tag = search.trim();
+                      if (
+                        isValidTag(tag) &&
+                        !selected.has(tag) &&
+                        value.length < maxTags
+                      ) {
+                        onChange([...value, tag]);
                         if (topInterests.length < MAX_TOP_INTERESTS) {
-                          onTopInterestsChange([...topInterests, tag])
+                          onTopInterestsChange([...topInterests, tag]);
                         }
-                        setSearch("")
+                        setSearch("");
                       }
                     }}
                     className="cursor-pointer"
                   >
                     <div className="flex items-center gap-2 w-full">
                       <Plus className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-                      <span>
-                        &ldquo;{search.trim()}&rdquo; を新しく追加
-                      </span>
+                      <span>&ldquo;{search.trim()}&rdquo; を新しく追加</span>
                     </div>
                   </CommandItem>
                 </CommandGroup>
@@ -449,5 +480,5 @@ export function InterestTagInput({
         </PopoverContent>
       </Popover>
     </div>
-  )
+  );
 }

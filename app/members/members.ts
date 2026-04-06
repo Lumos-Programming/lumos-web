@@ -13,7 +13,8 @@ export const members: Member[] = [
     social: {
       x: "https://x.com/tivo0921",
       github: "https://github.com/tivo0921",
-      linkedin: "https://www.linkedin.com/in/%E9%A7%BF-%E6%B1%A0%E7%94%B0-005221365/",
+      linkedin:
+        "https://www.linkedin.com/in/%E9%A7%BF-%E6%B1%A0%E7%94%B0-005221365/",
       website: "https://tivo0921.lumos-ynu.jp/",
     },
   },
@@ -25,7 +26,8 @@ export const members: Member[] = [
     year: "2年",
     bio: "プロフィールを入力してください",
 
-    image: "https://storage.googleapis.com/lumos-web-profile-data/shion1305.webp",
+    image:
+      "https://storage.googleapis.com/lumos-web-profile-data/shion1305.webp",
     social: {
       x: "https://x.com/shion1305",
       github: "https://github.com/Shion1305",

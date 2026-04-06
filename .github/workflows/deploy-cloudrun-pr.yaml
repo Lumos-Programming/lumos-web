@@ -24,17 +24,17 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           token_format: access_token
-          workload_identity_provider: 'projects/599050591800/locations/global/workloadIdentityPools/default/providers/provider-github'
-          service_account: 'gh-actions@lumos-infra.iam.gserviceaccount.com'
+          workload_identity_provider: "projects/599050591800/locations/global/workloadIdentityPools/default/providers/provider-github"
+          service_account: "gh-actions@lumos-infra.iam.gserviceaccount.com"
       - name: Set up Cloud SDK
-        uses: 'google-github-actions/setup-gcloud@v2'
+        uses: "google-github-actions/setup-gcloud@v2"
         with:
-          version: '>= 363.0.0'
+          version: ">= 363.0.0"
       - name: Authorize Docker
         id: docker-auth
         uses: docker/login-action@v3
         with:
-          username: 'oauth2accesstoken'
+          username: "oauth2accesstoken"
           password: ${{ steps.auth.outputs.access_token }}
           registry: asia-northeast1-docker.pkg.dev
       - name: Build and push Docker image
@@ -49,7 +49,7 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: dev-pr-${{ github.event.number }}
-          region: 'asia-northeast1'
+          region: "asia-northeast1"
           image: asia-northeast1-docker.pkg.dev/lumos-infra/lumos-web/pr-${{ github.event.number }}:latest
       - name: Make CloudRun accessible
         run: |

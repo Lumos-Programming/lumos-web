@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { unstable_cache } from 'next/cache'
-import { getEventInterestedUsers, getDiscordAvatarUrl } from '@/lib/discord'
+import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
+import { getEventInterestedUsers, getDiscordAvatarUrl } from "@/lib/discord";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 /**
  * Cached function to fetch interested users from Discord API
@@ -10,24 +10,24 @@ export const dynamic = 'force-dynamic'
  */
 const getCachedInterestedUsers = unstable_cache(
   async (eventId: string) => {
-    const discordUsers = await getEventInterestedUsers(eventId)
+    const discordUsers = await getEventInterestedUsers(eventId);
 
-    return discordUsers.map(eventUser => ({
+    return discordUsers.map((eventUser) => ({
       userId: eventUser.user.id,
       username: eventUser.user.global_name || eventUser.user.username,
       avatarUrl: getDiscordAvatarUrl(
         eventUser.user.id,
         eventUser.member?.avatar || eventUser.user.avatar,
-        eventUser.user.discriminator
+        eventUser.user.discriminator,
       ),
-    }))
+    }));
   },
-  ['discord-interested-users'],
+  ["discord-interested-users"],
   {
     revalidate: 20, // Cache for 30 seconds
-    tags: ['discord-interested-users'],
-  }
-)
+    tags: ["discord-interested-users"],
+  },
+);
 
 /**
  * GET /api/discord/events/[eventId]/interested-users
@@ -37,17 +37,20 @@ const getCachedInterestedUsers = unstable_cache(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ eventId: string }> }
+  { params }: { params: Promise<{ eventId: string }> },
 ) {
   try {
-    const { eventId } = await params
+    const { eventId } = await params;
 
     // Fetch interested users with caching
-    const users = await getCachedInterestedUsers(eventId)
+    const users = await getCachedInterestedUsers(eventId);
 
-    return NextResponse.json({ users, count: users.length })
+    return NextResponse.json({ users, count: users.length });
   } catch (error) {
-    console.error('Failed to fetch interested users:', error)
-    return NextResponse.json({ error: 'Failed to fetch interested users' }, { status: 500 })
+    console.error("Failed to fetch interested users:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch interested users" },
+      { status: 500 },
+    );
   }
 }

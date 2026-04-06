@@ -1,18 +1,24 @@
-"use client"
+"use client";
 
-import { RING_COLORS } from "@/types/member"
-import type { RingColorKey } from "@/types/member"
+import { RING_COLORS } from "@/types/member";
+import type { RingColorKey } from "@/types/member";
 
 interface RingColorPickerProps {
-  value: RingColorKey
-  onChange: (color: RingColorKey) => void
-  description?: string
+  value: RingColorKey;
+  onChange: (color: RingColorKey) => void;
+  description?: string;
 }
 
-export function RingColorPicker({ value, onChange, description }: RingColorPickerProps) {
+export function RingColorPicker({
+  value,
+  onChange,
+  description,
+}: RingColorPickerProps) {
   return (
     <div className="space-y-2">
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">リングカラー</span>
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        リングカラー
+      </span>
       {description && (
         <p className="text-xs text-muted-foreground">{description}</p>
       )}
@@ -28,5 +34,5 @@ export function RingColorPicker({ value, onChange, description }: RingColorPicke
         ))}
       </div>
     </div>
-  )
+  );
 }

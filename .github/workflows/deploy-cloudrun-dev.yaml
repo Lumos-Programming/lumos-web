@@ -7,8 +7,8 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: 'read'
-      id-token: 'write'
+      contents: "read"
+      id-token: "write"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,19 +21,19 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           token_format: access_token
-          workload_identity_provider: 'projects/599050591800/locations/global/workloadIdentityPools/default/providers/provider-github'
-          service_account: 'gh-actions@lumos-infra.iam.gserviceaccount.com'
+          workload_identity_provider: "projects/599050591800/locations/global/workloadIdentityPools/default/providers/provider-github"
+          service_account: "gh-actions@lumos-infra.iam.gserviceaccount.com"
 
       - name: Set up Cloud SDK
-        uses: 'google-github-actions/setup-gcloud@v2'
+        uses: "google-github-actions/setup-gcloud@v2"
         with:
-          version: '>= 363.0.0'
+          version: ">= 363.0.0"
 
       - name: Authorize Docker
         id: docker-auth
         uses: docker/login-action@v3
         with:
-          username: 'oauth2accesstoken'
+          username: "oauth2accesstoken"
           password: ${{ steps.auth.outputs.access_token }}
           registry: asia-northeast1-docker.pkg.dev
 
@@ -64,5 +64,5 @@ jobs:
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          region: 'asia-northeast1'
-          metadata: './cloudrun/service-hp-dev.yaml'
+          region: "asia-northeast1"
+          metadata: "./cloudrun/service-hp-dev.yaml"

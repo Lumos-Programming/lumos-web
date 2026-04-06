@@ -1,19 +1,24 @@
-"use client"
+"use client";
 
-import { useTheme } from "@/components/theme-provider"
-import dynamic from "next/dynamic"
+import { useTheme } from "@/components/theme-provider";
+import dynamic from "next/dynamic";
 
-const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false })
+const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
 
 interface MarkdownEditorProps {
-  value: string
-  onChange: (value: string) => void
-  height?: number
-  placeholder?: string
+  value: string;
+  onChange: (value: string) => void;
+  height?: number;
+  placeholder?: string;
 }
 
-export function MarkdownEditor({ value, onChange, height = 200, placeholder }: MarkdownEditorProps) {
-  const { resolvedTheme } = useTheme()
+export function MarkdownEditor({
+  value,
+  onChange,
+  height = 200,
+  placeholder,
+}: MarkdownEditorProps) {
+  const { resolvedTheme } = useTheme();
 
   return (
     <div data-color-mode={resolvedTheme === "dark" ? "dark" : "light"}>
@@ -26,5 +31,5 @@ export function MarkdownEditor({ value, onChange, height = 200, placeholder }: M
         textareaProps={{ placeholder }}
       />
     </div>
-  )
+  );
 }

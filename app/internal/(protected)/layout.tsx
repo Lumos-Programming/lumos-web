@@ -1,15 +1,19 @@
-import { auth } from '@/lib/auth'
-import { getMember, isOnboardingComplete } from '@/lib/members'
-import { redirect } from 'next/navigation'
-import { InternalShell } from '@/components/internal-shell'
+import { auth } from "@/lib/auth";
+import { getMember, isOnboardingComplete } from "@/lib/members";
+import { redirect } from "next/navigation";
+import { InternalShell } from "@/components/internal-shell";
 
-export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth()
-  if (!session?.user?.id) redirect('/login')
+export default async function ProtectedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
 
-  const member = await getMember(session.user.id)
+  const member = await getMember(session.user.id);
   if (!member || !isOnboardingComplete(member)) {
-    redirect('/internal/onboarding')
+    redirect("/internal/onboarding");
   }
 
   return (
@@ -21,5 +25,5 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     >
       {children}
     </InternalShell>
-  )
+  );
 }

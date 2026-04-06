@@ -1,13 +1,16 @@
-"use client"
+"use client";
 
-import Image from "next/image"
+import Image from "next/image";
 
 interface WelcomeScreenProps {
-  welcomeFading: boolean
-  onDismiss: () => void
+  welcomeFading: boolean;
+  onDismiss: () => void;
 }
 
-export function WelcomeScreen({welcomeFading, onDismiss}: WelcomeScreenProps) {
+export function WelcomeScreen({
+  welcomeFading,
+  onDismiss,
+}: WelcomeScreenProps) {
   return (
     <div
       className={[
@@ -35,14 +38,14 @@ export function WelcomeScreen({welcomeFading, onDismiss}: WelcomeScreenProps) {
       <div
         className="absolute w-[500px] h-[500px] rounded-full pointer-events-none animate-[welcomePulse_4s_ease-in-out_infinite]"
         style={{
-          background: "radial-gradient(circle, rgba(130,120,200,0.12) 0%, transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(130,120,200,0.12) 0%, transparent 70%)",
         }}
       />
 
       <div className="relative z-10 flex flex-col items-center w-full max-w-xl px-4">
         {/* ロゴ — spin + scale in */}
-        <div
-          className="w-56 h-56 rounded-full bg-white flex items-center justify-center shadow-2xl shadow-black/25 overflow-hidden p-4 animate-[welcomeLogoIn_1s_cubic-bezier(0.34,1.56,0.64,1)_both]">
+        <div className="w-56 h-56 rounded-full bg-white flex items-center justify-center shadow-2xl shadow-black/25 overflow-hidden p-4 animate-[welcomeLogoIn_1s_cubic-bezier(0.34,1.56,0.64,1)_both]">
           <Image
             src="/assets/lumos_logo-full.png"
             alt="Lumos"
@@ -59,7 +62,7 @@ export function WelcomeScreen({welcomeFading, onDismiss}: WelcomeScreenProps) {
             <span
               key={i}
               className="inline-block animate-[welcomeLetterIn_0.4s_ease_both]"
-              style={{animationDelay: `${0.8 + i * 0.06}s`}}
+              style={{ animationDelay: `${0.8 + i * 0.06}s` }}
             >
               {char}
             </span>
@@ -67,98 +70,111 @@ export function WelcomeScreen({welcomeFading, onDismiss}: WelcomeScreenProps) {
         </h1>
 
         {/* バッジ — pop in */}
-        <div className="mt-6 animate-[welcomeBadgeIn_0.5s_cubic-bezier(0.34,1.56,0.64,1)_both]"
-             style={{animationDelay: "1.8s"}}>
-          <span
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 text-sm text-[#c8cae0]">
-            <svg className="w-4 h-4 text-[#7c7fda]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 strokeWidth={2}>
-              <circle cx={12} cy={12} r={10}/>
-              <polyline points="12 6 12 12 16 14"/>
+        <div
+          className="mt-6 animate-[welcomeBadgeIn_0.5s_cubic-bezier(0.34,1.56,0.64,1)_both]"
+          style={{ animationDelay: "1.8s" }}
+        >
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 text-sm text-[#c8cae0]">
+            <svg
+              className="w-4 h-4 text-[#7c7fda]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <circle cx={12} cy={12} r={10} />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
             3分ほどで基本情報の登録が完了します
           </span>
         </div>
 
         {/* ボタン — slide up */}
-        <div className="mt-10 animate-[welcomeSlideUp_0.6s_ease_both]" style={{animationDelay: "2.2s"}}>
+        <div
+          className="mt-10 animate-[welcomeSlideUp_0.6s_ease_both]"
+          style={{ animationDelay: "2.2s" }}
+        >
           <button
             onClick={onDismiss}
             className="group inline-flex items-center gap-2 px-10 py-3.5 rounded-full text-base font-semibold text-[#0d0f1a] bg-white hover:bg-gray-100 active:scale-[0.97] transition-all duration-200 shadow-lg shadow-black/25"
           >
             はじめる
-            <span className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+            <span className="transition-transform duration-200 group-hover:translate-x-0.5">
+              →
+            </span>
           </button>
         </div>
       </div>
 
       <style jsx>{`
-          @keyframes welcomeFloat {
-              0%, 100% {
-                  transform: translateY(0) scale(1);
-                  opacity: 0.4;
-              }
-              50% {
-                  transform: translateY(-40px) scale(1.3);
-                  opacity: 0.8;
-              }
+        @keyframes welcomeFloat {
+          0%,
+          100% {
+            transform: translateY(0) scale(1);
+            opacity: 0.4;
           }
+          50% {
+            transform: translateY(-40px) scale(1.3);
+            opacity: 0.8;
+          }
+        }
 
-          @keyframes welcomePulse {
-              0%, 100% {
-                  transform: scale(0.9);
-                  opacity: 0.7;
-              }
-              50% {
-                  transform: scale(1.1);
-                  opacity: 1;
-              }
+        @keyframes welcomePulse {
+          0%,
+          100% {
+            transform: scale(0.9);
+            opacity: 0.7;
           }
+          50% {
+            transform: scale(1.1);
+            opacity: 1;
+          }
+        }
 
-          @keyframes welcomeLogoIn {
-              0% {
-                  transform: scale(0) rotate(-180deg);
-                  opacity: 0;
-              }
-              100% {
-                  transform: scale(1) rotate(0deg);
-                  opacity: 1;
-              }
+        @keyframes welcomeLogoIn {
+          0% {
+            transform: scale(0) rotate(-180deg);
+            opacity: 0;
           }
+          100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
+          }
+        }
 
-          @keyframes welcomeLetterIn {
-              0% {
-                  opacity: 0;
-                  transform: translateY(8px);
-              }
-              100% {
-                  opacity: 1;
-                  transform: translateY(0);
-              }
+        @keyframes welcomeLetterIn {
+          0% {
+            opacity: 0;
+            transform: translateY(8px);
           }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
 
-          @keyframes welcomeBadgeIn {
-              0% {
-                  transform: scale(0);
-                  opacity: 0;
-              }
-              100% {
-                  transform: scale(1);
-                  opacity: 1;
-              }
+        @keyframes welcomeBadgeIn {
+          0% {
+            transform: scale(0);
+            opacity: 0;
           }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
 
-          @keyframes welcomeSlideUp {
-              0% {
-                  transform: translateY(24px);
-                  opacity: 0;
-              }
-              100% {
-                  transform: translateY(0);
-                  opacity: 1;
-              }
+        @keyframes welcomeSlideUp {
+          0% {
+            transform: translateY(24px);
+            opacity: 0;
           }
+          100% {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
       `}</style>
     </div>
-  )
+  );
 }

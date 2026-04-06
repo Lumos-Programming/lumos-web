@@ -1,5 +1,5 @@
-import { PageHeader } from "@/components/page-header"
-import EventList from "@/components/event-list"
+import { PageHeader } from "@/components/page-header";
+import EventList from "@/components/event-list";
 
 export default function EventsPage() {
   return (
@@ -7,5 +7,5 @@ export default function EventsPage() {
       <PageHeader title="イベント一覧" />
       <EventList />
     </div>
-  )
+  );
 }

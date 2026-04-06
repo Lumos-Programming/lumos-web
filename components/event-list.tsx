@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { CalendarDays, MapPin } from "lucide-react"
-import type { Event } from "@/types/event"
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CalendarDays, MapPin } from "lucide-react";
+import type { Event } from "@/types/event";
 
 export default function EventList() {
-  const [events, setEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/events")
       .then((res) => res.json())
       .then((data: Event[]) => setEvents(data))
       .catch(() => setEvents([]))
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setLoading(false));
+  }, []);
 
   if (loading) {
     return (
@@ -36,7 +36,7 @@ export default function EventList() {
           </Card>
         ))}
       </div>
-    )
+    );
   }
 
   if (events.length === 0) {
@@ -44,11 +44,15 @@ export default function EventList() {
       <Card>
         <CardContent className="py-16 text-center">
           <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4 animate-soft-pulse" />
-          <p className="text-muted-foreground font-medium">イベントはまだありません</p>
-          <p className="text-muted-foreground/60 text-sm mt-1">イベントが登録されると、ここに表示されます。</p>
+          <p className="text-muted-foreground font-medium">
+            イベントはまだありません
+          </p>
+          <p className="text-muted-foreground/60 text-sm mt-1">
+            イベントが登録されると、ここに表示されます。
+          </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -61,7 +65,9 @@ export default function EventList() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-foreground truncate">{event.title}</h3>
+                <h3 className="font-semibold text-foreground truncate">
+                  {event.title}
+                </h3>
                 <div className="flex items-center gap-3 mt-1.5 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <CalendarDays className="w-3.5 h-3.5" />
@@ -75,7 +81,9 @@ export default function EventList() {
                   )}
                 </div>
                 {event.description && (
-                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{event.description}</p>
+                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                    {event.description}
+                  </p>
                 )}
               </div>
             </div>
@@ -83,5 +91,5 @@ export default function EventList() {
         </Card>
       ))}
     </div>
-  )
+  );
 }

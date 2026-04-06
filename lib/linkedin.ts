@@ -15,41 +15,41 @@
  * @returns Normalized URL `https://www.linkedin.com/in/{username}` or `null` if invalid.
  */
 export function normalizeLinkedInUrl(input: string): string | null {
-  const trimmed = input.trim()
-  if (!trimmed) return null
+  const trimmed = input.trim();
+  if (!trimmed) return null;
 
-  let raw = trimmed
+  let raw = trimmed;
 
   // Username-only: no "linkedin.com" and no slashes
   if (!raw.includes("linkedin.com") && !raw.includes("/")) {
-    raw = `https://www.linkedin.com/in/${raw}`
+    raw = `https://www.linkedin.com/in/${raw}`;
   }
   // Path-only like "/in/username"
   else if (raw.startsWith("/in/")) {
-    raw = `https://www.linkedin.com${raw}`
+    raw = `https://www.linkedin.com${raw}`;
   }
   // Missing protocol
   else if (!raw.startsWith("http://") && !raw.startsWith("https://")) {
-    raw = `https://${raw}`
+    raw = `https://${raw}`;
   }
 
-  let url: URL
+  let url: URL;
   try {
-    url = new URL(raw)
+    url = new URL(raw);
   } catch {
-    return null
+    return null;
   }
 
   // Validate hostname
-  const hostname = url.hostname.toLowerCase()
+  const hostname = url.hostname.toLowerCase();
   if (hostname !== "linkedin.com" && hostname !== "www.linkedin.com") {
-    return null
+    return null;
   }
 
   // Extract username from pathname
-  const match = url.pathname.match(/^\/in\/([A-Za-z0-9\-_%]+)\/?$/)
-  if (!match) return null
+  const match = url.pathname.match(/^\/in\/([A-Za-z0-9\-_%]+)\/?$/);
+  if (!match) return null;
 
-  const username = match[1]
-  return `https://www.linkedin.com/in/${username}`
+  const username = match[1];
+  return `https://www.linkedin.com/in/${username}`;
 }

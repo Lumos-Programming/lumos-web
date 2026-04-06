@@ -1,8 +1,8 @@
-import Link from "next/link"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Calendar, Tag } from "lucide-react"
-import { notFound } from "next/navigation"
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Calendar, Tag } from "lucide-react";
+import { notFound } from "next/navigation";
 
 // ニュース記事のデータ
 const newsArticles = [
@@ -24,7 +24,8 @@ const newsArticles = [
     id: 8,
     date: "2026年3月2日",
     title: "ウィークリーmini-LT開始",
-    summary: "毎週オンラインでのプログラミング成果共有会mini-LTが発足しました。",
+    summary:
+      "毎週オンラインでのプログラミング成果共有会mini-LTが発足しました。",
     content: `
     <p>2026年3月2日より、毎週月曜日にmini-LTを開始しました！</p>
     <p>mini-LTは、プログラミングの学習成果や技術的な知見を短時間で共有する場です。</p>
@@ -90,7 +91,8 @@ const newsArticles = [
     id: 1,
     date: "2025年5月24日",
     title: "確定大新歓BBQ",
-    summary: "5月24日に確定大新歓としてBBQを行います。BBQを通じて親睦を深めましょう。",
+    summary:
+      "5月24日に確定大新歓としてBBQを行います。BBQを通じて親睦を深めましょう。",
     content: `
       <p>2025年5月24日(土)に確定大新歓BBQを開催しました。</p>
       <p>当日は天気にも恵まれ、約25名の新入生・在学生が参加して、和やかで楽しい時間を過ごしました。</p>
@@ -132,14 +134,14 @@ const newsArticles = [
     image: "/assets/shinkan.jpg",
     category: "イベント",
   },
-]
+];
 
 export default function NewsDetailPage({ params }: { params: { id: string } }) {
-  const articleId = Number.parseInt(params.id)
-  const article = newsArticles.find((article) => article.id === articleId)
+  const articleId = Number.parseInt(params.id);
+  const article = newsArticles.find((article) => article.id === articleId);
 
   if (!article) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -148,11 +150,16 @@ export default function NewsDetailPage({ params }: { params: { id: string } }) {
       <section className="pt-32 pb-16 md:pt-40 md:pb-24 bg-primary text-white">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-3xl mx-auto">
-            <Link href="/news" className="inline-flex items-center text-white/80 hover:text-white mb-6">
+            <Link
+              href="/news"
+              className="inline-flex items-center text-white/80 hover:text-white mb-6"
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
               お知らせ一覧に戻る
             </Link>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">{article.title}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              {article.title}
+            </h1>
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center">
                 <Calendar className="mr-2 h-4 w-4" />
@@ -160,7 +167,9 @@ export default function NewsDetailPage({ params }: { params: { id: string } }) {
               </div>
               <div className="flex items-center">
                 <Tag className="mr-2 h-4 w-4" />
-                <span className="bg-accent/20 text-white px-2 py-0.5 rounded-full">{article.category}</span>
+                <span className="bg-accent/20 text-white px-2 py-0.5 rounded-full">
+                  {article.category}
+                </span>
               </div>
             </div>
           </div>
@@ -181,7 +190,10 @@ export default function NewsDetailPage({ params }: { params: { id: string } }) {
               />
             </div>
 
-            <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: article.content }} />
+            <div
+              className="prose prose-lg max-w-none"
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
 
             <div className="mt-12 pt-8 border-t">
               <Button asChild variant="outline">
@@ -195,5 +207,5 @@ export default function NewsDetailPage({ params }: { params: { id: string } }) {
         </div>
       </section>
     </>
-  )
+  );
 }
