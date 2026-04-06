@@ -91,7 +91,7 @@ const VISIBILITY_LABELS: Record<string, string> = {
   discord: "Discord",
   line: "LINE",
   github: "GitHub",
-  x: "X (Twitter)",
+  x: "X",
   linkedin: "LinkedIn",
 };
 
@@ -2003,12 +2003,12 @@ export default function ProfileEdit() {
                     key={key}
                     className="flex items-center justify-between gap-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
                   >
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0 shrink-1 flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0 flex items-center gap-1.5 flex-wrap">
                       {VISIBILITY_LABELS[key]}
                       {isSnsUnlinked && (
                         <Badge
                           variant="secondary"
-                          className="text-[10px] px-2 py-0.5"
+                          className="text-[10px] px-2 py-0.5 whitespace-nowrap"
                         >
                           未連携
                         </Badge>
@@ -2044,43 +2044,33 @@ export default function ProfileEdit() {
               })}
             </div>
 
-            {/* PC用プレビュー（折りたたみ） */}
-            <div className="hidden sm:block">
-              <button
-                onClick={() => setShowPreview((p) => !p)}
-                className="text-sm text-purple-600 dark:text-purple-400 hover:underline font-medium"
-              >
-                {showPreview ? "▼ プレビューを閉じる" : "▶ プレビューを見る"}
-              </button>
-              {showPreview && (
-                <div className="mt-3">
-                  <MemberPreviewToggle
-                    internalData={{
-                      ...internalPreview,
-                      ringColor,
-                      memberType,
-                      currentOrg,
-                      role,
-                      year,
-                      bio: profile.bio,
-                      sns: internalSns,
-                      topInterests,
-                      interests,
-                    }}
-                    externalData={{
-                      ...externalPreview,
-                      ringColor,
-                      memberType,
-                      currentOrg,
-                      bio: profile.bio,
-                      sns: externalSns,
-                      topInterests,
-                      interests,
-                    }}
-                    allowPublic={allowPublic}
-                  />
-                </div>
-              )}
+            {/* PC用プレビュー（常時表示） */}
+            <div className="hidden sm:block mt-3">
+              <MemberPreviewToggle
+                internalData={{
+                  ...internalPreview,
+                  ringColor,
+                  memberType,
+                  currentOrg,
+                  role,
+                  year,
+                  bio: profile.bio,
+                  sns: internalSns,
+                  topInterests,
+                  interests,
+                }}
+                externalData={{
+                  ...externalPreview,
+                  ringColor,
+                  memberType,
+                  currentOrg,
+                  bio: profile.bio,
+                  sns: externalSns,
+                  topInterests,
+                  interests,
+                }}
+                allowPublic={allowPublic}
+              />
             </div>
           </div>
         </CardContent>

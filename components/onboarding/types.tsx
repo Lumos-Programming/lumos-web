@@ -105,7 +105,7 @@ export const VISIBILITY_LABELS: Record<keyof VisibilityForm, string> = {
   nickname: "ニックネーム",
   bio: "プロフィール文",
   github: "GitHub",
-  x: "X (Twitter)",
+  x: "X",
   linkedin: "LinkedIn",
   line: "LINE",
   discord: "Discord",

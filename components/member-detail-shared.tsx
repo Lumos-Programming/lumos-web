@@ -46,12 +46,20 @@ export function BioSection({ bio, clamp }: { bio?: string; clamp?: boolean }) {
 
 // --- InterestsSection ---
 
-export function InterestsSection({ interests }: { interests?: string[] }) {
+export function InterestsSection({
+  interests,
+  centered,
+}: {
+  interests?: string[];
+  centered?: boolean;
+}) {
   if (!interests || interests.length === 0) return null;
   return (
     <div>
       <h4 className="font-bold text-sm text-muted-foreground mb-2">興味分野</h4>
-      <div className="flex flex-wrap gap-2">
+      <div
+        className={`flex flex-wrap gap-2 ${centered ? "justify-center sm:justify-start" : ""}`}
+      >
         {interests.map((tag, index) => (
           <span
             key={index}
@@ -124,13 +132,13 @@ export function MemberDetailContent({ member }: { member: Member }) {
           </DialogHeader>
           <div className="mt-3 space-y-3">
             {member.birthDate && (
-              <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+              <p className="text-sm text-muted-foreground flex items-center justify-center sm:justify-start gap-1.5">
                 <Cake className="w-4 h-4 text-gray-400" />
                 {formatBirthDate(member.birthDate)}
               </p>
             )}
-            <InterestsSection interests={member.interests} />
-            <SnsChipsSection social={member.social} />
+            <InterestsSection interests={member.interests} centered />
+            <SnsChipsSection social={member.social} centered />
           </div>
         </div>
       </div>

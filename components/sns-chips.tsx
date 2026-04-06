@@ -286,16 +286,20 @@ export function socialToSnsEntries(social?: SocialInput): SnsEntry[] {
 export function SnsChipsSection({
   social,
   snsEntries,
+  centered,
 }: {
   social?: SocialInput;
   snsEntries?: SnsEntry[];
+  centered?: boolean;
 }) {
   const entries = snsEntries ?? socialToSnsEntries(social);
   if (entries.length === 0) return null;
   return (
     <div>
       <h4 className="font-bold text-sm text-muted-foreground mb-2">SNS</h4>
-      <div className="flex flex-wrap gap-1.5">
+      <div
+        className={`flex flex-wrap gap-1.5 ${centered ? "justify-center sm:justify-start" : ""}`}
+      >
         {entries.map((entry) => (
           <SnsChip key={entry.platform} entry={entry} />
         ))}
