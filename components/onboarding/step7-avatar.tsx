@@ -25,10 +25,10 @@ import { cropAndResizeImage } from "@/lib/image-crop";
 import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
 import { CheckCircleIcon } from "./types";
-import type { FormData } from "./types";
+import type { FormData as OnboardingFormData } from "./types";
 
 interface Step7AvatarProps {
-  form: FormData;
+  form: OnboardingFormData;
   faceImageUrl: string;
   customPublicImageUrl: string;
   setCustomPublicImageUrl: (url: string) => void;

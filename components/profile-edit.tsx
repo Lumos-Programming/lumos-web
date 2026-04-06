@@ -529,7 +529,8 @@ export default function ProfileEdit() {
                 typeof data.allowPublic === "boolean"
                   ? data.allowPublic
                   : !!VISIBILITY_FIELD_KEYS.some((k) => vis[k] === "public"),
-              publicImageOption: data.publicImageOption ?? "face",
+              publicImageOption:
+                data.publicImageOption || (data.faceImage ? "face" : "discord"),
               customPublicImageUrl: data.customPublicImage ?? "",
               ringColor: data.ringColor ?? DEFAULT_RING_COLOR,
               interests: data.interests ?? [],

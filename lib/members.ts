@@ -271,8 +271,7 @@ function resolveDiscordAvatar(
 const DEFAULT_AVATAR = "/assets/lumos_logo-full.png";
 
 function resolvePublicImage(discordId: string, data: MemberDocument): string {
-  const pa = data.publicImageOption ?? "face";
-  switch (pa) {
+  switch (data.publicImageOption ?? "face") {
     case "face":
       return data.faceImage || DEFAULT_AVATAR;
     case "discord":
