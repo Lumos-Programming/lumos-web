@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getMember, updateMember } from "@/lib/members";
+import { getMember, updateMember, PUBLIC_IMAGE_OPTIONS } from "@/lib/members";
 import type {
   VisibilityLevel,
   MemberType,
@@ -135,18 +135,14 @@ export async function PUT(request: Request) {
     ) {
       data.yearByFiscal = body.yearByFiscal as Record<string, string>;
     }
-    const VALID_PRIMARY_AVATARS = [
-      "face",
-      "discord",
-      "line",
-      "default",
-    ] as const;
     if (
-      typeof body.primaryAvatar === "string" &&
-      (VALID_PRIMARY_AVATARS as readonly string[]).includes(body.primaryAvatar)
+      typeof body.publicImageOption === "string" &&
+      (PUBLIC_IMAGE_OPTIONS as readonly string[]).includes(
+        body.publicImageOption,
+      )
     ) {
-      data.primaryAvatar =
-        body.primaryAvatar as (typeof VALID_PRIMARY_AVATARS)[number];
+      data.publicImageOption =
+        body.publicImageOption as (typeof PUBLIC_IMAGE_OPTIONS)[number];
     }
     const VALID_RING_COLORS = [
       "purple",

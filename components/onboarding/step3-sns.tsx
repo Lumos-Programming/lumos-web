@@ -187,7 +187,7 @@ export function Step3Sns({
               </div>
               <div className="min-w-0">
                 <span className="font-medium text-gray-900 dark:text-gray-100">
-                  X (Twitter)
+                  X
                 </span>
                 {xLinked && (
                   <p className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">

@@ -78,7 +78,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-white/80 transition-colors"
-                aria-label="X(Twitter)  "
+                aria-label="X"
               >
                 <Image src="./x.svg" alt="X" width={25} height={25} />
               </Link>
