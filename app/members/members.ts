@@ -9,7 +9,8 @@ export const members: Member[] = [
     year: "1年",
     bio: "システムの力で楽しいもの、便利なものを作るのが趣味。みんなでレッツプログラミング！",
 
-    image: "https://storage.googleapis.com/lumos-web-profile-data/tivo0921.jpg",
+    publicImage:
+      "https://storage.googleapis.com/lumos-web-profile-data/tivo0921.jpg",
     social: {
       x: "https://x.com/tivo0921",
       github: "https://github.com/tivo0921",
@@ -26,7 +27,7 @@ export const members: Member[] = [
     year: "2年",
     bio: "プロフィールを入力してください",
 
-    image:
+    publicImage:
       "https://storage.googleapis.com/lumos-web-profile-data/shion1305.webp",
     social: {
       x: "https://x.com/shion1305",
@@ -43,7 +44,7 @@ export const members: Member[] = [
     year: "2年",
     bio: "",
 
-    image: "/assets/lumoslogo.png",
+    publicImage: "/assets/lumoslogo.png",
     social: {
       x: "",
       github: "",
@@ -59,7 +60,7 @@ export const members: Member[] = [
     year: "4年",
     bio: "プロフィールを入力してください",
 
-    image: "/assets/lumoslogo.png",
+    publicImage: "/assets/lumoslogo.png",
     social: {
       x: "",
       github: "",

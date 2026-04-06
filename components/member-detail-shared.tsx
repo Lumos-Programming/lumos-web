@@ -69,7 +69,7 @@ export function InterestsSection({ interests }: { interests?: string[] }) {
 
 export function MemberDetailContent({ member }: { member: Member }) {
   const { main, sub } = getTileDisplay(member);
-  const faceImage = member.faceImage || member.image;
+  const faceImage = member.publicImage;
   const ringColor = getRingColorClass(member.ringColor);
   return (
     <>

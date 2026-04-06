@@ -46,7 +46,7 @@ export default function MemberList({ members }: Props) {
             <MemberTile
               {...getTileDisplay(member)}
               department={member.department}
-              image={member.faceImage || member.image || "/placeholder.svg"}
+              image={member.publicImage}
               snsAvatar={member.snsAvatar}
               ringColor={member.ringColor}
               memberType={member.memberType}
