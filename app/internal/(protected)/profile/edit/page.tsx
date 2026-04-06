@@ -1,11 +1,11 @@
-import ProfileEdit from "@/components/profile-edit"
+import ProfileEdit from "@/components/profile-edit";
+import { PageHeader } from "@/components/page-header";
 
 export default async function ProfileEditPage() {
   return (
-    <div className="min-h-screen bg-purple-50 dark:bg-gradient-to-br dark:from-black dark:to-purple-900">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <ProfileEdit />
-      </div>
+    <div className="p-4 md:p-6 max-w-4xl mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+      <PageHeader title="プロフィール編集" />
+      <ProfileEdit />
     </div>
-  )
+  );
 }

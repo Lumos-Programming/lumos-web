@@ -1,2 +1,16 @@
 node_modules
 .next
+.git
+.github
+.claude
+.idea
+.env*
+.gitignore
+*.md
+Justfile
+aqua.yaml
+infra
+cloudrun
+firebase-debug.log
+firestore-debug.log
+tsconfig.tsbuildinfo

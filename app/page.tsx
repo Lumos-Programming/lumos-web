@@ -1,29 +1,36 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, Code, Users, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
-import { newsArticles } from "./news/news-data"
-import useEmblaCarousel from "embla-carousel-react"
-import Autoplay from "embla-carousel-autoplay"
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  ArrowRight,
+  Code,
+  Users,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { newsArticles } from "./news/news-data";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 
 // 日本語の日付文字列をYYYYMMDD形式の数値に変換してソート
 const parseJapaneseDate = (dateStr: string): number => {
-  const match = dateStr.match(/(\d+)年(\d+)月(\d+)?/)
+  const match = dateStr.match(/(\d+)年(\d+)月(\d+)?/);
   if (match) {
-    const year = match[1]
-    const month = match[2].padStart(2, "0")
-    const day = match[3] ? match[3].padStart(2, "0") : "15" // "中" などの曖昧な表記は15とする
-    return Number(`${year}${month}${day}`)
+    const year = match[1];
+    const month = match[2].padStart(2, "0");
+    const day = match[3] ? match[3].padStart(2, "0") : "15"; // "中" などの曖昧な表記は15とする
+    return Number(`${year}${month}${day}`);
   }
-  return 0
-}
+  return 0;
+};
 
 const sortedNewsArticles = [...newsArticles].sort(
-  (a, b) => parseJapaneseDate(b.date) - parseJapaneseDate(a.date)
-)
+  (a, b) => parseJapaneseDate(b.date) - parseJapaneseDate(a.date),
+);
 
 export default function Home() {
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -39,31 +46,31 @@ export default function Home() {
         stopOnInteraction: false,
         stopOnMouseEnter: false,
       }),
-    ]
-  )
-  const [prevBtnDisabled, setPrevBtnDisabled] = useState(false)
-  const [nextBtnDisabled, setNextBtnDisabled] = useState(false)
+    ],
+  );
+  const [prevBtnDisabled, setPrevBtnDisabled] = useState(false);
+  const [nextBtnDisabled, setNextBtnDisabled] = useState(false);
 
-  const scrollPrev = () => emblaApi && emblaApi.scrollPrev()
-  const scrollNext = () => emblaApi && emblaApi.scrollNext()
+  const scrollPrev = () => emblaApi && emblaApi.scrollPrev();
+  const scrollNext = () => emblaApi && emblaApi.scrollNext();
 
-  const onSelect = () => {
-    if (!emblaApi) return
-    setPrevBtnDisabled(!emblaApi.canScrollPrev())
-    setNextBtnDisabled(!emblaApi.canScrollNext())
-  }
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setPrevBtnDisabled(!emblaApi.canScrollPrev());
+    setNextBtnDisabled(!emblaApi.canScrollNext());
+  }, [emblaApi]);
 
   useEffect(() => {
-    if (!emblaApi) return
-    onSelect()
-    emblaApi.on("select", onSelect)
-    emblaApi.on("reInit", onSelect)
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
 
     return () => {
-      emblaApi.off("select", onSelect)
-      emblaApi.off("reInit", onSelect)
-    }
-  }, [emblaApi])
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+    };
+  }, [emblaApi, onSelect]);
   return (
     <>
       {/* Hero Section */}
@@ -72,19 +79,31 @@ export default function Home() {
         <div className="absolute inset-0 z-0">
           <div
             className="absolute inset-0 bg-cover bg-center bg-slide-1"
-            style={{ backgroundImage: 'url(https://storage.googleapis.com/lumos-web-profile-data/LT.JPG)' }}
+            style={{
+              backgroundImage:
+                "url(https://storage.googleapis.com/lumos-web-profile-data/LT.JPG)",
+            }}
           />
           <div
             className="absolute inset-0 bg-cover bg-center bg-slide-2"
-            style={{ backgroundImage: 'url(https://storage.googleapis.com/lumos-web-profile-data/hajipro.jpg)' }}
+            style={{
+              backgroundImage:
+                "url(https://storage.googleapis.com/lumos-web-profile-data/hajipro.jpg)",
+            }}
           />
           <div
             className="absolute inset-0 bg-cover bg-center bg-slide-3"
-            style={{ backgroundImage: 'url(https://storage.googleapis.com/lumos-web-profile-data/study.jpg)' }}
+            style={{
+              backgroundImage:
+                "url(https://storage.googleapis.com/lumos-web-profile-data/study.jpg)",
+            }}
           />
           <div
             className="absolute inset-0 bg-cover bg-center bg-slide-4"
-            style={{ backgroundImage: 'url(https://storage.googleapis.com/lumos-web-profile-data/ski.jpg)' }}
+            style={{
+              backgroundImage:
+                "url(https://storage.googleapis.com/lumos-web-profile-data/ski.jpg)",
+            }}
           />
         </div>
 
@@ -103,14 +122,24 @@ export default function Home() {
             Improving Together
           </p>
           <p className="animate-fade-in-up-600 text-base md:text-lg mb-10 max-w-2xl mx-auto leading-relaxed opacity-95 font-medium text-white">
-            プログラミングに興味を持つ学生たちが集い、共に学び、共に成長する。<br />
+            プログラミングに興味を持つ学生たちが集い、共に学び、共に成長する。
+            <br />
             ワクワクする気持ちから始まる、最高のプロジェクトを創造しましょう。
           </p>
           <div className="animate-fade-in-up-600 flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-gradient-orange hover:opacity-90 text-white font-semibold transition-all duration-300 hover:shadow-lg">
+            <Button
+              asChild
+              size="lg"
+              className="bg-gradient-orange hover:opacity-90 text-white font-semibold transition-all duration-300 hover:shadow-lg"
+            >
               <Link href="/projects">プロジェクトを見る</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="font-semibold transition-all duration-300 hover:shadow-lg border-accent-foreground text-accent-foreground hover:bg-accent-foreground/10">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="font-semibold transition-all duration-300 hover:shadow-lg border-accent-foreground text-accent-foreground hover:bg-accent-foreground/10"
+            >
               <Link href="/news">最新のニュース</Link>
             </Button>
           </div>
@@ -121,9 +150,12 @@ export default function Home() {
       <section className="section-padding bg-background">
         <div className="container mx-auto container-padding">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">Lumosについて</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+              Lumosについて
+            </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              プログラミングに興味がある人が集まり、勉強や交流活動を行っています。<br />
+              プログラミングに興味がある人が集まり、勉強や交流活動を行っています。
+              <br />
               discordを用いたオンライン活動が中心となっています。
             </p>
           </div>
@@ -134,7 +166,9 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Code className="h-12 w-12 text-accent-foreground" />
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-foreground">各種ハンズオン学習会</h3>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  各種ハンズオン学習会
+                </h3>
                 <p className="text-muted-foreground">
                   初心者向けの言語学習会や第一歩を踏み出すための小規模なプロジェクトを開催しています。
                 </p>
@@ -146,7 +180,9 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Users className="h-12 w-12 text-accent-foreground" />
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-foreground">交流イベント</h3>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  交流イベント
+                </h3>
                 <p className="text-muted-foreground">
                   ピザパーティーやBBQなどの対面イベントを開催し、メンバー同士の親睦を深めます。
                 </p>
@@ -170,7 +206,9 @@ export default function Home() {
                 <div className="mb-4 flex justify-center">
                   <Calendar className="h-12 w-12 text-accent-foreground" />
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-foreground">プロジェクト活動</h3>
+                <h3 className="text-xl font-bold mb-2 text-foreground">
+                  プロジェクト活動
+                </h3>
                 <p className="text-muted-foreground">
                   だれでも自由にプロジェクトを立ち上げることができ、メンバーと協力しながらプロジェクトを進めます。
                 </p>
@@ -179,7 +217,10 @@ export default function Home() {
           </div>
 
           <div className="mt-12 text-center">
-            <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-300 hover:shadow-lg">
+            <Button
+              asChild
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-300 hover:shadow-lg"
+            >
               <Link href="/about">
                 詳しく見る
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -193,21 +234,34 @@ export default function Home() {
       <section className="section-padding bg-secondary">
         <div className="container mx-auto container-padding">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">お知らせ</h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">Lumosの最新の活動やイベント情報をお知らせします。</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+              お知らせ
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Lumosの最新の活動やイベント情報をお知らせします。
+            </p>
           </div>
 
           <div className="relative">
             <div className="overflow-hidden" ref={emblaRef}>
               <div className="flex gap-8 px-8">
                 {sortedNewsArticles.map((news) => (
-                  <div key={news.id} className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.333%]">
+                  <div
+                    key={news.id}
+                    className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.333%]"
+                  >
                     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card h-full">
                       <CardContent className="p-0 flex flex-col h-full">
                         <div className="p-6 flex flex-col flex-grow">
-                          <p className="text-sm font-semibold text-gradient-orange mb-2">{news.date}</p>
-                          <h3 className="text-xl font-bold mb-2 text-foreground">{news.title}</h3>
-                          <p className="text-muted-foreground mb-4 flex-grow">{news.summary}</p>
+                          <p className="text-sm font-semibold text-gradient-orange mb-2">
+                            {news.date}
+                          </p>
+                          <h3 className="text-xl font-bold mb-2 text-foreground">
+                            {news.title}
+                          </h3>
+                          <p className="text-muted-foreground mb-4 flex-grow">
+                            {news.summary}
+                          </p>
                           <Link
                             href={`/news/${news.id}`}
                             className="text-accent-foreground hover:text-accent-foreground/80 font-medium inline-flex items-center transition-colors"
@@ -243,7 +297,11 @@ export default function Home() {
           </div>
 
           <div className="mt-12 text-center">
-            <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary/10 font-semibold transition-all duration-300">
+            <Button
+              asChild
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary/10 font-semibold transition-all duration-300"
+            >
               <Link href="/news">
                 すべてのお知らせを見る
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -256,9 +314,12 @@ export default function Home() {
       {/* CTA Section */}
       <section className="section-padding bg-secondary">
         <div className="container mx-auto container-padding text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">Lumosに入ってみませんか？</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
+            Lumosに入ってみませんか？
+          </h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto text-muted-foreground">
-            プログラミングができなくても大丈夫！<br />
+            プログラミングができなくても大丈夫！
+            <br />
             プログラミングに興味がある初心者から経験者まで誰でも大歓迎です。
           </p>
           {/* //お問い合わせページへのアクセスボタン
@@ -269,5 +330,5 @@ export default function Home() {
         </div>
       </section>
     </>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
+import Link from "next/link";
 
 export function DiscordEventCTA({ eventUrl }: { eventUrl?: string }) {
-  if (!eventUrl) return null
+  if (!eventUrl) return null;
 
   return (
     <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
@@ -19,5 +19,5 @@ export function DiscordEventCTA({ eventUrl }: { eventUrl?: string }) {
         <span>Discord で興味ありを押す 👀</span>
       </Link>
     </div>
-  )
+  );
 }

@@ -1,15 +1,17 @@
-import { getMembers } from "@/lib/members"
-import MemberList from "@/components/member-list"
+import { getMembersInternal } from "@/lib/members";
+import { PageHeader } from "@/components/page-header";
+import { MemberSearch } from "@/components/member-search";
 
 export default async function MembersPage() {
-  const members = await getMembers()
+  const members = await getMembersInternal();
 
   return (
-    <div className="min-h-screen bg-purple-50 dark:bg-gradient-to-br dark:from-black dark:to-purple-900">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <h1 className="text-3xl font-bold mb-6">メンバー一覧</h1>
-        <MemberList members={members} />
-      </div>
+    <div className="p-4 md:p-6 max-w-6xl mx-auto animate-spring-up">
+      <PageHeader
+        title="メンバー一覧"
+        description={`${members.length}名のメンバー`}
+      />
+      <MemberSearch members={members} />
     </div>
-  )
+  );
 }

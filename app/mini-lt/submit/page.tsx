@@ -1,25 +1,28 @@
-import { auth, signIn, signOut, isValidSnowflake } from '@/lib/auth'
-import { getWeekData, addTalk, updateTalk, deleteTalk } from '@/lib/firebase'
-import { getNextEventWeekId } from '@/lib/mini-lt/utils'
-import { createWeekEvent, syncWeekEventDescription } from '@/lib/mini-lt/actions/discord-events'
-import { WeekNavigator } from '@/components/mini-lt/WeekNavigator'
-import { ManageTalks } from '@/components/mini-lt/ManageTalks'
-import { Header } from '@/components/mini-lt/Header'
-import { Button } from '@/components/mini-lt/ui'
-import { revalidatePath } from 'next/cache'
-import Link from 'next/link'
-import Image from 'next/image'
+import { auth, signIn, signOut, isValidSnowflake } from "@/lib/auth";
+import { getWeekData, addTalk, updateTalk, deleteTalk } from "@/lib/firebase";
+import { getNextEventWeekId } from "@/lib/mini-lt/utils";
+import {
+  createWeekEvent,
+  syncWeekEventDescription,
+} from "@/lib/mini-lt/actions/discord-events";
+import { WeekNavigator } from "@/components/mini-lt/WeekNavigator";
+import { ManageTalks } from "@/components/mini-lt/ManageTalks";
+import { Header } from "@/components/mini-lt/Header";
+import { Button } from "@/components/mini-lt/ui";
+import { revalidatePath } from "next/cache";
+import Link from "next/link";
+import Image from "next/image";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export default async function SubmitPage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string }>
+  searchParams: Promise<{ week?: string }>;
 }) {
-  const session = await auth()
-  const params = await searchParams
-  const weekId = params.week || getNextEventWeekId()
+  const session = await auth();
+  const params = await searchParams;
+  const weekId = params.week || getNextEventWeekId();
 
   // Force logout if session has invalid user ID (old UUID format instead of Snowflake)
   if (session && !isValidSnowflake(session.user?.id)) {
@@ -30,7 +33,9 @@ export default async function SubmitPage({
             <div className="w-20 h-20 bg-orange-500 rounded-2xl mx-auto mb-4 flex items-center justify-center">
               <span className="text-4xl">⚠️</span>
             </div>
-            <h1 className="text-3xl font-bold mb-3">セッションの更新が必要です</h1>
+            <h1 className="text-3xl font-bold mb-3">
+              セッションの更新が必要です
+            </h1>
             <p className="text-muted-foreground">
               古いセッション形式を検出しました。
               <br />
@@ -39,8 +44,8 @@ export default async function SubmitPage({
           </div>
           <form
             action={async () => {
-              'use server'
-              await signOut()
+              "use server";
+              await signOut();
             }}
           >
             <Button
@@ -60,7 +65,7 @@ export default async function SubmitPage({
           </div>
         </div>
       </main>
-    )
+    );
   }
 
   if (!session) {
@@ -80,8 +85,8 @@ export default async function SubmitPage({
           </div>
           <form
             action={async () => {
-              'use server'
-              await signIn('discord')
+              "use server";
+              await signIn("discord");
             }}
           >
             <Button
@@ -102,22 +107,22 @@ export default async function SubmitPage({
           </div>
         </div>
       </main>
-    )
+    );
   }
 
-  const data = await getWeekData(weekId)
-  const myTalks = data.talks.filter(t => t.presenterUid === session.user?.id)
+  const data = await getWeekData(weekId);
+  const myTalks = data.talks.filter((t) => t.presenterUid === session.user?.id);
 
   const handleAction = async (formData: {
-    title: string
-    description: string
-    duration: number
-    id?: string
+    title: string;
+    description: string;
+    duration: number;
+    id?: string;
   }) => {
-    'use server'
-    const userId = session.user?.id as string
-    const userName = session.user?.name as string
-    const userAvatar = session.user?.image as string
+    "use server";
+    const userId = session.user?.id as string;
+    const userName = session.user?.name as string;
+    const userAvatar = session.user?.image as string;
 
     if (formData.id) {
       // 編集の場合はそのまま更新
@@ -129,15 +134,19 @@ export default async function SubmitPage({
           description: formData.description,
           duration: formData.duration,
         },
-        userId
-      )
+        userId,
+      );
     } else {
       // 新規登録の場合、既に発表があるかチェック
-      const currentData = await getWeekData(weekId)
-      const existingTalks = currentData.talks.filter(t => t.presenterUid === userId)
+      const currentData = await getWeekData(weekId);
+      const existingTalks = currentData.talks.filter(
+        (t) => t.presenterUid === userId,
+      );
 
       if (existingTalks.length >= 1) {
-        throw new Error('この週には既に発表を登録済みです。週に1件まで登録できます。')
+        throw new Error(
+          "この週には既に発表を登録済みです。週に1件まで登録できます。",
+        );
       }
 
       await addTalk(
@@ -149,53 +158,53 @@ export default async function SubmitPage({
           presenterName: userName,
           presenterAvatar: userAvatar,
         },
-        userId
-      )
+        userId,
+      );
     }
 
     // Auto-sync Discord event if it exists, or create it if this is the first talk
-    const updatedData = await getWeekData(weekId)
+    const updatedData = await getWeekData(weekId);
     if (updatedData.discordEventId) {
       // Event exists, sync the description
       try {
-        await syncWeekEventDescription(weekId, updatedData.discordEventId)
+        await syncWeekEventDescription(weekId, updatedData.discordEventId);
       } catch (error) {
-        console.error('Failed to sync Discord event:', error)
+        console.error("Failed to sync Discord event:", error);
         // Don't fail the entire operation if Discord sync fails
       }
     } else if (updatedData.talks.length > 0) {
       // No event yet, but we have talks - create the event automatically
       try {
-        await createWeekEvent(weekId)
+        await createWeekEvent(weekId);
       } catch (error) {
-        console.error('Failed to create Discord event:', error)
+        console.error("Failed to create Discord event:", error);
         // Don't fail the entire operation if Discord event creation fails
       }
     }
 
-    revalidatePath('/submit')
-    revalidatePath('/')
-  }
+    revalidatePath("/submit");
+    revalidatePath("/");
+  };
 
   const handleDelete = async (talkId: string) => {
-    'use server'
-    const userId = session.user?.id as string
-    await deleteTalk(weekId, talkId, userId)
+    "use server";
+    const userId = session.user?.id as string;
+    await deleteTalk(weekId, talkId, userId);
 
     // Auto-sync Discord event if it still exists after deletion
-    const updatedData = await getWeekData(weekId)
+    const updatedData = await getWeekData(weekId);
     if (updatedData.discordEventId) {
       try {
-        await syncWeekEventDescription(weekId, updatedData.discordEventId)
+        await syncWeekEventDescription(weekId, updatedData.discordEventId);
       } catch (error) {
-        console.error('Failed to sync Discord event:', error)
+        console.error("Failed to sync Discord event:", error);
         // Don't fail the entire operation if Discord sync fails
       }
     }
 
-    revalidatePath('/submit')
-    revalidatePath('/')
-  }
+    revalidatePath("/submit");
+    revalidatePath("/");
+  };
 
   return (
     <main className="min-h-screen">
@@ -220,7 +229,7 @@ export default async function SubmitPage({
                       width={100}
                       height={100}
                       src={session.user.image}
-                      alt={session.user.name || 'User'}
+                      alt={session.user.name || "User"}
                       className="w-5 h-5 md:w-6 md:h-6 rounded-full"
                     />
                   )}
@@ -230,8 +239,8 @@ export default async function SubmitPage({
                 </div>
                 <form
                   action={async () => {
-                    'use server'
-                    await signOut()
+                    "use server";
+                    await signOut();
                   }}
                 >
                   <Button
@@ -259,7 +268,10 @@ export default async function SubmitPage({
 
           <div className="mt-12 text-center pb-8">
             <Link href="/">
-              <Button variant="outline" className="hover:bg-purple-50 hover:border-purple-300">
+              <Button
+                variant="outline"
+                className="hover:bg-purple-50 hover:border-purple-300"
+              >
                 ← 公開ページへ戻る
               </Button>
             </Link>
@@ -267,5 +279,5 @@ export default async function SubmitPage({
         </div>
       </div>
     </main>
-  )
+  );
 }

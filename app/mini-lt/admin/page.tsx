@@ -1,26 +1,33 @@
-import { auth, isAdmin } from '@/lib/auth'
-import { getWeekData } from '@/lib/firebase'
-import { getNextEventWeekId, formatWeekDate } from '@/lib/mini-lt/utils'
+import { auth, isAdmin } from "@/lib/auth";
+import { getWeekData } from "@/lib/firebase";
+import { getNextEventWeekId, formatWeekDate } from "@/lib/mini-lt/utils";
 import {
   createWeekEvent,
   syncWeekEventDescription,
   deleteWeekEvent,
-} from '@/lib/mini-lt/actions/discord-events'
-import { WeekNavigator } from '@/components/mini-lt/WeekNavigator'
-import { Header } from '@/components/mini-lt/Header'
-import { InterestedUsers } from '@/components/mini-lt/InterestedUsers'
-import { Button, Card, CardHeader, CardTitle, CardContent, Badge } from '@/components/mini-lt/ui'
-import Link from 'next/link'
+} from "@/lib/mini-lt/actions/discord-events";
+import { WeekNavigator } from "@/components/mini-lt/WeekNavigator";
+import { Header } from "@/components/mini-lt/Header";
+import { InterestedUsers } from "@/components/mini-lt/InterestedUsers";
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Badge,
+} from "@/components/mini-lt/ui";
+import Link from "next/link";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string }>
+  searchParams: Promise<{ week?: string }>;
 }) {
-  const session = await auth()
-  const userIsAdmin = await isAdmin()
+  const session = await auth();
+  const userIsAdmin = await isAdmin();
 
   if (!session) {
     return (
@@ -30,14 +37,16 @@ export default async function AdminPage({
             <CardTitle>🔐 Admin Dashboard</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">Admin機能を使用するにはログインが必要です</p>
+            <p className="text-muted-foreground mb-4">
+              Admin機能を使用するにはログインが必要です
+            </p>
             <Link href="/mini-lt/submit">
               <Button>ログインページへ</Button>
             </Link>
           </CardContent>
         </Card>
       </main>
-    )
+    );
   }
 
   if (!userIsAdmin) {
@@ -48,20 +57,22 @@ export default async function AdminPage({
             <CardTitle>⛔ アクセス拒否</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">このページにアクセスする権限がありません</p>
+            <p className="text-muted-foreground mb-4">
+              このページにアクセスする権限がありません
+            </p>
             <Link href="/">
               <Button variant="outline">トップページへ戻る</Button>
             </Link>
           </CardContent>
         </Card>
       </main>
-    )
+    );
   }
 
-  const params = await searchParams
-  const weekId = params.week || getNextEventWeekId()
-  const data = await getWeekData(weekId)
-  const weekDateDisplay = formatWeekDate(weekId)
+  const params = await searchParams;
+  const weekId = params.week || getNextEventWeekId();
+  const data = await getWeekData(weekId);
+  const weekDateDisplay = formatWeekDate(weekId);
 
   return (
     <main>
@@ -72,8 +83,12 @@ export default async function AdminPage({
           <div className="bg-white rounded-2xl shadow-xl p-4 md:p-6 mb-8">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold">⚙️ Admin Dashboard</h1>
-                <p className="text-sm text-muted-foreground mt-1">Discord イベント管理</p>
+                <h1 className="text-2xl md:text-3xl font-bold">
+                  ⚙️ Admin Dashboard
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Discord イベント管理
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="bg-purple-50">
@@ -84,7 +99,11 @@ export default async function AdminPage({
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-            <WeekNavigator currentWeek={weekId} baseUrl="/admin" showSendButton />
+            <WeekNavigator
+              currentWeek={weekId}
+              baseUrl="/admin"
+              showSendButton
+            />
           </div>
 
           <Card className="mb-8">
@@ -113,13 +132,29 @@ export default async function AdminPage({
                   </div>
 
                   <div className="flex gap-2">
-                    <form action={syncWeekEventDescription.bind(null, weekId, data.discordEventId)}>
+                    <form
+                      action={syncWeekEventDescription.bind(
+                        null,
+                        weekId,
+                        data.discordEventId,
+                      )}
+                    >
                       <Button type="submit" variant="outline">
                         📝 Event説明を更新
                       </Button>
                     </form>
-                    <form action={deleteWeekEvent.bind(null, weekId, data.discordEventId)}>
-                      <Button type="submit" variant="outline" className="text-red-600">
+                    <form
+                      action={deleteWeekEvent.bind(
+                        null,
+                        weekId,
+                        data.discordEventId,
+                      )}
+                    >
+                      <Button
+                        type="submit"
+                        variant="outline"
+                        className="text-red-600"
+                      >
                         🗑️ Eventを削除
                       </Button>
                     </form>
@@ -149,7 +184,7 @@ export default async function AdminPage({
                 <ul className="space-y-2">
                   {data.talks
                     .sort((a, b) => a.order - b.order)
-                    .map(talk => (
+                    .map((talk) => (
                       <li
                         key={talk.id}
                         className="border rounded-lg p-3 hover:bg-gray-50 transition-colors"
@@ -180,5 +215,5 @@ export default async function AdminPage({
         </div>
       </div>
     </main>
-  )
+  );
 }

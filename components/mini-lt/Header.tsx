@@ -1,10 +1,10 @@
-import Link from 'next/link'
-import Image from 'next/image'
-import { auth, isAdmin } from '@/lib/auth'
+import Link from "next/link";
+import Image from "next/image";
+import { auth, isAdmin } from "@/lib/auth";
 
 export async function Header() {
-  const session = await auth()
-  const userIsAdmin = session ? await isAdmin() : false
+  const session = await auth();
+  const userIsAdmin = session ? await isAdmin() : false;
 
   return (
     <header className="bg-gradient-primary animate-gradient relative overflow-hidden">
@@ -24,7 +24,9 @@ export async function Header() {
                       alt="Lumos Logo"
                       className="w-10 h-10"
                     />
-                    <span className="text-xl text-[#273C5A] font-bold">Lumos</span>
+                    <span className="text-xl text-[#273C5A] font-bold">
+                      Lumos
+                    </span>
                   </div>
                 </div>
               </div>
@@ -60,5 +62,5 @@ export async function Header() {
         )}
       </div>
     </header>
-  )
+  );
 }

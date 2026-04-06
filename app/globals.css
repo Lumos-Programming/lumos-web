@@ -23,6 +23,14 @@
     --border: 240 6% 90%;
     --input: 240 6% 90%;
     --ring: 262 83% 58%;
+    --sidebar-background: 240 20% 98%;
+    --sidebar-foreground: 240 10% 10%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 262 80% 95%;
+    --sidebar-accent-foreground: 262 83% 58%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 262 83% 58%;
     --radius: 0.75rem;
   }
 
@@ -46,6 +54,14 @@
     --border: 240 10% 25%;
     --input: 240 10% 25%;
     --ring: 262 83% 58%;
+    --sidebar-background: 240 10% 12%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 262 40% 25%;
+    --sidebar-accent-foreground: 262 80% 80%;
+    --sidebar-border: 240 10% 20%;
+    --sidebar-ring: 262 83% 58%;
   }
 }
 
@@ -86,7 +102,11 @@
 }
 
 .bg-gradient-card {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.05) 0%,
+    rgba(118, 75, 162, 0.05) 100%
+  );
 }
 
 .bg-gradient-orange {
@@ -99,13 +119,29 @@
 
 /* アニメーション定義 */
 @keyframes gradient {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .animate-gradient {
   background-size: 200% 200%;
   animation: gradient 15s ease infinite;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fade-in-up {
@@ -141,35 +177,75 @@
 
 /* 背景画像スライド */
 @keyframes backgroundSlide1 {
-  0% { opacity: 1; }
-  22.92% { opacity: 1; }
-  25% { opacity: 0; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+  22.92% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 @keyframes backgroundSlide2 {
-  0% { opacity: 0; }
-  22.92% { opacity: 0; }
-  25% { opacity: 1; }
-  47.92% { opacity: 1; }
-  50% { opacity: 0; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+  22.92% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  47.92% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 @keyframes backgroundSlide3 {
-  0% { opacity: 0; }
-  47.92% { opacity: 0; }
-  50% { opacity: 1; }
-  72.92% { opacity: 1; }
-  75% { opacity: 0; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+  47.92% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  72.92% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 @keyframes backgroundSlide4 {
-  0% { opacity: 0; }
-  72.92% { opacity: 0; }
-  75% { opacity: 1; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+  72.92% {
+    opacity: 0;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .bg-slide-1 {
@@ -186,4 +262,244 @@
 
 .bg-slide-4 {
   animation: backgroundSlide4 48s ease-in-out infinite;
+}
+
+/* 浮遊バブルアニメーション（サンプル顔写真） */
+@keyframes float-bubble {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  33% {
+    transform: translateY(-8px) scale(1.03);
+  }
+  66% {
+    transform: translateY(4px) scale(0.97);
+  }
+}
+
+.animate-float-bubble {
+  animation: float-bubble ease-in-out infinite;
+}
+
+/* 液体スプラッシュ — 顔写真設定時のアバターポップ */
+
+@keyframes liquid-pop {
+  0% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1.12);
+  }
+  40% {
+    transform: scale(0.95);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  80% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-liquid-pop {
+  animation: liquid-pop 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Hide public header & footer when viewing internal pages */
+body:has(.internal-area) header.fixed {
+  display: none !important;
+}
+body:has(.internal-area) footer.bg-gradient-primary {
+  display: none !important;
+}
+
+/* Sidebar positioning (full viewport height) */
+[data-sidebar="sidebar"] {
+  top: 0;
+  height: 100svh;
+}
+
+/* Sidebar entrance animations (CSS-only, hydration-safe) */
+[data-sidebar="header"] > div {
+  animation: spring-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+[data-sidebar="menu-item"]:nth-child(1) > [data-sidebar="menu-button"] {
+  animation: spring-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 0ms;
+}
+[data-sidebar="menu-item"]:nth-child(2) > [data-sidebar="menu-button"] {
+  animation: spring-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 60ms;
+}
+[data-sidebar="menu-item"]:nth-child(3) > [data-sidebar="menu-button"] {
+  animation: spring-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 120ms;
+}
+[data-sidebar="menu-item"]:nth-child(4) > [data-sidebar="menu-button"] {
+  animation: spring-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 180ms;
+}
+[data-sidebar="menu-item"]:nth-child(5) > [data-sidebar="menu-button"] {
+  animation: spring-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 240ms;
+}
+
+/* Header logo entrance + hover */
+.internal-logo-link {
+  animation: spring-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.internal-logo-link img {
+  transition: transform 0.2s;
+}
+.internal-logo-link:hover img {
+  transform: scale(1.05);
+}
+
+/* Stagger animation delays */
+.stagger-1 {
+  animation-delay: 0ms;
+}
+.stagger-2 {
+  animation-delay: 75ms;
+}
+.stagger-3 {
+  animation-delay: 150ms;
+}
+.stagger-4 {
+  animation-delay: 200ms;
+}
+.stagger-5 {
+  animation-delay: 300ms;
+}
+
+/* Shimmer effect for skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Spring-up entrance with overshoot */
+@keyframes spring-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-spring-up {
+  animation: spring-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Soft pulse for ambient decoration */
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+.animate-soft-pulse {
+  animation: soft-pulse 4s ease-in-out infinite;
+}
+
+/* Accent bar grow animation */
+@keyframes accent-bar-grow {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+.animate-accent-bar {
+  transform-origin: bottom;
+  animation: accent-bar-grow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Tight stagger delays (60ms increments, onboarding-style) */
+.stagger-tight-1 {
+  animation-delay: 0ms;
+}
+.stagger-tight-2 {
+  animation-delay: 60ms;
+}
+.stagger-tight-3 {
+  animation-delay: 120ms;
+}
+.stagger-tight-4 {
+  animation-delay: 180ms;
+}
+.stagger-tight-5 {
+  animation-delay: 240ms;
+}
+.stagger-tight-6 {
+  animation-delay: 300ms;
+}
+.stagger-tight-7 {
+  animation-delay: 360ms;
+}
+.stagger-tight-8 {
+  animation-delay: 420ms;
+}
+
+/* Gradient shift for banners */
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease-in-out infinite;
+}
+
+/* Markdown editor: ensure placeholder is fully visible */
+.w-md-editor-text {
+  min-height: 100% !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spring-up,
+  .animate-soft-pulse,
+  .animate-accent-bar,
+  .animate-gradient,
+  .internal-logo-link,
+  [data-sidebar="header"] > div,
+  [data-sidebar="menu-item"] > [data-sidebar="menu-button"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

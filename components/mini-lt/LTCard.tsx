@@ -1,14 +1,22 @@
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import { Card, CardContent, CardHeader, CardTitle, Avatar, Badge, Button } from './ui'
-import { SerializableTalk } from '@/lib/mini-lt/firebase'
-import { format } from 'date-fns'
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Avatar,
+  Badge,
+  Button,
+} from "./ui";
+import { SerializableTalk } from "@/lib/mini-lt/firebase";
+import { format } from "date-fns";
 
 interface LTCardProps {
-  talk: SerializableTalk
-  onEdit?: (talk: SerializableTalk) => void
-  onDelete?: (talkId: string) => void
-  isOwner?: boolean
+  talk: SerializableTalk;
+  onEdit?: (talk: SerializableTalk) => void;
+  onDelete?: (talkId: string) => void;
+  isOwner?: boolean;
 }
 
 export function LTCard({ talk, onEdit, onDelete, isOwner }: LTCardProps) {
@@ -22,7 +30,9 @@ export function LTCard({ talk, onEdit, onDelete, isOwner }: LTCardProps) {
         />
         <div className="flex-1 space-y-2">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <Badge className="bg-gradient-primary text-white">{talk.presenterName}</Badge>
+            <Badge className="bg-gradient-primary text-white">
+              {talk.presenterName}
+            </Badge>
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded-full flex items-center gap-1">
                 <span>⏱️</span>
@@ -33,12 +43,16 @@ export function LTCard({ talk, onEdit, onDelete, isOwner }: LTCardProps) {
               </span>
             </div>
           </div>
-          <CardTitle className="text-xl font-bold leading-tight">{talk.title}</CardTitle>
+          <CardTitle className="text-xl font-bold leading-tight">
+            {talk.title}
+          </CardTitle>
         </div>
       </CardHeader>
       <CardContent className="flex-1 pt-4">
         <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{talk.description}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {talk.description}
+          </ReactMarkdown>
         </div>
       </CardContent>
       {isOwner && (onEdit || onDelete) && (
@@ -51,15 +65,19 @@ export function LTCard({ talk, onEdit, onDelete, isOwner }: LTCardProps) {
           >
             ✏️ 編集
           </Button>
-          <Button variant="destructive" size="sm" onClick={() => onDelete?.(talk.id)}>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => onDelete?.(talk.id)}
+          >
             🗑️ 削除
           </Button>
         </div>
       )}
       <div className="px-6 pb-3 text-xs text-muted-foreground flex items-center justify-end gap-1">
         <span className="opacity-60">📅</span>
-        {format(new Date(talk.createdAt), 'yyyy-MM-dd HH:mm')}
+        {format(new Date(talk.createdAt), "yyyy-MM-dd HH:mm")}
       </div>
     </Card>
-  )
+  );
 }

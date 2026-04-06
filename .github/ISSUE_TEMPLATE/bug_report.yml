@@ -1,0 +1,56 @@
+name: バグ報告
+description: バグや不具合の報告
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        該当する項目のみ入力してください。全て任意項目です。
+  - type: textarea
+    id: summary
+    attributes:
+      label: バグの概要
+      description: どのような問題が発生していますか？
+    validations:
+      required: false
+  - type: input
+    id: url
+    attributes:
+      label: 対応ページURL
+      description: バグが発生しているページのURL
+      placeholder: https://...
+    validations:
+      required: false
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: スクリーンショット
+      description: あれば添付してください
+    validations:
+      required: false
+  - type: dropdown
+    id: browser
+    attributes:
+      label: ブラウザ
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - その他
+    validations:
+      required: false
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - iOS
+        - Android
+        - その他
+    validations:
+      required: false

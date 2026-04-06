@@ -1,55 +1,67 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Button, Input, Textarea, Card, CardHeader, CardTitle, CardContent } from './ui'
-import { SerializableTalk } from '@/lib/mini-lt/firebase'
+import { useState, useEffect } from "react";
+import {
+  Button,
+  Input,
+  Textarea,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "./ui";
+import { SerializableTalk } from "@/lib/mini-lt/firebase";
 
 interface SubmitFormProps {
-  weekId: string
+  weekId: string;
   onSubmit: (data: {
-    title: string
-    description: string
-    duration: number
-    id?: string
-  }) => Promise<void>
-  editingTalk?: SerializableTalk | null
-  onCancelEdit?: () => void
+    title: string;
+    description: string;
+    duration: number;
+    id?: string;
+  }) => Promise<void>;
+  editingTalk?: SerializableTalk | null;
+  onCancelEdit?: () => void;
 }
 
-const DURATION_OPTIONS = [1, 3, 5, 7, 10, 15] as const
+const DURATION_OPTIONS = [1, 3, 5, 7, 10, 15] as const;
 
-export function SubmitForm({ onSubmit, editingTalk, onCancelEdit }: SubmitFormProps) {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [duration, setDuration] = useState<number>(5) // Default 5 minutes
-  const [loading, setLoading] = useState(false)
+export function SubmitForm({
+  onSubmit,
+  editingTalk,
+  onCancelEdit,
+}: SubmitFormProps) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [duration, setDuration] = useState<number>(5); // Default 5 minutes
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (editingTalk) {
-      setTitle(editingTalk.title)
-      setDescription(editingTalk.description)
-      setDuration(editingTalk.duration)
+      setTitle(editingTalk.title);
+      setDescription(editingTalk.description);
+      setDuration(editingTalk.duration);
     } else {
-      setTitle('')
-      setDescription('')
-      setDuration(5) // Reset to default
+      setTitle("");
+      setDescription("");
+      setDuration(5); // Reset to default
     }
-  }, [editingTalk])
+  }, [editingTalk]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
-      await onSubmit({ title, description, duration, id: editingTalk?.id })
+      await onSubmit({ title, description, duration, id: editingTalk?.id });
       if (!editingTalk) {
-        setTitle('')
-        setDescription('')
-        setDuration(5)
+        setTitle("");
+        setDescription("");
+        setDuration(5);
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Card className="border-2 border-purple-100 shadow-xl">
@@ -77,7 +89,7 @@ export function SubmitForm({ onSubmit, editingTalk, onCancelEdit }: SubmitFormPr
             </label>
             <Input
               value={title}
-              onChange={e => setTitle(e.target.value)}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="例: VSCodeの便利な拡張機能を見つけた話"
               required
               className="border-2 focus:border-purple-300"
@@ -89,15 +101,15 @@ export function SubmitForm({ onSubmit, editingTalk, onCancelEdit }: SubmitFormPr
               発表時間
             </label>
             <div className="flex flex-wrap gap-2">
-              {DURATION_OPTIONS.map(minutes => (
+              {DURATION_OPTIONS.map((minutes) => (
                 <button
                   key={minutes}
                   type="button"
                   onClick={() => setDuration(minutes)}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     duration === minutes
-                      ? 'bg-purple-600 text-white shadow-md scale-105'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? "bg-purple-600 text-white shadow-md scale-105"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   {minutes}分
@@ -121,7 +133,7 @@ export function SubmitForm({ onSubmit, editingTalk, onCancelEdit }: SubmitFormPr
             </label>
             <Textarea
               value={description}
-              onChange={e => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder={`発表の内容を詳しく記載してください
 
 例:
@@ -151,7 +163,11 @@ export function SubmitForm({ onSubmit, editingTalk, onCancelEdit }: SubmitFormPr
               disabled={loading}
               className="flex-1 bg-gradient-primary hover:shadow-lg transition-all py-5 font-semibold"
             >
-              {loading ? '保存中...' : editingTalk ? '✅ 更新する' : '🚀 登録する'}
+              {loading
+                ? "保存中..."
+                : editingTalk
+                  ? "✅ 更新する"
+                  : "🚀 登録する"}
             </Button>
             {editingTalk && (
               <Button
@@ -167,5 +183,5 @@ export function SubmitForm({ onSubmit, editingTalk, onCancelEdit }: SubmitFormPr
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
