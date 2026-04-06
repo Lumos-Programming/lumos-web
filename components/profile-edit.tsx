@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -168,7 +169,7 @@ type EnrollmentCache = {
 
 export default function ProfileEdit() {
   const { state: sidebarState, isMobile } = useSidebar();
-  const [showPreview, setShowPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
   const [allowPublic, setAllowPublic] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -1759,6 +1760,12 @@ export default function ProfileEdit() {
               {VISIBILITY_DISPLAY_KEYS.map((key) => {
                 if (key === "currentOrg" && memberType !== "卒業生")
                   return null;
+                const isSnsField = SNS_FIELDS.has(key) || key === "linkedin";
+                const isSnsUnlinked =
+                  isSnsField &&
+                  (key === "linkedin"
+                    ? !linkedinUrl
+                    : !(profile[key as keyof Profile] as string));
                 const isCombinedName = key === "lastName";
                 const visibilityValue = isCombinedName
                   ? profile.visibility.lastName === profile.visibility.firstName
@@ -1772,8 +1779,16 @@ export default function ProfileEdit() {
                     key={key}
                     className="flex items-center justify-between gap-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
                   >
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0 shrink-1">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-0 shrink-1 flex items-center gap-1.5">
                       {VISIBILITY_LABELS[key]}
+                      {isSnsUnlinked && (
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] px-2 py-0.5"
+                        >
+                          未連携
+                        </Badge>
+                      )}
                     </span>
                     <VisibilityToggle
                       value={visibilityValue}
