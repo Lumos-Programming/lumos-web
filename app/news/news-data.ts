@@ -1,10 +1,27 @@
+// ニュース記事の型定義
+export interface NewsArticle {
+    id: number
+    date: string
+    title: string
+    summary: string
+    content: string
+    image: string
+    category: "プロジェクト" | "イベント"
+}
+
 // ニュース記事のデータ
-export const newsArticles = [
+export const newsArticles: NewsArticle[] = [
     {
         id: 9,
         date: "2025年12月11日",
         title: "はじプロ最終発表会",
         summary: "はじめてのプロダクト開発ゼミの最終発表会がありました。",
+        content: `
+    <p>2025年12月11日、はじめてのプロダクト開発ゼミの最終発表会が行われました。</p>
+    <p>各メンバー、これまでに学んだことを発表し、他のメンバーの発表から刺激を受け、またアイデア交換などを行いました。</p>
+    <p>このイベントを通じてユニット外のメンバーとも交流し、さらにLumos内で知り合いが増えたという方も多いのではと思います。</p>
+    <p>今後もこのような初心者向けの活動を開催していく予定です。</p>
+  `,
         image: "https://storage.googleapis.com/lumos-web-profile-data/hajipro.jpg",
         category: "プロジェクト",
     },
@@ -13,6 +30,12 @@ export const newsArticles = [
         date: "2026年3月2日",
         title: "ウィークリーmini-LT開始",
         summary: "毎週オンラインでのプログラミング成果共有会mini-LTが発足しました。",
+        content: `
+    <p>2026年3月2日より、毎週月曜日にmini-LTを開始しました！</p>
+    <p>mini-LTは、プログラミングの学習成果や技術的な知見を短時間で共有する場です。</p>
+    <p>3～5分程度の発表を通じて、メンバー同士が学びを深め、互いに刺激を受けることができます。</p>
+    <p>プログラミング初心者から経験者まで、誰でも発表できます。ぜひご参加ください！</p>
+  `,
         image: "/assets/mini-lt.png",
         category: "プロジェクト",
     },
@@ -21,6 +44,11 @@ export const newsArticles = [
         date: "2025年10月31日",
         title: "クレープ屋 Crepe++",
         summary: "常盤祭にてクレープ屋を出店しました。",
+        content: `
+    <p>2025年10月31日から11月2日にかけて開催される常盤祭にて、Lumosは「Crepe++」というクレープ屋を出店しました！</p>
+    <p>メンバー自ら調理し、さまざまな味のクレープを販売し、おかげさまで完売することができました！</p>
+    <p>次回以降の学祭でも、ぜひお立ち寄りください！</p>
+  `,
         image: "/assets/Crepe.png",
         category: "イベント",
     },
@@ -29,6 +57,11 @@ export const newsArticles = [
         date: "2025年10月23日",
         title: "ピザパーティー",
         summary: "サークルメンバーでピザパーティーを開催しました。",
+        content: `
+    <p>2025年10月23日に、秋学期最初のイベントとしてピザパーティーを開催しました。</p>
+    <p>約3か月ぶりの対面活動ということもあり、多くのメンバーが参加し、交流を深めました。</p>
+    <p>楽しく充実した時間となりました。</p>
+  `,
         image: "/assets/pizza.png",
         category: "イベント",
     },
@@ -37,6 +70,11 @@ export const newsArticles = [
         date: "2025年7月10日",
         title: "LT会",
         summary: "個人の成果を発表するLT会を開催しました。",
+        content: `
+    <p>2025年7月10日に、サークル内でLT（Lightning Talk）会を開催しました。</p>
+    <p>参加者がそれぞれ10分程度の発表を行い、それぞれの成果を共有しました。</p>
+    <p>互いに刺激を受ける良い機会となりました</p>
+  `,
         image: "/assets/LT_1.png",
         category: "プロジェクト",
     },
@@ -45,15 +83,27 @@ export const newsArticles = [
         date: "2025年6月17日",
         title: "ドーナツパーティー",
         summary: "サークルメンバーでミスドのドーナツを食べました。",
+        content: `
+    <p>2025年6月17日に、Lumosメンバーでドーナツパーティーを開催しました！</p>
+    <p>ミスタードーナツのドーナツをみんなで食べ、和やかな雰囲気で交流しました。</p>
+  `,
         image: "/assets/donut.png",
         category: "イベント",
     },
-
     {
         id: 1,
         date: "2025年5月24日",
         title: "確定大新歓BBQ",
         summary: "5月24日に確定大新歓としてBBQを行いました。",
+        content: `
+      <p>2025年5月24日(土)に確定大新歓BBQを開催しました。</p>
+      <p>当日は天気にも恵まれ、約25名の新入生・在学生が参加して、和やかで楽しい時間を過ごしました。</p>
+
+      <p>プログラミングの話から大学生活のことまで、新入生同士の交流も深まりました！</p>
+
+      <p>今後もLumosでは、学びと交流の場をどんどん企画していきます。</p>
+
+    `,
         image: "/assets/BBQ.jpg",
         category: "イベント",
     },
@@ -62,6 +112,13 @@ export const newsArticles = [
         date: "2025年5月21-23日",
         title: "初学者向けプログラミング学習会",
         summary: "21-23日に3日連続の言語学習会をオンライン開催しました。",
+        content: `
+      <p>2025年5月21,22,23日にdiscord上でオンライン学習会を行いました</p>
+      <p>21日にC言語, 22日にJavaScript, 23日にPythonの学習会を行いました。</p>
+      <p>それぞれ約5-7名ほどのプログラミング初心者が参加し、実際にコードを書きながら学習を進めました。</p>
+
+      <p>今後もLumosでは学習の場を企画していく予定です。</p>
+    `,
         image: "/assets/C-program.png",
         category: "プロジェクト",
     },
@@ -70,6 +127,12 @@ export const newsArticles = [
         date: "2025年4月中",
         title: "新入生歓迎イベント",
         summary: "4月中に新入生向けの複数のイベントを開催しました。",
+        content: `
+      <p>2025年4月中に複数の新入生向けイベントを行いました。</p>
+      <p>イベント内容はみさきマグロツアーやピザ会、女子会や鎌倉散策などを行いました。</p>
+      <p>Lumosに興味がある新入生が多くのイベントに参加してくれました。</p>
+
+    `,
         image: "/assets/shinkan.jpg",
         category: "イベント",
     },
