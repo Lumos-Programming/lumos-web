@@ -82,7 +82,7 @@ export function MemberDetailContent({ member }: { member: Member }) {
               className={`w-28 h-28 sm:w-32 sm:h-32 relative rounded-lg overflow-hidden ring-2 ${ringColor}`}
             >
               <Image
-                src={faceImage || "/placeholder.svg"}
+                src={faceImage || "/assets/lumos_logo-full.png"}
                 alt={`${member.name}の写真`}
                 fill
                 className="object-cover"

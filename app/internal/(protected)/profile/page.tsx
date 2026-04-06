@@ -22,13 +22,7 @@ export default async function ProfilePage() {
 
   const member = await getMember(session.user.id);
 
-  const avatarUrl =
-    member?.faceImage ||
-    (member?.discordAvatar?.startsWith("http")
-      ? member.discordAvatar
-      : member?.discordAvatar
-        ? `https://cdn.discordapp.com/avatars/${session.user.id}/${member.discordAvatar}.png`
-        : "/placeholder.svg");
+  const avatarUrl = member?.faceImage || "/assets/lumos_logo-full.png";
 
   const displayName = member?.nickname || member?.discordUsername || "未設定";
   const ringClass = getRingColorClass(member?.ringColor);

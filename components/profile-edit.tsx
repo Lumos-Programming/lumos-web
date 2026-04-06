@@ -721,7 +721,7 @@ export default function ProfileEdit() {
     }
 
     const dept = v.faculty !== "private" ? faculty : "";
-    const mainImage = faceImageUrl || "/assets/avatar-placeholder.svg";
+    const mainImage = faceImageUrl || "/assets/lumos_logo-full.png";
     return {
       main,
       sub,
@@ -759,19 +759,19 @@ export default function ProfileEdit() {
     let image: string;
     switch (primaryAvatar) {
       case "face":
-        image = faceImageUrl || "/assets/avatar-placeholder.svg";
+        image = faceImageUrl || "/assets/lumos_logo-full.png";
         break;
       case "discord":
         image =
           discordAvatarUrl !== "/placeholder.svg"
             ? discordAvatarUrl
-            : "/assets/avatar-placeholder.svg";
+            : "/assets/lumos_logo-full.png";
         break;
       case "line":
-        image = lineAvatar || "/assets/avatar-placeholder.svg";
+        image = lineAvatar || "/assets/lumos_logo-full.png";
         break;
       default:
-        image = "/assets/avatar-placeholder.svg";
+        image = "/assets/lumos_logo-full.png";
     }
     return { main, sub, role, department: dept, year, image };
   }, [
@@ -913,7 +913,7 @@ export default function ProfileEdit() {
                   className={`w-24 h-24 relative rounded-full overflow-hidden ring-4 ${getRingColorClass(ringColor)} z-10 ${blobAnimating ? "animate-liquid-pop" : ""}`}
                 >
                   <Image
-                    src={faceImageUrl || "/placeholder.svg"}
+                    src={faceImageUrl || "/assets/lumos_logo-full.png"}
                     alt="プロフィール画像"
                     fill
                     className="object-cover"
@@ -1004,7 +1004,7 @@ export default function ProfileEdit() {
                 {
                   value: "face" as const,
                   label: "顔写真",
-                  src: faceImageUrl || "/placeholder.svg",
+                  src: faceImageUrl || "/assets/lumos_logo-full.png",
                   enabled: true,
                 },
                 {
@@ -1014,19 +1014,19 @@ export default function ProfileEdit() {
                     ? discordAvatarHash.startsWith("http")
                       ? discordAvatarHash
                       : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatarHash}.png`
-                    : "/placeholder.svg",
+                    : "/assets/lumos_logo-full.png",
                   enabled: !!discordAvatarHash,
                 },
                 {
                   value: "line" as const,
                   label: "LINE",
-                  src: lineAvatar || "/placeholder.svg",
+                  src: lineAvatar || "/assets/lumos_logo-full.png",
                   enabled: lineLinked && !!lineAvatar,
                 },
                 {
                   value: "default" as const,
                   label: "なし",
-                  src: "/placeholder.svg",
+                  src: "/assets/lumos_logo-full.png",
                   enabled: true,
                 },
               ].map(({ value, label, src, enabled }) => (

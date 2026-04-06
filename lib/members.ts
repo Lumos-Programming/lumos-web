@@ -258,19 +258,19 @@ function resolveDiscordAvatar(
   return `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`;
 }
 
+const DEFAULT_AVATAR = "/assets/lumos_logo-full.png";
+
 function resolvePrimaryAvatar(discordId: string, data: MemberDocument): string {
   const pa = data.primaryAvatar ?? "face";
   switch (pa) {
     case "face":
-      return (
-        data.faceImage || resolveDiscordAvatar(discordId, data.discordAvatar)
-      );
+      return data.faceImage || DEFAULT_AVATAR;
     case "discord":
       return resolveDiscordAvatar(discordId, data.discordAvatar);
     case "line":
-      return data.lineAvatar || "/placeholder.svg";
+      return data.lineAvatar || DEFAULT_AVATAR;
     case "default":
-      return "/placeholder.svg";
+      return DEFAULT_AVATAR;
   }
 }
 

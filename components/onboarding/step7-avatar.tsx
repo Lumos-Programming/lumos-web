@@ -76,17 +76,17 @@ export function Step7Avatar({
                 image: (() => {
                   switch (primaryAvatar) {
                     case "face":
-                      return faceImageUrl || "/placeholder.svg";
+                      return faceImageUrl || "/assets/lumos_logo-full.png";
                     case "discord":
                       return discordAvatar
                         ? discordAvatar.startsWith("http")
                           ? discordAvatar
                           : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`
-                        : "/placeholder.svg";
+                        : "/assets/lumos_logo-full.png";
                     case "line":
-                      return lineAvatar || "/placeholder.svg";
+                      return lineAvatar || "/assets/lumos_logo-full.png";
                     case "default":
-                      return "/placeholder.svg";
+                      return "/assets/lumos_logo-full.png";
                   }
                 })(),
                 ringColor,
@@ -108,7 +108,7 @@ export function Step7Avatar({
                 value: "face" as const,
                 label: "顔写真",
                 desc: faceImageUrl ? "アップロードした写真" : "未設定",
-                src: faceImageUrl || "/placeholder.svg",
+                src: faceImageUrl || "/assets/lumos_logo-full.png",
                 enabled: true,
               },
               {
@@ -119,21 +119,21 @@ export function Step7Avatar({
                   ? discordAvatar.startsWith("http")
                     ? discordAvatar
                     : `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`
-                  : "/placeholder.svg",
+                  : "/assets/lumos_logo-full.png",
                 enabled: !!discordAvatar,
               },
               {
                 value: "line" as const,
                 label: "LINE",
                 desc: "LINEアイコン",
-                src: lineAvatar || "/placeholder.svg",
+                src: lineAvatar || "/assets/lumos_logo-full.png",
                 enabled: lineLinked && !!lineAvatar,
               },
               {
                 value: "default" as const,
                 label: "なし",
                 desc: "デフォルト画像",
-                src: "/placeholder.svg",
+                src: "/assets/lumos_logo-full.png",
                 enabled: true,
               },
             ].map(({ value, label, desc, src, enabled }) => (

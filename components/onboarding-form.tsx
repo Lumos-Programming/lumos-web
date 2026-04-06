@@ -660,7 +660,7 @@ export default function OnboardingForm() {
     }
 
     const dept = v.faculty !== "private" ? form.faculty : "";
-    const mainImage = faceImageUrl || "/assets/avatar-placeholder.svg";
+    const mainImage = faceImageUrl || "/assets/lumos_logo-full.png";
     return {
       main,
       sub,
@@ -709,19 +709,19 @@ export default function OnboardingForm() {
     let image: string;
     switch (primaryAvatar) {
       case "face":
-        image = faceImageUrl || "/assets/avatar-placeholder.svg";
+        image = faceImageUrl || "/assets/lumos_logo-full.png";
         break;
       case "discord":
         image =
           discordAvatarUrl !== "/placeholder.svg"
             ? discordAvatarUrl
-            : "/assets/avatar-placeholder.svg";
+            : "/assets/lumos_logo-full.png";
         break;
       case "line":
-        image = lineAvatar || "/assets/avatar-placeholder.svg";
+        image = lineAvatar || "/assets/lumos_logo-full.png";
         break;
       default:
-        image = "/assets/avatar-placeholder.svg";
+        image = "/assets/lumos_logo-full.png";
     }
     return { main, sub, department: dept, year: form.schoolYear, image };
   }, [
