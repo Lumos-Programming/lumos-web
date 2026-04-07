@@ -9,7 +9,9 @@ import {
   UserCircle,
   Settings,
   ExternalLink,
+  LogOut,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
 import {
   Sidebar,
   SidebarContent,
@@ -115,6 +117,16 @@ export function AppSidebar({
                 <ExternalLink />
                 <span>サイトに戻る</span>
               </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="ログアウト"
+              onClick={() => signOut({ redirectTo: "/" })}
+              className="text-sidebar-foreground/60 hover:text-sidebar-foreground"
+            >
+              <LogOut />
+              <span>ログアウト</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
