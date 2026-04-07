@@ -173,10 +173,10 @@ const FIELD_RATIO = {
   firstName: 2,
   lastNameRomaji: 1,
   firstNameRomaji: 1,
-  studentId: 2,
   birthDate: 1,
   gender: 1,
   // Step 2: 所属情報
+  studentId: 2,
   memberType: 2,
   faculty: 2,
   admissionYear: 1,
@@ -233,7 +233,6 @@ function step1Entries(form: FormData) {
     { ratio: R.firstName, filled: !!form.firstName },
     { ratio: R.lastNameRomaji, filled: !!form.lastNameRomaji },
     { ratio: R.firstNameRomaji, filled: !!form.firstNameRomaji },
-    { ratio: R.studentId, filled: !!form.studentId },
     { ratio: R.birthDate, filled: !!form.birthDate },
     { ratio: R.gender, filled: !!form.gender },
   ];
@@ -242,6 +241,7 @@ function step1Entries(form: FormData) {
 function step2Entries(form: FormData) {
   const R = FIELD_RATIO;
   const entries: Array<{ ratio: number; filled: boolean }> = [
+    { ratio: R.studentId, filled: !!form.studentId },
     { ratio: R.memberType, filled: !!form.memberType },
     { ratio: R.faculty, filled: !!form.faculty },
     { ratio: R.admissionYear, filled: !!form.admissionYear },
