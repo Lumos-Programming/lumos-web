@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Discord from "next-auth/providers/discord";
 import { getOrCreateMember, getMember } from "@/lib/members";
+import { sendDiscordDm, buildWelcomeMessage } from "@/lib/discord-dm";
 
 /**
  * Check if a string is a valid Discord Snowflake ID
@@ -47,12 +48,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Use providerAccountId which is the Discord User ID (Snowflake)
         token.sub = account.providerAccountId;
         // Create or update member document in Firestore
-        await getOrCreateMember(
+        const { isNewMember } = await getOrCreateMember(
           account.providerAccountId,
           token.name ?? "",
           token.picture ?? "",
           (profile as { username?: string })?.username ?? undefined,
         );
+
+        // Send welcome DM to new members (fire-and-forget)
+        if (isNewMember) {
+          const payload = buildWelcomeMessage(token.name ?? "メンバー");
+          sendDiscordDm(account.providerAccountId, payload).catch((e) => {
+            console.error("Failed to send welcome DM:", e);
+          });
+        }
+
         // Fetch faceImage on first sign in
         const member = await getMember(account.providerAccountId);
         token.faceImage = member?.faceImage ?? null;
