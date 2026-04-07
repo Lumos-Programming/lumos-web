@@ -1467,10 +1467,14 @@ export default function ProfileEdit() {
               </div>
             </div>
 
-            {/* 学籍番号（卒業生以外） */}
-            {memberType && memberType !== "卒業生" && (
+            {/* 学籍番号 */}
+            {memberType && (
               <div className="space-y-1.5">
-                <Label>学籍番号</Label>
+                <Label>
+                  {memberType === "卒業生"
+                    ? "最終所属時の学籍番号"
+                    : "学籍番号"}
+                </Label>
                 <Input
                   value={profile.studentId}
                   onChange={(e) =>

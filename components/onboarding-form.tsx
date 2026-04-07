@@ -452,9 +452,7 @@ export default function OnboardingForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           memberType: data.memberType,
-          ...(data.memberType !== "卒業生" && data.studentId
-            ? { studentId: data.studentId }
-            : {}),
+          ...(data.studentId ? { studentId: data.studentId } : {}),
           yearByFiscal: data.schoolYear
             ? { [String(new Date().getFullYear())]: data.schoolYear }
             : undefined,
@@ -487,14 +485,15 @@ export default function OnboardingForm() {
   const handleStep2Next = async () => {
     const errors: Partial<Record<keyof FormData, string>> = {};
     if (!form.memberType) errors.memberType = "種別を選択してください";
-    if (form.memberType && form.memberType !== "卒業生") {
+    if (form.memberType) {
       if (!form.studentId.trim()) {
         errors.studentId = "学籍番号を入力してください";
       } else if (!/^\d{2}[A-Z0-9]{2}\d{3}$/.test(form.studentId.trim())) {
         errors.studentId =
           "学籍番号の形式が正しくありません（例: 2164078 / 24HJ078）";
       }
-      if (!form.schoolYear) errors.schoolYear = "学年を選択してください";
+      if (form.memberType !== "卒業生" && !form.schoolYear)
+        errors.schoolYear = "学年を選択してください";
     }
     if (!form.faculty) errors.faculty = "学部/学府を選択してください";
     if (!form.admissionYear)
@@ -941,10 +940,21 @@ export default function OnboardingForm() {
         router.push("/internal/onboarding/complete");
       } else {
         const data = await res.json();
-        alert(data.error ?? "登録に失敗しました。もう一度お試しください。");
+        if (data.missing) {
+          console.error("Missing required fields:", data.missing);
+        }
+        toast({
+          variant: "destructive",
+          title: "登録に失敗しました",
+          description: data.error ?? "もう一度お試しください。",
+        });
       }
     } catch {
-      alert("エラーが発生しました。もう一度お試しください。");
+      toast({
+        variant: "destructive",
+        title: "エラーが発生しました",
+        description: "もう一度お試しください。",
+      });
     } finally {
       setSubmitting(false);
     }

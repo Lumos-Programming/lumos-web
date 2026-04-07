@@ -87,10 +87,13 @@ export function Step2Enrollment({
           {step2Errors.memberType && (
             <p className="text-xs text-red-500">{step2Errors.memberType}</p>
           )}
-          {form.memberType && form.memberType !== "卒業生" && (
+          {form.memberType && (
             <div className="mt-3 space-y-1.5">
               <Label htmlFor="studentId">
-                学籍番号 <span className="text-red-500">*</span>
+                {form.memberType === "卒業生"
+                  ? "最終所属時の学籍番号"
+                  : "学籍番号"}{" "}
+                <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="studentId"
