@@ -37,7 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.isAdmin !== undefined) {
         session.user.isAdmin = token.isAdmin as boolean;
       }
-      session.user.faceImage = token.faceImage ?? null;
+      session.user.faceImage = (token.faceImage as string | null) ?? null;
       return session;
     },
     async jwt({ token, account, profile, trigger }) {

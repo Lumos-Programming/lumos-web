@@ -26,7 +26,7 @@ import { VISIBILITY_DISPLAY_KEYS } from "./onboarding/types";
 import {
   DEFAULT_FORM,
   DEFAULT_VISIBILITY,
-  FIELD_WEIGHTS,
+  calcProgress,
   STEP_LABELS_BASE,
   STEP_LABELS_WITH_AVATAR,
 } from "./onboarding/types";
@@ -957,35 +957,14 @@ export default function OnboardingForm() {
   const isFinalStep = (step: number) => step === maxStep;
 
   // 進捗 % 計算
-  // Step 5 完了とみなす（Step 6 に遷移済み = currentStep >= 6）
-  const step5Done = currentStep >= 6;
-
-  const progressPercent = Math.min(
-    100,
-    (() => {
-      let score = 0;
-      if (form.lastName) score += FIELD_WEIGHTS.lastName ?? 0;
-      if (form.firstName) score += FIELD_WEIGHTS.firstName ?? 0;
-      if (form.lastNameRomaji) score += FIELD_WEIGHTS.lastNameRomaji ?? 0;
-      if (form.firstNameRomaji) score += FIELD_WEIGHTS.firstNameRomaji ?? 0;
-      if (form.studentId) score += FIELD_WEIGHTS.studentId ?? 0;
-      if (form.birthDate) score += FIELD_WEIGHTS.birthDate ?? 0;
-      if (form.gender) score += FIELD_WEIGHTS.gender ?? 0;
-      if (form.memberType) score += FIELD_WEIGHTS.memberType ?? 0;
-      if (form.faculty) score += FIELD_WEIGHTS.faculty ?? 0;
-      if (form.admissionYear) score += FIELD_WEIGHTS.admissionYear ?? 0;
-      if (form.enrollmentType) score += FIELD_WEIGHTS.enrollmentType ?? 0;
-      if (form.nickname) score += FIELD_WEIGHTS.nickname ?? 0;
-      if (form.interests.length > 0) score += FIELD_WEIGHTS.interests ?? 0;
-      if (form.bio) score += FIELD_WEIGHTS.bio ?? 0;
-      if (lineLinked) score += FIELD_WEIGHTS.line ?? 0;
-      if (githubLinked) score += FIELD_WEIGHTS.github ?? 0;
-      if (xLinked) score += FIELD_WEIGHTS.x ?? 0;
-      if (step5Done) score += FIELD_WEIGHTS.visibility ?? 0;
-      if (faceImageUrl) score += FIELD_WEIGHTS.faceImage ?? 0;
-      return score;
-    })(),
-  );
+  const progressPercent = calcProgress({
+    form,
+    currentStep,
+    lineLinked,
+    githubLinked,
+    xLinked,
+    faceImageUrl,
+  });
 
   const dismissWelcome = useCallback(() => {
     setWelcomeFading(true);

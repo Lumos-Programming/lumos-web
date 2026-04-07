@@ -3,6 +3,7 @@ import type {
   EnrollmentType,
   VisibilityLevel,
 } from "@/types/profile";
+import { GRADUATE_SCHOOLS } from "@/types/profile";
 
 export interface FormData {
   // Step 1
@@ -151,32 +152,193 @@ export function getSchoolYearOptions(
   }
 }
 
-export const FIELD_WEIGHTS: Partial<
-  Record<
-    keyof FormData | "line" | "github" | "x" | "visibility" | "faceImage",
-    number
-  >
-> = {
-  lastName: 8,
-  firstName: 8,
-  lastNameRomaji: 4,
-  firstNameRomaji: 4,
-  studentId: 8,
-  birthDate: 4,
-  gender: 4,
-  memberType: 8,
-  faculty: 8,
-  admissionYear: 4,
-  enrollmentType: 4,
-  nickname: 4,
-  interests: 6,
-  bio: 12,
-  line: 8,
-  github: 4,
-  x: 4,
-  visibility: 8,
-  faceImage: 10,
-};
+/* ─────────────────────────────────────────────
+ * 進捗計算
+ *
+ * 設計:
+ *   - 各ステップに固定配点（合計 100%）を割り当てる
+ *   - ステップ内のフィールドには「比重」を設定する
+ *   - スコア = 配点 × (入力済み比重の合計 / 該当比重の合計)
+ *   - フィールドの追加・削除はステップ内の比重だけ変更すれば OK
+ *   - 通過済みステップは満点扱い
+ * ───────────────────────────────────────────── */
+
+/** 各ステップの配点（合計 100） */
+const STEP_POINTS = [20, 20, 10, 15, 15, 20] as const;
+
+/** フィールド比重（ステップ内での相対的な重み） */
+const FIELD_RATIO = {
+  // Step 1: 基本情報
+  lastName: 2,
+  firstName: 2,
+  lastNameRomaji: 1,
+  firstNameRomaji: 1,
+  studentId: 2,
+  birthDate: 1,
+  gender: 1,
+  // Step 2: 所属情報
+  memberType: 2,
+  faculty: 2,
+  admissionYear: 1,
+  enrollmentType: 1,
+  schoolYear: 1,
+  graduationYear: 1,
+  hasUndergrad: 1,
+  undergradFaculty: 1,
+  undergradAdmissionYear: 1,
+  undergradEnrollmentType: 1,
+  // Step 3: SNS 連携
+  line: 2,
+  github: 1,
+  x: 1,
+  // Step 4: プロフィール
+  nickname: 1,
+  interests: 2,
+  bio: 3,
+  // Step 5: 公開設定 — ステップ全体が1操作なので比重不要
+  // Step 6: 顔写真 — ステップ全体が1操作なので比重不要
+} as const;
+
+export interface ProgressContext {
+  form: FormData;
+  currentStep: number;
+  lineLinked: boolean;
+  githubLinked: boolean;
+  xLinked: boolean;
+  faceImageUrl: string | null;
+}
+
+/* ── ヘルパー ── */
+
+/** 比重の合計と入力済み比重を返す */
+function ratioScore(entries: Array<{ ratio: number; filled: boolean }>): {
+  earned: number;
+  total: number;
+} {
+  let earned = 0;
+  let total = 0;
+  for (const { ratio, filled } of entries) {
+    total += ratio;
+    if (filled) earned += ratio;
+  }
+  return { earned, total };
+}
+
+/* ── 各 Step の入力判定 ── */
+
+function step1Entries(form: FormData) {
+  const R = FIELD_RATIO;
+  return [
+    { ratio: R.lastName, filled: !!form.lastName },
+    { ratio: R.firstName, filled: !!form.firstName },
+    { ratio: R.lastNameRomaji, filled: !!form.lastNameRomaji },
+    { ratio: R.firstNameRomaji, filled: !!form.firstNameRomaji },
+    { ratio: R.studentId, filled: !!form.studentId },
+    { ratio: R.birthDate, filled: !!form.birthDate },
+    { ratio: R.gender, filled: !!form.gender },
+  ];
+}
+
+function step2Entries(form: FormData) {
+  const R = FIELD_RATIO;
+  const entries: Array<{ ratio: number; filled: boolean }> = [
+    { ratio: R.memberType, filled: !!form.memberType },
+    { ratio: R.faculty, filled: !!form.faculty },
+    { ratio: R.admissionYear, filled: !!form.admissionYear },
+    { ratio: R.enrollmentType, filled: !!form.enrollmentType },
+  ];
+
+  // 種別による条件分岐
+  if (form.memberType && form.memberType !== "卒業生") {
+    entries.push({ ratio: R.schoolYear, filled: !!form.schoolYear });
+  } else if (form.memberType === "卒業生") {
+    entries.push({ ratio: R.graduationYear, filled: !!form.graduationYear });
+  }
+
+  // 学部進学情報（院生 or 卒業生で学府卒の場合のみ）
+  const showUndergrad =
+    form.memberType === "院生" ||
+    (form.memberType === "卒業生" &&
+      (GRADUATE_SCHOOLS as readonly string[]).includes(form.faculty));
+
+  if (showUndergrad) {
+    entries.push({ ratio: R.hasUndergrad, filled: form.hasUndergrad !== null });
+
+    if (form.hasUndergrad === true) {
+      entries.push(
+        { ratio: R.undergradFaculty, filled: !!form.undergradFaculty },
+        {
+          ratio: R.undergradAdmissionYear,
+          filled: !!form.undergradAdmissionYear,
+        },
+        {
+          ratio: R.undergradEnrollmentType,
+          filled: !!form.undergradEnrollmentType,
+        },
+      );
+    } else if (form.hasUndergrad === false) {
+      // 「いいえ」→ 学部情報不要なので全て入力済みとみなす
+      entries.push(
+        { ratio: R.undergradFaculty, filled: true },
+        { ratio: R.undergradAdmissionYear, filled: true },
+        { ratio: R.undergradEnrollmentType, filled: true },
+      );
+    }
+  }
+
+  return entries;
+}
+
+function step3Entries(ctx: ProgressContext) {
+  const R = FIELD_RATIO;
+  return [
+    { ratio: R.line, filled: ctx.lineLinked },
+    { ratio: R.github, filled: ctx.githubLinked },
+    { ratio: R.x, filled: ctx.xLinked },
+  ];
+}
+
+function step4Entries(form: FormData) {
+  const R = FIELD_RATIO;
+  return [
+    { ratio: R.nickname, filled: !!form.nickname },
+    { ratio: R.interests, filled: form.interests.length > 0 },
+    { ratio: R.bio, filled: !!form.bio },
+  ];
+}
+
+/**
+ * ステップの配点と入力率からスコアを算出する。
+ * 通過済みステップは満点、それ以外は入力率に応じた按分。
+ */
+function stepScore(
+  points: number,
+  passed: boolean,
+  entries: Array<{ ratio: number; filled: boolean }>,
+): number {
+  if (passed) return points;
+  const { earned, total } = ratioScore(entries);
+  return total === 0 ? 0 : points * (earned / total);
+}
+
+/**
+ * オンボーディング進捗（0–100）を計算する。
+ */
+export function calcProgress(ctx: ProgressContext): number {
+  const { currentStep, form } = ctx;
+  const P = STEP_POINTS;
+
+  const total =
+    stepScore(P[0], currentStep > 1, step1Entries(form)) +
+    stepScore(P[1], currentStep > 2, step2Entries(form)) +
+    stepScore(P[2], currentStep > 3, step3Entries(ctx)) +
+    stepScore(P[3], currentStep > 4, step4Entries(form)) +
+    // Step 5・6 はステップ全体が1操作
+    (currentStep > 5 ? P[4] : 0) +
+    (currentStep > 6 ? P[5] : ctx.faceImageUrl ? P[5] : 0);
+
+  return Math.min(100, Math.round(total));
+}
 
 export const STEP_LABELS_BASE = [
   "基本情報",
