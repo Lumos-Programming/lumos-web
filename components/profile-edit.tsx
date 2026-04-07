@@ -352,7 +352,7 @@ function CustomImageDialog({
 
 export default function ProfileEdit() {
   const { state: sidebarState, isMobile } = useSidebar();
-  const [showPreview, setShowPreview] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
   const [allowPublic, setAllowPublic] = useState(true);
   const [loading, setLoading] = useState(true);
