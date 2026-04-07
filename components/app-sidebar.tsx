@@ -123,7 +123,7 @@ export function AppSidebar({
             <SidebarMenuButton
               tooltip="ログアウト"
               onClick={() => signOut({ redirectTo: "/" })}
-              className="text-sidebar-foreground/60 hover:text-sidebar-foreground"
+              className="text-red-500 hover:text-red-600 hover:bg-red-50"
             >
               <LogOut />
               <span>ログアウト</span>
