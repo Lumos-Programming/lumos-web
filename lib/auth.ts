@@ -104,7 +104,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
           const guilds = await res.json();
           const isMember = guilds.some((g: { id: string }) => g.id === guildId);
-          return isMember;
+          if (!isMember) return "/auth-error";
+          return true;
         } catch (e) {
           console.error("Failed to fetch guilds", e);
           return false;
