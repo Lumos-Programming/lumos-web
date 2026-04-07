@@ -25,6 +25,7 @@ variable "cloud_run_env_vars" {
       AUTH_LINE_ID          = "2009690509"
 
       AUTH_DISCORD_ID       = "1489548152779309197"
+      DISCORD_GUILD_ID      = "1368752707321729158"
       AUTH_URL              = "https://dev.lumos-ynu.jp"
       FIRESTORE_DATABASE_ID = "development"
       FIREBASE_PROJECT_ID   = "lumos-infra"
@@ -37,6 +38,7 @@ variable "cloud_run_env_vars" {
       AUTH_LINE_ID          = "2009694131"
 
       AUTH_DISCORD_ID       = "1377983265948041228"
+      DISCORD_GUILD_ID      = "1368752707321729158"
       AUTH_URL              = "https://stg.lumos-ynu.jp"
       FIRESTORE_DATABASE_ID = "staging"
       FIREBASE_PROJECT_ID   = "lumos-infra"
@@ -49,6 +51,7 @@ variable "cloud_run_env_vars" {
       AUTH_LINE_ID          = "1661094871"
 
       AUTH_DISCORD_ID       = "933021504319422544"
+      DISCORD_GUILD_ID      = "894226019240800276"
       AUTH_URL              = "https://lumos-ynu.jp"
       FIRESTORE_DATABASE_ID = "" // this should use default db (default)
       FIREBASE_PROJECT_ID   = "lumos-infra"
