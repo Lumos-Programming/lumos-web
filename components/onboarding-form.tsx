@@ -9,6 +9,7 @@ import {
   type ChangeEvent,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { toast } from "@/hooks/use-toast";
 import { cropAndResizeImage } from "@/lib/image-crop";
 import type { EnrollmentType } from "@/types/profile";
@@ -44,8 +45,18 @@ import {
 } from "./onboarding/preview-islands";
 
 export default function OnboardingForm() {
+  const { update: updateSession } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const fetchProfile = useCallback(async () => {
+    const res = await fetch("/api/profile");
+    if (res.status === 404) {
+      signOut({ redirectTo: "/onboarding" });
+      throw new Error("Profile not found");
+    }
+    return res.json();
+  }, []);
 
   const isPreview =
     process.env.NODE_ENV === "development" &&
@@ -138,8 +149,7 @@ export default function OnboardingForm() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/profile")
-      .then((res) => res.json())
+    fetchProfile()
       .then((data) => {
         if (data && !data.error) {
           type EnrollmentEntry = {
@@ -257,7 +267,7 @@ export default function OnboardingForm() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [fetchProfile]);
 
   // Handle OAuth callback results
   useEffect(() => {
@@ -267,8 +277,7 @@ export default function OnboardingForm() {
 
     if (success === "line_linked") {
       setLineLinked(true);
-      fetch("/api/profile")
-        .then((res) => res.json())
+      fetchProfile()
         .then((data) => {
           if (data?.line) {
             setLineUsername(data.line);
@@ -278,8 +287,7 @@ export default function OnboardingForm() {
         .catch(console.error);
     } else if (success === "github_linked") {
       setGithubLinked(true);
-      fetch("/api/profile")
-        .then((res) => res.json())
+      fetchProfile()
         .then((data) => {
           if (data?.github) {
             setGithubUsername(data.github);
@@ -289,8 +297,7 @@ export default function OnboardingForm() {
         .catch(console.error);
     } else if (success === "x_linked") {
       setXLinked(true);
-      fetch("/api/profile")
-        .then((res) => res.json())
+      fetchProfile()
         .then((data) => {
           if (data?.x) {
             setXUsername(data.x);
@@ -317,7 +324,7 @@ export default function OnboardingForm() {
       const qs = params.toString();
       router.replace(url.pathname + (qs ? `?${qs}` : ""));
     }
-  }, [searchParams, router, isPreview]);
+  }, [searchParams, router, isPreview, fetchProfile]);
 
   const saveStep1 = useCallback(async (data: FormData): Promise<boolean> => {
     try {
@@ -930,6 +937,7 @@ export default function OnboardingForm() {
         } catch {
           /* ignore */
         }
+        await updateSession();
         router.push("/internal/onboarding/complete");
       } else {
         const data = await res.json();

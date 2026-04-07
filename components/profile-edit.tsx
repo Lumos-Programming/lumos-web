@@ -9,6 +9,7 @@ import {
   type ChangeEvent,
 } from "react";
 import Image from "next/image";
+import { useSession, signOut } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -351,6 +352,7 @@ function CustomImageDialog({
 }
 
 export default function ProfileEdit() {
+  const { update: updateSession } = useSession();
   const { state: sidebarState, isMobile } = useSidebar();
   const [showPreview, setShowPreview] = useState(false);
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
@@ -413,7 +415,13 @@ export default function ProfileEdit() {
 
   useEffect(() => {
     fetch("/api/profile")
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 404) {
+          signOut({ redirectTo: "/login" });
+          throw new Error("Profile not found");
+        }
+        return res.json();
+      })
       .then((data) => {
         if (data && !data.error) {
           const vis: Profile["visibility"] = {
@@ -724,6 +732,7 @@ export default function ProfileEdit() {
         setSaved(true);
         setTimeout(() => setSaved(false), 10000);
         window.scrollTo({ top: 0, behavior: "smooth" });
+        await updateSession();
       } else {
         toast({
           variant: "destructive",
