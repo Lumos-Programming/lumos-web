@@ -35,7 +35,7 @@ const sortedNewsArticles = [...newsArticles].sort(
 export default function Home() {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
-      align: "start",
+      align: "center",
       loop: true,
       skipSnaps: true,
       dragFree: true,
@@ -149,7 +149,7 @@ export default function Home() {
       {/* About Section */}
       <section className="section-padding bg-background">
         <div className="container mx-auto container-padding">
-          <div className="text-center mb-16">
+          <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
               Lumosについて
             </h2>
@@ -233,7 +233,7 @@ export default function Home() {
       {/* News Section */}
       <section className="section-padding bg-secondary">
         <div className="container mx-auto container-padding">
-          <div className="text-center mb-16">
+          <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
               お知らせ
             </h2>
@@ -244,11 +244,11 @@ export default function Home() {
 
           <div className="relative">
             <div className="overflow-hidden" ref={emblaRef}>
-              <div className="flex gap-8 px-8">
+              <div className="flex gap-4 px-4">
                 {sortedNewsArticles.map((news) => (
                   <div
                     key={news.id}
-                    className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.333%]"
+                    className="flex-[0_0_85%] min-w-0 sm:flex-[0_0_45%] lg:flex-[0_0_30%]"
                   >
                     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card h-full">
                       <CardContent className="p-0 flex flex-col h-full">
@@ -259,7 +259,7 @@ export default function Home() {
                           <h3 className="text-xl font-bold mb-2 text-foreground">
                             {news.title}
                           </h3>
-                          <p className="text-muted-foreground mb-4 flex-grow">
+                          <p className="text-muted-foreground mb-2 flex-grow">
                             {news.summary}
                           </p>
                           <Link
@@ -281,7 +281,7 @@ export default function Home() {
             <button
               onClick={scrollPrev}
               disabled={prevBtnDisabled}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 md:-translate-x-14 z-10 p-2 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               aria-label="Previous slide"
             >
               <ChevronLeft className="h-6 w-6" />
@@ -289,7 +289,7 @@ export default function Home() {
             <button
               onClick={scrollNext}
               disabled={nextBtnDisabled}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 md:translate-x-14 z-10 p-2 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               aria-label="Next slide"
             >
               <ChevronRight className="h-6 w-6" />
