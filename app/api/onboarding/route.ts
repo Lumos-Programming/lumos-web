@@ -6,6 +6,7 @@ import {
   buildOnboardingCompleteMessage,
   calcProfileCompletion,
 } from "@/lib/discord-dm";
+import { checkLineGroupMembership } from "@/lib/line-invite";
 
 export async function POST() {
   const session = await auth();
@@ -39,8 +40,24 @@ export async function POST() {
 
   if (!member.lineId) {
     return NextResponse.json(
-      { error: "LINE account not linked" },
+      { error: "LINE account not linked", missing: ["lineId"] },
       { status: 400 },
+    );
+  }
+
+  try {
+    const isInGroup = await checkLineGroupMembership(member.lineId);
+    if (!isInGroup) {
+      return NextResponse.json(
+        { error: "LINE group not joined", missing: ["lineGroup"] },
+        { status: 400 },
+      );
+    }
+  } catch (e) {
+    console.error("LINE group membership check error during onboarding:", e);
+    return NextResponse.json(
+      { error: "Failed to verify LINE group membership" },
+      { status: 500 },
     );
   }
 
