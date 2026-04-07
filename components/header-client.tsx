@@ -113,7 +113,11 @@ export default function HeaderClient({ children }: { children?: ReactNode }) {
                   </Link>
                 ))}
               </div>
-              {children && <div className="mt-8">{children}</div>}
+              {children && (
+                <div className="mt-8" onClick={() => setMobileMenuOpen(false)}>
+                  {children}
+                </div>
+              )}
             </div>
           </div>,
           document.body,
