@@ -44,6 +44,7 @@ export interface MemberDocument {
   lineId?: string;
   lineAvatar?: string;
   linkedin?: string; // LinkedIn profile URL (manually entered)
+  lineLinkedAt?: number; // Unix timestamp (seconds) — LINE連携日時
   lineAccessToken?: string;
   lineRefreshToken?: string;
   lineTokenExpiresAt?: number; // Unix timestamp (seconds)
@@ -223,6 +224,7 @@ export async function updateMemberSns(
       | "line"
       | "lineId"
       | "lineAvatar"
+      | "lineLinkedAt"
       | "lineAccessToken"
       | "lineRefreshToken"
       | "lineTokenExpiresAt"
@@ -351,6 +353,13 @@ export function profileToMember(
     interests: data.interests ?? [],
     topInterests: data.topInterests ?? [],
   };
+}
+
+const RELINK_COOLDOWN_SECONDS = 14 * 24 * 60 * 60; // 14 days
+
+export function isLineRelinkCooldownActive(lineLinkedAt?: number): boolean {
+  if (!lineLinkedAt) return false;
+  return Math.floor(Date.now() / 1000) - lineLinkedAt < RELINK_COOLDOWN_SECONDS;
 }
 
 export function profileToMemberInternal(
