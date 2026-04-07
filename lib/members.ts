@@ -81,7 +81,7 @@ export async function getOrCreateMember(
   username: string,
   avatar: string,
   handle?: string,
-): Promise<void> {
+): Promise<{ isNewMember: boolean }> {
   const db = getDb();
   const ref = db.collection("members").doc(discordId);
   const snap = await ref.get();
@@ -118,6 +118,7 @@ export async function getOrCreateMember(
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
+    return { isNewMember: true };
   } else {
     await ref.update({
       discordUsername: username,
@@ -125,6 +126,7 @@ export async function getOrCreateMember(
       discordAvatar: avatar,
       updatedAt: FieldValue.serverTimestamp(),
     });
+    return { isNewMember: false };
   }
 }
 
