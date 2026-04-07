@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
@@ -16,8 +17,37 @@ const navigation = [
 ];
 
 export default function HeaderClient({ children }: { children?: ReactNode }) {
+  const pathname = usePathname();
+  const [prevPathname, setPrevPathname] = useState(pathname);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    if (mobileMenuOpen) {
+      setMenuVisible(false);
+      setMobileMenuOpen(false);
+    }
+  }
+
+  const openMenu = useCallback(() => {
+    setMobileMenuOpen(true);
+    requestAnimationFrame(() => setMenuVisible(true));
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    setMenuVisible(false);
+  }, []);
+
+  const handleTransitionEnd = useCallback(
+    (e: React.TransitionEvent) => {
+      if (e.propertyName === "opacity" && !menuVisible) {
+        setMobileMenuOpen(false);
+      }
+    },
+    [menuVisible],
+  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -74,7 +104,7 @@ export default function HeaderClient({ children }: { children?: ReactNode }) {
             <button
               type="button"
               className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-foreground"
-              onClick={() => setMobileMenuOpen(true)}
+              onClick={openMenu}
             >
               <span className="sr-only">メニューを開く</span>
               <Menu className="h-6 w-6" aria-hidden="true" />
@@ -86,7 +116,13 @@ export default function HeaderClient({ children }: { children?: ReactNode }) {
       {/* Mobile menu - portaled to body to avoid header clipping */}
       {mobileMenuOpen &&
         createPortal(
-          <div className="fixed inset-0 z-[100] bg-white overflow-y-auto">
+          <div
+            className={cn(
+              "fixed inset-0 z-[100] bg-white overflow-y-auto transition-opacity duration-200",
+              menuVisible ? "opacity-100" : "opacity-0",
+            )}
+            onTransitionEnd={handleTransitionEnd}
+          >
             <div className="flex h-16 items-center justify-between px-4">
               <Link href="/" className="text-2xl font-bold text-primary">
                 Lumos
@@ -94,7 +130,7 @@ export default function HeaderClient({ children }: { children?: ReactNode }) {
               <button
                 type="button"
                 className="-m-2.5 rounded-md p-2.5 text-foreground"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={closeMenu}
               >
                 <span className="sr-only">メニューを閉じる</span>
                 <X className="h-6 w-6" aria-hidden="true" />
@@ -107,7 +143,7 @@ export default function HeaderClient({ children }: { children?: ReactNode }) {
                     key={item.name}
                     href={item.href}
                     className="block text-base font-medium text-foreground hover:text-accent-foreground transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={closeMenu}
                   >
                     {item.name}
                   </Link>
