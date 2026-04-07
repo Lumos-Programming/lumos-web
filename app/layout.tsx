@@ -4,7 +4,6 @@ import Script from "next/script";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/header";
-import HeaderAuth from "@/components/header-auth";
 import Footer from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -88,7 +87,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header authSlot={<HeaderAuth />} />
+          <Header />
           <main className="flex-grow">{children}</main>
           <Footer />
           <Toaster />

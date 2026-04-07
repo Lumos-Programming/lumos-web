@@ -1,116 +1,68 @@
-"use client";
-
-import { useState, useEffect, type ReactNode } from "react";
+import { auth, signIn } from "@/lib/auth";
+import { getMember } from "@/lib/members";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { headers } from "next/headers";
+import { LogIn } from "lucide-react";
+import HeaderClient from "@/components/header-client";
 
-const navigation = [
-  { name: "ホーム", href: "/" },
-  { name: "サークル紹介", href: "/about" },
-  { name: "メンバー", href: "/members" },
-  { name: "プロジェクト紹介", href: "/projects" },
-  { name: "お知らせ", href: "/news" },
-  // { name: "お問い合わせ", href: "/contact" },
-];
+export default async function Header() {
+  const session = await auth();
 
-export default function Header({ authSlot }: { authSlot?: ReactNode }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  let authContent;
+  if (session) {
+    const member = await getMember(session.user.id);
+    const avatarUrl =
+      member?.faceImage || member?.discordAvatar || session.user?.image;
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    authContent = (
+      <Link href="/internal">
+        <Button variant="outline" size="sm" className="gap-2">
+          {avatarUrl && (
+            <Image
+              src={avatarUrl}
+              alt=""
+              width={20}
+              height={20}
+              className="h-5 w-5 rounded-full object-cover"
+            />
+          )}
+          <span>{session.user?.name ?? "メンバー"}</span>
+          <LogIn className="h-4 w-4" />
+        </Button>
+      </Link>
+    );
+  } else {
+    const headersList = await headers();
+    const referer = headersList.get("referer") ?? "";
+    let redirectTo = "/internal";
+    try {
+      const url = new URL(referer);
+      if (url.pathname && url.pathname !== "/") {
+        redirectTo = url.pathname;
+      }
+    } catch {
+      // ignore invalid referer
+    }
 
-  return (
-    <header
-      className={cn(
-        "fixed w-full z-50 transition-all duration-300",
-        scrolled ? "bg-white/95 backdrop-blur-md shadow-md" : "bg-white",
-      )}
-    >
-      <nav className="container mx-auto px-4 md:px-6 flex items-center justify-between py-4">
-        <div className="flex items-center">
-          <Image
-            src="/assets/Lumoslogo.png"
-            alt={"Lumoslogo"}
-            width={50}
-            height={50}
-          />
-          <Link href="/" className="text-2xl font-bold text-primary">
-            Lumos
-          </Link>
-        </div>
+    authContent = (
+      <form
+        action={async () => {
+          "use server";
+          await signIn("discord", { redirectTo });
+        }}
+      >
+        <Button
+          type="submit"
+          size="sm"
+          className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+        >
+          Discordでログイン
+        </Button>
+      </form>
+    );
+  }
 
-        {/* Desktop navigation */}
-        <div className="hidden md:flex md:items-center md:gap-x-8">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="text-sm font-medium text-foreground hover:text-accent-foreground transition-colors"
-            >
-              {item.name}
-            </Link>
-          ))}
-          {authSlot}
-        </div>
-
-        {/* Mobile menu button */}
-        <div className="flex md:hidden">
-          <button
-            type="button"
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-foreground"
-            onClick={() => setMobileMenuOpen(true)}
-          >
-            <span className="sr-only">メニューを開く</span>
-            <Menu className="h-6 w-6" aria-hidden="true" />
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-white">
-          <div className="fixed inset-0 flex">
-            <div className="relative w-full">
-              <div className="flex h-16 items-center justify-between px-4">
-                <Link href="/" className="text-2xl font-bold text-primary">
-                  Lumos
-                </Link>
-                <button
-                  type="button"
-                  className="-m-2.5 rounded-md p-2.5 text-foreground"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <span className="sr-only">メニューを閉じる</span>
-                  <X className="h-6 w-6" aria-hidden="true" />
-                </button>
-              </div>
-              <div className="mt-6 flow-root px-6">
-                <div className="space-y-6 py-6">
-                  {navigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="block text-base font-medium text-foreground hover:text-accent-foreground transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-                {authSlot && <div className="mt-8">{authSlot}</div>}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </header>
-  );
+  return <HeaderClient>{authContent}</HeaderClient>;
 }
