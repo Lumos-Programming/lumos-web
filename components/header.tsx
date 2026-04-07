@@ -5,6 +5,7 @@ import Image from "next/image";
 import { headers } from "next/headers";
 import { LayoutDashboard } from "lucide-react";
 import HeaderClient from "@/components/header-client";
+import { LogoutButton } from "@/components/logout-button";
 
 export default async function Header() {
   const session = await auth();
@@ -14,21 +15,26 @@ export default async function Header() {
     const avatarUrl = session.user?.faceImage || session.user?.image;
 
     authContent = (
-      <Link href="/internal">
-        <Button variant="outline" size="sm" className="gap-2">
-          {avatarUrl && (
-            <Image
-              src={avatarUrl}
-              alt=""
-              width={20}
-              height={20}
-              className="h-5 w-5 rounded-full object-cover"
-            />
-          )}
-          <span>ポータルへ</span>
-          <LayoutDashboard className="h-4 w-4" />
-        </Button>
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link href="/internal">
+          <Button variant="outline" size="sm" className="gap-2">
+            {avatarUrl && (
+              <Image
+                src={avatarUrl}
+                alt=""
+                width={20}
+                height={20}
+                className="h-5 w-5 rounded-full object-cover"
+              />
+            )}
+            <span>ポータルへ</span>
+            <LayoutDashboard className="h-4 w-4" />
+          </Button>
+        </Link>
+        <div className="md:hidden">
+          <LogoutButton />
+        </div>
+      </div>
     );
   } else {
     const headersList = await headers();
