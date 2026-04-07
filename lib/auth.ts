@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Discord from "next-auth/providers/discord";
-import { getOrCreateMember } from "@/lib/members";
+import { getOrCreateMember, getMember } from "@/lib/members";
 
 /**
  * Check if a string is a valid Discord Snowflake ID
@@ -37,9 +37,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.isAdmin !== undefined) {
         session.user.isAdmin = token.isAdmin as boolean;
       }
+      session.user.faceImage = token.faceImage ?? null;
       return session;
     },
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, trigger }) {
       // Store Discord User ID (Snowflake) in token on first sign in
       // account.providerAccountId contains the actual Discord User ID (Snowflake format)
       if (account?.provider === "discord") {
@@ -52,6 +53,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.picture ?? "",
           (profile as { username?: string })?.username ?? undefined,
         );
+        // Fetch faceImage on first sign in
+        const member = await getMember(account.providerAccountId);
+        token.faceImage = member?.faceImage ?? null;
+      }
+
+      // Refresh faceImage when session.update() is called
+      if (trigger === "update" && token.sub) {
+        const member = await getMember(token.sub);
+        token.faceImage = member?.faceImage ?? null;
       }
 
       // Check admin role on first sign in

@@ -1,5 +1,4 @@
 import { auth, signIn } from "@/lib/auth";
-import { getMember } from "@/lib/members";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
@@ -12,9 +11,7 @@ export default async function Header() {
 
   let authContent;
   if (session) {
-    const member = await getMember(session.user.id);
-    const avatarUrl =
-      member?.faceImage || member?.discordAvatar || session.user?.image;
+    const avatarUrl = session.user?.faceImage || session.user?.image;
 
     authContent = (
       <Link href="/internal">
