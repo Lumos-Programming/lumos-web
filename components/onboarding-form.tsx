@@ -9,6 +9,7 @@ import {
   type ChangeEvent,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { toast } from "@/hooks/use-toast";
 import { cropAndResizeImage } from "@/lib/image-crop";
 import type { EnrollmentType } from "@/types/profile";
@@ -25,7 +26,7 @@ import { VISIBILITY_DISPLAY_KEYS } from "./onboarding/types";
 import {
   DEFAULT_FORM,
   DEFAULT_VISIBILITY,
-  FIELD_WEIGHTS,
+  calcProgress,
   STEP_LABELS_BASE,
   STEP_LABELS_WITH_AVATAR,
 } from "./onboarding/types";
@@ -44,8 +45,18 @@ import {
 } from "./onboarding/preview-islands";
 
 export default function OnboardingForm() {
+  const { update: updateSession } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const fetchProfile = useCallback(async () => {
+    const res = await fetch("/api/profile");
+    if (res.status === 404) {
+      signOut({ redirectTo: "/onboarding" });
+      throw new Error("Profile not found");
+    }
+    return res.json();
+  }, []);
 
   const isPreview =
     process.env.NODE_ENV === "development" &&
@@ -138,8 +149,7 @@ export default function OnboardingForm() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/profile")
-      .then((res) => res.json())
+    fetchProfile()
       .then((data) => {
         if (data && !data.error) {
           type EnrollmentEntry = {
@@ -257,7 +267,7 @@ export default function OnboardingForm() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [fetchProfile]);
 
   // Handle OAuth callback results
   useEffect(() => {
@@ -267,8 +277,7 @@ export default function OnboardingForm() {
 
     if (success === "line_linked") {
       setLineLinked(true);
-      fetch("/api/profile")
-        .then((res) => res.json())
+      fetchProfile()
         .then((data) => {
           if (data?.line) {
             setLineUsername(data.line);
@@ -278,8 +287,7 @@ export default function OnboardingForm() {
         .catch(console.error);
     } else if (success === "github_linked") {
       setGithubLinked(true);
-      fetch("/api/profile")
-        .then((res) => res.json())
+      fetchProfile()
         .then((data) => {
           if (data?.github) {
             setGithubUsername(data.github);
@@ -289,8 +297,7 @@ export default function OnboardingForm() {
         .catch(console.error);
     } else if (success === "x_linked") {
       setXLinked(true);
-      fetch("/api/profile")
-        .then((res) => res.json())
+      fetchProfile()
         .then((data) => {
           if (data?.x) {
             setXUsername(data.x);
@@ -317,7 +324,7 @@ export default function OnboardingForm() {
       const qs = params.toString();
       router.replace(url.pathname + (qs ? `?${qs}` : ""));
     }
-  }, [searchParams, router, isPreview]);
+  }, [searchParams, router, isPreview, fetchProfile]);
 
   const saveStep1 = useCallback(async (data: FormData): Promise<boolean> => {
     try {
@@ -445,9 +452,7 @@ export default function OnboardingForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           memberType: data.memberType,
-          ...(data.memberType !== "卒業生" && data.studentId
-            ? { studentId: data.studentId }
-            : {}),
+          ...(data.studentId ? { studentId: data.studentId } : {}),
           yearByFiscal: data.schoolYear
             ? { [String(new Date().getFullYear())]: data.schoolYear }
             : undefined,
@@ -480,14 +485,15 @@ export default function OnboardingForm() {
   const handleStep2Next = async () => {
     const errors: Partial<Record<keyof FormData, string>> = {};
     if (!form.memberType) errors.memberType = "種別を選択してください";
-    if (form.memberType && form.memberType !== "卒業生") {
+    if (form.memberType) {
       if (!form.studentId.trim()) {
         errors.studentId = "学籍番号を入力してください";
       } else if (!/^\d{2}[A-Z0-9]{2}\d{3}$/.test(form.studentId.trim())) {
         errors.studentId =
           "学籍番号の形式が正しくありません（例: 2164078 / 24HJ078）";
       }
-      if (!form.schoolYear) errors.schoolYear = "学年を選択してください";
+      if (form.memberType !== "卒業生" && !form.schoolYear)
+        errors.schoolYear = "学年を選択してください";
     }
     if (!form.faculty) errors.faculty = "学部/学府を選択してください";
     if (!form.admissionYear)
@@ -930,13 +936,25 @@ export default function OnboardingForm() {
         } catch {
           /* ignore */
         }
+        await updateSession();
         router.push("/internal/onboarding/complete");
       } else {
         const data = await res.json();
-        alert(data.error ?? "登録に失敗しました。もう一度お試しください。");
+        if (data.missing) {
+          console.error("Missing required fields:", data.missing);
+        }
+        toast({
+          variant: "destructive",
+          title: "登録に失敗しました",
+          description: data.error ?? "もう一度お試しください。",
+        });
       }
     } catch {
-      alert("エラーが発生しました。もう一度お試しください。");
+      toast({
+        variant: "destructive",
+        title: "エラーが発生しました",
+        description: "もう一度お試しください。",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -949,32 +967,14 @@ export default function OnboardingForm() {
   const isFinalStep = (step: number) => step === maxStep;
 
   // 進捗 % 計算
-  // Step 5 完了とみなす（Step 6 に遷移済み = currentStep >= 6）
-  const step5Done = currentStep >= 6;
-
-  const progressPercent = Math.min(
-    100,
-    (() => {
-      let score = 0;
-      if (form.lastName) score += FIELD_WEIGHTS.lastName ?? 0;
-      if (form.firstName) score += FIELD_WEIGHTS.firstName ?? 0;
-      if (form.studentId) score += FIELD_WEIGHTS.studentId ?? 0;
-      if (form.birthDate) score += FIELD_WEIGHTS.birthDate ?? 0;
-      if (form.memberType) score += FIELD_WEIGHTS.memberType ?? 0;
-      if (form.faculty) score += FIELD_WEIGHTS.faculty ?? 0;
-      if (form.admissionYear) score += FIELD_WEIGHTS.admissionYear ?? 0;
-      if (form.enrollmentType) score += FIELD_WEIGHTS.enrollmentType ?? 0;
-      if (form.nickname) score += FIELD_WEIGHTS.nickname ?? 0;
-      if (form.interests.length > 0) score += FIELD_WEIGHTS.interests ?? 0;
-      if (form.bio) score += FIELD_WEIGHTS.bio ?? 0;
-      if (lineLinked) score += FIELD_WEIGHTS.line ?? 0;
-      if (githubLinked) score += FIELD_WEIGHTS.github ?? 0;
-      if (xLinked) score += FIELD_WEIGHTS.x ?? 0;
-      if (step5Done) score += FIELD_WEIGHTS.visibility ?? 0;
-      if (faceImageUrl) score += FIELD_WEIGHTS.faceImage ?? 0;
-      return score;
-    })(),
-  );
+  const progressPercent = calcProgress({
+    form,
+    currentStep,
+    lineLinked,
+    githubLinked,
+    xLinked,
+    faceImageUrl,
+  });
 
   const dismissWelcome = useCallback(() => {
     setWelcomeFading(true);

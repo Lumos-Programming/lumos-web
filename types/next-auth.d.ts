@@ -7,11 +7,13 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      faceImage?: string | null;
       isAdmin: boolean;
     };
   }
 
   interface JWT {
     isAdmin?: boolean;
+    faceImage?: string | null;
   }
 }

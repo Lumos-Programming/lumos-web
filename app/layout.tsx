@@ -4,9 +4,8 @@ import Script from "next/script";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/header";
-import HeaderAuth from "@/components/header-auth";
 import Footer from "@/components/footer";
-import { ThemeProvider } from "@/components/theme-provider";
+import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toaster";
 import { DevWarning } from "@/components/dev-warning";
 
@@ -82,18 +81,13 @@ export default function RootLayout({
       <body
         className={`${notoSansJP.variable} font-sans min-h-screen flex flex-col`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Header authSlot={<HeaderAuth />} />
+        <Providers>
+          <Header />
           <main className="flex-grow">{children}</main>
           <Footer />
           <Toaster />
           <DevWarning />
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

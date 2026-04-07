@@ -18,16 +18,16 @@ export async function POST() {
   }
 
   const hasFaculty = member.enrollments?.some((e) => e.isCurrent && e.faculty);
-  if (
-    !member.studentId ||
-    !member.lastName ||
-    !member.firstName ||
-    !member.lastNameRomaji ||
-    !member.firstNameRomaji ||
-    !hasFaculty
-  ) {
+  const missing: string[] = [];
+  if (!member.studentId) missing.push("studentId");
+  if (!member.lastName) missing.push("lastName");
+  if (!member.firstName) missing.push("firstName");
+  if (!member.lastNameRomaji) missing.push("lastNameRomaji");
+  if (!member.firstNameRomaji) missing.push("firstNameRomaji");
+  if (!hasFaculty) missing.push("faculty");
+  if (missing.length > 0) {
     return NextResponse.json(
-      { error: "Missing required fields" },
+      { error: "Missing required fields", missing },
       { status: 400 },
     );
   }
