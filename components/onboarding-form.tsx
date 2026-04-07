@@ -966,8 +966,11 @@ export default function OnboardingForm() {
       let score = 0;
       if (form.lastName) score += FIELD_WEIGHTS.lastName ?? 0;
       if (form.firstName) score += FIELD_WEIGHTS.firstName ?? 0;
+      if (form.lastNameRomaji) score += FIELD_WEIGHTS.lastNameRomaji ?? 0;
+      if (form.firstNameRomaji) score += FIELD_WEIGHTS.firstNameRomaji ?? 0;
       if (form.studentId) score += FIELD_WEIGHTS.studentId ?? 0;
       if (form.birthDate) score += FIELD_WEIGHTS.birthDate ?? 0;
+      if (form.gender) score += FIELD_WEIGHTS.gender ?? 0;
       if (form.memberType) score += FIELD_WEIGHTS.memberType ?? 0;
       if (form.faculty) score += FIELD_WEIGHTS.faculty ?? 0;
       if (form.admissionYear) score += FIELD_WEIGHTS.admissionYear ?? 0;

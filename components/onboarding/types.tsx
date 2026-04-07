@@ -159,8 +159,11 @@ export const FIELD_WEIGHTS: Partial<
 > = {
   lastName: 8,
   firstName: 8,
+  lastNameRomaji: 4,
+  firstNameRomaji: 4,
   studentId: 8,
   birthDate: 4,
+  gender: 4,
   memberType: 8,
   faculty: 8,
   admissionYear: 4,
