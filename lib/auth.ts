@@ -69,7 +69,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             buildWelcomeMessage(dmUsername),
           ).catch((e) => console.error("Failed to send welcome DM:", e));
         } else {
-          const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000 * 0.000001;
+          const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
           const isReturning =
             lastLoginAt && Date.now() - lastLoginAt.getTime() >= SEVEN_DAYS_MS;
 
