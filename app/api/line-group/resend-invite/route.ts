@@ -1,40 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { getMember } from "@/lib/members";
-import {
-  checkLineGroupMembership,
-  createLineInvitation,
-  sendLineGroupInviteDM,
-} from "@/lib/line-invite";
 
 export async function POST() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const member = await getMember(session.user.id);
-  if (!member?.lineId) {
-    return NextResponse.json(
-      { error: "LINE account not linked" },
-      { status: 400 },
-    );
-  }
-
-  const inGroup = await checkLineGroupMembership(member.lineId);
-  if (inGroup) {
-    return NextResponse.json(
-      { error: "Already a group member" },
-      { status: 400 },
-    );
-  }
-
-  // 新しい招待コードを発行（既存の未使用コードはcreateLineInvitation内で無効化される）
-  const { redirectUrl } = await createLineInvitation(
-    session.user.id,
-    member.lineId,
+  // 招待リンク再送はpush APIのメッセージ枠を消費するため無効化。
+  // ユーザーはBot友だち追加 or DMで招待を受け取れる。
+  return NextResponse.json(
+    {
+      error:
+        "招待リンクの再送信は無効化されました。LINEの公式アカウントを友だち追加するか、Botにメッセージを送信してください。",
+    },
+    { status: 410 },
   );
-  await sendLineGroupInviteDM(member.lineId, redirectUrl);
-
-  return NextResponse.json({ ok: true });
 }

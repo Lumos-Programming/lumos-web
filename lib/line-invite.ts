@@ -27,6 +27,26 @@ interface PendingData {
   pendingLineTokenExpiresAt?: number;
 }
 
+export interface MemberByLineId {
+  discordId: string;
+  lineId: string;
+}
+
+/**
+ * ユーザーアクセストークンでBot友だち状態を確認
+ * friendFlag: true = 友だち追加済み＆未ブロック
+ */
+export async function checkLineBotFriendship(
+  userAccessToken: string,
+): Promise<boolean> {
+  const res = await fetch("https://api.line.me/friendship/v1/status", {
+    headers: { Authorization: `Bearer ${userAccessToken}` },
+  });
+  if (!res.ok) return false;
+  const data = (await res.json()) as { friendFlag: boolean };
+  return data.friendFlag;
+}
+
 const INVITATION_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
 export async function checkLineGroupMembership(
@@ -127,6 +147,49 @@ export async function findPendingInvitationByLineId(
   if (snap.empty) return null;
   const doc = snap.docs[0];
   return { code: doc.id, invitation: doc.data() as LineInvitation };
+}
+
+export async function findMemberByLineId(
+  lineId: string,
+): Promise<MemberByLineId | null> {
+  const db = getDb();
+  const snap = await db
+    .collection("members")
+    .where("lineId", "==", lineId)
+    .limit(1)
+    .get();
+  if (snap.empty) return null;
+  const doc = snap.docs[0];
+  return { discordId: doc.id, lineId };
+}
+
+/**
+ * reply APIでメッセージを送信（送信数にカウントされない）
+ */
+export async function sendLineReply(
+  replyToken: string,
+  messages: LineFlexMessage[],
+): Promise<void> {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) {
+    throw new Error("LINE_CHANNEL_ACCESS_TOKEN is not configured");
+  }
+
+  const res = await fetch("https://api.line.me/v2/bot/message/reply", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ replyToken, messages }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `LINE reply送信に失敗しました: ${res.status} ${res.statusText} - ${body}`,
+    );
+  }
 }
 
 export async function sendLineGroupInviteDM(

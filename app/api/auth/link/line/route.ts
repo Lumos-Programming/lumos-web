@@ -59,6 +59,7 @@ export async function GET(request: Request) {
   url.searchParams.set("redirect_uri", callbackUrl);
   url.searchParams.set("scope", config.scope);
   url.searchParams.set("state", state);
+  url.searchParams.set("bot_prompt", "aggressive");
 
   return NextResponse.redirect(url.toString());
 }
