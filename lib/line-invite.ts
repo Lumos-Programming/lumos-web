@@ -61,13 +61,28 @@ export async function createLineInvitation(
   pendingData?: PendingData,
 ): Promise<{ code: string; redirectUrl: string }> {
   const db = getDb();
+
+  // 同じユーザーの既存の未使用招待を無効化
+  const existing = await db
+    .collection("line_invitations")
+    .where("userId", "==", userId)
+    .where("used", "==", false)
+    .get();
+  const batch = db.batch();
+  for (const doc of existing.docs) {
+    batch.update(doc.ref, { used: true });
+  }
+  if (!existing.empty) {
+    await batch.commit();
+  }
+
   const code = crypto.randomUUID();
   const now = Timestamp.now();
   const expiresAt = Timestamp.fromMillis(
     now.toMillis() + INVITATION_TTL_SECONDS * 1000,
   );
 
-  const doc: LineInvitation = {
+  const invitation: LineInvitation = {
     userId,
     lineId,
     createdAt: now,
@@ -76,7 +91,7 @@ export async function createLineInvitation(
     ...pendingData,
   };
 
-  await db.collection("line_invitations").doc(code).set(doc);
+  await db.collection("line_invitations").doc(code).set(invitation);
 
   const origin = process.env.AUTH_URL ?? "http://localhost:3000";
   const redirectUrl = `${origin}/api/line-invite/${code}`;
@@ -150,47 +165,73 @@ export function buildGroupInviteFlexMessage(
 ): LineFlexMessage {
   const supportUrl = process.env.LINE_INVITE_SUPPORT_URL;
 
-  const footerContents: Record<string, unknown>[] = [
+  const calloutContents: Record<string, unknown>[] = [
     {
       type: "text",
-      text: "年齢確認が未完了の場合、グループに参加できないことがあります。",
+      text: "LINEアカウントの年齢確認をしていない場合、上記ボタンが機能しません。その場合や上手く機能しない場合、担当者に直接ご連絡ください。",
       size: "xxs",
-      color: "#999999",
+      color: "#7A6100",
       wrap: true,
     },
   ];
 
+  calloutContents.push({
+    type: "text",
+    text: "LINE 年齢認証について →",
+    size: "xs",
+    color: "#6778df",
+    margin: "sm",
+    action: {
+      type: "uri",
+      label: "LINEアカウントの年齢認証について",
+      uri: "https://help.line.me/line/?contentId=20000400&lang=ja",
+    },
+  });
+
   if (supportUrl) {
-    footerContents.push({
-      type: "box",
-      layout: "vertical",
-      justifyContent: "center",
-      cornerRadius: "md",
-      margin: "sm",
-      borderColor: "#999999",
-      borderWidth: "1px",
-      contents: [
-        {
-          type: "button",
-          style: "link",
-          color: "#999999",
-          height: "sm",
-          action: {
-            type: "uri",
-            label: "サポート担当者に連絡",
-            uri: supportUrl,
-          },
-        },
-      ],
+    calloutContents.push({
+      type: "text",
+      text: "担当者を友だち追加して連絡する →",
+      size: "xs",
+      color: "#6778df",
+      margin: "lg",
+      action: {
+        type: "uri",
+        label: "友だち追加して連絡する",
+        uri: supportUrl,
+      },
     });
   }
+
+  const footerContents: Record<string, unknown>[] = [
+    {
+      type: "box",
+      layout: "horizontal",
+      paddingAll: "12px",
+      cornerRadius: "lg",
+      backgroundColor: "#FFF8E1",
+      spacing: "sm",
+      contents: [
+        {
+          type: "text",
+          text: "⚠",
+          size: "sm",
+          flex: 0,
+        },
+        {
+          type: "box",
+          layout: "vertical",
+          contents: calloutContents,
+        },
+      ],
+    },
+  ];
 
   const bubble: LineFlexBubble = {
     type: "bubble",
     header: {
       type: "box",
       layout: "vertical",
-      paddingAll: "20px",
       contents: [
         {
           type: "text",
@@ -212,20 +253,21 @@ export function buildGroupInviteFlexMessage(
     body: {
       type: "box",
       layout: "vertical",
-      spacing: "md",
-      paddingAll: "20px",
+      spacing: "sm",
       contents: [
         {
           type: "text",
-          text: "Lumosへようこそ！\nグループに参加して、メンバーと交流しましょう。",
-          size: "sm",
+          text: "Lumosへようこそ✨",
+          size: "lg",
+          align: "center",
           color: "#1f2937",
           wrap: true,
         },
         {
           type: "text",
-          text: "下のボタンからLINEグループに参加できます。",
+          text: "下のボタンから\nLINEグループに参加しましょう!",
           size: "sm",
+          align: "center",
           color: "#535353",
           wrap: true,
         },
