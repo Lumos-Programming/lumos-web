@@ -404,6 +404,7 @@ export default function ProfileEdit() {
   const [bannerCroppedArea, setBannerCroppedArea] = useState<Area | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerFileInputRef = useRef<HTMLInputElement>(null);
+  const composingRef = useRef(false);
   const [initialSnapshot, setInitialSnapshot] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -1477,10 +1478,22 @@ export default function ProfileEdit() {
                 </Label>
                 <Input
                   value={profile.studentId}
+                  onCompositionStart={() => {
+                    composingRef.current = true;
+                  }}
+                  onCompositionEnd={(e) => {
+                    composingRef.current = false;
+                    setProfile({
+                      ...profile,
+                      studentId: e.currentTarget.value.toUpperCase(),
+                    });
+                  }}
                   onChange={(e) =>
                     setProfile({
                       ...profile,
-                      studentId: e.target.value.toUpperCase(),
+                      studentId: composingRef.current
+                        ? e.target.value
+                        : e.target.value.toUpperCase(),
                     })
                   }
                   placeholder="2164078 / 24HJ078"
@@ -1843,11 +1856,29 @@ export default function ProfileEdit() {
                   ) : key === "lastNameRomaji" || key === "firstNameRomaji" ? (
                     <Input
                       value={(profile[key] as string) ?? ""}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+                      onCompositionStart={() => {
+                        composingRef.current = true;
+                      }}
+                      onCompositionEnd={(e) => {
+                        composingRef.current = false;
+                        const v = e.currentTarget.value.replace(
+                          /[^A-Za-z\s-]/g,
+                          "",
+                        );
                         const capitalized =
                           v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
                         setProfile({ ...profile, [key]: capitalized });
+                      }}
+                      onChange={(e) => {
+                        if (composingRef.current) {
+                          setProfile({ ...profile, [key]: e.target.value });
+                        } else {
+                          const v = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+                          const capitalized =
+                            v.charAt(0).toUpperCase() +
+                            v.slice(1).toLowerCase();
+                          setProfile({ ...profile, [key]: capitalized });
+                        }
                       }}
                       placeholder={key === "lastNameRomaji" ? "Yamada" : "Taro"}
                     />
