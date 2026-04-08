@@ -1,9 +1,14 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { updateMemberSns } from "@/lib/members";
+import {
+  getMember,
+  isOnboardingComplete,
+  updateMemberSns,
+} from "@/lib/members";
 import {
   findPendingInvitationByLineId,
   markInvitationUsed,
+  sendLineGroupJoinedDM,
 } from "@/lib/line-invite";
 
 function verifySignature(
@@ -92,6 +97,22 @@ export async function POST(request: NextRequest) {
         }
 
         await markInvitationUsed(code);
+
+        // グループ参加完了DMを送信
+        try {
+          const memberDoc = await getMember(invitation.userId);
+          const isOnboarding = memberDoc && !isOnboardingComplete(memberDoc);
+          const onboardingUrl = isOnboarding
+            ? `${process.env.AUTH_URL ?? "http://localhost:3000"}/internal/onboarding`
+            : undefined;
+
+          await sendLineGroupJoinedDM(member.userId, onboardingUrl);
+        } catch (dmError) {
+          console.error(
+            `Failed to send group joined DM to ${member.userId}:`,
+            dmError,
+          );
+        }
       } catch (e) {
         console.error(`Error processing memberJoined for ${member.userId}:`, e);
       }

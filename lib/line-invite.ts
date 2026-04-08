@@ -312,3 +312,134 @@ export function buildGroupInviteFlexMessage(
     contents: bubble,
   };
 }
+
+export async function sendLineGroupJoinedDM(
+  lineUserId: string,
+  onboardingUrl?: string,
+): Promise<void> {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) {
+    throw new Error("LINE_CHANNEL_ACCESS_TOKEN is not configured");
+  }
+
+  const message = buildGroupJoinedFlexMessage(onboardingUrl);
+
+  const res = await fetch("https://api.line.me/v2/bot/message/push", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      to: lineUserId,
+      messages: [message],
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `LINE DM送信に失敗しました: ${res.status} ${res.statusText} - ${body}`,
+    );
+  }
+}
+
+export function buildGroupJoinedFlexMessage(
+  onboardingUrl?: string,
+): LineFlexMessage {
+  const bodyContents: Record<string, unknown>[] = [
+    {
+      type: "text",
+      text: "参加が完了しました🎉",
+      size: "lg",
+      align: "center",
+      color: "#1f2937",
+      weight: "bold",
+      wrap: true,
+    },
+    {
+      type: "text",
+      text: "LINEグループへの参加ありがとうございます！",
+      size: "sm",
+      align: "center",
+      color: "#535353",
+      wrap: true,
+    },
+  ];
+
+  if (onboardingUrl) {
+    bodyContents.push(
+      {
+        type: "text",
+        text: "引き続き、オンボーディングを\n完了させましょう！",
+        size: "sm",
+        align: "center",
+        color: "#535353",
+        margin: "lg",
+        wrap: true,
+      },
+      {
+        type: "box",
+        layout: "vertical",
+        justifyContent: "center",
+        cornerRadius: "md",
+        margin: "lg",
+        background: {
+          type: "linearGradient",
+          angle: "135deg",
+          startColor: "#06C755",
+          endColor: "#05a848",
+        },
+        contents: [
+          {
+            type: "button",
+            style: "link",
+            color: "#ffffff",
+            action: {
+              type: "uri",
+              label: "オンボーディングを続ける",
+              uri: onboardingUrl,
+            },
+          },
+        ],
+      },
+    );
+  }
+
+  const bubble: LineFlexBubble = {
+    type: "bubble",
+    header: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "text",
+          text: "Lumosグループへようこそ",
+          weight: "bold",
+          size: "xl",
+          color: "#ffffff",
+          align: "center",
+          wrap: true,
+        },
+      ],
+      background: {
+        type: "linearGradient",
+        angle: "135deg",
+        startColor: "#6778df",
+        endColor: "#7354ae",
+      },
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      spacing: "sm",
+      contents: bodyContents,
+    },
+  };
+
+  return {
+    type: "flex",
+    altText: "Lumosグループへようこそ",
+    contents: bubble,
+  };
+}
