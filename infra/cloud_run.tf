@@ -106,6 +106,33 @@ resource "google_cloud_run_service" "web" {
             }
           }
         }
+        env {
+          name = "LINE_GROUP_INVITE_URL"
+          value_from {
+            secret_key_ref {
+              name = google_secret_manager_secret.per_env["line-group-url-${each.key}"].secret_id
+              key  = "latest"
+            }
+          }
+        }
+        env {
+          name = "LINE_INVITE_SUPPORT_URL"
+          value_from {
+            secret_key_ref {
+              name = google_secret_manager_secret.per_env["line-support-friend-url-${each.key}"].secret_id
+              key  = "latest"
+            }
+          }
+        }
+        env {
+          name = "LINE_WEBHOOK_SECRET"
+          value_from {
+            secret_key_ref {
+              name = google_secret_manager_secret.per_env["line-webhook-secret-${each.key}"].secret_id
+              key  = "latest"
+            }
+          }
+        }
       }
     }
   }
