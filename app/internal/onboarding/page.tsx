@@ -20,5 +20,5 @@ export default async function OnboardingPage({
     redirect("/internal");
   }
 
-  return <OnboardingForm />;
+  return <OnboardingForm lineBotFriendUrl={process.env.LINE_BOT_FRIEND_URL} />;
 }

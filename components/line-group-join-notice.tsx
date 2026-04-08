@@ -4,12 +4,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 interface LineGroupJoinNoticeProps {
+  lineBotFriendUrl?: string;
   onGroupJoined: () => void;
 }
 
-const LINE_BOT_FRIEND_URL = process.env.NEXT_PUBLIC_LINE_BOT_FRIEND_URL;
-
 export function LineGroupJoinNotice({
+  lineBotFriendUrl,
   onGroupJoined,
 }: LineGroupJoinNoticeProps) {
   const [checking, setChecking] = useState(false);
@@ -49,7 +49,7 @@ export function LineGroupJoinNotice({
           まずLumos公式アカウントを友だち追加してください。追加後、招待リンクが届きます。
         </p>
         <a
-          href={LINE_BOT_FRIEND_URL}
+          href={lineBotFriendUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs bg-[#06C755] hover:bg-[#05a848] text-white font-medium px-3 py-1.5 rounded-lg transition-colors"

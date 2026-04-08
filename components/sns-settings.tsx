@@ -17,6 +17,7 @@ interface Props {
   lineLinkedAt?: number;
   linkedin: string;
   lineGroupPending?: boolean;
+  lineBotFriendUrl?: string;
   successMessage?: string;
   errorMessage?: string;
 }
@@ -379,6 +380,7 @@ export default function SnsSettings({
   lineLinkedAt,
   linkedin: initialLinkedin,
   lineGroupPending: initialLineGroupPending,
+  lineBotFriendUrl,
   successMessage,
   errorMessage,
 }: Props) {
@@ -519,6 +521,7 @@ export default function SnsSettings({
         {!!lineId && lineGroupCheckPending && !lineGroupJoined && (
           <div className="px-4">
             <LineGroupJoinNotice
+              lineBotFriendUrl={lineBotFriendUrl}
               onGroupJoined={() => {
                 setLineGroupJoined(true);
                 setLineGroupCheckPending(false);

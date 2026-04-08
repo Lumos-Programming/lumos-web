@@ -44,7 +44,11 @@ import {
   PreviewIslandStep5,
 } from "./onboarding/preview-islands";
 
-export default function OnboardingForm() {
+export default function OnboardingForm({
+  lineBotFriendUrl,
+}: {
+  lineBotFriendUrl?: string;
+}) {
   const { update: updateSession } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -98,7 +102,7 @@ export default function OnboardingForm() {
   >({});
   const [lineGroupJoined, setLineGroupJoined] = useState(false);
   const [lineGroupCheckPending, setLineGroupCheckPending] = useState(false);
-  const [lineNotFriend, setLineNotFriend] = useState(false);
+
   const [step3Error, setStep3Error] = useState("");
   const [linkedinError, setLinkedinError] = useState("");
   const [slideAnimating, setSlideAnimating] = useState(false);
@@ -290,9 +294,6 @@ export default function OnboardingForm() {
     if (success === "line_linked") {
       setLineLinked(true);
       const lineGroup = searchParams.get("line_group");
-      if (searchParams.get("not_friend") === "1") {
-        setLineNotFriend(true);
-      }
       if (lineGroup === "not_joined") {
         setLineGroupCheckPending(true);
       } else {
@@ -1079,7 +1080,7 @@ export default function OnboardingForm() {
                 lineAvatar={lineAvatar}
                 lineGroupJoined={lineGroupJoined}
                 lineGroupCheckPending={lineGroupCheckPending}
-                showAddFriend={lineNotFriend}
+                lineBotFriendUrl={lineBotFriendUrl}
                 onLineGroupJoined={() => {
                   setLineGroupJoined(true);
                   setLineGroupCheckPending(false);
