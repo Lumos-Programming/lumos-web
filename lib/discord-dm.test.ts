@@ -122,7 +122,7 @@ describe("buildWelcomeMessage", () => {
     const button = payload.components![0].components[0];
     expect(button.type).toBe(2);
     expect(button.style).toBe(5);
-    expect(button.label).toBe("オンボーディングを始める");
+    expect(button.label).toBe("オンボーディングへLet's Go!");
     expect(button.url).toContain("/onboarding");
   });
 });

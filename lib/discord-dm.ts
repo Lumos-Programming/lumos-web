@@ -43,7 +43,7 @@ type DiscordMessagePayload = {
 
 // --- Constants ---
 
-const LOGO_URL = "https://lumos-ynu.jp/assets/Lumoslogo.png";
+const LOGO_URL = "https://lumos-ynu.jp/assets/lumos_logo-full.png";
 const FOOTER_TEXT = "Lumos | 横浜国立大学プログラミングサークル";
 const WELCOME_COLOR = 0xfee75c; // Discord Yellow — 明るくフレンドリーな印象
 const SUCCESS_COLOR = 0x57f287; // Discord Green — 達成感
@@ -127,15 +127,14 @@ export function buildWelcomeMessage(username: string): DiscordMessagePayload {
       {
         title: "✨ Lumosへようこそ！",
         description: [
-          `${username} さん、Lumosの世界へようこそ！🪄`,
+          `${username} さん、Lumosポータルサイトへようこそ！🪄`,
           "",
           "**Lumos Webでできること：**",
-          "🧑‍💻 メンバーのプロフィールを見る・つながる",
-          "📅 ミニLTなどのイベントを確認・参加",
-          "🔗 GitHub・X・LINEなどのSNSアカウント連携",
+          "👥 Lumosのメンバーについて知る",
+          "🎨 自分だけのプロフィールを作る",
+          "📅 ミニLTなどの各種イベントに参加登録する",
           "",
-          "まずはオンボーディングでプロフィールを設定して、",
-          "あなたのことをみんなに知ってもらいましょう💡",
+          "まずは**オンボーディング**を完了させてみましょう💪",
         ].join("\n"),
         color: WELCOME_COLOR,
         thumbnail: { url: LOGO_URL },
@@ -149,7 +148,7 @@ export function buildWelcomeMessage(username: string): DiscordMessagePayload {
           {
             type: 2,
             style: 5,
-            label: "オンボーディングを始める",
+            label: "オンボーディングへLet's Go!",
             url: `${getBaseUrl()}/onboarding`,
             emoji: { name: "📋" },
           },
@@ -197,8 +196,8 @@ export function buildOnboardingCompleteMessage(
       {
         title: "🎉 オンボーディング完了！",
         description: [
-          `${username} さん、おめでとうございます！オンボーディングが完了しました🥳`,
-          "これでLumosメンバーの仲間入りです！",
+          `**${username}** さん、オンボーディングが完了しました🥳`,
+          "おめでとうございます！これで**Lumosの仲間入り**です！",
         ].join("\n"),
         color: SUCCESS_COLOR,
         fields,
