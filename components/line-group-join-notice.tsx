@@ -4,14 +4,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 interface LineGroupJoinNoticeProps {
-  showAddFriend?: boolean;
   onGroupJoined: () => void;
 }
 
 const LINE_BOT_FRIEND_URL = process.env.NEXT_PUBLIC_LINE_BOT_FRIEND_URL;
 
 export function LineGroupJoinNotice({
-  showAddFriend,
   onGroupJoined,
 }: LineGroupJoinNoticeProps) {
   const [checking, setChecking] = useState(false);
@@ -46,25 +44,19 @@ export function LineGroupJoinNotice({
       <p className="text-sm text-amber-800 dark:text-amber-300 font-medium mb-1">
         LINEグループへの参加が必要です
       </p>
-      {showAddFriend && LINE_BOT_FRIEND_URL ? (
-        <div className="mb-3">
-          <p className="text-xs text-amber-700 dark:text-amber-400 mb-2">
-            まずLumos公式アカウントを友だち追加してください。追加後、招待リンクが届きます。
-          </p>
-          <a
-            href={LINE_BOT_FRIEND_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs bg-[#06C755] hover:bg-[#05a848] text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
-          >
-            公式アカウントを友だち追加
-          </a>
-        </div>
-      ) : (
-        <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">
-          Lumos公式アカウントにメッセージを送信すると、グループ招待リンクが届きます。
+      <div className="mb-3">
+        <p className="text-xs text-amber-700 dark:text-amber-400 mb-2">
+          まずLumos公式アカウントを友だち追加してください。追加後、招待リンクが届きます。
         </p>
-      )}
+        <a
+          href={LINE_BOT_FRIEND_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs bg-[#06C755] hover:bg-[#05a848] text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
+        >
+          公式アカウントを友だち追加
+        </a>
+      </div>
       <div className="flex items-center gap-2">
         <Button
           variant="outline"

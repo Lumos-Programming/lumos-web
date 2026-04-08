@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
     } else {
       isFriend = await checkLineBotFriendship(tokenResponse.access_token);
     }
+    console.log("LINE friendship status:", isFriend ? "friend" : "not friend");
 
     const isOnboarding = redirectTo.includes("/internal/onboarding");
     const isSettings = redirectTo.includes("/internal/settings");
