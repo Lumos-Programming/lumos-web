@@ -108,9 +108,9 @@ describe("buildWelcomeMessage", () => {
     const payload = buildWelcomeMessage("テストユーザー");
 
     expect(payload.embeds).toHaveLength(1);
-    expect(payload.embeds[0].title).toBe("Lumos Webへようこそ！");
+    expect(payload.embeds[0].title).toContain("Lumosへようこそ");
     expect(payload.embeds[0].description).toContain("テストユーザー");
-    expect(payload.embeds[0].color).toBe(0x293c59);
+    expect(payload.embeds[0].color).toBe(0xfee75c);
     expect(payload.embeds[0].thumbnail?.url).toBeTruthy();
     expect(payload.embeds[0].footer?.text).toContain("Lumos");
   });
@@ -123,7 +123,7 @@ describe("buildWelcomeMessage", () => {
     expect(button.type).toBe(2);
     expect(button.style).toBe(5);
     expect(button.label).toBe("オンボーディングを始める");
-    expect(button.url).toContain("/internal/onboarding");
+    expect(button.url).toContain("/onboarding");
   });
 });
 

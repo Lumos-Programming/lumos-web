@@ -45,8 +45,8 @@ type DiscordMessagePayload = {
 
 const LOGO_URL = "https://lumos-ynu.jp/assets/Lumoslogo.png";
 const FOOTER_TEXT = "Lumos | 横浜国立大学プログラミングサークル";
-const BRAND_COLOR = 0x293c59;
-const SUCCESS_COLOR = 0x57f287;
+const WELCOME_COLOR = 0xfee75c; // Discord Yellow — 明るくフレンドリーな印象
+const SUCCESS_COLOR = 0x57f287; // Discord Green — 達成感
 
 function getBaseUrl(): string {
   return process.env.AUTH_URL ?? "http://localhost:3000";
@@ -125,9 +125,19 @@ export function buildWelcomeMessage(username: string): DiscordMessagePayload {
   return {
     embeds: [
       {
-        title: "Lumos Webへようこそ！",
-        description: `${username} さん、アカウント登録ありがとうございます！\n早速プロフィールを入力して、オンボーディングを完了させましょう！`,
-        color: BRAND_COLOR,
+        title: "✨ Lumosへようこそ！",
+        description: [
+          `${username} さん、Lumosの世界へようこそ！🪄`,
+          "",
+          "**Lumos Webでできること：**",
+          "🧑‍💻 メンバーのプロフィールを見る・つながる",
+          "📅 ミニLTなどのイベントを確認・参加",
+          "🔗 GitHub・X・LINEなどのSNSアカウント連携",
+          "",
+          "まずはオンボーディングでプロフィールを設定して、",
+          "あなたのことをみんなに知ってもらいましょう💡",
+        ].join("\n"),
+        color: WELCOME_COLOR,
         thumbnail: { url: LOGO_URL },
         footer: { text: FOOTER_TEXT },
       },
@@ -140,7 +150,7 @@ export function buildWelcomeMessage(username: string): DiscordMessagePayload {
             type: 2,
             style: 5,
             label: "オンボーディングを始める",
-            url: `${getBaseUrl()}/internal/onboarding`,
+            url: `${getBaseUrl()}/onboarding`,
             emoji: { name: "📋" },
           },
         ],
@@ -158,10 +168,20 @@ export function buildOnboardingCompleteMessage(
     missingFields: string[];
   },
 ): DiscordMessagePayload {
+  const pct = completion.percentage;
+  const completionComment =
+    pct === 100
+      ? "パーフェクト！✨ もう何も言うことはありません！"
+      : pct >= 80
+        ? "あとちょっと…！完璧まであと一歩です💪"
+        : pct >= 50
+          ? "いい感じ！もう少し埋めるとプロフィールが輝きます🌟"
+          : "まだまだ伸びしろたっぷり！気が向いたら埋めてみてね📝";
+
   const fields: DiscordEmbedField[] = [
     {
       name: "📊 プロフィール充足率",
-      value: `${completion.percentage}% (${completion.filledCount}/${completion.totalCount}項目)`,
+      value: `**${pct}%** (${completion.filledCount}/${completion.totalCount}項目)\n${completionComment}`,
     },
   ];
 
@@ -176,7 +196,10 @@ export function buildOnboardingCompleteMessage(
     embeds: [
       {
         title: "🎉 オンボーディング完了！",
-        description: `おめでとうございます！\nオンボーディングが完了しました。`,
+        description: [
+          `${username} さん、おめでとうございます！オンボーディングが完了しました🥳`,
+          "これでLumosメンバーの仲間入りです！",
+        ].join("\n"),
         color: SUCCESS_COLOR,
         fields,
         thumbnail: { url: LOGO_URL },
