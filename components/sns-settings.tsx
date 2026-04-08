@@ -410,6 +410,8 @@ export default function SnsSettings({
           if (d.isMember) {
             setLineGroupJoined(true);
             setLineGroupCheckPending(false);
+          } else {
+            setLineGroupCheckPending(true);
           }
         })
         .catch(() => {});

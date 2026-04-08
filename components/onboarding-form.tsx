@@ -263,6 +263,7 @@ export default function OnboardingForm() {
               .then((r) => r.json())
               .then((d) => {
                 if (d.isMember) setLineGroupJoined(true);
+                else setLineGroupCheckPending(true);
               })
               .catch(() => {});
           }
