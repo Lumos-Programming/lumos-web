@@ -48,45 +48,9 @@ export async function GET(request: NextRequest) {
 
     if (isSettings) {
       // 再連携フロー: DB更新せず、招待コードに仮情報を保存
-      let lineGroupStatus = "joined";
-      try {
-        const inGroup = await checkLineGroupMembership(user.id);
-        if (inGroup) {
-          // 新アカウントが既にグループ参加済み → 即座にDB更新
-          await updateMemberSns(discordId, {
-            line: user.username,
-            lineId: user.id,
-            lineAvatar: user.avatar,
-            lineLinkedAt: Math.floor(Date.now() / 1000),
-            lineAccessToken: tokenResponse.access_token,
-            lineRefreshToken: tokenResponse.refresh_token,
-            lineTokenExpiresAt: tokenResponse.expires_in
-              ? Math.floor(Date.now() / 1000) + tokenResponse.expires_in
-              : undefined,
-          });
-          lineGroupStatus = "joined";
-        } else {
-          // 未参加 → 仮情報付き招待コード発行 + DM送信
-          const { redirectUrl } = await createLineInvitation(
-            discordId,
-            user.id,
-            {
-              pendingLine: user.username,
-              pendingLineId: user.id,
-              pendingLineAvatar: user.avatar,
-              pendingLineAccessToken: tokenResponse.access_token,
-              pendingLineRefreshToken: tokenResponse.refresh_token,
-              pendingLineTokenExpiresAt: tokenResponse.expires_in
-                ? Math.floor(Date.now() / 1000) + tokenResponse.expires_in
-                : undefined,
-            },
-          );
-          await sendLineGroupInviteDM(user.id, redirectUrl);
-          lineGroupStatus = "not_joined";
-        }
-      } catch (e) {
-        console.error("LINE group check/invite error (settings):", e);
-        // グループチェック失敗時は通常のDB更新にフォールバック
+      const inGroup = await checkLineGroupMembership(user.id);
+      if (inGroup) {
+        // 新アカウントが既にグループ参加済み → 即座にDB更新
         await updateMemberSns(discordId, {
           line: user.username,
           lineId: user.id,
@@ -98,17 +62,28 @@ export async function GET(request: NextRequest) {
             ? Math.floor(Date.now() / 1000) + tokenResponse.expires_in
             : undefined,
         });
-        lineGroupStatus = "joined";
+
+        const successUrl = new URL(redirectTo, origin);
+        successUrl.searchParams.set("success", "line_relinked");
+        return NextResponse.redirect(successUrl.toString());
       }
 
+      // 未参加 → 仮情報付き招待コード発行 + DM送信
+      const { redirectUrl } = await createLineInvitation(discordId, user.id, {
+        pendingLine: user.username,
+        pendingLineId: user.id,
+        pendingLineAvatar: user.avatar,
+        pendingLineAccessToken: tokenResponse.access_token,
+        pendingLineRefreshToken: tokenResponse.refresh_token,
+        pendingLineTokenExpiresAt: tokenResponse.expires_in
+          ? Math.floor(Date.now() / 1000) + tokenResponse.expires_in
+          : undefined,
+      });
+      await sendLineGroupInviteDM(user.id, redirectUrl);
+
       const successUrl = new URL(redirectTo, origin);
-      successUrl.searchParams.set(
-        "success",
-        lineGroupStatus === "joined" ? "line_relinked" : "line_linked",
-      );
-      if (lineGroupStatus === "not_joined") {
-        successUrl.searchParams.set("line_group", "not_joined");
-      }
+      successUrl.searchParams.set("success", "line_linked");
+      successUrl.searchParams.set("line_group", "not_joined");
       return NextResponse.redirect(successUrl.toString());
     }
 
@@ -129,20 +104,12 @@ export async function GET(request: NextRequest) {
     successUrl.searchParams.set("success", "line_linked");
 
     if (isOnboarding) {
-      try {
-        const inGroup = await checkLineGroupMembership(user.id);
-        if (!inGroup) {
-          // グループ未参加 → 招待コード発行 + DM送信
-          const { redirectUrl } = await createLineInvitation(
-            discordId,
-            user.id,
-          );
-          await sendLineGroupInviteDM(user.id, redirectUrl);
-          successUrl.searchParams.set("line_group", "not_joined");
-        }
-      } catch (e) {
-        console.error("LINE group check/invite error (onboarding):", e);
-        // グループチェック失敗時はスキップ（onboarding完了時に再チェックされる）
+      const inGroup = await checkLineGroupMembership(user.id);
+      if (!inGroup) {
+        // グループ未参加 → 招待コード発行 + DM送信
+        const { redirectUrl } = await createLineInvitation(discordId, user.id);
+        await sendLineGroupInviteDM(user.id, redirectUrl);
+        successUrl.searchParams.set("line_group", "not_joined");
       }
     }
 
