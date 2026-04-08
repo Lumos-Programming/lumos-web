@@ -72,6 +72,7 @@ export interface MemberDocument {
     line: VisibilityLevel;
     discord: VisibilityLevel;
   };
+  lastLoginAt?: FirebaseFirestore.Timestamp;
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;
 }
@@ -81,7 +82,7 @@ export async function getOrCreateMember(
   username: string,
   avatar: string,
   handle?: string,
-): Promise<{ isNewMember: boolean }> {
+): Promise<{ isNewMember: boolean; lastLoginAt: Date | null }> {
   const db = getDb();
   const ref = db.collection("members").doc(discordId);
   const snap = await ref.get();
@@ -115,18 +116,22 @@ export async function getOrCreateMember(
         line: "internal",
         discord: "public",
       },
+      lastLoginAt: FieldValue.serverTimestamp(),
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
-    return { isNewMember: true };
+    return { isNewMember: true, lastLoginAt: null };
   } else {
+    const data = snap.data() as MemberDocument;
+    const lastLoginAt = data.lastLoginAt?.toDate() ?? null;
     await ref.update({
       discordUsername: username,
       ...(handle ? { discordHandle: handle } : {}),
       discordAvatar: avatar,
+      lastLoginAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
-    return { isNewMember: false };
+    return { isNewMember: false, lastLoginAt };
   }
 }
 

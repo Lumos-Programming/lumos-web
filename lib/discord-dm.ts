@@ -47,6 +47,8 @@ const LOGO_URL = "https://lumos-ynu.jp/assets/lumos_logo-full.png";
 const FOOTER_TEXT = "Lumos | 横浜国立大学プログラミングサークル";
 const WELCOME_COLOR = 0xfee75c; // Discord Yellow — 明るくフレンドリーな印象
 const SUCCESS_COLOR = 0x57f287; // Discord Green — 達成感
+const LOGIN_COLOR = 0x5865f2; // Discord Blurple — 日常的な通知
+const WELCOME_BACK_COLOR = 0xeb459e; // Discord Fuchsia — おかえり感
 
 function getBaseUrl(): string {
   return process.env.AUTH_URL ?? "http://localhost:3000";
@@ -58,7 +60,7 @@ const PROFILE_FIELDS = [
   { key: "bio", label: "自己紹介", check: (m: MemberDocument) => !!m.bio },
   {
     key: "faceImage",
-    label: "顔写真",
+    label: "プロフィール顔写真",
     check: (m: MemberDocument) => !!m.faceImage,
   },
   {
@@ -215,6 +217,104 @@ export function buildOnboardingCompleteMessage(
             label: "プロフィールを充実させる",
             url: `${getBaseUrl()}/internal/settings`,
             emoji: { name: "✏️" },
+          },
+        ],
+      },
+    ],
+  };
+}
+
+const LOGIN_GREETINGS = [
+  "今日も100億コントリビューションしましょう🚀",
+  "**{name}** さん、今日もおつかれさまです🍵",
+  "**{name}** さん、今日は何行コード書いたかな？👨‍💻",
+  "**{name}** さん、git push前にコーヒーいかがですか？☕",
+  "console.log('ようこそ、**{name}** さん')🖥️",
+  "今日もlintエラー0件でありますように🙏",
+  "今日も爆速開発しちゃいましょう⚡️**{name}** さん！",
+  "**{name}** さん、今日のバグは明日のfeatureです🐛",
+];
+
+export function buildLoginMessage(username: string): DiscordMessagePayload {
+  const template =
+    LOGIN_GREETINGS[Math.floor(Math.random() * LOGIN_GREETINGS.length)];
+  const greeting = template.replace("{name}", username);
+
+  return {
+    embeds: [
+      {
+        title: "👋 ログイン通知",
+        description: `Lumos Webへのログインを検知しました!!\n${greeting}`,
+        color: LOGIN_COLOR,
+        footer: { text: FOOTER_TEXT },
+      },
+    ],
+  };
+}
+
+export function buildWelcomeBackMessage(
+  username: string,
+  discordId: string,
+  completion: {
+    percentage: number;
+    filledCount: number;
+    totalCount: number;
+    missingFields: string[];
+  },
+): DiscordMessagePayload {
+  const fields: DiscordEmbedField[] = [];
+
+  if (completion.missingFields.length > 0) {
+    fields.push(
+      {
+        name: "📊 プロフィール充足率",
+        value: `**${completion.percentage}%** (${completion.filledCount}/${completion.totalCount}項目)`,
+      },
+      {
+        name: "📝 まだ埋まっていない項目",
+        value: completion.missingFields.map((f) => `・${f}`).join("\n"),
+      },
+    );
+  }
+
+  return {
+    embeds: [
+      {
+        title: "🏠 おかえりなさい！",
+        description: [
+          `**${username}** さん、久しぶりのログインうれしいです🎶`,
+          "",
+          ...(completion.missingFields.length > 0
+            ? [
+                "せっかくなので、まだ埋まっていないプロフィール項目もチェックしてみませんか？",
+              ]
+            : ["久しぶりに自分のプロフィールを見直してみませんか？🔄"]),
+        ].join("\n"),
+        color: WELCOME_BACK_COLOR,
+        fields: fields.length > 0 ? fields : undefined,
+        thumbnail: { url: LOGO_URL },
+        footer: { text: FOOTER_TEXT },
+      },
+    ],
+    components: [
+      {
+        type: 1 as const,
+        components: [
+          ...(completion.missingFields.length > 0
+            ? [
+                {
+                  type: 2 as const,
+                  style: 5 as const,
+                  label: "✨プロフィールを充実させる",
+                  url: `${getBaseUrl()}/internal/settings`,
+                },
+              ]
+            : []),
+          {
+            type: 2 as const,
+            style: 5 as const,
+            label: "👀自分のプロフィールを確認する",
+            url: `${getBaseUrl()}/internal/members?member=${discordId}`,
           },
         ],
       },

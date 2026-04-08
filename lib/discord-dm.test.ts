@@ -4,6 +4,8 @@ import {
   calcProfileCompletion,
   buildWelcomeMessage,
   buildOnboardingCompleteMessage,
+  buildLoginMessage,
+  buildWelcomeBackMessage,
   sendDiscordDm,
 } from "./discord-dm";
 
@@ -81,7 +83,7 @@ describe("calcProfileCompletion", () => {
     expect(result.filledCount).toBe(3);
     expect(result.totalCount).toBe(9);
     expect(result.percentage).toBe(33); // Math.round(3/9 * 100)
-    expect(result.missingFields).toContain("顔写真");
+    expect(result.missingFields).toContain("プロフィール顔写真");
     expect(result.missingFields).toContain("X (Twitter)");
     expect(result.missingFields).not.toContain("自己紹介");
     expect(result.missingFields).not.toContain("GitHub");
@@ -133,7 +135,7 @@ describe("buildOnboardingCompleteMessage", () => {
       percentage: 67,
       filledCount: 6,
       totalCount: 9,
-      missingFields: ["自己紹介", "顔写真", "興味分野"],
+      missingFields: ["自己紹介", "プロフィール顔写真", "興味分野"],
     };
     const payload = buildOnboardingCompleteMessage(
       "テストユーザー",
@@ -165,7 +167,7 @@ describe("buildOnboardingCompleteMessage", () => {
       percentage: 67,
       filledCount: 6,
       totalCount: 9,
-      missingFields: ["自己紹介", "顔写真"],
+      missingFields: ["自己紹介", "プロフィール顔写真"],
     };
     const payload = buildOnboardingCompleteMessage("テスト", completion);
     const fields = payload.embeds[0].fields!;
@@ -173,7 +175,7 @@ describe("buildOnboardingCompleteMessage", () => {
     expect(fields).toHaveLength(2);
     expect(fields[1].name).toBe("📝 未入力の項目");
     expect(fields[1].value).toContain("・自己紹介");
-    expect(fields[1].value).toContain("・顔写真");
+    expect(fields[1].value).toContain("・プロフィール顔写真");
   });
 
   it("全項目入力済みの場合、未入力フィールドを表示しない", () => {
@@ -203,6 +205,73 @@ describe("buildOnboardingCompleteMessage", () => {
     const button = payload.components![0].components[0];
     expect(button.label).toBe("プロフィールを充実させる");
     expect(button.url).toContain("/internal/settings");
+  });
+});
+
+describe("buildLoginMessage", () => {
+  it("正しいEmbed構造を返す", () => {
+    const payload = buildLoginMessage("テストユーザー");
+
+    expect(payload.embeds).toHaveLength(1);
+    expect(payload.embeds[0].title).toContain("ログイン");
+    expect(payload.embeds[0].description).toContain("テストユーザー");
+    expect(payload.embeds[0].color).toBe(0x5865f2);
+  });
+
+  it("ボタンを含まない", () => {
+    const payload = buildLoginMessage("テスト");
+    expect(payload.components).toBeUndefined();
+  });
+});
+
+describe("buildWelcomeBackMessage", () => {
+  it("未入力項目がある場合、プロフィール案内を含む", () => {
+    const completion = {
+      percentage: 44,
+      filledCount: 4,
+      totalCount: 9,
+      missingFields: [
+        "自己紹介",
+        "プロフィール顔写真",
+        "興味分野",
+        "生年月日",
+        "性別",
+      ],
+    };
+    const payload = buildWelcomeBackMessage(
+      "テストユーザー",
+      "123456789",
+      completion,
+    );
+
+    expect(payload.embeds[0].title).toContain("おかえり");
+    expect(payload.embeds[0].color).toBe(0xeb459e);
+    expect(payload.embeds[0].description).toContain("久しぶり");
+    expect(payload.embeds[0].fields).toHaveLength(2);
+    expect(payload.embeds[0].fields![0].value).toContain("44%");
+    expect(payload.embeds[0].fields![1].value).toContain("・自己紹介");
+    expect(payload.components).toHaveLength(1);
+    const buttons = payload.components![0].components;
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0].label).toBe("✨プロフィールを充実させる");
+    expect(buttons[1].label).toBe("👀自分のプロフィールを確認する");
+  });
+
+  it("全項目入力済みの場合、プロフィール見直しを案内する", () => {
+    const completion = {
+      percentage: 100,
+      filledCount: 9,
+      totalCount: 9,
+      missingFields: [],
+    };
+    const payload = buildWelcomeBackMessage("テスト", "987654321", completion);
+
+    expect(payload.embeds[0].description).toContain("見直してみませんか");
+    expect(payload.embeds[0].fields).toBeUndefined();
+    expect(payload.components).toHaveLength(1);
+    const button = payload.components![0].components[0];
+    expect(button.label).toBe("👀自分のプロフィールを確認する");
+    expect(button.url).toContain("/internal/members?member=987654321");
   });
 });
 
