@@ -346,7 +346,7 @@ export const STEP_LABELS_BASE = [
   "SNS連携",
   "プロフィール",
   "公開設定",
-  "顔写真",
+  "プロフィール顔写真",
 ];
 export const STEP_LABELS_WITH_AVATAR = [...STEP_LABELS_BASE, "HP画像"];
 

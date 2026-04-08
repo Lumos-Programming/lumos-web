@@ -189,7 +189,7 @@ export function Step7Avatar({
             {[
               {
                 value: "face" as const,
-                label: "顔写真",
+                label: "プロフィール顔写真",
                 desc: faceImageUrl ? "アップロードした写真" : "未設定",
                 src: faceImageUrl || "/assets/lumos_logo-full.png",
                 enabled: !!faceImageUrl,
