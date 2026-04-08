@@ -142,6 +142,15 @@ resource "google_cloud_run_service" "web" {
             }
           }
         }
+        env {
+          name = "NEXT_PUBLIC_LINE_BOT_FRIEND_URL"
+          value_from {
+            secret_key_ref {
+              name = google_secret_manager_secret.per_env["line-bot-friend-url-${each.key}"].secret_id
+              key  = "latest"
+            }
+          }
+        }
       }
     }
   }
