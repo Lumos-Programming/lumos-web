@@ -14,6 +14,11 @@ import {
 import type { FormData } from "./types";
 import { GENDER_OPTIONS } from "@/types/profile";
 
+function capitalizeRomaji(raw: string): string {
+  const v = raw.replace(/[^A-Za-z\s-]/g, "");
+  return v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+}
+
 interface Step1BasicInfoProps {
   form: FormData;
   setForm: Dispatch<SetStateAction<FormData>>;
@@ -101,22 +106,17 @@ export function Step1BasicInfo({
               }}
               onCompositionEnd={(e) => {
                 composingRef.current = false;
-                const raw = e.currentTarget?.value ?? "";
-                const v = raw.replace(/[^A-Za-z\s-]/g, "");
-                const capitalized =
-                  v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
-                setForm((f) => ({ ...f, lastNameRomaji: capitalized }));
+                const val = capitalizeRomaji(e.currentTarget?.value ?? "");
+                setForm((f) => ({ ...f, lastNameRomaji: val }));
               }}
               onChange={(e) => {
                 const raw = e.target.value;
-                if (composingRef.current) {
-                  setForm((f) => ({ ...f, lastNameRomaji: raw }));
-                } else {
-                  const v = raw.replace(/[^A-Za-z\s-]/g, "");
-                  const capitalized =
-                    v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
-                  setForm((f) => ({ ...f, lastNameRomaji: capitalized }));
-                }
+                setForm((f) => ({
+                  ...f,
+                  lastNameRomaji: composingRef.current
+                    ? raw
+                    : capitalizeRomaji(raw),
+                }));
                 if (step1Errors.lastNameRomaji)
                   setStep1Errors((p) => ({
                     ...p,
@@ -144,22 +144,17 @@ export function Step1BasicInfo({
               }}
               onCompositionEnd={(e) => {
                 composingRef.current = false;
-                const raw = e.currentTarget?.value ?? "";
-                const v = raw.replace(/[^A-Za-z\s-]/g, "");
-                const capitalized =
-                  v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
-                setForm((f) => ({ ...f, firstNameRomaji: capitalized }));
+                const val = capitalizeRomaji(e.currentTarget?.value ?? "");
+                setForm((f) => ({ ...f, firstNameRomaji: val }));
               }}
               onChange={(e) => {
                 const raw = e.target.value;
-                if (composingRef.current) {
-                  setForm((f) => ({ ...f, firstNameRomaji: raw }));
-                } else {
-                  const v = raw.replace(/[^A-Za-z\s-]/g, "");
-                  const capitalized =
-                    v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
-                  setForm((f) => ({ ...f, firstNameRomaji: capitalized }));
-                }
+                setForm((f) => ({
+                  ...f,
+                  firstNameRomaji: composingRef.current
+                    ? raw
+                    : capitalizeRomaji(raw),
+                }));
                 if (step1Errors.firstNameRomaji)
                   setStep1Errors((p) => ({
                     ...p,

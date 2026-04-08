@@ -58,6 +58,11 @@ import { LiquidSplashEffect } from "@/components/liquid-splash-effect";
 import { InterestTagInput } from "@/components/interest-tag-input";
 import { useSidebar } from "@/components/ui/sidebar";
 
+function capitalizeRomaji(raw: string): string {
+  const v = raw.replace(/[^A-Za-z\s-]/g, "");
+  return v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+}
+
 const FIELD_LABELS: Partial<
   Record<
     keyof Omit<Profile, "visibility" | "role" | "year" | "enrollments">,
@@ -1489,14 +1494,13 @@ export default function ProfileEdit() {
                       studentId: raw.toUpperCase(),
                     });
                   }}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const raw = e.target.value;
                     setProfile({
                       ...profile,
-                      studentId: composingRef.current
-                        ? e.target.value
-                        : e.target.value.toUpperCase(),
-                    })
-                  }
+                      studentId: composingRef.current ? raw : raw.toUpperCase(),
+                    });
+                  }}
                   placeholder="2164078 / 24HJ078"
                 />
                 <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
@@ -1862,23 +1866,19 @@ export default function ProfileEdit() {
                       }}
                       onCompositionEnd={(e) => {
                         composingRef.current = false;
-                        const raw = e.currentTarget?.value ?? "";
-                        const v = raw.replace(/[^A-Za-z\s-]/g, "");
-                        const capitalized =
-                          v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
-                        setProfile({ ...profile, [key]: capitalized });
+                        const val = capitalizeRomaji(
+                          e.currentTarget?.value ?? "",
+                        );
+                        setProfile({ ...profile, [key]: val });
                       }}
                       onChange={(e) => {
                         const raw = e.target.value;
-                        if (composingRef.current) {
-                          setProfile({ ...profile, [key]: raw });
-                        } else {
-                          const v = raw.replace(/[^A-Za-z\s-]/g, "");
-                          const capitalized =
-                            v.charAt(0).toUpperCase() +
-                            v.slice(1).toLowerCase();
-                          setProfile({ ...profile, [key]: capitalized });
-                        }
+                        setProfile({
+                          ...profile,
+                          [key]: composingRef.current
+                            ? raw
+                            : capitalizeRomaji(raw),
+                        });
                       }}
                       placeholder={key === "lastNameRomaji" ? "Yamada" : "Taro"}
                     />
