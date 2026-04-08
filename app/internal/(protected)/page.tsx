@@ -63,7 +63,7 @@ function getProfileCompletionItems(
     { label: "ニックネーム", done: !!member.nickname },
     { label: "氏名", done: !!member.lastName },
     { label: "プロフィール文", done: !!member.bio },
-    { label: "顔写真", done: !!member.faceImage },
+    { label: "プロフィール顔写真", done: !!member.faceImage },
     { label: "SNS連携", done: !!member.github || !!member.x || !!member.line },
     {
       label: "興味分野",

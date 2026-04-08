@@ -1,6 +1,13 @@
 import NextAuth from "next-auth";
 import Discord from "next-auth/providers/discord";
 import { getOrCreateMember, getMember } from "@/lib/members";
+import {
+  sendDiscordDm,
+  buildWelcomeMessage,
+  buildLoginMessage,
+  buildWelcomeBackMessage,
+  calcProfileCompletion,
+} from "@/lib/discord-dm";
 
 /**
  * Check if a string is a valid Discord Snowflake ID
@@ -47,12 +54,50 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Use providerAccountId which is the Discord User ID (Snowflake)
         token.sub = account.providerAccountId;
         // Create or update member document in Firestore
-        await getOrCreateMember(
+        const { isNewMember, lastLoginAt } = await getOrCreateMember(
           account.providerAccountId,
           token.name ?? "",
           token.picture ?? "",
           (profile as { username?: string })?.username ?? undefined,
         );
+
+        // Send DM based on login context (fire-and-forget)
+        const dmUsername = token.name ?? "メンバー";
+        if (isNewMember) {
+          sendDiscordDm(
+            account.providerAccountId,
+            buildWelcomeMessage(dmUsername),
+          ).catch((e) => console.error("Failed to send welcome DM:", e));
+        } else {
+          const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000 * 0.000001;
+          const isReturning =
+            lastLoginAt && Date.now() - lastLoginAt.getTime() >= SEVEN_DAYS_MS;
+
+          if (isReturning) {
+            // 7日以上ぶり → おかえりメッセージ + プロフィール案内
+            getMember(account.providerAccountId).then((m) => {
+              if (!m) return;
+              const completion = calcProfileCompletion(m);
+              sendDiscordDm(
+                account.providerAccountId,
+                buildWelcomeBackMessage(
+                  dmUsername,
+                  account.providerAccountId,
+                  completion,
+                ),
+              ).catch((e) =>
+                console.error("Failed to send welcome back DM:", e),
+              );
+            });
+          } else {
+            // 通常ログイン
+            sendDiscordDm(
+              account.providerAccountId,
+              buildLoginMessage(dmUsername),
+            ).catch((e) => console.error("Failed to send login DM:", e));
+          }
+        }
+
         // Fetch faceImage on first sign in
         const member = await getMember(account.providerAccountId);
         token.faceImage = member?.faceImage ?? null;

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getMember, updateMember, isOnboardingComplete } from "@/lib/members";
+import {
+  sendDiscordDm,
+  buildOnboardingCompleteMessage,
+  calcProfileCompletion,
+} from "@/lib/discord-dm";
 
 export async function POST() {
   const session = await auth();
@@ -42,6 +47,19 @@ export async function POST() {
   await updateMember(session.user.id, {
     onboardingCompleted: true,
   });
+
+  // Send onboarding complete DM (fire-and-forget)
+  const updatedMember = await getMember(session.user.id);
+  if (updatedMember) {
+    const completion = calcProfileCompletion(updatedMember);
+    const payload = buildOnboardingCompleteMessage(
+      updatedMember.discordUsername,
+      completion,
+    );
+    sendDiscordDm(session.user.id, payload).catch((e) => {
+      console.error("Failed to send onboarding complete DM:", e);
+    });
+  }
 
   return NextResponse.json({ success: true });
 }
