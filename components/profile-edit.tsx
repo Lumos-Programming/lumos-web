@@ -1483,9 +1483,10 @@ export default function ProfileEdit() {
                   }}
                   onCompositionEnd={(e) => {
                     composingRef.current = false;
+                    const raw = e.currentTarget?.value ?? "";
                     setProfile({
                       ...profile,
-                      studentId: e.currentTarget.value.toUpperCase(),
+                      studentId: raw.toUpperCase(),
                     });
                   }}
                   onChange={(e) =>
@@ -1861,19 +1862,18 @@ export default function ProfileEdit() {
                       }}
                       onCompositionEnd={(e) => {
                         composingRef.current = false;
-                        const v = e.currentTarget.value.replace(
-                          /[^A-Za-z\s-]/g,
-                          "",
-                        );
+                        const raw = e.currentTarget?.value ?? "";
+                        const v = raw.replace(/[^A-Za-z\s-]/g, "");
                         const capitalized =
                           v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
                         setProfile({ ...profile, [key]: capitalized });
                       }}
                       onChange={(e) => {
+                        const raw = e.target.value;
                         if (composingRef.current) {
-                          setProfile({ ...profile, [key]: e.target.value });
+                          setProfile({ ...profile, [key]: raw });
                         } else {
-                          const v = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+                          const v = raw.replace(/[^A-Za-z\s-]/g, "");
                           const capitalized =
                             v.charAt(0).toUpperCase() +
                             v.slice(1).toLowerCase();

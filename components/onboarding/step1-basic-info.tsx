@@ -101,19 +101,18 @@ export function Step1BasicInfo({
               }}
               onCompositionEnd={(e) => {
                 composingRef.current = false;
-                const v = e.currentTarget.value.replace(/[^A-Za-z\s-]/g, "");
+                const raw = e.currentTarget?.value ?? "";
+                const v = raw.replace(/[^A-Za-z\s-]/g, "");
                 const capitalized =
                   v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
                 setForm((f) => ({ ...f, lastNameRomaji: capitalized }));
               }}
               onChange={(e) => {
+                const raw = e.target.value;
                 if (composingRef.current) {
-                  setForm((f) => ({
-                    ...f,
-                    lastNameRomaji: e.target.value,
-                  }));
+                  setForm((f) => ({ ...f, lastNameRomaji: raw }));
                 } else {
-                  const v = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+                  const v = raw.replace(/[^A-Za-z\s-]/g, "");
                   const capitalized =
                     v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
                   setForm((f) => ({ ...f, lastNameRomaji: capitalized }));
@@ -145,19 +144,18 @@ export function Step1BasicInfo({
               }}
               onCompositionEnd={(e) => {
                 composingRef.current = false;
-                const v = e.currentTarget.value.replace(/[^A-Za-z\s-]/g, "");
+                const raw = e.currentTarget?.value ?? "";
+                const v = raw.replace(/[^A-Za-z\s-]/g, "");
                 const capitalized =
                   v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
                 setForm((f) => ({ ...f, firstNameRomaji: capitalized }));
               }}
               onChange={(e) => {
+                const raw = e.target.value;
                 if (composingRef.current) {
-                  setForm((f) => ({
-                    ...f,
-                    firstNameRomaji: e.target.value,
-                  }));
+                  setForm((f) => ({ ...f, firstNameRomaji: raw }));
                 } else {
-                  const v = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+                  const v = raw.replace(/[^A-Za-z\s-]/g, "");
                   const capitalized =
                     v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
                   setForm((f) => ({ ...f, firstNameRomaji: capitalized }));

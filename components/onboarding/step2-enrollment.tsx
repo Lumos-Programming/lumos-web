@@ -105,21 +105,20 @@ export function Step2Enrollment({
                 }}
                 onCompositionEnd={(e) => {
                   composingRef.current = false;
+                  const raw = e.currentTarget?.value ?? "";
                   setFormStep2((f) => ({
                     ...f,
-                    studentId: e.currentTarget.value.toUpperCase(),
+                    studentId: raw.toUpperCase(),
                   }));
                 }}
                 onChange={(e) => {
+                  const raw = e.target.value;
                   if (composingRef.current) {
-                    setFormStep2((f) => ({
-                      ...f,
-                      studentId: e.target.value,
-                    }));
+                    setFormStep2((f) => ({ ...f, studentId: raw }));
                   } else {
                     setFormStep2((f) => ({
                       ...f,
-                      studentId: e.target.value.toUpperCase(),
+                      studentId: raw.toUpperCase(),
                     }));
                   }
                   if (step2Errors.studentId)
