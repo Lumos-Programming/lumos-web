@@ -133,6 +133,15 @@ resource "google_cloud_run_service" "web" {
             }
           }
         }
+        env {
+          name = "LINE_CHANNEL_ACCESS_TOKEN"
+          value_from {
+            secret_key_ref {
+              name = google_secret_manager_secret.per_env["line-channel-access-token-${each.key}"].secret_id
+              key  = "latest"
+            }
+          }
+        }
       }
     }
   }
