@@ -1,6 +1,6 @@
 "use client";
 
-import type { Dispatch, SetStateAction } from "react";
+import { useRef, type Dispatch, type SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +36,8 @@ export function Step2Enrollment({
   onNext,
   onBack,
 }: Step2EnrollmentProps) {
+  const composingRef = useRef(false);
+
   return (
     <div className="p-8">
       <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
@@ -98,11 +100,28 @@ export function Step2Enrollment({
               <Input
                 id="studentId"
                 value={form.studentId}
-                onChange={(e) => {
+                onCompositionStart={() => {
+                  composingRef.current = true;
+                }}
+                onCompositionEnd={(e) => {
+                  composingRef.current = false;
                   setFormStep2((f) => ({
                     ...f,
-                    studentId: e.target.value.toUpperCase(),
+                    studentId: e.currentTarget.value.toUpperCase(),
                   }));
+                }}
+                onChange={(e) => {
+                  if (composingRef.current) {
+                    setFormStep2((f) => ({
+                      ...f,
+                      studentId: e.target.value,
+                    }));
+                  } else {
+                    setFormStep2((f) => ({
+                      ...f,
+                      studentId: e.target.value.toUpperCase(),
+                    }));
+                  }
                   if (step2Errors.studentId)
                     setStep2Errors((p) => ({ ...p, studentId: undefined }));
                 }}

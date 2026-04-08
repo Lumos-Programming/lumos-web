@@ -1,6 +1,6 @@
 "use client";
 
-import type { Dispatch, SetStateAction } from "react";
+import { useRef, type Dispatch, type SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +33,8 @@ export function Step1BasicInfo({
   submitting,
   onNext,
 }: Step1BasicInfoProps) {
+  const composingRef = useRef(false);
+
   return (
     <div className="p-8">
       <div className="mb-6 animate-[fadeInUp_300ms_ease_both]">
@@ -94,11 +96,28 @@ export function Step1BasicInfo({
             <Input
               id="lastNameRomaji"
               value={form.lastNameRomaji}
-              onChange={(e) => {
-                const v = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+              onCompositionStart={() => {
+                composingRef.current = true;
+              }}
+              onCompositionEnd={(e) => {
+                composingRef.current = false;
+                const v = e.currentTarget.value.replace(/[^A-Za-z\s-]/g, "");
                 const capitalized =
                   v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
                 setForm((f) => ({ ...f, lastNameRomaji: capitalized }));
+              }}
+              onChange={(e) => {
+                if (composingRef.current) {
+                  setForm((f) => ({
+                    ...f,
+                    lastNameRomaji: e.target.value,
+                  }));
+                } else {
+                  const v = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+                  const capitalized =
+                    v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+                  setForm((f) => ({ ...f, lastNameRomaji: capitalized }));
+                }
                 if (step1Errors.lastNameRomaji)
                   setStep1Errors((p) => ({
                     ...p,
@@ -121,11 +140,28 @@ export function Step1BasicInfo({
             <Input
               id="firstNameRomaji"
               value={form.firstNameRomaji}
-              onChange={(e) => {
-                const v = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+              onCompositionStart={() => {
+                composingRef.current = true;
+              }}
+              onCompositionEnd={(e) => {
+                composingRef.current = false;
+                const v = e.currentTarget.value.replace(/[^A-Za-z\s-]/g, "");
                 const capitalized =
                   v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
                 setForm((f) => ({ ...f, firstNameRomaji: capitalized }));
+              }}
+              onChange={(e) => {
+                if (composingRef.current) {
+                  setForm((f) => ({
+                    ...f,
+                    firstNameRomaji: e.target.value,
+                  }));
+                } else {
+                  const v = e.target.value.replace(/[^A-Za-z\s-]/g, "");
+                  const capitalized =
+                    v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+                  setForm((f) => ({ ...f, firstNameRomaji: capitalized }));
+                }
                 if (step1Errors.firstNameRomaji)
                   setStep1Errors((p) => ({
                     ...p,
