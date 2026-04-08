@@ -1,37 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getLineInvitation, checkLineGroupMembership } from "@/lib/line-invite";
+import { checkLineGroupMembership } from "@/lib/line-invite";
+import { validateInvitation, isValidationError } from "./validate";
+
+const ERROR_PAGE = "/error/line-invite";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ code: string }> },
 ) {
   const { code } = await params;
-  const invitation = await getLineInvitation(code);
+  const origin = process.env.AUTH_URL ?? request.nextUrl.origin;
+  const result = await validateInvitation(code, origin);
 
-  if (!invitation) {
-    return NextResponse.json(
-      { error: "Invitation not found" },
-      { status: 404 },
-    );
-  }
-
-  if (invitation.used) {
-    return NextResponse.json(
-      { error: "Invitation already used" },
-      { status: 410 },
-    );
-  }
-
-  if (invitation.expiresAt.toMillis() < Date.now()) {
-    return NextResponse.json({ error: "Invitation expired" }, { status: 410 });
+  if (isValidationError(result)) {
+    return result.response;
   }
 
   try {
-    const alreadyMember = await checkLineGroupMembership(invitation.lineId);
+    const alreadyMember = await checkLineGroupMembership(
+      result.invitation.lineId,
+    );
     if (alreadyMember) {
-      return NextResponse.json(
-        { error: "Already a group member" },
-        { status: 400 },
+      return NextResponse.redirect(
+        new URL(`${ERROR_PAGE}?reason=already_member`, origin),
       );
     }
   } catch {
@@ -40,9 +31,8 @@ export async function GET(
 
   const groupInviteUrl = process.env.LINE_GROUP_INVITE_URL;
   if (!groupInviteUrl) {
-    return NextResponse.json(
-      { error: "Group invite URL not configured" },
-      { status: 500 },
+    return NextResponse.redirect(
+      new URL(`${ERROR_PAGE}?reason=not_configured`, origin),
     );
   }
 

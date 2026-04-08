@@ -163,7 +163,7 @@ export async function sendLineGroupInviteDM(
 export function buildGroupInviteFlexMessage(
   redirectUrl: string,
 ): LineFlexMessage {
-  const supportUrl = process.env.LINE_INVITE_SUPPORT_URL;
+  const supportRedirectUrl = `${redirectUrl}/support`;
 
   const calloutContents: Record<string, unknown>[] = [
     {
@@ -173,23 +173,19 @@ export function buildGroupInviteFlexMessage(
       color: "#7A6100",
       wrap: true,
     },
-  ];
-
-  calloutContents.push({
-    type: "text",
-    text: "LINE 年齢認証について →",
-    size: "xs",
-    color: "#6778df",
-    margin: "sm",
-    action: {
-      type: "uri",
-      label: "LINEアカウントの年齢認証について",
-      uri: "https://help.line.me/line/?contentId=20000400&lang=ja",
+    {
+      type: "text",
+      text: "LINE 年齢認証について →",
+      size: "xs",
+      color: "#6778df",
+      margin: "sm",
+      action: {
+        type: "uri",
+        label: "LINEアカウントの年齢認証について",
+        uri: "https://help.line.me/line/?contentId=20000400&lang=ja",
+      },
     },
-  });
-
-  if (supportUrl) {
-    calloutContents.push({
+    {
       type: "text",
       text: "担当者を友だち追加して連絡する →",
       size: "xs",
@@ -198,10 +194,10 @@ export function buildGroupInviteFlexMessage(
       action: {
         type: "uri",
         label: "友だち追加して連絡する",
-        uri: supportUrl,
+        uri: supportRedirectUrl,
       },
-    });
-  }
+    },
+  ];
 
   const footerContents: Record<string, unknown>[] = [
     {
