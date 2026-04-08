@@ -11,6 +11,10 @@ locals {
     "line-oauth-secret",
     "discord-oauth-secret",
     "discord-token",
+    "line-group-url",
+    "line-support-friend-url",
+    "line-webhook-secret",
+    "line-channel-access-token"
   ]
 
   # Build a flat map: "github-oauth-secret-dev" => { secret_suffix, env }

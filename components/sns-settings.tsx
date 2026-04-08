@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { normalizeLinkedInUrl } from "@/lib/linkedin";
+import { LineGroupJoinNotice } from "@/components/line-group-join-notice";
 
 interface Props {
   discordUsername: string;
@@ -13,7 +14,9 @@ interface Props {
   xId: string;
   line: string;
   lineId: string;
+  lineLinkedAt?: number;
   linkedin: string;
+  lineGroupPending?: boolean;
   successMessage?: string;
   errorMessage?: string;
 }
@@ -373,7 +376,9 @@ export default function SnsSettings({
   xId: initialXId,
   line: initialLine,
   lineId: initialLineId,
+  lineLinkedAt,
   linkedin: initialLinkedin,
+  lineGroupPending: initialLineGroupPending,
   successMessage,
   errorMessage,
 }: Props) {
@@ -385,6 +390,33 @@ export default function SnsSettings({
   const [line, setLine] = useState(initialLine);
   const [lineId, setLineId] = useState(initialLineId);
   const [linkedinUrl, setLinkedinUrl] = useState(initialLinkedin);
+  const [lineGroupJoined, setLineGroupJoined] = useState(false);
+  const [lineGroupCheckPending, setLineGroupCheckPending] = useState(
+    initialLineGroupPending ?? false,
+  );
+
+  const RELINK_COOLDOWN_SECONDS = 14 * 24 * 60 * 60;
+  const [cooldownActive] = useState(() =>
+    lineLinkedAt
+      ? Math.floor(Date.now() / 1000) - lineLinkedAt < RELINK_COOLDOWN_SECONDS
+      : false,
+  );
+
+  useEffect(() => {
+    if (lineId) {
+      fetch("/api/line-group/check-membership")
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.isMember) {
+            setLineGroupJoined(true);
+            setLineGroupCheckPending(false);
+          } else {
+            setLineGroupCheckPending(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [lineId]);
 
   const disconnect = async (provider: "github" | "x" | "line") => {
     const res = await fetch("/api/settings/sns", {
@@ -453,24 +485,54 @@ export default function SnsSettings({
       </div>
 
       {/* LINE */}
-      <ProviderCard
-        name="LINE"
-        connectedUser={line}
-        isConnected={!!lineId}
-        reconnectOnly
-        onConnect={() => {
-          window.location.href = "/api/auth/link/line";
-        }}
-        onDisconnect={() => disconnect("line")}
-        brandColor="bg-[#06C755]"
-        icon={<LineIcon className="w-5 h-5" />}
-        connectButton={
-          <span className="flex items-center gap-2 bg-[#06C755] hover:bg-[#05a848] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-            <LineIcon className="w-4 h-4" />
-            LINEで連携
-          </span>
-        }
-      />
+      <div>
+        <ProviderCard
+          name="LINE"
+          connectedUser={line}
+          isConnected={!!lineId}
+          reconnectOnly
+          onConnect={() => {
+            if (cooldownActive) return;
+            window.location.href = "/api/auth/link/line";
+          }}
+          onDisconnect={() => disconnect("line")}
+          brandColor="bg-[#06C755]"
+          icon={<LineIcon className="w-5 h-5" />}
+          connectButton={
+            <span className="flex items-center gap-2 bg-[#06C755] hover:bg-[#05a848] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+              <LineIcon className="w-4 h-4" />
+              LINEで連携
+            </span>
+          }
+        />
+        {!!lineId && cooldownActive && (
+          <p className="text-xs text-muted-foreground mt-1 px-4">
+            再連携は連携から2週間後に可能です。問題がある場合は管理者にお問い合わせください。
+          </p>
+        )}
+        {!!lineId && lineGroupJoined && (
+          <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 mt-1 px-4">
+            <Check className="w-3 h-3" />
+            LINEグループに参加済み
+          </div>
+        )}
+        {!!lineId && lineGroupCheckPending && !lineGroupJoined && (
+          <div className="px-4">
+            <LineGroupJoinNotice
+              onGroupJoined={() => {
+                setLineGroupJoined(true);
+                setLineGroupCheckPending(false);
+                router.refresh();
+              }}
+            />
+          </div>
+        )}
+        {!!lineId && !lineGroupJoined && !lineGroupCheckPending && (
+          <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mt-1 px-4">
+            LINEグループに未参加
+          </div>
+        )}
+      </div>
 
       {/* GitHub */}
       <ProviderCard

@@ -3,18 +3,25 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const LINES = [
-  { text: "Oops!", delay: 0.3 },
-  { text: "Looks like", delay: 0.6 },
-  { text: "invisible dragons", delay: 0.9 },
-  { text: "ain't letting you in", delay: 1.2 },
-];
+export type ErrorPageConfig = {
+  lines: { text: string; delay: number }[];
+  /** "Lumos!" を下線アニメーション付きで最終行の後に表示 */
+  showLumos?: boolean;
+  description: string;
+  /** カウントダウン後にリダイレクトする先（未指定なら表示しない） */
+  redirectTo?: string;
+  /** カウントダウン秒数（デフォルト: 10） */
+  redirectSeconds?: number;
+};
 
-export default function AuthError() {
+export default function ErrorPage({ config }: { config: ErrorPageConfig }) {
   const router = useRouter();
-  const [countdown, setCountdown] = useState(10);
+  const [countdown, setCountdown] = useState(
+    config.redirectTo ? (config.redirectSeconds ?? 10) : 0,
+  );
 
   useEffect(() => {
+    if (!config.redirectTo) return;
     const interval = setInterval(() => {
       setCountdown((c) => {
         if (c <= 1) {
@@ -25,13 +32,19 @@ export default function AuthError() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [config.redirectTo]);
 
   useEffect(() => {
-    if (countdown <= 0) {
-      router.push("/");
+    if (config.redirectTo && countdown <= 0) {
+      router.push(config.redirectTo);
     }
-  }, [countdown, router]);
+  }, [countdown, config.redirectTo, router]);
+
+  const lastLineDelay = config.lines[config.lines.length - 1].delay;
+  const lumosDelay = lastLineDelay + 0.3;
+  const descriptionDelay =
+    (config.showLumos ? lumosDelay + 0.6 : lastLineDelay) + 0.8;
+  const countdownDelay = descriptionDelay + 0.6;
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#0d0f1a] overflow-hidden">
@@ -65,7 +78,7 @@ export default function AuthError() {
       <div className="relative z-10 flex flex-col items-start w-full max-w-md px-6">
         {/* アニメーションテキスト */}
         <h1 className="flex flex-col items-start gap-1">
-          {LINES.map((line) => (
+          {config.lines.map((line) => (
             <span
               key={line.text}
               className="text-3xl sm:text-4xl font-bold text-white tracking-tight animate-[fade-in-up_0.5s_ease_both]"
@@ -74,40 +87,44 @@ export default function AuthError() {
               {line.text}
             </span>
           ))}
-          {/* Lumos! — 大きいフォント + 下線アニメーション */}
-          <span
-            className="relative text-[2.5rem] sm:text-5xl font-bold text-white tracking-tight animate-[fade-in-up_0.5s_ease_both]"
-            style={{ animationDelay: "1.5s" }}
-          >
-            Lumos!
+          {config.showLumos && (
             <span
-              className="absolute bottom-0 left-0 w-full h-[2px] bg-white animate-[authUnderlineDraw_1.5s_ease_both] origin-left"
-              style={{ animationDelay: "1.8s" }}
-            />
-          </span>
+              className="relative text-[2.5rem] sm:text-5xl font-bold text-white tracking-tight animate-[fade-in-up_0.5s_ease_both]"
+              style={{ animationDelay: `${lumosDelay}s` }}
+            >
+              Lumos!
+              <span
+                className="absolute bottom-0 left-0 w-full h-[2px] bg-white animate-[authUnderlineDraw_1.5s_ease_both] origin-left"
+                style={{ animationDelay: `${lumosDelay + 0.3}s` }}
+              />
+            </span>
+          )}
         </h1>
 
-        {/* メッセージ */}
+        {/* 説明文 */}
         <p
           className="mt-8 text-lg text-[#c8cae0] leading-relaxed animate-[fade-in-up_0.5s_ease_both]"
-          style={{ animationDelay: "2.4s" }}
+          style={{ animationDelay: `${descriptionDelay}s` }}
         >
-          認証したアカウントが
-          <br />
-          Lumosに存在しているか
-          <br />
-          確認しましょう
+          {config.description.split("\n").map((line, i, arr) => (
+            <span key={i}>
+              {line}
+              {i < arr.length - 1 && <br />}
+            </span>
+          ))}
         </p>
 
         {/* カウントダウン */}
-        <div
-          className="mt-6 animate-[fade-in-up_0.5s_ease_both]"
-          style={{ animationDelay: "3.0s" }}
-        >
-          <p className="text-xs text-[#6b6f8a]">
-            {countdown}秒後にトップへ戻ります
-          </p>
-        </div>
+        {config.redirectTo && (
+          <div
+            className="mt-6 animate-[fade-in-up_0.5s_ease_both]"
+            style={{ animationDelay: `${countdownDelay}s` }}
+          >
+            <p className="text-xs text-[#6b6f8a]">
+              {countdown}秒後にトップへ戻ります
+            </p>
+          </div>
+        )}
       </div>
 
       <style jsx>{`

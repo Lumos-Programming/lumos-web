@@ -20,9 +20,9 @@ variable "cloud_run_env_vars" {
   type = map(map(string))
   default = {
     dev = {
-      AUTH_GITHUB_ID        = "Ov23liN6oGK1lfbZm3P2"
-      AUTH_X_ID             = "eW5jSnZRbEFBLWJMY1Z3NTFmVXQ6MTpjaQ"
-      AUTH_LINE_ID          = "2009690509"
+      AUTH_GITHUB_ID = "Ov23liN6oGK1lfbZm3P2"
+      AUTH_X_ID      = "eW5jSnZRbEFBLWJMY1Z3NTFmVXQ6MTpjaQ"
+      AUTH_LINE_ID   = "2009690509"
 
       AUTH_DISCORD_ID       = "1489548152779309197"
       DISCORD_GUILD_ID      = "1368752707321729158"
@@ -30,12 +30,13 @@ variable "cloud_run_env_vars" {
       FIRESTORE_DATABASE_ID = "development"
       FIREBASE_PROJECT_ID   = "lumos-infra"
       GCS_BUCKET_NAME       = "lumos-ynu-profile-dev"
-      LINE_PUSH_TARGET_ID   = "C39f62528b0c75c22e5feb50620989bd3"
+      LINE_PUSH_TARGET_ID   = "C1634d113e1d5a316077098b5776b94b5"
+      LINE_GROUP_ID         = "C1634d113e1d5a316077098b5776b94b5"
     }
     stg = {
-      AUTH_GITHUB_ID        = "Ov23li6SPPesKvJDqXiO"
-      AUTH_X_ID             = "MktOVXFWdWNFZzN5VzI2TXJFZ2Q6MTpjaQ"
-      AUTH_LINE_ID          = "2009694131"
+      AUTH_GITHUB_ID = "Ov23li6SPPesKvJDqXiO"
+      AUTH_X_ID      = "MktOVXFWdWNFZzN5VzI2TXJFZ2Q6MTpjaQ"
+      AUTH_LINE_ID   = "2009694131"
 
       AUTH_DISCORD_ID       = "1377983265948041228"
       DISCORD_GUILD_ID      = "1368752707321729158"
@@ -43,12 +44,13 @@ variable "cloud_run_env_vars" {
       FIRESTORE_DATABASE_ID = "staging"
       FIREBASE_PROJECT_ID   = "lumos-infra"
       GCS_BUCKET_NAME       = "lumos-ynu-profile-stg"
-      LINE_PUSH_TARGET_ID   = "C39f62528b0c75c22e5feb50620989bd3"
+      LINE_PUSH_TARGET_ID   = "C5a28521ffe1f42b16998bd506acab713"
+      LINE_GROUP_ID         = "C5a28521ffe1f42b16998bd506acab713"
     }
     prd = {
-      AUTH_GITHUB_ID        = "Ov23liaSCNoELzDDQ71W"
-      AUTH_X_ID             = "UUthQmxHVlY1anFBU0VtWmQxUmU6MTpjaQ"
-      AUTH_LINE_ID          = "1661094871"
+      AUTH_GITHUB_ID = "Ov23liaSCNoELzDDQ71W"
+      AUTH_X_ID      = "UUthQmxHVlY1anFBU0VtWmQxUmU6MTpjaQ"
+      AUTH_LINE_ID   = "1661094871"
 
       AUTH_DISCORD_ID       = "933021504319422544"
       DISCORD_GUILD_ID      = "894226019240800276"
@@ -57,6 +59,7 @@ variable "cloud_run_env_vars" {
       FIREBASE_PROJECT_ID   = "lumos-infra"
       GCS_BUCKET_NAME       = "lumos-ynu-profile-prd"
       LINE_PUSH_TARGET_ID   = "C39f62528b0c75c22e5feb50620989bd3"
+      LINE_GROUP_ID         = "C39f62528b0c75c22e5feb50620989bd3"
     }
   }
 }

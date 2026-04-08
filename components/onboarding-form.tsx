@@ -96,6 +96,8 @@ export default function OnboardingForm() {
   const [step2Errors, setStep2Errors] = useState<
     Partial<Record<keyof FormData, string>>
   >({});
+  const [lineGroupJoined, setLineGroupJoined] = useState(false);
+  const [lineGroupCheckPending, setLineGroupCheckPending] = useState(false);
   const [step3Error, setStep3Error] = useState("");
   const [linkedinError, setLinkedinError] = useState("");
   const [slideAnimating, setSlideAnimating] = useState(false);
@@ -256,6 +258,15 @@ export default function OnboardingForm() {
           setLineLinked(!!data.lineId);
           setLineUsername(data.line ?? "");
           setLineAvatar(data.lineAvatar ?? "");
+          if (data.lineId) {
+            fetch("/api/line-group/check-membership")
+              .then((r) => r.json())
+              .then((d) => {
+                if (d.isMember) setLineGroupJoined(true);
+                else setLineGroupCheckPending(true);
+              })
+              .catch(() => {});
+          }
           setGithubLinked(!!data.githubId);
           setGithubUsername(data.github ?? "");
           setGithubAvatar(data.githubAvatar ?? "");
@@ -277,6 +288,19 @@ export default function OnboardingForm() {
 
     if (success === "line_linked") {
       setLineLinked(true);
+      const lineGroup = searchParams.get("line_group");
+      if (lineGroup === "not_joined") {
+        setLineGroupCheckPending(true);
+      } else {
+        // line_group param未指定 = APIでグループチェック
+        fetch("/api/line-group/check-membership")
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.isMember) setLineGroupJoined(true);
+            else setLineGroupCheckPending(true);
+          })
+          .catch(() => {});
+      }
       fetchProfile()
         .then((data) => {
           if (data?.line) {
@@ -318,6 +342,7 @@ export default function OnboardingForm() {
       const url = new URL(window.location.href);
       url.searchParams.delete("success");
       url.searchParams.delete("error");
+      url.searchParams.delete("line_group");
       const params = new URLSearchParams();
       if (step) params.set("step", String(step));
       if (isPreview) params.set("preview", "");
@@ -550,6 +575,10 @@ export default function OnboardingForm() {
   const handleStep3Next = async () => {
     if (!lineLinked) {
       setStep3Error("LINEアカウントの連携は必須です");
+      return;
+    }
+    if (!lineGroupJoined) {
+      setStep3Error("LINEグループへの参加が必要です");
       return;
     }
     setStep3Error("");
@@ -1044,6 +1073,12 @@ export default function OnboardingForm() {
                 lineLinked={lineLinked}
                 lineUsername={lineUsername}
                 lineAvatar={lineAvatar}
+                lineGroupJoined={lineGroupJoined}
+                lineGroupCheckPending={lineGroupCheckPending}
+                onLineGroupJoined={() => {
+                  setLineGroupJoined(true);
+                  setLineGroupCheckPending(false);
+                }}
                 githubLinked={githubLinked}
                 githubUsername={githubUsername}
                 githubAvatar={githubAvatar}

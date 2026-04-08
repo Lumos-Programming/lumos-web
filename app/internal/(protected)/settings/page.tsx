@@ -9,6 +9,7 @@ const SUCCESS_MESSAGES: Record<string, string> = {
   github_linked: "GitHubと連携しました。",
   x_linked: "Xと連携しました。",
   line_linked: "LINEと連携しました。",
+  line_relinked: "LINEを再連携しました。",
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -20,11 +21,15 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function SettingPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ success?: string; error?: string }>;
+  searchParams?: Promise<{
+    success?: string;
+    error?: string;
+    line_group?: string;
+  }>;
 }) {
   const session = await auth();
   const member = await getMember(session!.user!.id);
-  const { success, error } = (await searchParams) ?? {};
+  const { success, error, line_group } = (await searchParams) ?? {};
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto animate-spring-up">
@@ -59,7 +64,9 @@ export default async function SettingPage({
                 xId={member?.xId ?? ""}
                 line={member?.line ?? ""}
                 lineId={member?.lineId ?? ""}
+                lineLinkedAt={member?.lineLinkedAt}
                 linkedin={member?.linkedin ?? ""}
+                lineGroupPending={line_group === "not_joined"}
                 successMessage={success ? SUCCESS_MESSAGES[success] : undefined}
                 errorMessage={error ? ERROR_MESSAGES[error] : undefined}
               />
