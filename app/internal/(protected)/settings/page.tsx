@@ -25,12 +25,11 @@ export default async function SettingPage({
     success?: string;
     error?: string;
     line_group?: string;
-    not_friend?: string;
   }>;
 }) {
   const session = await auth();
   const member = await getMember(session!.user!.id);
-  const { success, error, line_group, not_friend } = (await searchParams) ?? {};
+  const { success, error, line_group } = (await searchParams) ?? {};
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto animate-spring-up">
@@ -68,7 +67,7 @@ export default async function SettingPage({
                 lineLinkedAt={member?.lineLinkedAt}
                 linkedin={member?.linkedin ?? ""}
                 lineGroupPending={line_group === "not_joined"}
-                showAddFriend={not_friend === "1"}
+                lineBotFriendUrl={process.env.LINE_BOT_FRIEND_URL}
                 successMessage={success ? SUCCESS_MESSAGES[success] : undefined}
                 errorMessage={error ? ERROR_MESSAGES[error] : undefined}
               />

@@ -11,6 +11,7 @@ interface Step3SnsProps {
   lineAvatar: string;
   lineGroupJoined: boolean;
   lineGroupCheckPending: boolean;
+  lineBotFriendUrl?: string;
   onLineGroupJoined: () => void;
   githubLinked: boolean;
   githubUsername: string;
@@ -33,6 +34,7 @@ export function Step3Sns({
   lineAvatar,
   lineGroupJoined,
   lineGroupCheckPending,
+  lineBotFriendUrl,
   onLineGroupJoined,
   githubLinked,
   githubUsername,
@@ -131,7 +133,10 @@ export function Step3Sns({
             </div>
           )}
           {lineLinked && lineGroupCheckPending && !lineGroupJoined && (
-            <LineGroupJoinNotice onGroupJoined={onLineGroupJoined} />
+            <LineGroupJoinNotice
+              lineBotFriendUrl={lineBotFriendUrl}
+              onGroupJoined={onLineGroupJoined}
+            />
           )}
         </div>
 
