@@ -2,14 +2,21 @@
 
 import { isAdmin } from "@/lib/auth";
 import { getGuildMembers, type DiscordGuildMember } from "@/lib/discord-guild";
-import { getRegisteredDiscordIds } from "@/lib/members";
-import { sendDiscordDm, buildRegistrationNudgeMessage } from "@/lib/discord-dm";
+import { getMemberRegistrationStatus } from "@/lib/members";
+import {
+  sendDiscordDm,
+  buildRegistrationNudgeMessage,
+  buildOnboardingNudgeMessage,
+} from "@/lib/discord-dm";
+
+export type MemberStatus = "unregistered" | "onboarding";
 
 export type UnregisteredMember = {
   discordId: string;
   username: string;
   displayName: string;
   avatarUrl: string | null;
+  status: MemberStatus;
 };
 
 export type SendResult = {
@@ -31,9 +38,9 @@ export async function getUnregisteredMembers(): Promise<UnregisteredMember[]> {
     throw new Error("管理者権限が必要です");
   }
 
-  const [guildMembers, registeredIds] = await Promise.all([
+  const [guildMembers, { registeredIds, onboardingIds }] = await Promise.all([
     getGuildMembers(),
-    getRegisteredDiscordIds(),
+    getMemberRegistrationStatus(),
   ]);
 
   return guildMembers
@@ -43,8 +50,17 @@ export async function getUnregisteredMembers(): Promise<UnregisteredMember[]> {
       username: m.user.username,
       displayName: m.nick || m.user.global_name || m.user.username,
       avatarUrl: buildAvatarUrl(m),
+      status: onboardingIds.has(m.user.id)
+        ? ("onboarding" as const)
+        : ("unregistered" as const),
     }))
-    .sort((a, b) => a.displayName.localeCompare(b.displayName));
+    .sort((a, b) => {
+      // onboarding first, then unregistered
+      if (a.status !== b.status) {
+        return a.status === "onboarding" ? -1 : 1;
+      }
+      return a.displayName.localeCompare(b.displayName);
+    });
 }
 
 function sleep(ms: number): Promise<void> {
@@ -62,7 +78,7 @@ export async function sendRegistrationNudge(
     return { total: 0, success: 0, failed: 0, failures: [] };
   }
 
-  // Fetch unregistered members to get usernames for the message
+  // Fetch unregistered members to get usernames and status for the message
   const unregistered = await getUnregisteredMembers();
   const memberMap = new Map(unregistered.map((m) => [m.discordId, m]));
 
@@ -77,9 +93,13 @@ export async function sendRegistrationNudge(
     const id = discordIds[i];
     const member = memberMap.get(id);
     const username = member?.displayName ?? "メンバー";
+    const message =
+      member?.status === "onboarding"
+        ? buildOnboardingNudgeMessage(username)
+        : buildRegistrationNudgeMessage(username);
 
     try {
-      await sendDiscordDm(id, buildRegistrationNudgeMessage(username));
+      await sendDiscordDm(id, message);
       result.success++;
     } catch (e) {
       result.failed++;

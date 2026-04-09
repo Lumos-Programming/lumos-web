@@ -161,10 +161,17 @@ export function AdminNotificationPanel({
                     {member.displayName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {member.displayName}
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium truncate">
+                      {member.displayName}
+                    </p>
+                    {member.status === "onboarding" && (
+                      <Badge variant="outline" className="shrink-0 text-xs">
+                        オンボーディング中
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground truncate">
                     @{member.username}
                   </p>

@@ -369,6 +369,51 @@ export function buildRegistrationNudgeMessage(
   };
 }
 
+export function buildOnboardingNudgeMessage(
+  username: string,
+): DiscordMessagePayload {
+  return {
+    embeds: [
+      {
+        title: "📋 オンボーディングを完了させましょう！",
+        description: [
+          `${username} さん、こんにちは！`,
+          "",
+          "Lumos Webへのログインありがとうございます！",
+          "**オンボーディングがまだ完了していない**ようです。",
+          "",
+          "オンボーディングを完了すると、以下の機能が使えるようになります：",
+          "👥 Lumosのメンバーについて知る",
+          "🎨 自分だけのプロフィールを作る",
+          "📅 ミニLTなどの各種イベントに参加登録する",
+          "💬 LumosのLINEグループに参加する",
+          "",
+          "**数分で完了します。** ぜひオンボーディングを終わらせてください！🙏",
+          "",
+          "_※ LumosのDiscordサーバーに参加されているため、このメッセージをお送りしています。_",
+        ].join("\n"),
+        color: WELCOME_COLOR,
+        thumbnail: { url: LOGO_URL },
+        footer: { text: FOOTER_TEXT },
+      },
+    ],
+    components: [
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 5,
+            label: "オンボーディングを完了する",
+            url: `${getBaseUrl()}/internal/onboarding`,
+            emoji: { name: "📋" },
+          },
+        ],
+      },
+    ],
+  };
+}
+
 // --- Discord API ---
 
 async function createDmChannel(recipientId: string): Promise<string> {

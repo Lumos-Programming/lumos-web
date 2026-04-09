@@ -266,15 +266,30 @@ export function isOnboardingComplete(member: MemberDocument): boolean {
   return member.onboardingCompleted === true;
 }
 
-export async function getRegisteredDiscordIds(): Promise<Set<string>> {
+export type MemberRegistrationStatus = {
+  registeredIds: Set<string>;
+  onboardingIds: Set<string>;
+};
+
+export async function getMemberRegistrationStatus(): Promise<MemberRegistrationStatus> {
   const db = getDb();
   const snap = await db
     .collection("members")
-    .where("onboardingCompleted", "==", true)
-    .select()
+    .select("onboardingCompleted")
     .get();
 
-  return new Set(snap.docs.map((doc) => doc.id));
+  const registeredIds = new Set<string>();
+  const onboardingIds = new Set<string>();
+
+  for (const doc of snap.docs) {
+    if (doc.data().onboardingCompleted === true) {
+      registeredIds.add(doc.id);
+    } else {
+      onboardingIds.add(doc.id);
+    }
+  }
+
+  return { registeredIds, onboardingIds };
 }
 
 function resolveDiscordAvatar(
