@@ -305,16 +305,18 @@ export function buildWelcomeBackMessage(
                 {
                   type: 2 as const,
                   style: 5 as const,
-                  label: "✨プロフィールを充実させる",
+                  label: "プロフィールを充実させる",
                   url: `${getBaseUrl()}/internal/settings`,
+                  emoji: { name: "✨" },
                 },
               ]
             : []),
           {
             type: 2 as const,
             style: 5 as const,
-            label: "👀自分のプロフィールを確認する",
+            label: "自分のプロフィールを確認する",
             url: `${getBaseUrl()}/internal/members?member=${discordId}`,
+            emoji: { name: "👀" },
           },
         ],
       },
