@@ -266,6 +266,17 @@ export function isOnboardingComplete(member: MemberDocument): boolean {
   return member.onboardingCompleted === true;
 }
 
+export async function getRegisteredDiscordIds(): Promise<Set<string>> {
+  const db = getDb();
+  const snap = await db
+    .collection("members")
+    .where("onboardingCompleted", "==", true)
+    .select()
+    .get();
+
+  return new Set(snap.docs.map((doc) => doc.id));
+}
+
 function resolveDiscordAvatar(
   discordId: string,
   discordAvatar?: string,

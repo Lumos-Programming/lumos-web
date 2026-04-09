@@ -322,6 +322,53 @@ export function buildWelcomeBackMessage(
   };
 }
 
+export function buildRegistrationNudgeMessage(
+  username: string,
+): DiscordMessagePayload {
+  return {
+    embeds: [
+      {
+        title: "📢 Lumos Web メンバー登録のお願い",
+        description: [
+          `${username} さん、こんにちは！`,
+          "",
+          "2026年度より、Lumosのメンバー管理は **Lumos Web** で行われることになりました。",
+          "",
+          "**Lumos Webでできること：**",
+          "💬 Lumos2026のLINEグループに参加する",
+          "👥 Lumosのメンバーについて知る",
+          "🎨 自分だけのプロフィールを作る",
+          "📅 ミニLTなどの各種イベントに参加登録する",
+          "",
+          "現役生・卒業生・社会人を問わず、",
+          "**2026年度もLumosのDiscordサーバーに参加するためにはLumos Webへの登録が必要です。**",
+          "",
+          "Discordアカウントで簡単にログインできます。ぜひ登録をお願いします！🙏",
+          "",
+          "_※ LumosのDiscordサーバーに参加されているため、このメッセージをお送りしています。_",
+        ].join("\n"),
+        color: WELCOME_COLOR,
+        thumbnail: { url: LOGO_URL },
+        footer: { text: FOOTER_TEXT },
+      },
+    ],
+    components: [
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 5,
+            label: "Lumos Webで2026年度メンバー登録をする",
+            url: `${getBaseUrl()}/onboarding`,
+            emoji: { name: "🚀" },
+          },
+        ],
+      },
+    ],
+  };
+}
+
 // --- Discord API ---
 
 async function createDmChannel(recipientId: string): Promise<string> {

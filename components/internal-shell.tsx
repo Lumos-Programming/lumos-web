@@ -16,6 +16,7 @@ interface InternalShellProps {
   userImage?: string;
   memberNickname?: string;
   memberRole?: string;
+  isAdmin?: boolean;
 }
 
 export function InternalShell({
@@ -24,6 +25,7 @@ export function InternalShell({
   userImage,
   memberNickname,
   memberRole,
+  isAdmin,
 }: InternalShellProps) {
   return (
     <SidebarProvider>
@@ -32,6 +34,7 @@ export function InternalShell({
         userImage={userImage}
         memberNickname={memberNickname}
         memberRole={memberRole}
+        isAdmin={isAdmin}
       />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center border-b px-4">

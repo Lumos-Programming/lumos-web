@@ -16,12 +16,15 @@ export default async function ProtectedLayout({
     redirect("/internal/onboarding");
   }
 
+  const userIsAdmin = session.user.isAdmin === true;
+
   return (
     <InternalShell
       userName={session.user.name || ""}
       userImage={session.user.image || undefined}
       memberNickname={member.nickname || undefined}
       memberRole={member.role || undefined}
+      isAdmin={userIsAdmin}
     >
       {children}
     </InternalShell>
