@@ -58,8 +58,8 @@ variable "cloud_run_env_vars" {
       FIRESTORE_DATABASE_ID = "" // this should use default db (default)
       FIREBASE_PROJECT_ID   = "lumos-infra"
       GCS_BUCKET_NAME       = "lumos-ynu-profile-prd"
-      LINE_PUSH_TARGET_ID   = "C39f62528b0c75c22e5feb50620989bd3"
-      LINE_GROUP_ID         = "C39f62528b0c75c22e5feb50620989bd3"
+      LINE_PUSH_TARGET_ID   = "Ca2a9d031634839fbf0e57faff0c00eb6"
+      LINE_GROUP_ID         = "Ca2a9d031634839fbf0e57faff0c00eb6"
     }
   }
 }
