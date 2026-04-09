@@ -10,6 +10,7 @@ import {
   Settings,
   ExternalLink,
   LogOut,
+  Shield,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import {
@@ -36,11 +37,16 @@ const NAV_ITEMS = [
   { href: "/internal/settings", icon: Settings, label: "設定" },
 ];
 
+const ADMIN_NAV_ITEMS = [
+  { href: "/internal/admin", icon: Shield, label: "管理者ページ" },
+];
+
 interface AppSidebarProps {
   userName: string;
   userImage?: string;
   memberNickname?: string;
   memberRole?: string;
+  isAdmin?: boolean;
 }
 
 export function AppSidebar({
@@ -48,6 +54,7 @@ export function AppSidebar({
   userImage,
   memberNickname,
   memberRole,
+  isAdmin,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
@@ -98,6 +105,44 @@ export function AppSidebar({
                         <span>{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>管理</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {ADMIN_NAV_ITEMS.map((item) => {
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    {isAdmin ? (
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        tooltip={item.label}
+                      >
+                        <Link
+                          href={item.href}
+                          onClick={() => setOpenMobile(false)}
+                        >
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    ) : (
+                      <SidebarMenuButton
+                        disabled
+                        tooltip={item.label}
+                        className="opacity-50"
+                      >
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    )}
                   </SidebarMenuItem>
                 );
               })}
