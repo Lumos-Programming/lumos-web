@@ -111,12 +111,14 @@ export function AppSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup>
+        <SidebarGroup
+          className={isAdmin ? undefined : "opacity-40 pointer-events-none"}
+        >
           <SidebarGroupLabel>管理</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {ADMIN_NAV_ITEMS.map((item) => {
-                const isActive = pathname.startsWith(item.href);
+                const isActive = isAdmin && pathname.startsWith(item.href);
                 return (
                   <SidebarMenuItem key={item.href}>
                     {isAdmin ? (
@@ -134,11 +136,7 @@ export function AppSidebar({
                         </Link>
                       </SidebarMenuButton>
                     ) : (
-                      <SidebarMenuButton
-                        disabled
-                        tooltip={item.label}
-                        className="opacity-50"
-                      >
+                      <SidebarMenuButton disabled tooltip={item.label}>
                         <item.icon />
                         <span>{item.label}</span>
                       </SidebarMenuButton>
