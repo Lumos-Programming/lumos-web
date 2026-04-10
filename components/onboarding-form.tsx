@@ -29,6 +29,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Star } from "lucide-react";
 import { normalizeLinkedInUrl } from "@/lib/linkedin";
 import type { FormData, VisibilityForm } from "./onboarding/types";
 import { VISIBILITY_DISPLAY_KEYS } from "./onboarding/types";
@@ -89,6 +91,11 @@ export default function OnboardingForm({
   );
   const [welcomeFading, setWelcomeFading] = useState(false);
   const [showFeeNotice, setShowFeeNotice] = useState(false);
+  const [showSurvey, setShowSurvey] = useState(false);
+  const [surveyRating, setSurveyRating] = useState(0);
+  const [surveyReason, setSurveyReason] = useState("");
+  const [surveyExpectations, setSurveyExpectations] = useState("");
+  const [surveySubmitting, setSurveySubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [form, setForm] = useState<FormData>(DEFAULT_FORM);
   const [allowPublic, setAllowPublic] = useState(true);
@@ -983,6 +990,10 @@ export default function OnboardingForm({
           /* ignore */
         }
         await updateSession();
+        if (isReturningMember) {
+          setShowSurvey(true);
+          return;
+        }
         router.push("/internal/onboarding/complete");
       } else {
         const data = await res.json();
@@ -1032,6 +1043,30 @@ export default function OnboardingForm({
       }
     }, 500);
   }, [isReturningMember]);
+
+  const handleSurveySubmit = useCallback(async () => {
+    setSurveySubmitting(true);
+    try {
+      await fetch("/api/survey", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          satisfaction: surveyRating,
+          ...(surveyReason.trim()
+            ? { satisfactionReason: surveyReason.trim() }
+            : {}),
+          ...(surveyExpectations.trim()
+            ? { expectations: surveyExpectations.trim() }
+            : {}),
+        }),
+      });
+    } catch {
+      /* non-blocking */
+    } finally {
+      setSurveySubmitting(false);
+    }
+    router.push("/internal/onboarding/complete");
+  }, [surveyRating, surveyReason, surveyExpectations, router]);
 
   if (loading) {
     return (
@@ -1243,6 +1278,76 @@ export default function OnboardingForm({
           </div>
           <DialogFooter className="sm:justify-center">
             <Button onClick={() => setShowFeeNotice(false)}>確認した</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 継続メンバー向けアンケート */}
+      <Dialog open={showSurvey} onOpenChange={() => {}}>
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          className="[&>button:last-child]:hidden"
+        >
+          <DialogHeader>
+            <DialogTitle>活動についてのアンケート</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5">
+            <div>
+              <p className="text-sm font-medium">
+                現在のLumosの活動の満足度を教えてください。
+                <span className="text-destructive ml-1">*</span>
+              </p>
+              <div className="flex items-center justify-center gap-3 mt-3">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setSurveyRating(n)}
+                    className="flex flex-col items-center gap-1 group"
+                  >
+                    <span className="text-xs text-muted-foreground">{n}</span>
+                    <Star
+                      className={`h-8 w-8 transition-colors ${
+                        n <= surveyRating
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-muted-foreground/40 group-hover:text-yellow-300"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium mb-2">
+                回答された満足度について、理由があれば教えてください。
+              </p>
+              <Textarea
+                placeholder="回答を入力"
+                value={surveyReason}
+                onChange={(e) => setSurveyReason(e.target.value)}
+                rows={2}
+              />
+            </div>
+            <div>
+              <p className="text-sm font-medium mb-2">
+                これからのLumosに期待することや、やりたい企画があれば教えてください
+              </p>
+              <Textarea
+                placeholder="回答を入力"
+                value={surveyExpectations}
+                onChange={(e) => setSurveyExpectations(e.target.value)}
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-center">
+            <Button
+              onClick={handleSurveySubmit}
+              disabled={surveyRating === 0 || surveySubmitting}
+            >
+              {surveySubmitting ? "送信中..." : "送信する"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
