@@ -217,6 +217,38 @@ export async function getEventInterestedUsers(
 }
 
 /**
+ * Check if a Discord user has the returning member role (昨年度メンバー)
+ */
+export async function checkReturningMember(userId: string): Promise<boolean> {
+  const guildId = process.env.DISCORD_GUILD_ID;
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  const returningRoleId = process.env.RETURNING_MEMBER_ROLE_ID;
+
+  if (!guildId || !botToken || !returningRoleId) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(
+      `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}`,
+      {
+        headers: {
+          Authorization: `Bot ${botToken}`,
+        },
+      },
+    );
+
+    if (!response.ok) return false;
+
+    const member = await response.json();
+    return member.roles?.includes(returningRoleId) ?? false;
+  } catch (e) {
+    console.error("Failed to check returning member role:", e);
+    return false;
+  }
+}
+
+/**
  * Get avatar URL for a Discord user
  */
 export function getDiscordAvatarUrl(
