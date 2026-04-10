@@ -20,7 +20,8 @@ variable "cloud_run_env_vars" {
   type = map(map(string))
   default = {
     dev = {
-      ADMIN_ROLE_ID = "1368939833162076200"
+      ADMIN_ROLE_ID            = "1368939833162076200"
+      RETURNING_MEMBER_ROLE_ID = "1492146121663971409"
 
       AUTH_GITHUB_ID = "Ov23liN6oGK1lfbZm3P2"
       AUTH_X_ID      = "eW5jSnZRbEFBLWJMY1Z3NTFmVXQ6MTpjaQ"
@@ -36,7 +37,8 @@ variable "cloud_run_env_vars" {
       LINE_GROUP_ID         = "C1634d113e1d5a316077098b5776b94b5"
     }
     stg = {
-      ADMIN_ROLE_ID = "1368939833162076200"
+      ADMIN_ROLE_ID            = "1368939833162076200"
+      RETURNING_MEMBER_ROLE_ID = "1492146121663971409"
 
       AUTH_GITHUB_ID = "Ov23li6SPPesKvJDqXiO"
       AUTH_X_ID      = "MktOVXFWdWNFZzN5VzI2TXJFZ2Q6MTpjaQ"
@@ -52,7 +54,8 @@ variable "cloud_run_env_vars" {
       LINE_GROUP_ID         = "C5a28521ffe1f42b16998bd506acab713"
     }
     prd = {
-      ADMIN_ROLE_ID = "1478450042749849670"
+      ADMIN_ROLE_ID            = "1478450042749849670"
+      RETURNING_MEMBER_ROLE_ID = "1356896104351793154"
 
       AUTH_GITHUB_ID = "Ov23liaSCNoELzDDQ71W"
       AUTH_X_ID      = "UUthQmxHVlY1anFBU0VtWmQxUmU6MTpjaQ"
