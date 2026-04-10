@@ -1039,11 +1039,9 @@ export default function OnboardingForm({
     setTimeout(() => {
       setShowWelcome(false);
       setWelcomeFading(false);
-      if (isReturningMember) {
-        setShowFeeNotice(true);
-      }
+      setShowFeeNotice(true);
     }, 500);
-  }, [isReturningMember]);
+  }, []);
 
   const handleSurveySubmit = useCallback(async () => {
     setSurveySubmitting(true);
@@ -1253,7 +1251,7 @@ export default function OnboardingForm({
         />
       )}
 
-      {/* 継続メンバー向け会費通知モーダル */}
+      {/* 会費通知モーダル */}
       <Dialog open={showFeeNotice} onOpenChange={() => {}}>
         <DialogContent
           onInteractOutside={(e) => e.preventDefault()}
@@ -1261,10 +1259,14 @@ export default function OnboardingForm({
           className="[&>button:last-child]:hidden"
         >
           <DialogHeader>
-            <DialogTitle>継続メンバーの皆さまへ</DialogTitle>
-            <DialogDescription className="text-balance">
-              今年度もLumosでの活動を続けてくださり、ありがとうございます！
-            </DialogDescription>
+            <DialogTitle>
+              {isReturningMember ? "継続メンバーの皆さまへ" : "会費について"}
+            </DialogTitle>
+            {isReturningMember && (
+              <DialogDescription className="text-balance">
+                今年度もLumosでの活動を続けてくださり、ありがとうございます！
+              </DialogDescription>
+            )}
           </DialogHeader>
           <div className="text-sm">
             <p>
@@ -1273,9 +1275,11 @@ export default function OnboardingForm({
               <br />
               (詳細は後日アナウンス予定)
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              ※卒業生の方は対象外です。
-            </p>
+            {isReturningMember && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                ※卒業生の方は対象外です。
+              </p>
+            )}
           </div>
           <DialogFooter className="sm:justify-center">
             <Button onClick={() => setShowFeeNotice(false)}>確認した</Button>
