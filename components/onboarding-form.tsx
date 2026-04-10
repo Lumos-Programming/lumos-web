@@ -20,6 +20,15 @@ import type { SnsEntry } from "@/components/member-tile-preview";
 import type { Area } from "react-easy-crop";
 import type { PublicImageOption } from "@/lib/members";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { normalizeLinkedInUrl } from "@/lib/linkedin";
 import type { FormData, VisibilityForm } from "./onboarding/types";
 import { VISIBILITY_DISPLAY_KEYS } from "./onboarding/types";
@@ -46,8 +55,10 @@ import {
 
 export default function OnboardingForm({
   lineBotFriendUrl,
+  isReturningMember,
 }: {
   lineBotFriendUrl?: string;
+  isReturningMember?: boolean;
 }) {
   const { update: updateSession } = useSession();
   const router = useRouter();
@@ -77,6 +88,7 @@ export default function OnboardingForm({
       !searchParams.get("error"),
   );
   const [welcomeFading, setWelcomeFading] = useState(false);
+  const [showFeeNotice, setShowFeeNotice] = useState(false);
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [form, setForm] = useState<FormData>(DEFAULT_FORM);
   const [allowPublic, setAllowPublic] = useState(true);
@@ -1015,8 +1027,11 @@ export default function OnboardingForm({
     setTimeout(() => {
       setShowWelcome(false);
       setWelcomeFading(false);
+      if (isReturningMember) {
+        setShowFeeNotice(true);
+      }
     }, 500);
-  }, []);
+  }, [isReturningMember]);
 
   if (loading) {
     return (
@@ -1201,6 +1216,36 @@ export default function OnboardingForm({
           onbExternalSns={onbExternalSns}
         />
       )}
+
+      {/* 継続メンバー向け会費通知モーダル */}
+      <Dialog open={showFeeNotice} onOpenChange={() => {}}>
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          className="[&>button:last-child]:hidden"
+        >
+          <DialogHeader>
+            <DialogTitle>継続メンバーの皆さまへ</DialogTitle>
+            <DialogDescription className="text-balance">
+              今年度もLumosでの活動を続けてくださり、ありがとうございます！
+            </DialogDescription>
+          </DialogHeader>
+          <div className="text-sm">
+            <p>
+              年会費は <span className="font-bold">3,000円</span>{" "}
+              です。5月頃に対面で集金します。
+              <br />
+              (詳細は後日アナウンス予定)
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              ※卒業生の方は対象外です。
+            </p>
+          </div>
+          <DialogFooter className="sm:justify-center">
+            <Button onClick={() => setShowFeeNotice(false)}>確認した</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
