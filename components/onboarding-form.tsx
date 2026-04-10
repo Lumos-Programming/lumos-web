@@ -87,11 +87,12 @@ export default function OnboardingForm({
   const [showWelcome, setShowWelcome] = useState(
     !searchParams.get("step") &&
       !searchParams.get("success") &&
-      !searchParams.get("error"),
+      !searchParams.get("error") &&
+      !searchParams.get("survey"),
   );
   const [welcomeFading, setWelcomeFading] = useState(false);
   const [showFeeNotice, setShowFeeNotice] = useState(false);
-  const [showSurvey, setShowSurvey] = useState(false);
+  const showSurvey = searchParams.get("survey") === "1";
   const [surveyRating, setSurveyRating] = useState(0);
   const [surveyReason, setSurveyReason] = useState("");
   const [surveyExpectations, setSurveyExpectations] = useState("");
@@ -991,7 +992,7 @@ export default function OnboardingForm({
         }
         await updateSession();
         if (isReturningMember) {
-          setShowSurvey(true);
+          router.replace("?survey=1");
           return;
         }
         router.push("/internal/onboarding/complete");
@@ -1331,7 +1332,7 @@ export default function OnboardingForm({
             </div>
             <div>
               <p className="text-sm font-medium mb-2">
-                これからのLumosに期待することや、やりたい企画があれば教えてください
+                これからのLumosに期待することや、やりたい企画があれば教えてください。
               </p>
               <Textarea
                 placeholder="回答を入力"

@@ -20,7 +20,8 @@ export default async function OnboardingPage({
     getMember(session.user.id),
     checkReturningMember(session.user.id),
   ]);
-  if (member && isOnboardingComplete(member) && !isDevPreview) {
+  const isSurvey = params.survey === "1";
+  if (member && isOnboardingComplete(member) && !isDevPreview && !isSurvey) {
     redirect("/internal");
   }
 
