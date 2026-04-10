@@ -24,14 +24,14 @@ export async function POST(req: Request) {
   }
 
   const db = getDb();
-  const docId = `${session.user.id}_onboarding_2025`;
+  const docId = `${session.user.id}_onboarding_2026`;
 
   await db
     .collection("surveys")
     .doc(docId)
     .set({
       discordId: session.user.id,
-      type: "onboarding_2025",
+      type: "onboarding_2026",
       satisfaction,
       ...(satisfactionReason ? { satisfactionReason } : {}),
       ...(expectations ? { expectations } : {}),
