@@ -111,7 +111,7 @@ export function MemberTile({
     <button
       type="button"
       onClick={onClick}
-      className="group flex flex-col items-center text-center rounded-xl p-3 hover:bg-card hover:shadow-lg hover:shadow-purple-200/30 dark:hover:shadow-purple-900/20 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:scale-[0.97]"
+      className="group flex flex-col items-center text-center w-full rounded-xl p-3 hover:bg-card hover:shadow-lg hover:shadow-purple-200/30 dark:hover:shadow-purple-900/20 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:scale-[0.97]"
     >
       {content}
     </button>
