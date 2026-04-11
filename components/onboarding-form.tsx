@@ -1275,11 +1275,9 @@ export default function OnboardingForm({
               <br />
               (詳細は後日アナウンス予定)
             </p>
-            {isReturningMember && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                ※卒業生の方は対象外です。
-              </p>
-            )}
+            <p className="mt-2 text-xs text-muted-foreground">
+              ※卒業生の方は対象外です。
+            </p>
           </div>
           <DialogFooter className="sm:justify-center">
             <Button onClick={() => setShowFeeNotice(false)}>確認した</Button>
