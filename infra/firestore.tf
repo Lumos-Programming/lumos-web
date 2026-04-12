@@ -1,10 +1,11 @@
 resource "google_firestore_database" "production" {
-  project                     = var.project_id
-  name                        = "(default)"
-  location_id                 = var.region
-  type                        = "FIRESTORE_NATIVE"
-  deletion_policy             = "PREVENT"
-  delete_protection_state     = "DELETE_PROTECTION_ENABLED"
+  project                           = var.project_id
+  name                              = "(default)"
+  location_id                       = var.region
+  type                              = "FIRESTORE_NATIVE"
+  point_in_time_recovery_enablement = "POINT_IN_TIME_RECOVERY_ENABLED"
+  deletion_policy                   = "PREVENT"
+  delete_protection_state           = "DELETE_PROTECTION_ENABLED"
 
   lifecycle {
     prevent_destroy = true
@@ -35,6 +36,20 @@ resource "google_firestore_database" "staging" {
   point_in_time_recovery_enablement = "POINT_IN_TIME_RECOVERY_ENABLED"
   deletion_policy                   = "PREVENT"
   delete_protection_state           = "DELETE_PROTECTION_ENABLED"
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = all
+  }
+}
+
+resource "google_firestore_backup_schedule" "production_daily" {
+  project  = var.project_id
+  database = google_firestore_database.production.name
+
+  retention = "2592000s" # 30 days
+
+  daily_recurrence {}
 
   lifecycle {
     prevent_destroy = true
