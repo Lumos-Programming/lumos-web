@@ -73,8 +73,8 @@ export async function createWeekEvent(weekId: string): Promise<void> {
   const eventUrl = getDiscordEventUrl(event.id);
   await saveDiscordEvent(weekId, event.id, eventUrl);
 
-  revalidatePath("/admin");
-  revalidatePath("/");
+  revalidatePath("/mini-lt/admin");
+  revalidatePath("/mini-lt");
 }
 
 /**
@@ -93,8 +93,8 @@ export async function syncWeekEventDescription(
     description,
   });
 
-  revalidatePath("/admin");
-  revalidatePath("/");
+  revalidatePath("/mini-lt/admin");
+  revalidatePath("/mini-lt");
 }
 
 /**
@@ -107,6 +107,6 @@ export async function deleteWeekEvent(
   await deleteDiscordEvent(eventId);
   await removeDiscordEvent(weekId);
 
-  revalidatePath("/admin");
-  revalidatePath("/");
+  revalidatePath("/mini-lt/admin");
+  revalidatePath("/mini-lt");
 }

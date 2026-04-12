@@ -11,7 +11,7 @@ export async function Header() {
       <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]"></div>
       <div className="container mx-auto px-4 py-6 max-w-5xl relative">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex-1">
+          <Link href="/mini-lt" className="flex-1">
             <div className="text-center text-white cursor-pointer hover:opacity-90 transition-opacity">
               {/* Lumos Logo Area */}
               <div className="flex items-center justify-center mb-3">

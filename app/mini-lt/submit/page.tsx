@@ -57,7 +57,7 @@ export default async function SubmitPage({
           </form>
           <div className="mt-8 pt-6 border-t">
             <Link
-              href="/"
+              href="/mini-lt"
               className="text-sm text-muted-foreground hover:text-purple-600 transition-colors"
             >
               ← 公開ページへ戻る
@@ -99,7 +99,7 @@ export default async function SubmitPage({
           </form>
           <div className="mt-8 pt-6 border-t">
             <Link
-              href="/"
+              href="/mini-lt"
               className="text-sm text-muted-foreground hover:text-purple-600 transition-colors"
             >
               ← 公開ページへ戻る
@@ -182,8 +182,8 @@ export default async function SubmitPage({
       }
     }
 
-    revalidatePath("/submit");
-    revalidatePath("/");
+    revalidatePath("/mini-lt/submit");
+    revalidatePath("/mini-lt");
   };
 
   const handleDelete = async (talkId: string) => {
@@ -202,8 +202,8 @@ export default async function SubmitPage({
       }
     }
 
-    revalidatePath("/submit");
-    revalidatePath("/");
+    revalidatePath("/mini-lt/submit");
+    revalidatePath("/mini-lt");
   };
 
   return (
@@ -267,7 +267,7 @@ export default async function SubmitPage({
           />
 
           <div className="mt-12 text-center pb-8">
-            <Link href="/">
+            <Link href="/mini-lt">
               <Button
                 variant="outline"
                 className="hover:bg-purple-50 hover:border-purple-300"

@@ -37,7 +37,7 @@ export default async function EventRedirectPage({ params }: PageProps) {
 
   // If no Discord event exists, redirect to home page for that week immediately
   if (!weekData.discordEventUrl) {
-    redirect(`/?week=${weekId}`);
+    redirect(`/mini-lt?week=${weekId}`);
   }
 
   const redirectUrl = weekData.discordEventUrl;
