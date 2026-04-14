@@ -60,7 +60,7 @@ export default async function AdminPage({
             <p className="text-muted-foreground mb-4">
               このページにアクセスする権限がありません
             </p>
-            <Link href="/">
+            <Link href="/mini-lt">
               <Button variant="outline">トップページへ戻る</Button>
             </Link>
           </CardContent>
@@ -101,7 +101,7 @@ export default async function AdminPage({
           <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
             <WeekNavigator
               currentWeek={weekId}
-              baseUrl="/admin"
+              baseUrl="/mini-lt/admin"
               showSendButton
             />
           </div>
@@ -208,7 +208,7 @@ export default async function AdminPage({
           </Card>
 
           <div className="mt-8 text-center">
-            <Link href="/">
+            <Link href="/mini-lt">
               <Button variant="outline">← トップページへ戻る</Button>
             </Link>
           </div>

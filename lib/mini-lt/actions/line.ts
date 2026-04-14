@@ -40,6 +40,6 @@ export async function sendLineNextEvent(): Promise<void> {
     );
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/");
+  revalidatePath("/mini-lt/admin");
+  revalidatePath("/mini-lt");
 }
