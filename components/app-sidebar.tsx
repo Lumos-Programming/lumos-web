@@ -11,7 +11,9 @@ import {
   ExternalLink,
   LogOut,
   Shield,
+  Wrench,
 } from "lucide-react";
+import { isProduction } from "@/lib/env";
 import { signOut } from "next-auth/react";
 import {
   Sidebar,
@@ -38,7 +40,17 @@ const NAV_ITEMS = [
 ];
 
 const ADMIN_NAV_ITEMS = [
-  { href: "/internal/admin", icon: Shield, label: "管理者ページ" },
+  { href: "/internal/admin", icon: Shield, label: "管理者ページ", exact: true },
+  ...(!isProduction()
+    ? [
+        {
+          href: "/internal/admin/dev-tools",
+          icon: Wrench,
+          label: "開発者ツール",
+          exact: false,
+        },
+      ]
+    : []),
 ];
 
 interface AppSidebarProps {
@@ -118,7 +130,11 @@ export function AppSidebar({
           <SidebarGroupContent>
             <SidebarMenu>
               {ADMIN_NAV_ITEMS.map((item) => {
-                const isActive = isAdmin && pathname.startsWith(item.href);
+                const isActive = isAdmin
+                  ? item.exact
+                    ? pathname === item.href
+                    : pathname.startsWith(item.href)
+                  : false;
                 return (
                   <SidebarMenuItem key={item.href}>
                     {isAdmin ? (

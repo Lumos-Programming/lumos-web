@@ -36,7 +36,7 @@ type DiscordActionRow = {
   components: DiscordButtonComponent[];
 };
 
-type DiscordMessagePayload = {
+export type DiscordMessagePayload = {
   embeds: DiscordEmbed[];
   components?: DiscordActionRow[];
 };
@@ -336,14 +336,14 @@ export function buildRegistrationNudgeMessage(
           "",
           "2026年度より、Lumosのメンバー管理は **Lumos Web** で行われることになりました。",
           "",
-          "**Lumos Webでできること：**",
+          "### Lumos Webでできること",
           "💬 Lumos2026のLINEグループに参加する",
           "👥 Lumosのメンバーについて知る",
           "🎨 自分だけのプロフィールを作る",
           "📅 ミニLTなどの各種イベントに参加登録する",
           "",
-          "現役生・卒業生・社会人を問わず、",
-          "**2026年度もLumosのDiscordサーバーに参加するためにはLumos Webへの登録が必要です。**",
+          "### ⚠️ 登録が必要です",
+          "現役生・卒業生・社会人を問わず、2026年度もLumosのDiscordサーバーに参加するためには **Lumos Webへの登録が必要** です。",
           "",
           "Discordアカウントで簡単にログインできます。ぜひ登録をお願いします！🙏",
           "",
@@ -352,6 +352,12 @@ export function buildRegistrationNudgeMessage(
         color: WELCOME_COLOR,
         thumbnail: { url: LOGO_URL },
         footer: { text: FOOTER_TEXT },
+      },
+      {
+        title: "🚨 対応期限：2026年4月18日（金）",
+        description:
+          "期限を過ぎるとDiscordサーバーへのアクセスが制限される場合があります。\nお早めの登録をお願いします！",
+        color: 0xed4245, // Discord Red
       },
     ],
     components: [
@@ -384,10 +390,11 @@ export function buildOnboardingNudgeMessage(
           "Lumos Webへのログインありがとうございます！",
           "**オンボーディングがまだ完了していない**ようです。",
           "",
+          "### ⚠️ オンボーディングの完了が必要です",
           "2026年度より、Lumosのメンバー管理はLumos Webで行われます。",
-          "**2026年度もLumosのDiscordサーバーに参加し続けるには、オンボーディングの完了が必要です。**",
+          "2026年度もLumosのDiscordサーバーに参加し続けるには、 **オンボーディングの完了が必要** です。",
           "",
-          "オンボーディングを完了すると、以下の機能も使えるようになります：",
+          "### Lumos Webでできること",
           "👥 Lumosのメンバーについて知る",
           "🎨 自分だけのプロフィールを作る",
           "📅 ミニLTなどの各種イベントに参加登録する",
@@ -400,6 +407,12 @@ export function buildOnboardingNudgeMessage(
         color: WELCOME_COLOR,
         thumbnail: { url: LOGO_URL },
         footer: { text: FOOTER_TEXT },
+      },
+      {
+        title: "🚨 対応期限：2026年4月18日（金）",
+        description:
+          "期限を過ぎるとDiscordサーバーへのアクセスが制限される場合があります。\nお早めの対応をお願いします！",
+        color: 0xed4245, // Discord Red
       },
     ],
     components: [

@@ -49,6 +49,8 @@ jobs:
           tags: asia-northeast1-docker.pkg.dev/lumos-infra/lumos-web/stg:latest
           context: .
           file: ./cloudrun/Dockerfile
+          build-args: |
+            NEXT_PUBLIC_APP_ENV=staging
 
       - name: Download Cloud Run Service YAML
         run: |
