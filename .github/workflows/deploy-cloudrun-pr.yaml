@@ -44,6 +44,8 @@ jobs:
           tags: asia-northeast1-docker.pkg.dev/lumos-infra/lumos-web/pr-${{ github.event.number }}:latest
           context: .
           file: ./cloudrun/Dockerfile
+          build-args: |
+            NEXT_PUBLIC_APP_ENV=development
       - name: Deploy to Cloud Run
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v2

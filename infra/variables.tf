@@ -20,6 +20,7 @@ variable "cloud_run_env_vars" {
   type = map(map(string))
   default = {
     dev = {
+      NEXT_PUBLIC_APP_ENV      = "development"
       ADMIN_ROLE_ID            = "1368939833162076200"
       RETURNING_MEMBER_ROLE_ID = "1492146121663971409"
 
@@ -37,6 +38,7 @@ variable "cloud_run_env_vars" {
       LINE_GROUP_ID         = "C1634d113e1d5a316077098b5776b94b5"
     }
     stg = {
+      NEXT_PUBLIC_APP_ENV      = "staging"
       ADMIN_ROLE_ID            = "1368939833162076200"
       RETURNING_MEMBER_ROLE_ID = "1492146121663971409"
 
@@ -54,6 +56,7 @@ variable "cloud_run_env_vars" {
       LINE_GROUP_ID         = "C5a28521ffe1f42b16998bd506acab713"
     }
     prd = {
+      NEXT_PUBLIC_APP_ENV      = "production"
       ADMIN_ROLE_ID            = "1478450042749849670"
       RETURNING_MEMBER_ROLE_ID = "1356896104351793154"
 

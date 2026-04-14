@@ -18,6 +18,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# App environment (baked into client bundle via NEXT_PUBLIC_ prefix)
+ARG NEXT_PUBLIC_APP_ENV=development
+ENV NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV
+
 # Generate version.json before build
 ARG COMMIT_SHA
 ARG BUILD_DATE
