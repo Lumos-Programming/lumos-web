@@ -1,4 +1,4 @@
-import { auth, isAdmin } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { isProduction } from "@/lib/env";
 import { getGuildMemberList } from "@/lib/admin/dev-tools-actions";
 import { DevToolsPanel } from "@/components/admin/dev-tools-panel";
@@ -15,19 +15,6 @@ export default async function DevToolsPage() {
         <h1 className="text-2xl font-bold">アクセス拒否</h1>
         <p className="text-muted-foreground">
           本番環境ではこのページは使用できません。
-        </p>
-      </div>
-    );
-  }
-
-  const admin = await isAdmin();
-  if (!admin) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <ShieldAlert className="h-16 w-16 text-destructive" />
-        <h1 className="text-2xl font-bold">アクセス拒否</h1>
-        <p className="text-muted-foreground">
-          このページは管理者のみアクセスできます。
         </p>
       </div>
     );

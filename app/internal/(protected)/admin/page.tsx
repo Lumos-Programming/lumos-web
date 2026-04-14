@@ -1,26 +1,11 @@
-import { isAdmin } from "@/lib/auth";
 import { getUnregisteredMembers } from "@/lib/admin/actions";
 import { AdminNotificationPanel } from "@/components/admin/notification-panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Shield, ShieldAlert, AlertCircle } from "lucide-react";
+import { Shield, AlertCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const admin = await isAdmin();
-
-  if (!admin) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <ShieldAlert className="h-16 w-16 text-destructive" />
-        <h1 className="text-2xl font-bold">アクセス拒否</h1>
-        <p className="text-muted-foreground">
-          このページは管理者のみアクセスできます。
-        </p>
-      </div>
-    );
-  }
-
   let members;
   let error: string | null = null;
   try {
