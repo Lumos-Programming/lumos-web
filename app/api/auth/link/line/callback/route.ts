@@ -5,7 +5,7 @@ import {
   fetchProviderUser,
   getCallbackUrl,
 } from "@/lib/oauth-link";
-import { updateMemberSns } from "@/lib/members";
+import { getMember, updateMemberSns } from "@/lib/members";
 import {
   checkLineGroupMembership,
   checkLineBotFriendship,
@@ -44,40 +44,61 @@ export async function GET(request: NextRequest) {
     );
     const user = await fetchProviderUser("line", tokenResponse.access_token);
 
-    // Bot友だち状態を判定
-    // friendship_status_changed=true → 今回追加した（友だち）
-    // friendship_status_changed=false → 追加しなかった（未友だち or ブロック中）
-    // null → 同意画面スキップ → APIで確認
-    let isFriend: boolean;
-    if (friendshipChanged === "true") {
-      isFriend = true;
-    } else if (friendshipChanged === "false") {
-      isFriend = false;
-    } else {
-      isFriend = await checkLineBotFriendship(tokenResponse.access_token);
-    }
-    console.log("LINE friendship status:", isFriend ? "friend" : "not friend");
-
     const isOnboarding = redirectTo.includes("/internal/onboarding");
     const isSettings = redirectTo.includes("/internal/settings");
+    const member = await getMember(discordId);
+    const isAlumni = member?.memberType === "卒業生";
 
+    /** LINE SNS データ（全フローで共通） */
+    const snsData = {
+      line: user.username,
+      lineId: user.id,
+      lineAvatar: user.avatar,
+      lineLinkedAt: Math.floor(Date.now() / 1000),
+      lineAccessToken: tokenResponse.access_token,
+      lineRefreshToken: tokenResponse.refresh_token,
+      lineTokenExpiresAt: tokenResponse.expires_in
+        ? Math.floor(Date.now() / 1000) + tokenResponse.expires_in
+        : undefined,
+    };
+
+    /**
+     * Bot友だち状態を遅延判定（グループ招待が必要な非卒業生フローでのみ使用）
+     * friendship_status_changed=true → 今回追加した（友だち）
+     * friendship_status_changed=false → 追加しなかった（未友だち or ブロック中）
+     * null → 同意画面スキップ → APIで確認
+     */
+    const resolveIsFriend = async () => {
+      if (friendshipChanged === "true") return true;
+      if (friendshipChanged === "false") return false;
+      return checkLineBotFriendship(tokenResponse.access_token);
+    };
+
+    /** グループ未参加時の not_friend パラメータを付与（ベストエフォート） */
+    const appendNotFriendParam = async (url: URL) => {
+      try {
+        if (!(await resolveIsFriend())) {
+          url.searchParams.set("not_friend", "1");
+        }
+      } catch {
+        // 友だち判定失敗時はパラメータ無しで続行
+      }
+    };
+
+    // ── 設定画面からの再連携フロー ──
     if (isSettings) {
-      // 再連携フロー: DB更新せず、招待コードに仮情報を保存
+      // 卒業生はグループ参加不要 → 即座にDB更新
+      if (isAlumni) {
+        await updateMemberSns(discordId, snsData);
+        const successUrl = new URL(redirectTo, origin);
+        successUrl.searchParams.set("success", "line_relinked");
+        return NextResponse.redirect(successUrl.toString());
+      }
+
+      // 再連携フロー: グループ参加済みなら即DB更新
       const inGroup = await checkLineGroupMembership(user.id);
       if (inGroup) {
-        // 新アカウントが既にグループ参加済み → 即座にDB更新
-        await updateMemberSns(discordId, {
-          line: user.username,
-          lineId: user.id,
-          lineAvatar: user.avatar,
-          lineLinkedAt: Math.floor(Date.now() / 1000),
-          lineAccessToken: tokenResponse.access_token,
-          lineRefreshToken: tokenResponse.refresh_token,
-          lineTokenExpiresAt: tokenResponse.expires_in
-            ? Math.floor(Date.now() / 1000) + tokenResponse.expires_in
-            : undefined,
-        });
-
+        await updateMemberSns(discordId, snsData);
         const successUrl = new URL(redirectTo, origin);
         successUrl.searchParams.set("success", "line_relinked");
         return NextResponse.redirect(successUrl.toString());
@@ -98,37 +119,23 @@ export async function GET(request: NextRequest) {
       const successUrl = new URL(redirectTo, origin);
       successUrl.searchParams.set("success", "line_linked");
       successUrl.searchParams.set("line_group", "not_joined");
-      if (!isFriend) {
-        successUrl.searchParams.set("not_friend", "1");
-      }
+      await appendNotFriendParam(successUrl);
       return NextResponse.redirect(successUrl.toString());
     }
 
-    // 初回連携フロー（onboarding含むデフォルト）
-    await updateMemberSns(discordId, {
-      line: user.username,
-      lineId: user.id,
-      lineAvatar: user.avatar,
-      lineLinkedAt: Math.floor(Date.now() / 1000),
-      lineAccessToken: tokenResponse.access_token,
-      lineRefreshToken: tokenResponse.refresh_token,
-      lineTokenExpiresAt: tokenResponse.expires_in
-        ? Math.floor(Date.now() / 1000) + tokenResponse.expires_in
-        : undefined,
-    });
+    // ── 初回連携フロー（onboarding含むデフォルト） ──
+    await updateMemberSns(discordId, snsData);
 
     const successUrl = new URL(redirectTo, origin);
     successUrl.searchParams.set("success", "line_linked");
 
-    if (isOnboarding) {
+    if (isOnboarding && !isAlumni) {
       const inGroup = await checkLineGroupMembership(user.id);
       if (!inGroup) {
         // グループ未参加 → 招待コード発行（push DMは送らず、Bot友だち追加を促す）
         await createLineInvitation(discordId, user.id);
         successUrl.searchParams.set("line_group", "not_joined");
-        if (!isFriend) {
-          successUrl.searchParams.set("not_friend", "1");
-        }
+        await appendNotFriendParam(successUrl);
       }
     }
 

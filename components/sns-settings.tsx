@@ -7,6 +7,7 @@ import { normalizeLinkedInUrl } from "@/lib/linkedin";
 import { LineGroupJoinNotice } from "@/components/line-group-join-notice";
 
 interface Props {
+  isAlumni: boolean;
   discordUsername: string;
   github: string;
   githubId: string;
@@ -18,6 +19,7 @@ interface Props {
   linkedin: string;
   lineGroupPending?: boolean;
   lineBotFriendUrl?: string;
+  isBotFriend?: boolean;
   successMessage?: string;
   errorMessage?: string;
 }
@@ -370,6 +372,7 @@ function LinkedInCard({
 }
 
 export default function SnsSettings({
+  isAlumni,
   discordUsername,
   github: initialGithub,
   githubId: initialGithubId,
@@ -381,6 +384,7 @@ export default function SnsSettings({
   linkedin: initialLinkedin,
   lineGroupPending: initialLineGroupPending,
   lineBotFriendUrl,
+  isBotFriend: initialIsBotFriend,
   successMessage,
   errorMessage,
 }: Props) {
@@ -405,7 +409,7 @@ export default function SnsSettings({
   );
 
   useEffect(() => {
-    if (lineId) {
+    if (lineId && !isAlumni) {
       fetch("/api/line-group/check-membership")
         .then((r) => r.json())
         .then((d) => {
@@ -418,7 +422,7 @@ export default function SnsSettings({
         })
         .catch(() => {});
     }
-  }, [lineId]);
+  }, [lineId, isAlumni]);
 
   const disconnect = async (provider: "github" | "x" | "line") => {
     const res = await fetch("/api/settings/sns", {
@@ -512,16 +516,17 @@ export default function SnsSettings({
             再連携は連携から2週間後に可能です。問題がある場合は管理者にお問い合わせください。
           </p>
         )}
-        {!!lineId && lineGroupJoined && (
+        {!isAlumni && !!lineId && lineGroupJoined && (
           <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 mt-1 px-4">
             <Check className="w-3 h-3" />
             LINEグループに参加済み
           </div>
         )}
-        {!!lineId && lineGroupCheckPending && !lineGroupJoined && (
+        {!isAlumni && !!lineId && lineGroupCheckPending && !lineGroupJoined && (
           <div className="px-4">
             <LineGroupJoinNotice
               lineBotFriendUrl={lineBotFriendUrl}
+              isBotFriend={initialIsBotFriend}
               onGroupJoined={() => {
                 setLineGroupJoined(true);
                 setLineGroupCheckPending(false);
@@ -530,11 +535,14 @@ export default function SnsSettings({
             />
           </div>
         )}
-        {!!lineId && !lineGroupJoined && !lineGroupCheckPending && (
-          <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mt-1 px-4">
-            LINEグループに未参加
-          </div>
-        )}
+        {!isAlumni &&
+          !!lineId &&
+          !lineGroupJoined &&
+          !lineGroupCheckPending && (
+            <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mt-1 px-4">
+              LINEグループに未参加
+            </div>
+          )}
       </div>
 
       {/* GitHub */}

@@ -6,12 +6,14 @@ import { LineGroupJoinNotice } from "@/components/line-group-join-notice";
 import { LineIcon, GithubIcon, XIcon, LinkedInIcon } from "./types";
 
 interface Step3SnsProps {
+  isAlumni: boolean;
   lineLinked: boolean;
   lineUsername: string;
   lineAvatar: string;
   lineGroupJoined: boolean;
   lineGroupCheckPending: boolean;
   lineBotFriendUrl?: string;
+  isBotFriend?: boolean;
   onLineGroupJoined: () => void;
   githubLinked: boolean;
   githubUsername: string;
@@ -29,12 +31,14 @@ interface Step3SnsProps {
 }
 
 export function Step3Sns({
+  isAlumni,
   lineLinked,
   lineUsername,
   lineAvatar,
   lineGroupJoined,
   lineGroupCheckPending,
   lineBotFriendUrl,
+  isBotFriend,
   onLineGroupJoined,
   githubLinked,
   githubUsername,
@@ -50,6 +54,7 @@ export function Step3Sns({
   onNext,
   onBack,
 }: Step3SnsProps) {
+  const lineRequired = !isAlumni;
   return (
     <div className="p-8">
       <div className="mb-6">
@@ -57,7 +62,9 @@ export function Step3Sns({
           SNSアカウントを連携
         </h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          LINEの連携は必須です。GitHubとXは任意です。
+          {isAlumni
+            ? "すべて任意です。"
+            : "LINEの連携は必須です。GitHubとXは任意です。"}
         </p>
       </div>
 
@@ -92,9 +99,11 @@ export function Step3Sns({
                   <span className="font-medium text-gray-900 dark:text-gray-100">
                     LINE
                   </span>
-                  <span className="text-[10px] bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400 px-1.5 py-0.5 rounded font-medium">
-                    必須
-                  </span>
+                  {lineRequired && (
+                    <span className="text-[10px] bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400 px-1.5 py-0.5 rounded font-medium">
+                      必須
+                    </span>
+                  )}
                 </div>
                 {lineLinked && (
                   <p className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">
@@ -116,7 +125,7 @@ export function Step3Sns({
               {lineLinked ? "再連携" : "連携する"}
             </a>
           </div>
-          {lineLinked && lineGroupJoined && (
+          {lineLinked && lineGroupJoined && !isAlumni && (
             <div className="mt-2 flex items-center gap-1.5 text-xs text-green-700 dark:text-green-400">
               <svg
                 className="w-3.5 h-3.5"
@@ -132,12 +141,16 @@ export function Step3Sns({
               LINEグループに参加済み
             </div>
           )}
-          {lineLinked && lineGroupCheckPending && !lineGroupJoined && (
-            <LineGroupJoinNotice
-              lineBotFriendUrl={lineBotFriendUrl}
-              onGroupJoined={onLineGroupJoined}
-            />
-          )}
+          {lineLinked &&
+            lineGroupCheckPending &&
+            !lineGroupJoined &&
+            !isAlumni && (
+              <LineGroupJoinNotice
+                lineBotFriendUrl={lineBotFriendUrl}
+                isBotFriend={isBotFriend}
+                onGroupJoined={onLineGroupJoined}
+              />
+            )}
         </div>
 
         {/* GitHub — optional */}
