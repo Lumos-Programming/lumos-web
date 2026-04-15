@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 
 interface LineGroupJoinNoticeProps {
   lineBotFriendUrl?: string;
+  isBotFriend?: boolean;
   onGroupJoined: () => void;
 }
 
 export function LineGroupJoinNotice({
   lineBotFriendUrl,
+  isBotFriend = false,
   onGroupJoined,
 }: LineGroupJoinNoticeProps) {
   const [checking, setChecking] = useState(false);
@@ -48,14 +50,32 @@ export function LineGroupJoinNotice({
         <p className="text-xs text-amber-700 dark:text-amber-400 mb-2">
           まずLumos公式アカウントを友だち追加してください。追加後、招待リンクが届きます。
         </p>
-        <a
-          href={lineBotFriendUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs bg-[#06C755] hover:bg-[#05a848] text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
-        >
-          公式アカウントを友だち追加
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href={lineBotFriendUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs bg-[#06C755] hover:bg-[#05a848] text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
+          >
+            公式アカウントを友だち追加
+          </a>
+          {isBotFriend && (
+            <span className="inline-flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
+              <svg
+                className="w-3.5 h-3.5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              追加済み
+            </span>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <Button

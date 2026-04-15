@@ -25,11 +25,12 @@ export default async function SettingPage({
     success?: string;
     error?: string;
     line_group?: string;
+    not_friend?: string;
   }>;
 }) {
   const session = await auth();
   const member = await getMember(session!.user!.id);
-  const { success, error, line_group } = (await searchParams) ?? {};
+  const { success, error, line_group, not_friend } = (await searchParams) ?? {};
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto animate-spring-up">
@@ -57,6 +58,7 @@ export default async function SettingPage({
             </CardHeader>
             <CardContent>
               <SnsSettings
+                isAlumni={member?.memberType === "卒業生"}
                 discordUsername={member?.discordUsername ?? ""}
                 github={member?.github ?? ""}
                 githubId={member?.githubId ?? ""}
@@ -68,6 +70,7 @@ export default async function SettingPage({
                 linkedin={member?.linkedin ?? ""}
                 lineGroupPending={line_group === "not_joined"}
                 lineBotFriendUrl={process.env.LINE_BOT_FRIEND_URL}
+                isBotFriend={line_group === "not_joined" && not_friend !== "1"}
                 successMessage={success ? SUCCESS_MESSAGES[success] : undefined}
                 errorMessage={error ? ERROR_MESSAGES[error] : undefined}
               />

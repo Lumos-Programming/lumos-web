@@ -122,6 +122,7 @@ export default function OnboardingForm({
   >({});
   const [lineGroupJoined, setLineGroupJoined] = useState(false);
   const [lineGroupCheckPending, setLineGroupCheckPending] = useState(false);
+  const [isBotFriend, setIsBotFriend] = useState(false);
 
   const [step3Error, setStep3Error] = useState("");
   const [linkedinError, setLinkedinError] = useState("");
@@ -283,7 +284,8 @@ export default function OnboardingForm({
           setLineLinked(!!data.lineId);
           setLineUsername(data.line ?? "");
           setLineAvatar(data.lineAvatar ?? "");
-          if (data.lineId) {
+          const memberTypeValue = data.memberType || cache.memberType || "";
+          if (data.lineId && memberTypeValue !== "卒業生") {
             fetch("/api/line-group/check-membership")
               .then((r) => r.json())
               .then((d) => {
@@ -313,24 +315,27 @@ export default function OnboardingForm({
 
     if (success === "line_linked") {
       setLineLinked(true);
-      const lineGroup = searchParams.get("line_group");
-      if (lineGroup === "not_joined") {
-        setLineGroupCheckPending(true);
-      } else {
-        // line_group param未指定 = APIでグループチェック
-        fetch("/api/line-group/check-membership")
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.isMember) setLineGroupJoined(true);
-            else setLineGroupCheckPending(true);
-          })
-          .catch(() => {});
-      }
       fetchProfile()
         .then((data) => {
           if (data?.line) {
             setLineUsername(data.line);
             setLineAvatar(data.lineAvatar ?? "");
+          }
+          // 卒業生はグループ参加不要
+          if (data?.memberType === "卒業生") return;
+          const notFriend = searchParams.get("not_friend");
+          if (notFriend !== "1") setIsBotFriend(true);
+          const lineGroup = searchParams.get("line_group");
+          if (lineGroup === "not_joined") {
+            setLineGroupCheckPending(true);
+          } else {
+            fetch("/api/line-group/check-membership")
+              .then((r) => r.json())
+              .then((d) => {
+                if (d.isMember) setLineGroupJoined(true);
+                else setLineGroupCheckPending(true);
+              })
+              .catch(() => {});
           }
         })
         .catch(console.error);
@@ -597,14 +602,18 @@ export default function OnboardingForm({
     }
   }, [linkedinUrl]);
 
+  const isAlumni = form.memberType === "卒業生";
+
   const handleStep3Next = async () => {
-    if (!lineLinked) {
-      setStep3Error("LINEアカウントの連携は必須です");
-      return;
-    }
-    if (!lineGroupJoined) {
-      setStep3Error("LINEグループへの参加が必要です");
-      return;
+    if (!isAlumni) {
+      if (!lineLinked) {
+        setStep3Error("LINEアカウントの連携は必須です");
+        return;
+      }
+      if (!lineGroupJoined) {
+        setStep3Error("LINEグループへの参加が必要です");
+        return;
+      }
     }
     setStep3Error("");
     // Validate & normalize LinkedIn URL if provided
@@ -1124,12 +1133,14 @@ export default function OnboardingForm({
 
             {currentStep === 3 && (
               <Step3Sns
+                isAlumni={isAlumni}
                 lineLinked={lineLinked}
                 lineUsername={lineUsername}
                 lineAvatar={lineAvatar}
                 lineGroupJoined={lineGroupJoined}
                 lineGroupCheckPending={lineGroupCheckPending}
                 lineBotFriendUrl={lineBotFriendUrl}
+                isBotFriend={isBotFriend}
                 onLineGroupJoined={() => {
                   setLineGroupJoined(true);
                   setLineGroupCheckPending(false);
