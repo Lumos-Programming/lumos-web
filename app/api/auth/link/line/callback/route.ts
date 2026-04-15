@@ -74,10 +74,14 @@ export async function GET(request: NextRequest) {
       return checkLineBotFriendship(tokenResponse.access_token);
     };
 
-    /** グループ未参加時の not_friend パラメータを付与 */
+    /** グループ未参加時の not_friend パラメータを付与（ベストエフォート） */
     const appendNotFriendParam = async (url: URL) => {
-      if (!(await resolveIsFriend())) {
-        url.searchParams.set("not_friend", "1");
+      try {
+        if (!(await resolveIsFriend())) {
+          url.searchParams.set("not_friend", "1");
+        }
+      } catch {
+        // 友だち判定失敗時はパラメータ無しで続行
       }
     };
 

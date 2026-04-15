@@ -324,7 +324,7 @@ export default function OnboardingForm({
           // 卒業生はグループ参加不要
           if (data?.memberType === "卒業生") return;
           const notFriend = searchParams.get("not_friend");
-          if (notFriend !== "1") setIsBotFriend(true);
+          setIsBotFriend(notFriend !== "1");
           const lineGroup = searchParams.get("line_group");
           if (lineGroup === "not_joined") {
             setLineGroupCheckPending(true);
@@ -373,6 +373,7 @@ export default function OnboardingForm({
       url.searchParams.delete("success");
       url.searchParams.delete("error");
       url.searchParams.delete("line_group");
+      url.searchParams.delete("not_friend");
       const params = new URLSearchParams();
       if (step) params.set("step", String(step));
       if (isPreview) params.set("preview", "");
