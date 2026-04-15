@@ -211,7 +211,7 @@ async function handleMemberJoined(event: LineWebhookEvent): Promise<void> {
         const memberDoc = await getMember(invitation.userId);
         const isOnboarding = memberDoc && !isOnboardingComplete(memberDoc);
         const onboardingUrl = isOnboarding
-          ? `${process.env.AUTH_URL ?? "http://localhost:3000"}/internal/onboarding`
+          ? `${process.env.AUTH_URL ?? "http://localhost:3000"}/internal/onboarding?openExternalBrowser=1`
           : undefined;
 
         await sendLineGroupJoinedDM(member.userId, onboardingUrl);
