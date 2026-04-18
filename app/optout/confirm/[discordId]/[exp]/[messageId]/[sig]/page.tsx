@@ -15,6 +15,7 @@ import {
 import { isValidSnowflake } from "@/lib/auth";
 import {
   sendDiscordDm,
+  editDiscordDm,
   buildOptoutLinkReissueMessage,
   buildOptoutCompletedMessage,
 } from "@/lib/discord-dm";
@@ -73,9 +74,14 @@ async function reissueAndRender(discordId: string) {
 export default async function OptoutConfirmPage({
   params,
 }: {
-  params: Promise<{ discordId: string; exp: string; sig: string }>;
+  params: Promise<{
+    discordId: string;
+    exp: string;
+    messageId: string;
+    sig: string;
+  }>;
 }) {
-  const { discordId, exp, sig } = await params;
+  const { discordId, exp, messageId, sig } = await params;
 
   if (!isValidSnowflake(discordId)) {
     return (
@@ -94,7 +100,7 @@ export default async function OptoutConfirmPage({
     redirect("/optout/done");
   }
 
-  const result = verifyOptoutConfirm(discordId, exp, sig);
+  const result = verifyOptoutConfirm(discordId, exp, sig, messageId);
   if (!result.ok) {
     // invalid も expired も同じ: Step 1 からやり直しリンクを再送
     return reissueAndRender(discordId);
@@ -124,6 +130,13 @@ export default async function OptoutConfirmPage({
         description="サーバーで保存に失敗しました。しばらくしてからもう一度お試しください。"
       />
     );
+  }
+
+  // 元の最終確認 DM のボタンを無効化 (再加入後に誤って再押下されるのを防ぐ)
+  try {
+    await editDiscordDm(discordId, messageId, { components: [] });
+  } catch (e) {
+    console.error("Failed to strip buttons from confirm DM:", e);
   }
 
   // 完了通知 DM (失敗してもユーザー体験には影響しないので握りつぶしてログのみ)

@@ -10,7 +10,9 @@ import { getMember, isMemberOptedOut } from "@/lib/members";
 import { isValidSnowflake } from "@/lib/auth";
 import {
   sendDiscordDm,
+  editDiscordDm,
   buildOptoutConfirmRequestMessage,
+  buildOptoutConfirmRequestButtons,
 } from "@/lib/discord-dm";
 
 const REASON_SET = new Set<string>(OPTOUT_REASON_VALUES);
@@ -102,16 +104,37 @@ export async function POST(request: NextRequest) {
   }
 
   // Step 2 の最終確認 DM を送信
+  // 1. ボタン無しで送信 → messageId を取得
+  // 2. PATCH で messageId を埋め込んだ finalizeUrl ボタンを後付けする
+  // これにより確定後に同じ messageId でボタンを削除して誤クリックを防げる
   const displayName =
     member?.discordUsername ?? member?.nickname ?? "Discord ユーザー";
-  const finalizeUrl = getOptoutFinalizeUrl(discordId);
+  let messageId: string;
   try {
-    await sendDiscordDm(
+    const sent = await sendDiscordDm(
       discordId,
-      buildOptoutConfirmRequestMessage(displayName, finalizeUrl),
+      buildOptoutConfirmRequestMessage(displayName),
     );
+    messageId = sent.messageId;
   } catch (e) {
     console.error("Failed to send opt-out confirm DM:", e);
+    return NextResponse.json(
+      {
+        error:
+          "Discordへの確認DM送信に失敗しました。DMを受信できる設定かご確認のうえ、再度お試しください。",
+      },
+      { status: 502 },
+    );
+  }
+
+  // messageId 埋め込み済みのボタンを後付け。失敗したらボタン無しで届いてしまうので 502
+  try {
+    const finalizeUrl = getOptoutFinalizeUrl(discordId, messageId);
+    await editDiscordDm(discordId, messageId, {
+      components: buildOptoutConfirmRequestButtons(finalizeUrl),
+    });
+  } catch (e) {
+    console.error("Failed to attach confirm button:", e);
     return NextResponse.json(
       {
         error:

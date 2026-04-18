@@ -67,7 +67,7 @@ export type OptoutRequestDecodeResult =
   | { ok: false; error: OptoutTokenError; discordId?: string };
 
 export type OptoutConfirmDecodeResult =
-  | { ok: true; discordId: string; exp: number }
+  | { ok: true; discordId: string; exp: number; messageId: string }
   | { ok: false; error: OptoutTokenError; discordId?: string };
 
 // --- Step 1 (request) ---
@@ -96,34 +96,42 @@ export function verifyOptoutRequest(
 
 // --- Step 2 (confirm) ---
 
-export function signOptoutConfirm(discordId: string, exp: number): string {
-  return sign(`${CONFIRM_LABEL}|${discordId}|${exp}`);
+export function signOptoutConfirm(
+  discordId: string,
+  exp: number,
+  messageId: string,
+): string {
+  return sign(`${CONFIRM_LABEL}|${discordId}|${exp}|${messageId}`);
 }
 
-/** `/optout/confirm/{discordId}/{exp}/{sig}` を検証 */
+/** `/optout/confirm/{discordId}/{exp}/{messageId}/{sig}` を検証 */
 export function verifyOptoutConfirm(
   discordId: string,
   expRaw: string,
   sig: string,
+  messageId: string,
 ): OptoutConfirmDecodeResult {
   if (!process.env.AUTH_SECRET) {
     return { ok: false, error: "missing_secret", discordId };
   }
-  if (!discordId || !expRaw || !sig) {
+  if (!discordId || !expRaw || !sig || !messageId) {
     return { ok: false, error: "invalid", discordId };
   }
   if (!/^\d{1,13}$/.test(expRaw)) {
     return { ok: false, error: "invalid", discordId };
   }
+  if (!/^\d{1,25}$/.test(messageId)) {
+    return { ok: false, error: "invalid", discordId };
+  }
   const exp = Number(expRaw);
-  const expected = signOptoutConfirm(discordId, exp);
+  const expected = signOptoutConfirm(discordId, exp, messageId);
   if (!timingSafeEqual(expected, sig)) {
     return { ok: false, error: "invalid", discordId };
   }
   if (exp * 1000 < Date.now()) {
     return { ok: false, error: "expired", discordId };
   }
-  return { ok: true, discordId, exp };
+  return { ok: true, discordId, exp, messageId };
 }
 
 // --- URL helpers ---
@@ -137,10 +145,18 @@ export function getOptoutRequestUrl(discordId: string): string {
   return `${getBaseUrl()}/optout/${discordId}/${signOptoutRequest(discordId)}`;
 }
 
-/** Step 2 のランディング URL (exp 20 分後) */
-export function getOptoutFinalizeUrl(discordId: string): string {
+/**
+ * Step 2 のランディング URL (exp 20 分後)。
+ * messageId は元の Confirm DM のメッセージIDで、確定後にそのメッセージを編集して
+ * 誤クリックを防ぐのに使う。URL には平文で含むが HMAC 署名の material にも入れて改竄検出する。
+ */
+export function getOptoutFinalizeUrl(
+  discordId: string,
+  messageId: string,
+): string {
   const exp = Math.floor(Date.now() / 1000) + OPTOUT_CONFIRM_TTL_SECONDS;
-  return `${getBaseUrl()}/optout/confirm/${discordId}/${exp}/${signOptoutConfirm(discordId, exp)}`;
+  const sig = signOptoutConfirm(discordId, exp, messageId);
+  return `${getBaseUrl()}/optout/confirm/${discordId}/${exp}/${messageId}/${sig}`;
 }
 
 // --- Firestore: optout_submissions ---
