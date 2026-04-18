@@ -40,8 +40,10 @@ export default function OptoutStatusCard({
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-10">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-8 text-[#e8eaf6] shadow-xl backdrop-blur-sm">
-        <Icon aria-hidden className={`h-10 w-10 ${accent}`} />
-        <h1 className="mt-4 text-2xl font-bold">{title}</h1>
+        <div className="flex items-center gap-3">
+          <Icon aria-hidden className={`h-9 w-9 flex-shrink-0 ${accent}`} />
+          <h1 className="text-2xl font-bold">{title}</h1>
+        </div>
         <p className="mt-4 text-sm leading-relaxed text-[#c8cae0]">
           {description}
         </p>

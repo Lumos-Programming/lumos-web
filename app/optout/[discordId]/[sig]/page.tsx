@@ -2,8 +2,20 @@ import { verifyOptoutRequest, getOptoutSubmission } from "@/lib/discord-optout";
 import { getMember, isOnboardingComplete } from "@/lib/members";
 import { isValidSnowflake } from "@/lib/auth";
 import { sendDiscordDm, buildOptoutLinkReissueMessage } from "@/lib/discord-dm";
+import { fetchDiscordDisplayName } from "@/lib/discord";
 import OptoutConfirmForm from "@/components/optout/confirm-form";
 import OptoutStatusCard from "@/components/optout/status-card";
+import RejoinCallout from "@/components/optout/rejoin-callout";
+
+async function resolveDisplayName(
+  discordId: string,
+  member: Awaited<ReturnType<typeof getMember>>,
+): Promise<string> {
+  const fromMember = member?.discordUsername ?? member?.nickname;
+  if (fromMember) return fromMember;
+  const fromDiscord = await fetchDiscordDisplayName(discordId);
+  return fromDiscord ?? "Discord ユーザー";
+}
 
 export const dynamic = "force-dynamic";
 
@@ -51,16 +63,11 @@ export default async function OptoutPage({
   }
 
   const member = await getMember(discordId);
-  const displayName =
-    member?.discordUsername ?? member?.nickname ?? "Discord ユーザー";
+  const displayName = await resolveDisplayName(discordId, member);
 
-  // 2) 署名検証 — 失敗時は新しい退会リンクを Discord DM で再送
-  const result = verifyOptoutRequest(discordId, sig);
-  if (!result.ok) {
-    return reissueAndRender(discordId, displayName);
-  }
-
-  // 3) 既に opt-out 確定済み
+  // 2) 既に opt-out 確定済みなら sig 検証より先に終状態を返す。
+  //    AUTH_SECRET ローテ等で過去リンクが invalid になっていても「受付済み」を表示する方が親切で、
+  //    確定済みユーザーに不要な再発行 DM を送らずに済む。
   const existing = await getOptoutSubmission(discordId);
   if (existing) {
     return (
@@ -68,8 +75,15 @@ export default async function OptoutPage({
         tone="success"
         title="受付済みです"
         description={`${displayName} さんの退会の意思表示を受け付けています。Discordサーバーには引き続き参加いただけますが、4月末を目処にメンバー用チャンネルは閲覧できなくなります。`}
+        extra={<RejoinCallout />}
       />
     );
+  }
+
+  // 3) 署名検証 — 失敗時は新しい退会リンクを Discord DM で再送
+  const result = verifyOptoutRequest(discordId, sig);
+  if (!result.ok) {
+    return reissueAndRender(discordId, displayName);
   }
 
   // 4) 登録完了済み

@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import {
   verifyOptoutConfirm,
   getOptoutSubmission,
@@ -10,6 +11,7 @@ import {
 import { markMemberOptedOut, getMember } from "@/lib/members";
 import { isValidSnowflake } from "@/lib/auth";
 import { sendDiscordDm, buildOptoutLinkReissueMessage } from "@/lib/discord-dm";
+import { fetchDiscordDisplayName } from "@/lib/discord";
 import OptoutStatusCard from "@/components/optout/status-card";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +35,10 @@ function hashIp(
 async function reissueAndRender(discordId: string) {
   const member = await getMember(discordId);
   const displayName =
-    member?.discordUsername ?? member?.nickname ?? "Discord ユーザー";
+    member?.discordUsername ??
+    member?.nickname ??
+    (await fetchDiscordDisplayName(discordId)) ??
+    "Discord ユーザー";
   try {
     await sendDiscordDm(
       discordId,
@@ -75,22 +80,17 @@ export default async function OptoutConfirmPage({
     );
   }
 
+  // 既に確定済みなら sig 検証より先に完了ページへ。
+  // AUTH_SECRET ローテ等で過去リンクが invalid になっていても不要な再発行 DM を送らない。
+  const existing = await getOptoutSubmission(discordId);
+  if (existing) {
+    redirect("/optout/done");
+  }
+
   const result = verifyOptoutConfirm(discordId, exp, sig);
   if (!result.ok) {
     // invalid も expired も同じ: Step 1 からやり直しリンクを再送
     return reissueAndRender(discordId);
-  }
-
-  // 冪等性: 既に確定済みなら書き込まず success 表示
-  const existing = await getOptoutSubmission(discordId);
-  if (existing) {
-    return (
-      <OptoutStatusCard
-        tone="success"
-        title="退会処理を受け付けています"
-        description="既に退会の意思表示が記録されています。Discordサーバーには引き続き参加いただけますが、メンバー用チャンネルは閲覧できなくなります。このページは閉じていただいて構いません。"
-      />
-    );
   }
 
   // GET で副作用を行う（署名自体が本人認証要素、Firestore 書き込みは冪等）
@@ -119,11 +119,6 @@ export default async function OptoutConfirmPage({
     );
   }
 
-  return (
-    <OptoutStatusCard
-      tone="success"
-      title="退会処理が完了しました"
-      description="退会の意思表示を受け付けました。Discordサーバーには引き続き参加いただけますが、4月末を目処にメンバー用チャンネルは閲覧できなくなります。Lumosでは一年中入会を受け付けていますので、再加入をご希望の場合はポータルサイトにログインしてご自身で再加入申請いただけます。"
-    />
-  );
+  // 副作用完了後は専用ページへリダイレクト (リロードでも副作用が再走しないように)
+  redirect("/optout/done");
 }
