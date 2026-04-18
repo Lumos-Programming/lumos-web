@@ -14,6 +14,12 @@ export async function GET(request: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (session.user.optedOut) {
+    return NextResponse.json(
+      { error: "退会済みアカウントでは操作できません" },
+      { status: 403 },
+    );
+  }
 
   const config = PROVIDER_CONFIGS.x;
   const clientId = process.env[config.clientIdEnv];
