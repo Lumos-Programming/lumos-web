@@ -30,7 +30,7 @@ flowchart TD
     G -->|成功| H["/optout/submitted<br/>最終確認DMを送信しました ページ"]
     G -->|エラー| D
     H --> I{"Discord DM<br/>最終確認"}
-    I -->|最終確認する ボタン / 20分以内| J["Step 2 ページ<br/>/optout/confirm/:discordId/:exp/:sig"]
+    I -->|最終確認する ボタン / 20分以内| J["Step 2 ページ<br/>/optout/confirm/:discordId/:exp/:messageId/:sig"]
     J -->|リンク期限切れ / 無効| K["退会リンクを DM に再発行<br/>→ Step 1 からやり直し"]
     J -->|既に退会済み| L["/optout/done<br/>退会処理が完了しました ページ"]
     J -->|通常ケース| M["Firestore 書き込み<br/>members.optedOut = true"]
@@ -69,10 +69,10 @@ flowchart TD
 
 ### URL 構造
 
-| ステップ              | URL                                       | 有効期限 |
-| --------------------- | ----------------------------------------- | -------- |
-| Step 1 (Web フォーム) | `/optout/{discordId}/{sig}`               | 無期限   |
-| Step 2 (最終確認)     | `/optout/confirm/{discordId}/{exp}/{sig}` | 20 分    |
+| ステップ              | URL                                                   | 有効期限 |
+| --------------------- | ----------------------------------------------------- | -------- |
+| Step 1 (Web フォーム) | `/optout/{discordId}/{sig}`                           | 無期限   |
+| Step 2 (最終確認)     | `/optout/confirm/{discordId}/{exp}/{messageId}/{sig}` | 20 分    |
 
 - `sig` = `HMAC-SHA256(key, LABEL \| discordId [\| exp])` の base64url エンコード
 - Step 1 / Step 2 で `LABEL` を分けて HMAC のドメイン分離 (`optout-request-v1`, `optout-confirm-v1`) を行う
@@ -83,7 +83,7 @@ flowchart TD
 - `lib/discord-optout.ts` — トークン生成・検証、Firestore ヘルパー
 - `lib/discord-dm.ts` — Discord DM テンプレート
 - `app/optout/[discordId]/[sig]/page.tsx` — Step 1 ページ
-- `app/optout/confirm/[discordId]/[exp]/[sig]/page.tsx` — Step 2 ページ (副作用実行)
+- `app/optout/confirm/[discordId]/[exp]/[messageId]/[sig]/page.tsx` — Step 2 ページ (副作用実行)
 - `app/optout/submitted/page.tsx` — Step 1 送信完了後のランディング (リロード安全)
 - `app/optout/done/page.tsx` — Step 2 完了後のランディング (リロード安全)
 - `app/optout/completed/page.tsx` — 退会済みユーザーがポータルに来たときのランディング
@@ -145,6 +145,28 @@ sequenceDiagram
 - `recordOptoutSurvey` を**DM 送信より先**に実行する理由: DM 送信が失敗してもアンケート回答は残るため、ユーザーは同じ内容を再送信できる (冪等)。
 - DM 送信が失敗した場合は `502` を返し、フォームに「Discord の DM 設定をご確認ください」というエラーを表示。
 - 既に確定済みなら `{ success: true, alreadyRecorded: true }` を返し、フォーム側では `/optout/done` にリダイレクトして Step 2 完了と終状態を揃える。
+
+### 最終確認 DM を「2 段階」で送る理由 (PR #215)
+
+素朴に実装すると、最終確認 DM を 1 回の `POST /channels/{id}/messages` で送信して終わりにしたくなる。が、以下の **誤再押下** シナリオが問題になる:
+
+1. ユーザーが最終確認 DM のボタンを踏んで退会確定
+2. 気が変わって同じフローから再加入 (`/api/optout/rejoin`)
+3. 退会確認 DM に残っていたボタンを誤って再押下 → **20 分以内ならトークンが有効なので再度退会確定してしまう**
+
+そこで、確定時に **元の最終確認 DM そのものを PATCH してボタンを消す** 仕組みを入れた。これを実現するには、確定処理を行う `/optout/confirm/...` 画面が「どの DM メッセージを編集すればいいか」を知っている必要がある → **finalize URL の path に Discord の `messageId` を含めて HMAC 署名で改竄検出する** 設計になった。
+
+ただしここで **chicken-and-egg 問題** が発生する: `messageId` は DM を送信しないと判明しない。一方、DM の中に埋めるボタンの URL は `messageId` を含めないといけない。この循環依存を解くために、Step 1 API は Discord への書き込みを 2 回に分けている:
+
+1. `sendDiscordDm(...)` — **ボタン無しの embed のみ** を送信して `messageId` を取得
+2. `editDiscordDm(messageId, { components })` — 取得した `messageId` を埋め込んだ finalize URL のボタンを後付けで PATCH
+
+その結果、**最終確認 DM には Discord 側で「(編集済み)」マークが付く**。これはユーザー視点では違和感だが、仕組み上の必然であり、以下の挙動にも繋がる:
+
+- Step 2 確定時の PATCH (`components: []`) で元 DM のボタンが消える → 再加入後の誤クリックを防げる
+- `messageId` を含む finalize URL は HMAC 改竄検出されるので、攻撃者が URL 内の `messageId` だけ差し替えても sig が壊れて通らない
+
+PATCH が失敗した場合は `502` を返す (ボタン無しの DM だけが届いた状態でフローが進んでしまうのを防ぐため)。dev-tools でのテスト送信 (`sendTestDiscordMessage`) も本番と同じ 2 段階にしており、挙動の非対称性を作らない。
 
 ---
 
