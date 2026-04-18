@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Info,
   EyeOff,
@@ -23,8 +24,7 @@ const REASON_DETAIL_MAX = 1000;
 type SubmitState =
   | { status: "idle" }
   | { status: "submitting" }
-  | { status: "sent" }
-  | { status: "alreadyRecorded" }
+  | { status: "redirecting" }
   | { status: "error"; message: string };
 
 type Notice = {
@@ -43,6 +43,7 @@ export default function OptoutConfirmForm({
   displayName: string;
   notice?: Notice;
 }) {
+  const router = useRouter();
   const [reason, setReason] = useState("");
   const [reasonDetail, setReasonDetail] = useState("");
   const [checked, setChecked] = useState(false);
@@ -96,11 +97,11 @@ export default function OptoutConfirmForm({
           });
           return;
         }
-        if (data.alreadyRecorded) {
-          setState({ status: "alreadyRecorded" });
-          return;
-        }
-        setState({ status: "sent" });
+        setState({ status: "redirecting" });
+        // 成功後は専用ページへ遷移 (既に受付済みの場合は完了ページへ)
+        router.replace(
+          data.alreadyRecorded ? "/optout/done" : "/optout/submitted",
+        );
       } catch {
         setState({
           status: "error",
@@ -109,48 +110,6 @@ export default function OptoutConfirmForm({
         });
       }
     });
-  }
-
-  if (state.status === "alreadyRecorded") {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-6 py-10">
-        <div className="w-full max-w-md rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.06] p-8 text-[#e8eaf6] shadow-xl backdrop-blur-sm">
-          <div className="text-4xl text-emerald-300">✓</div>
-          <h1 className="mt-4 text-2xl font-bold">受付済みです</h1>
-          <p className="mt-4 text-sm leading-relaxed text-[#c8cae0]">
-            {displayName} さんの退会の意思表示は既に受け付けられています。
-            <br />
-            Discordサーバーには引き続き参加いただけますが、4月末を目処にメンバー用チャンネルは閲覧できなくなります。
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (state.status === "sent") {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-6 py-10">
-        <div className="w-full max-w-md rounded-2xl border border-sky-400/20 bg-sky-400/[0.06] p-8 text-[#e8eaf6] shadow-xl backdrop-blur-sm">
-          <div className="text-4xl text-sky-300">✉️</div>
-          <h1 className="mt-4 text-2xl font-bold">
-            Discordに最終確認のDMを送信しました
-          </h1>
-          <p className="mt-4 text-sm leading-relaxed text-[#c8cae0]">
-            ご本人確認のため、Discord
-            DMに届いた「退会処理を完了させる」ボタンから
-            <strong className="text-white"> 20分以内</strong>
-            に確定操作をお願いします。
-          </p>
-          <p className="mt-4 rounded-md border border-white/10 bg-white/[0.03] p-3 text-xs text-[#8b8fa8]">
-            DMが届かない場合:
-            Discordのプライバシー設定で「サーバーメンバーからのダイレクトメッセージを許可する」がオフになっている可能性があります。設定をご確認ください。
-          </p>
-          <p className="mt-4 text-xs text-[#8b8fa8]">
-            このタブはそのまま閉じていただいて構いません。
-          </p>
-        </div>
-      </div>
-    );
   }
 
   return (

@@ -28,7 +28,7 @@ export default function OptoutStatusCard({
 }: {
   tone: Tone;
   title: string;
-  description: string;
+  description: ReactNode;
   /** ユーザーに案内する追加アクション（テキストのみ） */
   actions?: StatusCardAction[];
   /** ボタンなど任意の JSX */
