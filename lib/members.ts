@@ -268,15 +268,29 @@ export function isOnboardingComplete(member: MemberDocument): boolean {
   return member.onboardingCompleted === true;
 }
 
-/** 退会フラグを立てる（member doc が存在する場合のみ） */
+/**
+ * 退会フラグを立てる。member doc が無い場合は最小限のドキュメントを作成する。
+ * 未ログインのまま Discord DM のリンクだけで退会するユーザーも、以後の登録案内 DM から
+ * 除外できるようにするため存在を記録する。
+ */
 export async function markMemberOptedOut(discordId: string): Promise<void> {
   const db = getDb();
   const ref = db.collection("members").doc(discordId);
   const snap = await ref.get();
-  if (!snap.exists) return;
-  await ref.update({
+  if (snap.exists) {
+    await ref.update({
+      optedOut: true,
+      optedOutAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return;
+  }
+  // メンバーが会員登録そもそもしていない場合
+  await ref.set({
     optedOut: true,
     optedOutAt: FieldValue.serverTimestamp(),
+    onboardingCompleted: false,
+    createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   });
 }
