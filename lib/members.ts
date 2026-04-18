@@ -57,6 +57,8 @@ export interface MemberDocument {
   topInterests?: string[]; // 一覧カード表示用 (max 3)
   allowPublic?: boolean;
   onboardingCompleted?: boolean;
+  optedOut?: boolean;
+  optedOutAt?: FirebaseFirestore.Timestamp;
   visibility: {
     studentId: VisibilityLevel;
     nickname: VisibilityLevel;
@@ -266,30 +268,64 @@ export function isOnboardingComplete(member: MemberDocument): boolean {
   return member.onboardingCompleted === true;
 }
 
+/** 退会フラグを立てる（member doc が存在する場合のみ） */
+export async function markMemberOptedOut(discordId: string): Promise<void> {
+  const db = getDb();
+  const ref = db.collection("members").doc(discordId);
+  const snap = await ref.get();
+  if (!snap.exists) return;
+  await ref.update({
+    optedOut: true,
+    optedOutAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
+/** 再加入時: 退会フラグを解除し、オンボーディングをやり直させる */
+export async function markMemberRejoined(discordId: string): Promise<void> {
+  const db = getDb();
+  const ref = db.collection("members").doc(discordId);
+  const snap = await ref.get();
+  if (!snap.exists) return;
+  await ref.update({
+    optedOut: FieldValue.delete(),
+    optedOutAt: FieldValue.delete(),
+    onboardingCompleted: false,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
 export type MemberRegistrationStatus = {
   registeredIds: Set<string>;
   onboardingIds: Set<string>;
+  optedOutIds: Set<string>;
 };
 
 export async function getMemberRegistrationStatus(): Promise<MemberRegistrationStatus> {
   const db = getDb();
   const snap = await db
     .collection("members")
-    .select("onboardingCompleted")
+    .select("onboardingCompleted", "optedOut")
     .get();
 
   const registeredIds = new Set<string>();
   const onboardingIds = new Set<string>();
+  const optedOutIds = new Set<string>();
 
   for (const doc of snap.docs) {
-    if (doc.data().onboardingCompleted === true) {
+    const data = doc.data();
+    if (data.optedOut === true) {
+      optedOutIds.add(doc.id);
+      continue;
+    }
+    if (data.onboardingCompleted === true) {
       registeredIds.add(doc.id);
     } else {
       onboardingIds.add(doc.id);
     }
   }
 
-  return { registeredIds, onboardingIds };
+  return { registeredIds, onboardingIds, optedOutIds };
 }
 
 function resolveDiscordAvatar(
