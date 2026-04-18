@@ -12,9 +12,9 @@ export default async function ProtectedLayout({
   if (!session?.user?.id) redirect("/login");
 
   const member = await getMember(session.user.id);
-  if (!member || !isOnboardingComplete(member)) {
-    redirect("/internal/onboarding");
-  }
+  if (!member) redirect("/internal/onboarding");
+  if (member.optedOut) redirect("/optout/completed");
+  if (!isOnboardingComplete(member)) redirect("/internal/onboarding");
 
   const userIsAdmin = session.user.isAdmin === true;
 
