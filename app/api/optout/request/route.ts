@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   verifyOptoutRequest,
   getOptoutFinalizeUrl,
-  getOptoutSubmission,
   recordOptoutSurvey,
   OPTOUT_REASON_VALUES,
   type OptoutReason,
 } from "@/lib/discord-optout";
-import { getMember } from "@/lib/members";
+import { getMember, isMemberOptedOut } from "@/lib/members";
 import { isValidSnowflake } from "@/lib/auth";
 import {
   sendDiscordDm,
@@ -81,13 +80,12 @@ export async function POST(request: NextRequest) {
     if (trimmed) reasonDetail = trimmed;
   }
 
+  const member = await getMember(discordId);
+
   // 既に確定済みなら冪等に success を返す（UI 側で「受付済み」表示へ）
-  const existing = await getOptoutSubmission(discordId);
-  if (existing) {
+  if (isMemberOptedOut(member)) {
     return NextResponse.json({ success: true, alreadyRecorded: true });
   }
-
-  const member = await getMember(discordId);
 
   // Step 1: アンケートを先に保存（DM 送信失敗時の再試行に備える）
   try {

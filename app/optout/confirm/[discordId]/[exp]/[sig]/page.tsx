@@ -4,11 +4,14 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   verifyOptoutConfirm,
-  getOptoutSubmission,
   recordOptoutSubmission,
   markOptoutSurveyConfirmed,
 } from "@/lib/discord-optout";
-import { markMemberOptedOut, getMember } from "@/lib/members";
+import {
+  markMemberOptedOut,
+  getMember,
+  isDiscordIdOptedOut,
+} from "@/lib/members";
 import { isValidSnowflake } from "@/lib/auth";
 import { sendDiscordDm, buildOptoutLinkReissueMessage } from "@/lib/discord-dm";
 import { fetchDiscordDisplayName } from "@/lib/discord";
@@ -80,10 +83,10 @@ export default async function OptoutConfirmPage({
     );
   }
 
-  // 既に確定済みなら sig 検証より先に完了ページへ。
-  // AUTH_SECRET ローテ等で過去リンクが invalid になっていても不要な再発行 DM を送らない。
-  const existing = await getOptoutSubmission(discordId);
-  if (existing) {
+  // members.optedOut を source of truth として先に判定。
+  // sig 検証より前に終状態へ飛ばすことで、AUTH_SECRET ローテ等で古いリンクが invalid に
+  // なっていても退会済みユーザーに不要な再発行 DM を送らずに済む。
+  if (await isDiscordIdOptedOut(discordId)) {
     redirect("/optout/done");
   }
 

@@ -1,5 +1,9 @@
-import { verifyOptoutRequest, getOptoutSubmission } from "@/lib/discord-optout";
-import { getMember, isOnboardingComplete } from "@/lib/members";
+import { verifyOptoutRequest } from "@/lib/discord-optout";
+import {
+  getMember,
+  isMemberOptedOut,
+  isOnboardingComplete,
+} from "@/lib/members";
 import { isValidSnowflake } from "@/lib/auth";
 import { sendDiscordDm, buildOptoutLinkReissueMessage } from "@/lib/discord-dm";
 import { fetchDiscordDisplayName } from "@/lib/discord";
@@ -57,7 +61,7 @@ export default async function OptoutPage({
       <OptoutStatusCard
         tone="error"
         title="リンクを認識できませんでした"
-        description="リンクが正しくないか、破損している可能性があります。Discord DMに届いた元のメッセージからもう一度お試しください。"
+        description="リンクが正しくないか、破損している可能性があります。解決しない場合は運営にお問い合わせください。"
       />
     );
   }
@@ -65,11 +69,10 @@ export default async function OptoutPage({
   const member = await getMember(discordId);
   const displayName = await resolveDisplayName(discordId, member);
 
-  // 2) 既に opt-out 確定済みなら sig 検証より先に終状態を返す。
-  //    AUTH_SECRET ローテ等で過去リンクが invalid になっていても「受付済み」を表示する方が親切で、
-  //    確定済みユーザーに不要な再発行 DM を送らずに済む。
-  const existing = await getOptoutSubmission(discordId);
-  if (existing) {
+  // 2) members.optedOut を source of truth として先に判定。
+  //    sig 検証より前に終状態を返すことで、AUTH_SECRET ローテ等で古いリンクが invalid に
+  //    なっていても退会済みユーザーに不要な再発行 DM を送らずに済む。
+  if (isMemberOptedOut(member)) {
     return (
       <OptoutStatusCard
         tone="success"
