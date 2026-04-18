@@ -11,8 +11,12 @@ import {
   buildWelcomeBackMessage,
   buildRegistrationNudgeMessage,
   buildOnboardingNudgeMessage,
+  buildOptoutConfirmRequestMessage,
+  buildOptoutCompletedMessage,
+  buildRejoinCompletedMessage,
   type DiscordMessagePayload,
 } from "@/lib/discord-dm";
+import { getOptoutFinalizeUrl } from "@/lib/discord-optout";
 import { sendLineNextEvent } from "@/lib/mini-lt/actions/line";
 
 // --- Types ---
@@ -57,9 +61,18 @@ function buildMessagePayload(
         missingFields: ["GitHub", "LinkedIn", "生年月日", "性別"],
       });
     case "registration_nudge":
-      return buildRegistrationNudgeMessage(displayName);
+      return buildRegistrationNudgeMessage(displayName, discordId);
     case "onboarding_nudge":
-      return buildOnboardingNudgeMessage(displayName);
+      return buildOnboardingNudgeMessage(displayName, discordId);
+    case "optout_confirm_request":
+      return buildOptoutConfirmRequestMessage(
+        displayName,
+        getOptoutFinalizeUrl(discordId),
+      );
+    case "optout_completed":
+      return buildOptoutCompletedMessage(displayName);
+    case "rejoin_completed":
+      return buildRejoinCompletedMessage(displayName);
     default:
       throw new Error(`不明なメッセージタイプ: ${messageType}`);
   }

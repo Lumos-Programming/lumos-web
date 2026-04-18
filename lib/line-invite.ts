@@ -160,6 +160,9 @@ export async function findMemberByLineId(
     .get();
   if (snap.empty) return null;
   const doc = snap.docs[0];
+  // 退会済みメンバーは LINE 連携済みでもヒットしないものとして扱う
+  // (招待 DM / 案内 DM をもう送らない)
+  if ((doc.data() as { optedOut?: boolean }).optedOut === true) return null;
   return { discordId: doc.id, lineId };
 }
 

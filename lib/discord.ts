@@ -249,6 +249,39 @@ export async function checkReturningMember(userId: string): Promise<boolean> {
 }
 
 /**
+ * Bot 権限で guild member の表示名を解決する。
+ * 優先度: guild nickname > global_name > username。member doc が無い/空の場合のフォールバックに使う
+ */
+export async function fetchDiscordDisplayName(
+  userId: string,
+): Promise<string | null> {
+  const guildId = process.env.DISCORD_GUILD_ID;
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!guildId || !botToken) return null;
+
+  try {
+    const response = await fetch(
+      `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}`,
+      { headers: { Authorization: `Bot ${botToken}` } },
+    );
+    if (!response.ok) return null;
+    const member = (await response.json()) as {
+      nick?: string | null;
+      user?: {
+        global_name?: string | null;
+        username?: string | null;
+      } | null;
+    };
+    return (
+      member.nick || member.user?.global_name || member.user?.username || null
+    );
+  } catch (e) {
+    console.error("Failed to fetch Discord display name:", e);
+    return null;
+  }
+}
+
+/**
  * Get avatar URL for a Discord user
  */
 export function getDiscordAvatarUrl(

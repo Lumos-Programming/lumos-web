@@ -8,6 +8,7 @@ import {
   buildRegistrationNudgeMessage,
   buildOnboardingNudgeMessage,
 } from "@/lib/discord-dm";
+import { getOptoutSubmissionIds } from "@/lib/discord-optout";
 
 export type MemberStatus = "unregistered" | "onboarding";
 
@@ -38,13 +39,12 @@ export async function getUnregisteredMembers(): Promise<UnregisteredMember[]> {
     throw new Error("管理者権限が必要です");
   }
 
-  const [guildMembers, { registeredIds, onboardingIds }] = await Promise.all([
-    getGuildMembers(),
-    getMemberRegistrationStatus(),
-  ]);
+  const [guildMembers, { registeredIds, onboardingIds, optedOutIds }] =
+    await Promise.all([getGuildMembers(), getMemberRegistrationStatus()]);
 
   return guildMembers
     .filter((m) => !registeredIds.has(m.user.id))
+    .filter((m) => !optedOutIds.has(m.user.id))
     .map((m) => ({
       discordId: m.user.id,
       username: m.user.username,
@@ -82,36 +82,45 @@ export async function sendRegistrationNudge(
   const unregistered = await getUnregisteredMembers();
   const memberMap = new Map(unregistered.map((m) => [m.discordId, m]));
 
+  // 退会メンバーを除外する
+  const optedOutIds = await getOptoutSubmissionIds();
+  const targetIds = discordIds.filter((id) => !optedOutIds.has(id));
+
   const result: SendResult = {
-    total: discordIds.length,
+    total: targetIds.length,
     success: 0,
     failed: 0,
     failures: [],
   };
 
-  for (let i = 0; i < discordIds.length; i++) {
-    const id = discordIds[i];
-    const member = memberMap.get(id);
-    const username = member?.displayName ?? "メンバー";
-    const message =
-      member?.status === "onboarding"
-        ? buildOnboardingNudgeMessage(username)
-        : buildRegistrationNudgeMessage(username);
+  // 同時2件で並列送信し、バッチ間は1秒待機してレート制御
+  const CONCURRENCY = 2;
+  for (let i = 0; i < targetIds.length; i += CONCURRENCY) {
+    const batch = targetIds.slice(i, i + CONCURRENCY);
+    await Promise.all(
+      batch.map(async (id) => {
+        const member = memberMap.get(id);
+        const username = member?.displayName ?? "メンバー";
+        const message =
+          member?.status === "onboarding"
+            ? buildOnboardingNudgeMessage(username, id)
+            : buildRegistrationNudgeMessage(username, id);
 
-    try {
-      await sendDiscordDm(id, message);
-      result.success++;
-    } catch (e) {
-      result.failed++;
-      result.failures.push({
-        discordId: id,
-        username,
-        error: e instanceof Error ? e.message : String(e),
-      });
-    }
+        try {
+          await sendDiscordDm(id, message);
+          result.success++;
+        } catch (e) {
+          result.failed++;
+          result.failures.push({
+            discordId: id,
+            username,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
+      }),
+    );
 
-    // Rate limit: wait 1 second between messages (skip after last)
-    if (i < discordIds.length - 1) {
+    if (i + CONCURRENCY < targetIds.length) {
       await sleep(1000);
     }
   }

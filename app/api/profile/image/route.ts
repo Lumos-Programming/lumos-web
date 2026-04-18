@@ -15,6 +15,12 @@ export async function POST(request: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (session.user.optedOut) {
+    return NextResponse.json(
+      { error: "退会済みアカウントでは操作できません" },
+      { status: 403 },
+    );
+  }
 
   const discordId = session.user.id;
 
@@ -76,6 +82,12 @@ export async function DELETE(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (session.user.optedOut) {
+    return NextResponse.json(
+      { error: "退会済みアカウントでは操作できません" },
+      { status: 403 },
+    );
   }
 
   const discordId = session.user.id;

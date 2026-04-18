@@ -13,6 +13,12 @@ export async function POST() {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (session.user.optedOut) {
+    return NextResponse.json(
+      { error: "退会済みアカウントでは操作できません" },
+      { status: 403 },
+    );
+  }
 
   const member = await getMember(session.user.id);
   if (!member) {

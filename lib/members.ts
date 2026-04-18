@@ -57,6 +57,8 @@ export interface MemberDocument {
   topInterests?: string[]; // 一覧カード表示用 (max 3)
   allowPublic?: boolean;
   onboardingCompleted?: boolean;
+  optedOut?: boolean;
+  optedOutAt?: FirebaseFirestore.Timestamp;
   visibility: {
     studentId: VisibilityLevel;
     nickname: VisibilityLevel;
@@ -144,9 +146,10 @@ export async function getPublicMembers(): Promise<Member[]> {
     .where("allowPublic", "==", true)
     .get();
 
-  return snap.docs.map((doc) => {
+  return snap.docs.flatMap((doc) => {
     const data = doc.data() as MemberDocument;
-    return profileToMember(doc.id, data);
+    if (isMemberOptedOut(data)) return [];
+    return [profileToMember(doc.id, data)];
   });
 }
 
@@ -157,9 +160,10 @@ export async function getMembersInternal(): Promise<Member[]> {
     .where("onboardingCompleted", "==", true)
     .get();
 
-  return snap.docs.map((doc) => {
+  return snap.docs.flatMap((doc) => {
     const data = doc.data() as MemberDocument;
-    return profileToMemberInternal(doc.id, data);
+    if (isMemberOptedOut(data)) return [];
+    return [profileToMemberInternal(doc.id, data)];
   });
 }
 
@@ -266,30 +270,88 @@ export function isOnboardingComplete(member: MemberDocument): boolean {
   return member.onboardingCompleted === true;
 }
 
+export function isMemberOptedOut(member: MemberDocument | null): boolean {
+  return member?.optedOut === true;
+}
+
+/** discordId から直接退会済みかを判定する (members コレクションが source of truth) */
+export async function isDiscordIdOptedOut(discordId: string): Promise<boolean> {
+  const member = await getMember(discordId);
+  return isMemberOptedOut(member);
+}
+
+/**
+ * 退会フラグを立てる。member doc が無い場合は最小限のドキュメントを作成する。
+ * 未ログインのまま Discord DM のリンクだけで退会するユーザーも、以後の登録案内 DM から
+ * 除外できるようにするため存在を記録する。
+ */
+export async function markMemberOptedOut(discordId: string): Promise<void> {
+  const db = getDb();
+  const ref = db.collection("members").doc(discordId);
+  const snap = await ref.get();
+  if (snap.exists) {
+    await ref.update({
+      optedOut: true,
+      optedOutAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return;
+  }
+  // メンバーが会員登録そもそもしていない場合
+  await ref.set({
+    optedOut: true,
+    optedOutAt: FieldValue.serverTimestamp(),
+    onboardingCompleted: false,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
+/** 再加入時: 退会フラグを解除し、オンボーディングをやり直させる */
+export async function markMemberRejoined(discordId: string): Promise<void> {
+  const db = getDb();
+  const ref = db.collection("members").doc(discordId);
+  const snap = await ref.get();
+  if (!snap.exists) return;
+  await ref.update({
+    optedOut: FieldValue.delete(),
+    optedOutAt: FieldValue.delete(),
+    onboardingCompleted: false,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
 export type MemberRegistrationStatus = {
   registeredIds: Set<string>;
   onboardingIds: Set<string>;
+  optedOutIds: Set<string>;
 };
 
 export async function getMemberRegistrationStatus(): Promise<MemberRegistrationStatus> {
   const db = getDb();
   const snap = await db
     .collection("members")
-    .select("onboardingCompleted")
+    .select("onboardingCompleted", "optedOut")
     .get();
 
   const registeredIds = new Set<string>();
   const onboardingIds = new Set<string>();
+  const optedOutIds = new Set<string>();
 
   for (const doc of snap.docs) {
-    if (doc.data().onboardingCompleted === true) {
+    const data = doc.data();
+    if (data.optedOut === true) {
+      optedOutIds.add(doc.id);
+      continue;
+    }
+    if (data.onboardingCompleted === true) {
       registeredIds.add(doc.id);
     } else {
       onboardingIds.add(doc.id);
     }
   }
 
-  return { registeredIds, onboardingIds };
+  return { registeredIds, onboardingIds, optedOutIds };
 }
 
 function resolveDiscordAvatar(

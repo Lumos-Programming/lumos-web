@@ -68,6 +68,32 @@ export default async function SubmitPage({
     );
   }
 
+  if (session?.user?.optedOut) {
+    return (
+      <main className="bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4 min-h-[80vh]">
+        <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-md w-full text-center">
+          <div className="mb-8">
+            <div className="w-20 h-20 bg-rose-500 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+              <span className="text-4xl">🚫</span>
+            </div>
+            <h1 className="text-3xl font-bold mb-3">退会済みアカウントです</h1>
+            <p className="text-muted-foreground">
+              このアカウントは退会処理が完了しているため、
+              <br />
+              発表を登録することはできません。
+            </p>
+          </div>
+          <Link
+            href="/mini-lt"
+            className="inline-flex items-center rounded-md border border-purple-200 px-4 py-2 text-sm text-purple-700 transition-colors hover:bg-purple-50"
+          >
+            ← 公開ページへ戻る
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   if (!session) {
     return (
       <main className="bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4 min-h-[80vh]">
@@ -120,9 +146,14 @@ export default async function SubmitPage({
     id?: string;
   }) => {
     "use server";
-    const userId = session.user?.id as string;
-    const userName = session.user?.name as string;
-    const userAvatar = session.user?.image as string;
+    // Server Action でもセッションを再評価 (退会直後の操作を弾く)
+    const currentSession = await auth();
+    if (!currentSession?.user?.id || currentSession.user.optedOut) {
+      throw new Error("このアカウントでは発表を登録できません");
+    }
+    const userId = currentSession.user.id;
+    const userName = currentSession.user.name as string;
+    const userAvatar = currentSession.user.image as string;
 
     if (formData.id) {
       // 編集の場合はそのまま更新
@@ -188,7 +219,11 @@ export default async function SubmitPage({
 
   const handleDelete = async (talkId: string) => {
     "use server";
-    const userId = session.user?.id as string;
+    const currentSession = await auth();
+    if (!currentSession?.user?.id || currentSession.user.optedOut) {
+      throw new Error("このアカウントでは操作できません");
+    }
+    const userId = currentSession.user.id;
     await deleteTalk(weekId, talkId, userId);
 
     // Auto-sync Discord event if it still exists after deletion

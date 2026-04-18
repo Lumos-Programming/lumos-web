@@ -8,6 +8,12 @@ export async function PUT(request: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (session.user.optedOut) {
+    return NextResponse.json(
+      { error: "退会済みアカウントでは操作できません" },
+      { status: 403 },
+    );
+  }
 
   try {
     const body = await request.json();
@@ -54,6 +60,12 @@ export async function DELETE(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (session.user.optedOut) {
+    return NextResponse.json(
+      { error: "退会済みアカウントでは操作できません" },
+      { status: 403 },
+    );
   }
 
   try {

@@ -63,6 +63,23 @@ const MESSAGE_TYPES = [
     description:
       "ログイン済みだがオンボーディング未完了のメンバーに送信。完了を促す。",
   },
+  {
+    value: "optout_confirm_request",
+    label: "退会 最終確認リクエスト",
+    description:
+      "退会フォーム送信後に送られる、本人確認用の最終確認 DM。20分間有効な「退会処理を完了させる」ボタン付き。",
+  },
+  {
+    value: "optout_completed",
+    label: "退会完了通知",
+    description: "退会処理が確定したときに送信される完了通知 DM。",
+  },
+  {
+    value: "rejoin_completed",
+    label: "再加入歓迎通知",
+    description:
+      "退会済みユーザーが再加入したときに送信される、おかえりなさい DM。Lumos Web への導線付き。",
+  },
 ] as const;
 
 interface DevToolsPanelProps {
