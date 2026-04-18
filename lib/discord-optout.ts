@@ -1,10 +1,18 @@
 /**
  * 退会 (opt-out) フロー用のトークン生成・検証ヘルパー
- * Discord DMのリンクボタンに埋め込む暗号化トークンと、Firestore保存ロジック
+ * Discord DMのリンクボタンに埋め込む HMAC 署名付きURLと、Firestore保存ロジック
  *
  * 2段階確認:
- *   Step 1 (Web)     : request token で /optout/[token] に誘導
- *   Step 2 (DM→Web)  : confirm token (短命・20分) で /optout/confirm/[token] を確定
+ *   Step 1 (Web)     : /optout/{discordId}/{sig}                   — 無期限
+ *   Step 2 (DM→Web)  : /optout/confirm/{discordId}/{exp}/{sig}     — 20分有効
+ *
+ * 設計方針:
+ *   - discordId は URL path に平文で載せる。AUTH_SECRET ローテで鍵が変わっても
+ *     リンクに記載されている宛先ユーザーは常に判別可能 (=無効時に再送可能)。
+ *   - sig は HMAC-SHA256 で正当性のみを証明する。改竄検出。
+ *   - Step 2 の exp も path 平文。sig には exp を含めて改竄を防ぐ。
+ *   - kind は URL path (/optout vs /optout/confirm) で分離するので sig 材料にも
+ *     ドメイン文字列として含める。
  *
  * 表示上のアクセス期日 (4月末目処) は UI 側に文言としてベタ書きし、
  * 本モジュールの Firestore データやトークンには保持しない。
@@ -14,17 +22,15 @@ import crypto from "crypto";
 import { getDb } from "@/lib/firebase";
 import { FieldValue } from "firebase-admin/firestore";
 
-const ALGO = "aes-256-gcm";
-const IV_LEN = 12;
-const TAG_LEN = 16;
-
-// opt-out レコードの種別 (Firestore docId / トークン kind 共通)
+// Firestore docId キー (既存レコードとの互換維持)
 const OPTOUT_KIND = "continuation-2026";
-const CONFIRM_KIND = `${OPTOUT_KIND}-confirm`;
 const SURVEY_COLLECTION = "survey_optout";
 
+// HMAC ドメイン分離用ラベル
+const REQUEST_LABEL = "optout-request-v1";
+const CONFIRM_LABEL = "optout-confirm-v1";
+
 // 最終確認 (confirm) トークンの有効期限 (秒)。
-// request token (Step 1) 側は期限を持たせず、常に有効として扱う。
 export const OPTOUT_CONFIRM_TTL_SECONDS = 20 * 60;
 
 function deriveKey(): Buffer {
@@ -32,160 +38,109 @@ function deriveKey(): Buffer {
   if (!secret) {
     throw new Error("AUTH_SECRET is not configured");
   }
-  // AUTH_SECRETから用途別の派生鍵を生成（HKDF的にsha256でドメイン分離）
   return crypto
     .createHash("sha256")
-    .update(`lumos-optout-v1|${secret}`)
+    .update(`lumos-optout-hmac|${secret}`)
     .digest();
 }
 
-// --- Token types ---
-
-export type OptoutKind = typeof OPTOUT_KIND | typeof CONFIRM_KIND;
-
-export interface OptoutTokenPayload {
-  discordId: string;
-  kind: OptoutKind;
-  /** Unix seconds — トークンの有効期限。request token では省略 (無期限) */
-  exp?: number;
+function sign(material: string): string {
+  return crypto
+    .createHmac("sha256", deriveKey())
+    .update(material)
+    .digest("base64url");
 }
 
-export type OptoutTokenError =
-  | "invalid"
-  | "expired"
-  | "wrong_kind"
-  | "missing_secret";
-
-export interface OptoutTokenDecodeResult {
-  ok: boolean;
-  payload?: OptoutTokenPayload;
-  error?: OptoutTokenError;
+function timingSafeEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
 }
 
-// --- Token encode / decode ---
+// --- Token decode result types ---
 
-function encodeToken(
+export type OptoutTokenError = "invalid" | "expired" | "missing_secret";
+
+export type OptoutRequestDecodeResult =
+  | { ok: true; discordId: string }
+  | { ok: false; error: OptoutTokenError; discordId?: string };
+
+export type OptoutConfirmDecodeResult =
+  | { ok: true; discordId: string; exp: number }
+  | { ok: false; error: OptoutTokenError; discordId?: string };
+
+// --- Step 1 (request) ---
+
+export function signOptoutRequest(discordId: string): string {
+  return sign(`${REQUEST_LABEL}|${discordId}`);
+}
+
+/** `/optout/{discordId}/{sig}` を検証 */
+export function verifyOptoutRequest(
   discordId: string,
-  kind: OptoutKind,
-  exp?: number,
-): string {
-  const payload: OptoutTokenPayload = {
-    discordId,
-    kind,
-    ...(typeof exp === "number" ? { exp } : {}),
-  };
-  const plaintext = Buffer.from(JSON.stringify(payload), "utf8");
-  const iv = crypto.randomBytes(IV_LEN);
-  const cipher = crypto.createCipheriv(ALGO, deriveKey(), iv);
-  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-  const tag = cipher.getAuthTag();
-  return Buffer.concat([iv, tag, ciphertext]).toString("base64url");
-}
-
-function decodeToken(
-  token: string,
-  expectedKind: OptoutKind,
-): OptoutTokenDecodeResult {
+  sig: string,
+): OptoutRequestDecodeResult {
   if (!process.env.AUTH_SECRET) {
-    return { ok: false, error: "missing_secret" };
+    return { ok: false, error: "missing_secret", discordId };
   }
-  if (!token) return { ok: false, error: "invalid" };
-
-  let raw: Buffer;
-  try {
-    raw = Buffer.from(token, "base64url");
-  } catch {
-    return { ok: false, error: "invalid" };
+  if (!discordId || !sig) {
+    return { ok: false, error: "invalid", discordId };
   }
-  if (raw.length < IV_LEN + TAG_LEN + 1) {
-    return { ok: false, error: "invalid" };
+  const expected = signOptoutRequest(discordId);
+  if (!timingSafeEqual(expected, sig)) {
+    return { ok: false, error: "invalid", discordId };
   }
-
-  const iv = raw.subarray(0, IV_LEN);
-  const tag = raw.subarray(IV_LEN, IV_LEN + TAG_LEN);
-  const ciphertext = raw.subarray(IV_LEN + TAG_LEN);
-
-  let plaintext: Buffer;
-  try {
-    const decipher = crypto.createDecipheriv(ALGO, deriveKey(), iv);
-    decipher.setAuthTag(tag);
-    plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
-  } catch {
-    return { ok: false, error: "invalid" };
-  }
-
-  let payload: Partial<OptoutTokenPayload>;
-  try {
-    payload = JSON.parse(
-      plaintext.toString("utf8"),
-    ) as Partial<OptoutTokenPayload>;
-  } catch {
-    return { ok: false, error: "invalid" };
-  }
-
-  if (
-    !payload ||
-    typeof payload.discordId !== "string" ||
-    typeof payload.kind !== "string"
-  ) {
-    return { ok: false, error: "invalid" };
-  }
-
-  if (payload.kind !== expectedKind) {
-    return { ok: false, error: "wrong_kind" };
-  }
-
-  // exp が含まれる場合のみ期限チェック (confirm token 用)。
-  // request token は exp を含めず、常に有効として扱う。
-  if (typeof payload.exp === "number" && payload.exp * 1000 < Date.now()) {
-    return { ok: false, error: "expired" };
-  }
-
-  const validated: OptoutTokenPayload = {
-    discordId: payload.discordId,
-    kind: payload.kind,
-    ...(typeof payload.exp === "number" ? { exp: payload.exp } : {}),
-  };
-  return { ok: true, payload: validated };
+  return { ok: true, discordId };
 }
 
-/** Step 1 用: /optout/[token] に埋め込むトークン (有効期限なし) */
-export function encodeOptoutRequestToken(discordId: string): string {
-  return encodeToken(discordId, OPTOUT_KIND);
+// --- Step 2 (confirm) ---
+
+export function signOptoutConfirm(discordId: string, exp: number): string {
+  return sign(`${CONFIRM_LABEL}|${discordId}|${exp}`);
 }
 
-/** Step 1 用トークンを復号・検証 */
-export function decodeOptoutRequestToken(
-  token: string,
-): OptoutTokenDecodeResult {
-  return decodeToken(token, OPTOUT_KIND);
+/** `/optout/confirm/{discordId}/{exp}/{sig}` を検証 */
+export function verifyOptoutConfirm(
+  discordId: string,
+  expRaw: string,
+  sig: string,
+): OptoutConfirmDecodeResult {
+  if (!process.env.AUTH_SECRET) {
+    return { ok: false, error: "missing_secret", discordId };
+  }
+  if (!discordId || !expRaw || !sig) {
+    return { ok: false, error: "invalid", discordId };
+  }
+  if (!/^\d{1,13}$/.test(expRaw)) {
+    return { ok: false, error: "invalid", discordId };
+  }
+  const exp = Number(expRaw);
+  const expected = signOptoutConfirm(discordId, exp);
+  if (!timingSafeEqual(expected, sig)) {
+    return { ok: false, error: "invalid", discordId };
+  }
+  if (exp * 1000 < Date.now()) {
+    return { ok: false, error: "expired", discordId };
+  }
+  return { ok: true, discordId, exp };
 }
 
-/** Step 2 用: /optout/confirm/[token] に埋め込む有効期限付きトークン (20 分) */
-export function encodeOptoutConfirmToken(discordId: string): string {
-  const exp = Math.floor(Date.now() / 1000) + OPTOUT_CONFIRM_TTL_SECONDS;
-  return encodeToken(discordId, CONFIRM_KIND, exp);
-}
-
-/** Step 2 用トークンを復号・検証 */
-export function decodeOptoutConfirmToken(
-  token: string,
-): OptoutTokenDecodeResult {
-  return decodeToken(token, CONFIRM_KIND);
-}
+// --- URL helpers ---
 
 function getBaseUrl(): string {
   return process.env.AUTH_URL ?? "http://localhost:3000";
 }
 
-/** Step 1 のランディング URL (Discord DM の「継続しない / 退会する」ボタン) */
+/** Step 1 のランディング URL */
 export function getOptoutRequestUrl(discordId: string): string {
-  return `${getBaseUrl()}/optout/${encodeOptoutRequestToken(discordId)}`;
+  return `${getBaseUrl()}/optout/${discordId}/${signOptoutRequest(discordId)}`;
 }
 
-/** Step 2 のランディング URL (確認 DM の「退会処理を完了させる」ボタン) */
+/** Step 2 のランディング URL (exp 20 分後) */
 export function getOptoutFinalizeUrl(discordId: string): string {
-  return `${getBaseUrl()}/optout/confirm/${encodeOptoutConfirmToken(discordId)}`;
+  const exp = Math.floor(Date.now() / 1000) + OPTOUT_CONFIRM_TTL_SECONDS;
+  return `${getBaseUrl()}/optout/confirm/${discordId}/${exp}/${signOptoutConfirm(discordId, exp)}`;
 }
 
 // --- Firestore: optout_submissions ---

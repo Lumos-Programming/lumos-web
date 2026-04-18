@@ -465,6 +465,43 @@ export function buildOnboardingNudgeMessage(
 }
 
 /**
+ * リンク無効/期限切れで退会フローに入れなかったユーザーに、Step 1 のリンクを
+ * 再送する DM
+ */
+export function buildOptoutLinkReissueMessage(
+  username: string,
+  discordId: string,
+): DiscordMessagePayload {
+  return {
+    embeds: [
+      {
+        title: "🔁 退会リンクを再発行しました",
+        description: [
+          `${username} さん、先ほどの退会リンクは無効または期限切れでした。`,
+          "下のボタンから改めて退会手続きをお願いします。",
+        ].join("\n"),
+        color: CONTINUATION_CHECK_COLOR,
+        footer: { text: FOOTER_TEXT },
+      },
+    ],
+    components: [
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 5,
+            label: "継続しない / 退会する",
+            url: getOptoutRequestUrl(discordId),
+            emoji: { name: "👋" },
+          },
+        ],
+      },
+    ],
+  };
+}
+
+/**
  * Step 2 確認用 DM: Web 上で退会リクエストを送信したユーザーに、本人確認として
  * 別途 DM で最終確認リンク (20 分有効) を送る
  */
