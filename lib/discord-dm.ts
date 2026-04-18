@@ -596,9 +596,13 @@ export function buildRejoinCompletedMessage(
  * Step 2 確認用 DM: Web 上で退会リクエストを送信したユーザーに、本人確認として
  * 別途 DM で最終確認リンク (20 分有効) を送る
  */
+/**
+ * Step 2 確認 DM の本文 embed。finalizeUrl は送信時点では messageId が未知のため、
+ * components (ボタン) は別途 {@link buildOptoutConfirmRequestButtons} で生成して
+ * PATCH で後付けする。
+ */
 export function buildOptoutConfirmRequestMessage(
   username: string,
-  finalizeUrl: string,
 ): DiscordMessagePayload {
   return {
     embeds: [
@@ -616,21 +620,26 @@ export function buildOptoutConfirmRequestMessage(
         footer: { text: FOOTER_TEXT },
       },
     ],
-    components: [
-      {
-        type: 1,
-        components: [
-          {
-            type: 2,
-            style: 5,
-            label: "退会処理を完了させる",
-            url: finalizeUrl,
-            emoji: { name: "✅" },
-          },
-        ],
-      },
-    ],
   };
+}
+
+export function buildOptoutConfirmRequestButtons(
+  finalizeUrl: string,
+): DiscordActionRow[] {
+  return [
+    {
+      type: 1,
+      components: [
+        {
+          type: 2,
+          style: 5,
+          label: "退会処理を完了させる",
+          url: finalizeUrl,
+          emoji: { name: "✅" },
+        },
+      ],
+    },
+  ];
 }
 
 // --- Discord API ---
@@ -662,7 +671,7 @@ async function createDmChannel(recipientId: string): Promise<string> {
 async function sendChannelMessage(
   channelId: string,
   payload: DiscordMessagePayload,
-): Promise<void> {
+): Promise<{ messageId: string }> {
   const botToken = process.env.DISCORD_BOT_TOKEN;
   if (!botToken) {
     throw new Error("DISCORD_BOT_TOKEN is not configured");
@@ -684,12 +693,49 @@ async function sendChannelMessage(
     const error = await response.text();
     throw new Error(`Failed to send DM message: ${response.status} ${error}`);
   }
+
+  const data = (await response.json()) as { id: string };
+  return { messageId: data.id };
 }
 
 export async function sendDiscordDm(
   recipientId: string,
   payload: DiscordMessagePayload,
-): Promise<void> {
+): Promise<{ channelId: string; messageId: string }> {
   const channelId = await createDmChannel(recipientId);
-  await sendChannelMessage(channelId, payload);
+  const { messageId } = await sendChannelMessage(channelId, payload);
+  return { channelId, messageId };
+}
+
+/**
+ * 既に送信済みの DM メッセージを編集する。components を空配列にすればボタン無効化可能。
+ * Bot 自身が送信したメッセージのみ編集可能。
+ */
+export async function editDiscordDm(
+  recipientId: string,
+  messageId: string,
+  payload: Partial<DiscordMessagePayload>,
+): Promise<void> {
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!botToken) {
+    throw new Error("DISCORD_BOT_TOKEN is not configured");
+  }
+
+  const channelId = await createDmChannel(recipientId);
+  const response = await fetch(
+    `${DISCORD_API_BASE}/channels/${channelId}/messages/${messageId}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bot ${botToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to edit DM message: ${response.status} ${error}`);
+  }
 }

@@ -133,7 +133,9 @@ sequenceDiagram
     API->>FS: getMember(discordId)
     FS-->>API: members.optedOut 未設定
     API->>FS: recordOptoutSurvey(discordId, survey)
-    API->>DC: sendDiscordDm(discordId, buildOptoutConfirmRequestMessage(...))
+    API->>DC: sendDiscordDm(discordId, buildOptoutConfirmRequestMessage(...))  // ボタン無し
+    DC-->>API: { messageId }
+    API->>DC: editDiscordDm(discordId, messageId, components: ボタン with finalizeUrl(messageId 埋め込み))
     DC-->>API: 成功
     API-->>F: { success: true }
     F->>F: router.replace("/optout/submitted")
@@ -148,18 +150,19 @@ sequenceDiagram
 
 ## 4. Step 2 技術詳細: 最終確認 (Discord DM → Web)
 
-### 画面遷移 — `app/optout/confirm/[discordId]/[exp]/[sig]/page.tsx`
+### 画面遷移 — `app/optout/confirm/[discordId]/[exp]/[messageId]/[sig]/page.tsx`
 
 ```mermaid
 flowchart TD
-    Start["/optout/confirm/:discordId/:exp/:sig"] --> V1{"discordId<br/>Snowflake 妥当?"}
+    Start["/optout/confirm/:discordId/:exp/:messageId/:sig"] --> V1{"discordId<br/>Snowflake 妥当?"}
     V1 -->|No| ErrInvalid["リンクを認識できませんでした"]
     V1 -->|Yes| V2{"isDiscordIdOptedOut<br/>既に確定済み?"}
     V2 -->|Yes| RedirDone["/optout/done へ redirect<br/>冪等"]
     V2 -->|No| V3{"verifyOptoutConfirm<br/>sig と exp 妥当?"}
     V3 -->|No - invalid または expired| Reissue["Step 1 用 退会リンクを<br/>Discord DM に再送"]
     V3 -->|Yes| Write["Firestore 書き込み<br/>recordOptoutSubmission<br/>markOptoutSurveyConfirmed<br/>markMemberOptedOut"]
-    Write -->|成功| RedirDone
+    Write -->|成功| PatchDM["editDiscordDm で元 DM の<br/>ボタンを無効化 (components: [])"]
+    PatchDM --> RedirDone
     Write -->|失敗| Err["処理に失敗しました カード"]
 ```
 
@@ -170,6 +173,7 @@ flowchart TD
 - `noindex, nofollow` の `robots` メタ + `dynamic = "force-dynamic"` でブラウザプリフェッチ・クロール副作用を抑止。
 - **invalid と expired で挙動を分けない**: どちらも Step 1 からやり直すべき状況なので、新しい退会リンクを送信する。
 - **副作用完了後は必ず `/optout/done` にリダイレクト**。ユーザーが完了画面でリロードしても、署名付き URL が再実行されず副作用が重複しない。既に確定済みだった場合も同じページに飛ばして、ブラウザ履歴の巻き戻し耐性も確保している。
+- **確定後に元 Confirm DM のボタンを削除する**。再加入→同じ DM のボタンを誤って再押下してしまうと、期限が20分以内なら再び退会確定してしまう。その事故を防ぐため、`messageId` を URL payload に埋めておき (HMAC で改竄検出)、確定時に `PATCH /channels/{channelId}/messages/{messageId}` で components を空配列に差し替える。編集失敗はログのみで握りつぶす (退会自体は成功扱い)。
 
 ### 書き込まれるもの
 
@@ -285,7 +289,7 @@ sequenceDiagram
 | ---------------------------------- | ------------------------------------ | ---------------------------------------------------------------- |
 | `buildRegistrationNudgeMessage`    | 未登録者への登録案内                 | 登録: `/internal` / 退会: `/optout/{discordId}/{sig}`            |
 | `buildOnboardingNudgeMessage`      | オンボーディング途中の人への再開案内 | 再開: `/internal/onboarding` / 退会: `/optout/{discordId}/{sig}` |
-| `buildOptoutConfirmRequestMessage` | Step 1 送信後の最終確認 DM           | 最終確認: `/optout/confirm/{discordId}/{exp}/{sig}`              |
+| `buildOptoutConfirmRequestMessage` | Step 1 送信後の最終確認 DM           | 最終確認: `/optout/confirm/{discordId}/{exp}/{messageId}/{sig}`  |
 | `buildOptoutLinkReissueMessage`    | 古いリンク検知時の再発行 DM          | 退会: `/optout/{discordId}/{sig}` (最新 sig)                     |
 
 ---

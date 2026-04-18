@@ -5,6 +5,7 @@ import { isProduction } from "@/lib/env";
 import { getGuildMembers, type DiscordGuildMember } from "@/lib/discord-guild";
 import {
   sendDiscordDm,
+  editDiscordDm,
   buildWelcomeMessage,
   buildOnboardingCompleteMessage,
   buildLoginMessage,
@@ -12,6 +13,7 @@ import {
   buildRegistrationNudgeMessage,
   buildOnboardingNudgeMessage,
   buildOptoutConfirmRequestMessage,
+  buildOptoutConfirmRequestButtons,
   buildOptoutCompletedMessage,
   buildRejoinCompletedMessage,
   type DiscordMessagePayload,
@@ -65,10 +67,7 @@ function buildMessagePayload(
     case "onboarding_nudge":
       return buildOnboardingNudgeMessage(displayName, discordId);
     case "optout_confirm_request":
-      return buildOptoutConfirmRequestMessage(
-        displayName,
-        getOptoutFinalizeUrl(discordId),
-      );
+      return buildOptoutConfirmRequestMessage(displayName);
     case "optout_completed":
       return buildOptoutCompletedMessage(displayName);
     case "rejoin_completed":
@@ -116,7 +115,15 @@ export async function sendTestDiscordMessage(
       "テストユーザー",
       targetDiscordId,
     );
-    await sendDiscordDm(targetDiscordId, payload);
+    const sent = await sendDiscordDm(targetDiscordId, payload);
+
+    // 最終確認 DM は本番と同じ2段階 (messageId 判明後にボタン後付け) で送る
+    if (messageType === "optout_confirm_request") {
+      const finalizeUrl = getOptoutFinalizeUrl(targetDiscordId, sent.messageId);
+      await editDiscordDm(targetDiscordId, sent.messageId, {
+        components: buildOptoutConfirmRequestButtons(finalizeUrl),
+      });
+    }
     return { success: true };
   } catch (e) {
     return {
