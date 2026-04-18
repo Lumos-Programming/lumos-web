@@ -80,7 +80,7 @@ export default function Footer() {
                 className="text-white hover:text-white/80 transition-colors"
                 aria-label="X"
               >
-                <Image src="./x.svg" alt="X" width={25} height={25} />
+                <Image src="/x.svg" alt="X" width={25} height={25} />
               </Link>
               <Link
                 href="https://github.com/Lumos-Programming"
