@@ -13,7 +13,11 @@ import {
   isDiscordIdOptedOut,
 } from "@/lib/members";
 import { isValidSnowflake } from "@/lib/auth";
-import { sendDiscordDm, buildOptoutLinkReissueMessage } from "@/lib/discord-dm";
+import {
+  sendDiscordDm,
+  buildOptoutLinkReissueMessage,
+  buildOptoutCompletedMessage,
+} from "@/lib/discord-dm";
 import { fetchDiscordDisplayName } from "@/lib/discord";
 import OptoutStatusCard from "@/components/optout/status-card";
 
@@ -120,6 +124,19 @@ export default async function OptoutConfirmPage({
         description="サーバーで保存に失敗しました。しばらくしてからもう一度お試しください。"
       />
     );
+  }
+
+  // 完了通知 DM (失敗してもユーザー体験には影響しないので握りつぶしてログのみ)
+  try {
+    const member = await getMember(discordId);
+    const displayName =
+      member?.discordUsername ??
+      member?.nickname ??
+      (await fetchDiscordDisplayName(discordId)) ??
+      "Discord ユーザー";
+    await sendDiscordDm(discordId, buildOptoutCompletedMessage(displayName));
+  } catch (e) {
+    console.error("Failed to send opt-out completion DM:", e);
   }
 
   // 副作用完了後は専用ページへリダイレクト (リロードでも副作用が再走しないように)

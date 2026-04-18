@@ -502,6 +502,70 @@ export function buildOptoutLinkReissueMessage(
 }
 
 /**
+ * 退会処理が完了したユーザーに送る完了通知 DM
+ */
+export function buildOptoutCompletedMessage(
+  username: string,
+): DiscordMessagePayload {
+  return {
+    embeds: [
+      {
+        title: "👋 退会手続きを受け付けました",
+        description: [
+          `${username} さん、退会手続きの完了を確認しました。`,
+          "これまでLumosに参加いただき、ありがとうございました🙏",
+          "",
+          "引き続きLumosのDiscordサーバーにはご参加いただけますが、**4月末を目処にメンバー用チャンネルは閲覧できなくなります**。",
+          "",
+          "またいつでも戻ってきてください。Lumosは一年中入会を受け付けています🌱",
+        ].join("\n"),
+        color: CONTINUATION_CHECK_COLOR,
+        thumbnail: { url: LOGO_URL },
+        footer: { text: FOOTER_TEXT },
+      },
+    ],
+  };
+}
+
+/**
+ * 退会済みユーザーが再加入したときに送る歓迎 DM
+ */
+export function buildRejoinCompletedMessage(
+  username: string,
+): DiscordMessagePayload {
+  return {
+    embeds: [
+      {
+        title: "🎉 おかえりなさい！",
+        description: [
+          `${username} さん、Lumosへの再加入を受け付けました！`,
+          "また一緒に活動できることをうれしく思います🥳",
+          "",
+          "引き続きLumos Webからメンバー用の機能をご利用いただけます。",
+        ].join("\n"),
+        color: WELCOME_BACK_COLOR,
+        thumbnail: { url: LOGO_URL },
+        footer: { text: FOOTER_TEXT },
+      },
+    ],
+    components: [
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 5,
+            label: "Lumos Webを開く",
+            url: `${getBaseUrl()}/internal`,
+            emoji: { name: "🚀" },
+          },
+        ],
+      },
+    ],
+  };
+}
+
+/**
  * Step 2 確認用 DM: Web 上で退会リクエストを送信したユーザーに、本人確認として
  * 別途 DM で最終確認リンク (20 分有効) を送る
  */

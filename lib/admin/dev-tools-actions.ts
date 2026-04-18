@@ -12,6 +12,8 @@ import {
   buildRegistrationNudgeMessage,
   buildOnboardingNudgeMessage,
   buildOptoutConfirmRequestMessage,
+  buildOptoutCompletedMessage,
+  buildRejoinCompletedMessage,
   type DiscordMessagePayload,
 } from "@/lib/discord-dm";
 import { getOptoutFinalizeUrl } from "@/lib/discord-optout";
@@ -67,6 +69,10 @@ function buildMessagePayload(
         displayName,
         getOptoutFinalizeUrl(discordId),
       );
+    case "optout_completed":
+      return buildOptoutCompletedMessage(displayName);
+    case "rejoin_completed":
+      return buildRejoinCompletedMessage(displayName);
     default:
       throw new Error(`不明なメッセージタイプ: ${messageType}`);
   }
