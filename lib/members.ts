@@ -146,9 +146,10 @@ export async function getPublicMembers(): Promise<Member[]> {
     .where("allowPublic", "==", true)
     .get();
 
-  return snap.docs.map((doc) => {
+  return snap.docs.flatMap((doc) => {
     const data = doc.data() as MemberDocument;
-    return profileToMember(doc.id, data);
+    if (isMemberOptedOut(data)) return [];
+    return [profileToMember(doc.id, data)];
   });
 }
 
@@ -159,9 +160,10 @@ export async function getMembersInternal(): Promise<Member[]> {
     .where("onboardingCompleted", "==", true)
     .get();
 
-  return snap.docs.map((doc) => {
+  return snap.docs.flatMap((doc) => {
     const data = doc.data() as MemberDocument;
-    return profileToMemberInternal(doc.id, data);
+    if (isMemberOptedOut(data)) return [];
+    return [profileToMemberInternal(doc.id, data)];
   });
 }
 
