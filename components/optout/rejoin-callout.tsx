@@ -16,7 +16,8 @@ export default function RejoinCallout() {
         <span className="font-medium text-white">
           Lumosは一年中入会を受け付けています。
         </span>
-        再加入をご希望の場合は、ポータルサイトにログインしてご自身で再加入申請いただけます。
+        <br />
+        再加入をご希望の場合は、ポータルサイトにログインして再加入申請お願いします。
       </p>
     </div>
   );

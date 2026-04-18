@@ -524,6 +524,20 @@ export function buildOptoutCompletedMessage(
         footer: { text: FOOTER_TEXT },
       },
     ],
+    components: [
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 5,
+            label: "Lumos公式サイトはこちら",
+            url: "https://lumos-ynu.jp",
+            emoji: { name: "🌐" },
+          },
+        ],
+      },
+    ],
   };
 }
 
@@ -540,12 +554,25 @@ export function buildRejoinCompletedMessage(
         description: [
           `${username} さん、Lumosへの再加入を受け付けました！`,
           "また一緒に活動できることをうれしく思います🥳",
-          "",
-          "引き続きLumos Webからメンバー用の機能をご利用いただけます。",
         ].join("\n"),
         color: WELCOME_BACK_COLOR,
         thumbnail: { url: LOGO_URL },
         footer: { text: FOOTER_TEXT },
+      },
+      {
+        title: "📋 オンボーディングをお願いします",
+        description: [
+          "2026年度のメンバーとしてLumosの各種機能をご利用いただくには、**オンボーディングの完了**が必要です。",
+          "",
+          "### Lumos Webでできること",
+          "👥 Lumosのメンバーについて知る",
+          "🎨 自分だけのプロフィールを作る",
+          "📅 ミニLTなどの各種イベントに参加登録する",
+          "💬 LumosのLINEグループに参加する",
+          "",
+          "**数分で完了します。** 下のボタンからオンボーディングへお進みください！",
+        ].join("\n"),
+        color: WELCOME_COLOR,
       },
     ],
     components: [
@@ -555,9 +582,9 @@ export function buildRejoinCompletedMessage(
           {
             type: 2,
             style: 5,
-            label: "Lumos Webを開く",
-            url: `${getBaseUrl()}/internal`,
-            emoji: { name: "🚀" },
+            label: "オンボーディングへLet's Go!",
+            url: `${getBaseUrl()}/internal/onboarding`,
+            emoji: { name: "📋" },
           },
         ],
       },

@@ -39,9 +39,9 @@ export default function RejoinButton() {
         type="button"
         onClick={handleRejoin}
         disabled={isPending}
-        className="inline-flex w-full items-center justify-center rounded-md border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/20 disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center rounded-md bg-gradient-to-r from-emerald-400 to-teal-400 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-400/30 transition-all hover:from-emerald-300 hover:to-teal-300 hover:shadow-emerald-400/50 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isPending ? "処理中…" : "再加入してオンボーディングをやり直す"}
+        {isPending ? "処理中…" : "✨ 再入会する"}
       </button>
       {error && <p className="text-xs text-rose-300">{error}</p>}
     </div>
