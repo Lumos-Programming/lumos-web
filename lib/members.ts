@@ -268,6 +268,16 @@ export function isOnboardingComplete(member: MemberDocument): boolean {
   return member.onboardingCompleted === true;
 }
 
+export function isMemberOptedOut(member: MemberDocument | null): boolean {
+  return member?.optedOut === true;
+}
+
+/** discordId から直接退会済みかを判定する (members コレクションが source of truth) */
+export async function isDiscordIdOptedOut(discordId: string): Promise<boolean> {
+  const member = await getMember(discordId);
+  return isMemberOptedOut(member);
+}
+
 /**
  * 退会フラグを立てる。member doc が無い場合は最小限のドキュメントを作成する。
  * 未ログインのまま Discord DM のリンクだけで退会するユーザーも、以後の登録案内 DM から
