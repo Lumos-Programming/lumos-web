@@ -63,6 +63,12 @@ const MESSAGE_TYPES = [
     description:
       "ログイン済みだがオンボーディング未完了のメンバーに送信。完了を促す。",
   },
+  {
+    value: "optout_confirm_request",
+    label: "退会 最終確認リクエスト",
+    description:
+      "退会フォーム送信後に送られる、本人確認用の最終確認 DM。20分間有効な「退会処理を完了させる」ボタン付き。",
+  },
 ] as const;
 
 interface DevToolsPanelProps {
