@@ -6,7 +6,7 @@
  *   Step 1 (Web)     : request token で /optout/[token] に誘導
  *   Step 2 (DM→Web)  : confirm token (短命・20分) で /optout/confirm/[token] を確定
  *
- * 表示上のアクセス期日 (5月末まで) は UI 側に文言としてベタ書きし、
+ * 表示上のアクセス期日 (4月末目処) は UI 側に文言としてベタ書きし、
  * 本モジュールの Firestore データやトークンには保持しない。
  */
 
