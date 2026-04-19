@@ -244,7 +244,7 @@ export function Step2Enrollment({
           <Label>
             {form.memberType === "院生"
               ? "横浜国立大学大学院への入学年度"
-              : "横浜国立大学への入学年度"}
+              : "横浜国立大学への入学年度"}{" "}
             <span className="text-red-500">*</span>
           </Label>
           <div className="flex gap-2">
@@ -408,7 +408,9 @@ export function Step2Enrollment({
                 </p>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="undergradFaculty">所属学部</Label>
+                  <Label htmlFor="undergradFaculty">
+                    所属学部 <span className="text-red-500">*</span>
+                  </Label>
                   <select
                     id="undergradFaculty"
                     value={form.undergradFaculty}
@@ -445,7 +447,9 @@ export function Step2Enrollment({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label>学部への入学年度</Label>
+                  <Label>
+                    学部への入学年度 <span className="text-red-500">*</span>
+                  </Label>
                   <div className="flex gap-2">
                     <select
                       value={form.undergradAdmissionYear}
@@ -586,7 +590,9 @@ export function Step2Enrollment({
                   </p>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="undergradFacultyGrad">所属学部</Label>
+                    <Label htmlFor="undergradFacultyGrad">
+                      所属学部 <span className="text-red-500">*</span>
+                    </Label>
                     <select
                       id="undergradFacultyGrad"
                       value={form.undergradFaculty}
@@ -623,7 +629,9 @@ export function Step2Enrollment({
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label>学部への入学年度</Label>
+                    <Label>
+                      学部への入学年度 <span className="text-red-500">*</span>
+                    </Label>
                     <div className="flex gap-2">
                       <select
                         value={form.undergradAdmissionYear}
