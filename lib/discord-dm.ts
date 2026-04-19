@@ -532,7 +532,7 @@ export function buildOptoutCompletedMessage(
             type: 2,
             style: 5,
             label: "Lumos公式サイトはこちら",
-            url: "https://lumos-ynu.jp",
+            url: getBaseUrl(),
             emoji: { name: "🌐" },
           },
         ],

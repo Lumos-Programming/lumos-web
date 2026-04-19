@@ -174,15 +174,28 @@ export function Step1BasicInfo({
 
         <div className="space-y-1.5 animate-[fadeInUp_300ms_120ms_ease_both]">
           <Label htmlFor="birthDate">誕生日</Label>
-          <Input
-            id="birthDate"
-            type="date"
-            value={form.birthDate}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, birthDate: e.target.value }))
-            }
-            className="block w-full"
-          />
+          <div className="flex gap-2">
+            <Input
+              id="birthDate"
+              type="date"
+              value={form.birthDate}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, birthDate: e.target.value }))
+              }
+              className="block w-full"
+            />
+            {form.birthDate && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setForm((f) => ({ ...f, birthDate: "" }))}
+                className="text-muted-foreground hover:text-foreground flex-shrink-0"
+              >
+                リセット
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="space-y-1.5 animate-[fadeInUp_300ms_210ms_ease_both]">
