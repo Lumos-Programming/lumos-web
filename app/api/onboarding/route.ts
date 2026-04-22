@@ -5,6 +5,8 @@ import {
   sendDiscordDm,
   buildOnboardingCompleteMessage,
   calcProfileCompletion,
+  notifyAdminChannel,
+  buildAdminOnboardingCompletedNotification,
 } from "@/lib/discord-dm";
 import { checkLineGroupMembership } from "@/lib/line-invite";
 
@@ -85,6 +87,19 @@ export async function POST() {
     );
     sendDiscordDm(session.user.id, payload).catch((e) => {
       console.error("Failed to send onboarding complete DM:", e);
+    });
+
+    notifyAdminChannel(
+      buildAdminOnboardingCompletedNotification({
+        discordId: session.user.id,
+        discordUsername: updatedMember.discordUsername,
+        nickname: updatedMember.nickname,
+        lastName: updatedMember.lastName,
+        firstName: updatedMember.firstName,
+        memberType: updatedMember.memberType,
+      }),
+    ).catch((e) => {
+      console.error("Failed to notify admin channel (onboarding):", e);
     });
   }
 

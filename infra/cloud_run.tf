@@ -151,6 +151,15 @@ resource "google_cloud_run_service" "web" {
             }
           }
         }
+        env {
+          name = "ADMIN_NOTIFICATION_CHANNEL_WEBHOOK"
+          value_from {
+            secret_key_ref {
+              name = google_secret_manager_secret.per_env["admin-notification-channel-webhook-${each.key}"].secret_id
+              key  = "latest"
+            }
+          }
+        }
       }
     }
   }
