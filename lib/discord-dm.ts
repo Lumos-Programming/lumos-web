@@ -369,9 +369,9 @@ export function buildRegistrationNudgeMessage(
         footer: { text: FOOTER_TEXT },
       },
       {
-        title: "🚨 対応期限：2026年4月18日（金）",
+        title: "🚨 対応期限を過ぎています!!",
         description:
-          "期限を過ぎるとDiscordサーバーへのアクセスが制限される場合があります。\nお早めの登録をお願いします！",
+          "期限を過ぎるとDiscordサーバーへのアクセスが制限される場合があります。\nお早めの登録をお願いします！\n継続しない/退会を希望する方は以下からお願いします",
         color: 0xed4245, // Discord Red
       },
       buildOptoutEmbed(),
