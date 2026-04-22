@@ -18,6 +18,8 @@ import {
   editDiscordDm,
   buildOptoutLinkReissueMessage,
   buildOptoutCompletedMessage,
+  notifyAdminChannel,
+  buildAdminOptoutNotification,
 } from "@/lib/discord-dm";
 import { fetchDiscordDisplayName } from "@/lib/discord";
 import OptoutStatusCard from "@/components/optout/status-card";
@@ -140,16 +142,31 @@ export default async function OptoutConfirmPage({
   }
 
   // 完了通知 DM (失敗してもユーザー体験には影響しないので握りつぶしてログのみ)
+  const member = await getMember(discordId);
+  const displayName =
+    member?.discordUsername ??
+    member?.nickname ??
+    (await fetchDiscordDisplayName(discordId)) ??
+    "Discord ユーザー";
   try {
-    const member = await getMember(discordId);
-    const displayName =
-      member?.discordUsername ??
-      member?.nickname ??
-      (await fetchDiscordDisplayName(discordId)) ??
-      "Discord ユーザー";
     await sendDiscordDm(discordId, buildOptoutCompletedMessage(displayName));
   } catch (e) {
     console.error("Failed to send opt-out completion DM:", e);
+  }
+
+  // 運営チャンネル通知 (webhook 未設定時は no-op)
+  try {
+    await notifyAdminChannel(
+      buildAdminOptoutNotification({
+        discordId,
+        discordUsername: member?.discordUsername ?? displayName,
+        nickname: member?.nickname,
+        lastName: member?.lastName,
+        firstName: member?.firstName,
+      }),
+    );
+  } catch (e) {
+    console.error("Failed to notify admin channel (optout):", e);
   }
 
   // 副作用完了後は専用ページへリダイレクト (リロードでも副作用が再走しないように)

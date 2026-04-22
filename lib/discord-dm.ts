@@ -708,6 +708,112 @@ export async function sendDiscordDm(
 }
 
 /**
+ * 運営チャンネルへ webhook 経由で通知を送る。
+ * ADMIN_NOTIFICATION_CHANNEL_WEBHOOK が未設定（空文字 / 空白のみ）の場合は no-op。
+ * 呼び出し側が例外を受け取らないよう fire-and-forget 前提で使うこと。
+ */
+export async function notifyAdminChannel(
+  payload: DiscordMessagePayload,
+): Promise<void> {
+  const webhookUrl = process.env.ADMIN_NOTIFICATION_CHANNEL_WEBHOOK?.trim();
+  if (!webhookUrl) return;
+
+  const response = await fetch(webhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(
+      `Failed to notify admin channel: ${response.status} ${error}`,
+    );
+  }
+}
+
+// --- Admin notification message builders ---
+
+const ADMIN_JOIN_COLOR = 0x57f287; // Discord Green
+const ADMIN_OPTOUT_COLOR = 0xed4245; // Discord Red
+
+export function buildAdminOnboardingCompletedNotification(member: {
+  discordId: string;
+  discordUsername: string;
+  nickname?: string | null;
+  lastName?: string | null;
+  firstName?: string | null;
+  memberType?: string | null;
+}): DiscordMessagePayload {
+  const fullName =
+    [member.lastName, member.firstName].filter(Boolean).join(" ") || "—";
+  const fields: DiscordEmbedField[] = [
+    {
+      name: "Discord",
+      value: `${member.discordUsername} (<@${member.discordId}>)`,
+      inline: false,
+    },
+    { name: "氏名", value: fullName, inline: true },
+  ];
+  if (member.nickname) {
+    fields.push({ name: "ニックネーム", value: member.nickname, inline: true });
+  }
+  if (member.memberType) {
+    fields.push({
+      name: "メンバー区分",
+      value: member.memberType,
+      inline: true,
+    });
+  }
+
+  return {
+    embeds: [
+      {
+        title: "新メンバー入会通知",
+        description: "オンボーディングが完了しました。",
+        color: ADMIN_JOIN_COLOR,
+        fields,
+        footer: { text: FOOTER_TEXT },
+      },
+    ],
+  };
+}
+
+export function buildAdminOptoutNotification(member: {
+  discordId: string;
+  discordUsername: string;
+  nickname?: string | null;
+  lastName?: string | null;
+  firstName?: string | null;
+}): DiscordMessagePayload {
+  const fullName =
+    [member.lastName, member.firstName].filter(Boolean).join(" ") || "—";
+  const fields: DiscordEmbedField[] = [
+    {
+      name: "Discord",
+      value: `${member.discordUsername} (<@${member.discordId}>)`,
+      inline: false,
+    },
+    { name: "氏名", value: fullName, inline: true },
+  ];
+  if (member.nickname) {
+    fields.push({ name: "ニックネーム", value: member.nickname, inline: true });
+  }
+
+  return {
+    embeds: [
+      {
+        title: "メンバー退会通知",
+        description: "退会処理が完了しました。",
+        color: ADMIN_OPTOUT_COLOR,
+        fields,
+        footer: { text: FOOTER_TEXT },
+      },
+    ],
+  };
+}
+
+/**
  * 既に送信済みの DM メッセージを編集する。components を空配列にすればボタン無効化可能。
  * Bot 自身が送信したメッセージのみ編集可能。
  */
