@@ -1,5 +1,6 @@
 import { getUnregisteredMembers } from "@/lib/admin/actions";
 import { AdminNotificationPanel } from "@/components/admin/notification-panel";
+import { RoleSyncPanel } from "@/components/admin/role-sync-panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Shield, AlertCircle } from "lucide-react";
 
@@ -44,6 +45,14 @@ export default async function AdminPage() {
         ) : (
           <AdminNotificationPanel members={members!} />
         )}
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-lg font-semibold mb-4">Discordロール付与</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          登録済みメンバー全員に年度メンバーロールおよびメンバー種別ロールを一括付与します。
+        </p>
+        <RoleSyncPanel />
       </section>
     </div>
   );
