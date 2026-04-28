@@ -1,4 +1,20 @@
+import { MEMBER_TYPES, FACULTIES, GRADUATE_SCHOOLS } from "@/types/profile";
+import { ALL_PRESET_TAGS } from "@/types/interests";
+
 const DISCORD_API_BASE = "https://discord.com/api/v10";
+
+// "学部1年" / "修士2年" / "博士3年" / "その他1年" などの学年文字列にマッチ
+const YEAR_ROLE_PATTERN = /^(学部|修士|博士|その他)[1-9]\d*年$/;
+
+function isProfileValueName(name: string): boolean {
+  return (
+    (MEMBER_TYPES as readonly string[]).includes(name) ||
+    (FACULTIES as readonly string[]).includes(name) ||
+    (GRADUATE_SCHOOLS as readonly string[]).includes(name) ||
+    ALL_PRESET_TAGS.has(name) ||
+    YEAR_ROLE_PATTERN.test(name)
+  );
+}
 
 export type SyncRolesResult = {
   added: string[];
@@ -196,10 +212,12 @@ export async function syncMemberDiscordRoles(
   const currentRoleSet = new Set(currentRoleIds);
   const targetRoleSet = new Set(targetRoleIds);
 
-  // このシステムが管理するロールID一覧（roleNameMap に含まれるもの + MEMBER_ROLE_ID）
+  // 管理対象ロール = プロフィール値名に対応するロールのみ（adminなど無関係なロールは触らない）
   const managedRoleIds = new Set([
-    ...map.values(),
     ...(process.env.MEMBER_ROLE_ID ? [process.env.MEMBER_ROLE_ID] : []),
+    ...[...map.entries()]
+      .filter(([name]) => isProfileValueName(name))
+      .map(([, id]) => id),
   ]);
 
   const toAdd = targetRoleIds.filter((id) => !currentRoleSet.has(id));
