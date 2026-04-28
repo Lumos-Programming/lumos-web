@@ -2,6 +2,7 @@ const DISCORD_API_BASE = "https://discord.com/api/v10";
 
 export type SyncRolesResult = {
   added: string[];
+  removed: string[];
   errors: string[];
 };
 
@@ -12,17 +13,23 @@ export type MemberRoleParams = {
   interests?: string[];
 };
 
+type DiscordRole = { id: string; name: string };
+type DiscordMember = { roles: string[] };
+
+function getGuildAndToken(): { guildId: string; botToken: string } {
+  const guildId = process.env.DISCORD_GUILD_ID;
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!guildId || !botToken) {
+    throw new Error("DISCORD_GUILD_ID または DISCORD_BOT_TOKEN が未設定です");
+  }
+  return { guildId, botToken };
+}
+
 export async function addGuildMemberRole(
   userId: string,
   roleId: string,
 ): Promise<void> {
-  const guildId = process.env.DISCORD_GUILD_ID;
-  const botToken = process.env.DISCORD_BOT_TOKEN;
-
-  if (!guildId || !botToken) {
-    throw new Error("DISCORD_GUILD_ID または DISCORD_BOT_TOKEN が未設定です");
-  }
-
+  const { guildId, botToken } = getGuildAndToken();
   const response = await fetch(
     `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}/roles/${roleId}`,
     {
@@ -33,7 +40,6 @@ export async function addGuildMemberRole(
       },
     },
   );
-
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`ロール付与失敗: ${response.status} ${error}`);
@@ -44,38 +50,18 @@ export async function removeGuildMemberRole(
   userId: string,
   roleId: string,
 ): Promise<void> {
-  const guildId = process.env.DISCORD_GUILD_ID;
-  const botToken = process.env.DISCORD_BOT_TOKEN;
-
-  if (!guildId || !botToken) {
-    throw new Error("DISCORD_GUILD_ID または DISCORD_BOT_TOKEN が未設定です");
-  }
-
+  const { guildId, botToken } = getGuildAndToken();
   const response = await fetch(
     `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}/roles/${roleId}`,
     {
       method: "DELETE",
-      headers: {
-        Authorization: `Bot ${botToken}`,
-      },
+      headers: { Authorization: `Bot ${botToken}` },
     },
   );
-
   if (!response.ok && response.status !== 404) {
     const error = await response.text();
     throw new Error(`ロール削除失敗: ${response.status} ${error}`);
   }
-}
-
-type DiscordRole = { id: string; name: string };
-
-function getGuildAndToken(): { guildId: string; botToken: string } {
-  const guildId = process.env.DISCORD_GUILD_ID;
-  const botToken = process.env.DISCORD_BOT_TOKEN;
-  if (!guildId || !botToken) {
-    throw new Error("DISCORD_GUILD_ID または DISCORD_BOT_TOKEN が未設定です");
-  }
-  return { guildId, botToken };
 }
 
 async function fetchGuildRoles(): Promise<DiscordRole[]> {
@@ -88,6 +74,20 @@ async function fetchGuildRoles(): Promise<DiscordRole[]> {
     throw new Error(`ギルドロール取得失敗: ${response.status} ${error}`);
   }
   return response.json();
+}
+
+async function fetchGuildMemberRoles(userId: string): Promise<string[]> {
+  const { guildId, botToken } = getGuildAndToken();
+  const response = await fetch(
+    `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}`,
+    { headers: { Authorization: `Bot ${botToken}` } },
+  );
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`メンバー情報取得失敗: ${response.status} ${error}`);
+  }
+  const member: DiscordMember = await response.json();
+  return member.roles;
 }
 
 async function createGuildRole(name: string): Promise<DiscordRole> {
@@ -176,7 +176,7 @@ export async function syncMemberDiscordRoles(
 ): Promise<SyncRolesResult> {
   const map = roleNameMap ?? (await getGuildRoleNameMap());
 
-  // マップにないロールを作成（onboarding 単体呼び出し用）
+  // マップにないロールを作成
   const nameKeys = [
     params.memberType,
     params.year,
@@ -185,25 +185,57 @@ export async function syncMemberDiscordRoles(
   ].filter(Boolean) as string[];
   await ensureRolesInMap(nameKeys, map);
 
-  const { roleIds, matched, notFound } = getTargetRoleIds(params, map);
+  const {
+    roleIds: targetRoleIds,
+    matched,
+    notFound,
+  } = getTargetRoleIds(params, map);
+
+  // 現在のメンバーロールを取得して差分を計算
+  const currentRoleIds = await fetchGuildMemberRoles(userId);
+  const currentRoleSet = new Set(currentRoleIds);
+  const targetRoleSet = new Set(targetRoleIds);
+
+  // このシステムが管理するロールID一覧（roleNameMap に含まれるもの + MEMBER_ROLE_ID）
+  const managedRoleIds = new Set([
+    ...map.values(),
+    ...(process.env.MEMBER_ROLE_ID ? [process.env.MEMBER_ROLE_ID] : []),
+  ]);
+
+  const toAdd = targetRoleIds.filter((id) => !currentRoleSet.has(id));
+  const toRemove = [...currentRoleSet].filter(
+    (id) => managedRoleIds.has(id) && !targetRoleSet.has(id),
+  );
 
   console.log(
-    `[role-sync] ${userId} matched=[${matched.join(", ")}] notFound=[${notFound.join(", ")}]`,
+    `[role-sync] ${userId} matched=[${matched.join(", ")}] notFound=[${notFound.join(", ")}] toAdd=[${toAdd.join(", ")}] toRemove=[${toRemove.join(", ")}]`,
   );
 
   const added: string[] = [];
+  const removed: string[] = [];
   const errors: string[] = [];
 
-  for (const roleId of roleIds) {
+  for (const roleId of toAdd) {
     try {
       await addGuildMemberRole(userId, roleId);
       added.push(roleId);
     } catch (e) {
       errors.push(
-        `roleId=${roleId}: ${e instanceof Error ? e.message : String(e)}`,
+        `add roleId=${roleId}: ${e instanceof Error ? e.message : String(e)}`,
       );
     }
   }
 
-  return { added, errors };
+  for (const roleId of toRemove) {
+    try {
+      await removeGuildMemberRole(userId, roleId);
+      removed.push(roleId);
+    } catch (e) {
+      errors.push(
+        `remove roleId=${roleId}: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    }
+  }
+
+  return { added, removed, errors };
 }

@@ -139,6 +139,7 @@ export type MemberSyncDetail = {
   discordId: string;
   discordUsername: string;
   addedRoleIds: string[];
+  removedRoleIds: string[];
   errors: string[];
 };
 
@@ -231,6 +232,7 @@ export async function syncAllMemberDiscordRoles(): Promise<SyncRolesResult> {
           discordId: doc.id,
           discordUsername: discordUsername ?? doc.id,
           addedRoleIds: roleResult.added,
+          removedRoleIds: roleResult.removed,
           errors: roleResult.errors,
         };
         result.details.push(detail);
@@ -242,7 +244,7 @@ export async function syncAllMemberDiscordRoles(): Promise<SyncRolesResult> {
         } else {
           result.success++;
           console.log(
-            `[role-sync] OK ${discordUsername ?? doc.id}: added=[${roleResult.added.join(", ") || "なし"}]`,
+            `[role-sync] OK ${discordUsername ?? doc.id}: added=[${roleResult.added.join(", ") || "なし"}] removed=[${roleResult.removed.join(", ") || "なし"}]`,
           );
         }
       }),

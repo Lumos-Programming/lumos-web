@@ -32,7 +32,7 @@ export function RoleSyncPanel() {
             ) : (
               <CheckCircle className="h-4 w-4" />
             )}
-            <AlertTitle>ロール付与結果</AlertTitle>
+            <AlertTitle>ロール同期結果</AlertTitle>
             <AlertDescription>
               {result.total}件中 {result.success}件成功
               {result.failed > 0 && `、${result.failed}件失敗`}
@@ -44,7 +44,8 @@ export function RoleSyncPanel() {
               <thead>
                 <tr className="border-b bg-muted/50 text-left">
                   <th className="px-3 py-2 font-medium">メンバー</th>
-                  <th className="px-3 py-2 font-medium">付与したロールID</th>
+                  <th className="px-3 py-2 font-medium">付与</th>
+                  <th className="px-3 py-2 font-medium">削除</th>
                   <th className="px-3 py-2 font-medium">エラー</th>
                 </tr>
               </thead>
@@ -74,7 +75,23 @@ export function RoleSyncPanel() {
                           ))}
                         </ul>
                       ) : (
-                        <span className="text-muted-foreground">なし</span>
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2">
+                      {d.removedRoleIds.length > 0 ? (
+                        <ul className="space-y-0.5">
+                          {d.removedRoleIds.map((id) => (
+                            <li
+                              key={id}
+                              className="font-mono text-xs text-orange-600"
+                            >
+                              {id}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
                       )}
                     </td>
                     <td className="px-3 py-2">
@@ -102,14 +119,14 @@ export function RoleSyncPanel() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <ShieldCheck className="h-5 w-5" />
-            Discordロール一括付与
+            Discordロール一括同期
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            登録済みメンバー全員に Discord ロールを付与します。
+            登録済みメンバー全員の Discord ロールをプロフィールと同期します。
             メンバー種別・学年・学部・興味分野は Discord
-            サーバーのロール名とプロフィール値を自動マッチングします。
+            サーバーのロール名と自動マッチングし、不要になったロールは削除します。
             年度メンバーロール（全員共通）は環境変数
             <code className="text-xs bg-muted px-1 rounded">
               MEMBER_ROLE_ID
@@ -122,7 +139,7 @@ export function RoleSyncPanel() {
             ) : (
               <ShieldCheck className="h-4 w-4" />
             )}
-            {isPending ? "付与中..." : "全メンバーにロールを付与"}
+            {isPending ? "同期中..." : "全メンバーのロールを同期"}
           </Button>
         </CardContent>
       </Card>
