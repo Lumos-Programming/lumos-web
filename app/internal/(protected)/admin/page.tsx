@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { getUnregisteredMembers } from "@/lib/admin/actions";
 import { AdminNotificationPanel } from "@/components/admin/notification-panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Shield, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Shield, AlertCircle, Users } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +22,16 @@ export default async function AdminPage() {
         <Shield className="h-6 w-6" />
         <h1 className="text-2xl font-bold">管理者ページ</h1>
       </div>
+
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold mb-4">メンバー管理</h2>
+        <Button asChild variant="outline">
+          <Link href="/internal/admin/members">
+            <Users className="h-4 w-4" />
+            メンバー一覧ダッシュボード
+          </Link>
+        </Button>
+      </section>
 
       <section>
         <h2 className="text-lg font-semibold mb-4">登録案内通知</h2>
