@@ -149,7 +149,7 @@ const COLUMNS: ColumnDef[] = [
   {
     id: "line",
     label: "LINE",
-    defaultVisible: false,
+    defaultVisible: true,
     render: (r) =>
       r.hasLine ? (
         <span className="text-sm">{r.lineName || "—"}</span>
