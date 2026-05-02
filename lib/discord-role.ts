@@ -6,6 +6,8 @@ const DISCORD_API_BASE = "https://discord.com/api/v10";
 // "学部1年" / "修士2年" / "博士3年" / "その他1年" などの学年文字列にマッチ
 const YEAR_ROLE_PATTERN = /^(学部|修士|博士|その他)[1-9]\d*年$/;
 
+// 管理対象ロール判定（削除候補になりうるロール）
+// 付与はしないが過去に付与した興味分野・種別ロールも削除できるよう全種類を含む
 function isProfileValueName(name: string): boolean {
   return (
     (MEMBER_TYPES as readonly string[]).includes(name) ||
@@ -23,10 +25,8 @@ export type SyncRolesResult = {
 };
 
 export type MemberRoleParams = {
-  memberType?: string;
   year?: string;
   faculty?: string;
-  interests?: string[];
 };
 
 type DiscordRole = { id: string; name: string };
@@ -163,13 +163,8 @@ function getTargetRoleIds(
     matched.push(`MEMBER_ROLE_ID(${memberRoleId})`);
   }
 
-  // メンバー種別・学年・学部・興味分野はロール名でマッチング
-  const nameKeys = [
-    params.memberType,
-    params.year,
-    params.faculty,
-    ...(params.interests ?? []),
-  ];
+  // 学年・学部はロール名でマッチング
+  const nameKeys = [params.year, params.faculty];
 
   for (const key of nameKeys) {
     if (!key) continue;
@@ -193,12 +188,7 @@ export async function syncMemberDiscordRoles(
   const map = roleNameMap ?? (await getGuildRoleNameMap());
 
   // マップにないロールを作成
-  const nameKeys = [
-    params.memberType,
-    params.year,
-    params.faculty,
-    ...(params.interests ?? []),
-  ].filter(Boolean) as string[];
+  const nameKeys = [params.year, params.faculty].filter(Boolean) as string[];
   await ensureRolesInMap(nameKeys, map);
 
   const {
