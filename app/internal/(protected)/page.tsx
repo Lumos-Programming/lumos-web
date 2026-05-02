@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { getMember } from "@/lib/members";
+import { getMember, getMembersInternal } from "@/lib/members";
+import { TodayBirthdayBanner } from "@/components/today-birthday-banner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -72,10 +73,25 @@ function getProfileCompletionItems(
   ];
 }
 
+function getTodayBirthdayNames(
+  members: { name: string; nickname?: string; birthDate?: string }[],
+): string[] {
+  const now = new Date();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return members
+    .filter((m) => m.birthDate?.slice(5) === `${mm}-${dd}`)
+    .map((m) => m.nickname || m.name);
+}
+
 export default async function InternalPage() {
   const session = await auth();
-  const member = await getMember(session!.user!.id);
+  const [member, allMembers] = await Promise.all([
+    getMember(session!.user!.id),
+    getMembersInternal(),
+  ]);
   const displayName = member?.nickname || session?.user?.name || "メンバー";
+  const todayBirthdayNames = getTodayBirthdayNames(allMembers);
   const items = getProfileCompletionItems(
     member as Record<string, unknown> | null,
   );
@@ -92,6 +108,9 @@ export default async function InternalPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+      {todayBirthdayNames.length > 0 && (
+        <TodayBirthdayBanner names={todayBirthdayNames} />
+      )}
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-primary p-6 md:p-8 text-white animate-spring-up">
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
