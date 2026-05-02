@@ -104,10 +104,8 @@ export async function POST() {
     });
 
     syncMemberDiscordRoles(session.user.id, {
-      memberType: updatedMember.memberType,
       year: updatedMember.yearByFiscal?.[String(new Date().getFullYear())],
       faculty: updatedMember.enrollments?.find((e) => e.isCurrent)?.faculty,
-      interests: updatedMember.interests,
     }).catch((e) => {
       console.error("Failed to sync Discord roles (onboarding):", e);
     });
