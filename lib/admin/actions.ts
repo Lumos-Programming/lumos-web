@@ -9,6 +9,7 @@ import {
   buildOnboardingNudgeMessage,
 } from "@/lib/discord-dm";
 import { getOptoutSubmissionIds } from "@/lib/discord-optout";
+import { getDb } from "@/lib/firebase";
 
 export type MemberStatus = "unregistered" | "onboarding";
 
@@ -126,4 +127,64 @@ export async function sendRegistrationNudge(
   }
 
   return result;
+}
+
+export type AdminMemberRow = {
+  discordId: string;
+  discordUsername: string;
+  discordHandle?: string;
+  lastName: string;
+  firstName: string;
+  nickname: string;
+  studentId: string;
+  memberType?: string;
+  year?: string;
+  faculty?: string;
+  interests: string[];
+  github?: string;
+  x?: string;
+  lineName?: string;
+  hasLine: boolean;
+  onboardingCompleted: boolean;
+  optedOut: boolean;
+  createdAt: string;
+};
+
+export async function getAdminMembers(): Promise<AdminMemberRow[]> {
+  if (!(await isAdmin())) {
+    throw new Error("管理者権限が必要です");
+  }
+
+  const db = getDb();
+  const snap = await db.collection("members").get();
+  const currentYear = String(new Date().getFullYear());
+
+  return snap.docs
+    .map((doc) => {
+      const d = doc.data();
+      const currentEnrollment = (d.enrollments ?? []).find(
+        (e: { isCurrent: boolean }) => e.isCurrent,
+      );
+      return {
+        discordId: doc.id,
+        discordUsername: d.discordUsername ?? "",
+        discordHandle: d.discordHandle,
+        lastName: d.lastName ?? "",
+        firstName: d.firstName ?? "",
+        nickname: d.nickname ?? "",
+        studentId: d.studentId ?? "",
+        memberType: d.memberType,
+        year: d.yearByFiscal?.[currentYear],
+        faculty: currentEnrollment?.faculty,
+        interests: d.interests ?? [],
+        github: d.github,
+        x: d.x,
+        lineName: d.line,
+        hasLine: !!d.lineId,
+        onboardingCompleted: d.onboardingCompleted === true,
+        optedOut: d.optedOut === true,
+        createdAt: d.createdAt?.toDate().toISOString() ?? "",
+      } satisfies AdminMemberRow;
+    })
+    .sort((a, b) => a.lastName.localeCompare(b.lastName, "ja"));
 }
