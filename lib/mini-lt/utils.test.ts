@@ -564,3 +564,188 @@ describe("週次ロジックのテスト", () => {
     });
   });
 });
+
+// 2026-03-30(月)〜2026-04-05(日) の実際の日付を使ったテーブルテスト
+// ISO週: 2026-W14, イベント: 月曜21:00〜24:00
+describe("先週(2026-W14)の実際の日付によるテーブルテスト", () => {
+  // EVENT_CONFIGが変わってもテストが壊れないよう固定値を使用
+  const config: EventConfig = {
+    dayOfWeek: 1, // 月曜日
+    startHour: 21,
+    endHour: 24,
+  };
+
+  // getWeekId: 先週の全日付が同じISO週になることを検証（configに依存しない）
+  describe("getWeekId", () => {
+    const weekIdCases = [
+      { date: "2026-03-30T12:00:00", label: "3/30(月)", expected: "2026-W14" },
+      { date: "2026-03-31T12:00:00", label: "3/31(火)", expected: "2026-W14" },
+      { date: "2026-04-01T12:00:00", label: "4/1(水)", expected: "2026-W14" },
+      { date: "2026-04-02T12:00:00", label: "4/2(木)", expected: "2026-W14" },
+      { date: "2026-04-03T12:00:00", label: "4/3(金)", expected: "2026-W14" },
+      { date: "2026-04-04T12:00:00", label: "4/4(土)", expected: "2026-W14" },
+      { date: "2026-04-05T12:00:00", label: "4/5(日)", expected: "2026-W14" },
+    ];
+
+    it.each(weekIdCases)("$label → $expected", ({ date, expected }) => {
+      expect(getWeekId(new Date(date))).toBe(expected);
+    });
+  });
+
+  // isDuringEvent: 曜日・時刻ごとの状態を検証
+  describe("isDuringEvent", () => {
+    const stateCases = [
+      // 月曜日（イベント日）
+      {
+        date: "2026-03-30T00:00:00",
+        label: "3/30(月) 0:00  イベント前",
+        expected: false,
+      },
+      {
+        date: "2026-03-30T12:00:00",
+        label: "3/30(月) 12:00 イベント前",
+        expected: false,
+      },
+      {
+        date: "2026-03-30T20:59:00",
+        label: "3/30(月) 20:59 イベント直前",
+        expected: false,
+      },
+      {
+        date: "2026-03-30T21:00:00",
+        label: "3/30(月) 21:00 イベント開始",
+        expected: true,
+      },
+      {
+        date: "2026-03-30T22:30:00",
+        label: "3/30(月) 22:30 イベント中",
+        expected: true,
+      },
+      {
+        date: "2026-03-30T23:59:00",
+        label: "3/30(月) 23:59 イベント終了直前",
+        expected: true,
+      },
+      {
+        date: "2026-03-31T00:00:00",
+        label: "3/31(月) 0:00 イベント終了後",
+        expected: false,
+      },
+      // 火曜〜日曜（イベント後）
+      { date: "2026-03-31T12:00:00", label: "3/31(火) 12:00", expected: false },
+      { date: "2026-04-01T12:00:00", label: "4/1(水) 12:00", expected: false },
+      { date: "2026-04-02T12:00:00", label: "4/2(木) 12:00", expected: false },
+      { date: "2026-04-03T12:00:00", label: "4/3(金) 12:00", expected: false },
+      { date: "2026-04-04T12:00:00", label: "4/4(土) 12:00", expected: false },
+      { date: "2026-04-05T12:00:00", label: "4/5(日) 12:00", expected: false },
+    ];
+
+    it.each(stateCases)("$label → $expected", ({ date, expected }) => {
+      expect(isDuringEvent(new Date(date), config)).toBe(expected);
+    });
+  });
+
+  // getNextEventWeekId: 各日付から見た「次のイベント週」を検証
+  describe("getNextEventWeekId", () => {
+    const nextEventCases = [
+      // 月曜（イベント前・イベント中）→ 今週 W14
+      {
+        date: "2026-03-30T12:00:00",
+        label: "3/30(月) 12:00 イベント前",
+        expected: "2026-W14",
+      },
+      {
+        date: "2026-03-30T22:30:00",
+        label: "3/30(月) 22:30 イベント中",
+        expected: "2026-W14",
+      },
+      // 火曜〜日曜（イベント後）→ 来週 W15
+      {
+        date: "2026-03-31T12:00:00",
+        label: "3/31(火) イベント終了後",
+        expected: "2026-W15",
+      },
+      { date: "2026-04-01T12:00:00", label: "4/1(水)", expected: "2026-W15" },
+      { date: "2026-04-02T12:00:00", label: "4/2(木)", expected: "2026-W15" },
+      { date: "2026-04-03T12:00:00", label: "4/3(金)", expected: "2026-W15" },
+      { date: "2026-04-04T12:00:00", label: "4/4(土)", expected: "2026-W15" },
+      {
+        date: "2026-04-05T12:00:00",
+        label: "4/5(日) 翌月曜を待つ",
+        expected: "2026-W15",
+      },
+    ];
+
+    it.each(nextEventCases)("$label → $expected", ({ date, expected }) => {
+      expect(getNextEventWeekId(new Date(date), config)).toBe(expected);
+    });
+  });
+
+  // getNavigationWeeks: 各状態でのナビゲーションラベルを検証
+  describe("getNavigationWeeks", () => {
+    const navCases = [
+      // イベント前（月曜イベント前）: center=次回(W14)
+      {
+        date: "2026-03-30T12:00:00",
+        label: "3/30(月) 12:00 イベント前",
+        prevWeek: "2026-W13",
+        centerWeek: "2026-W14",
+        nextWeek: "2026-W15",
+        centerLabel: "次回" as const,
+        rightLabel: "次々回" as const,
+      },
+      // イベント中（月曜イベント中）: center=今回(W14)
+      {
+        date: "2026-03-30T22:30:00",
+        label: "3/30(月) 22:30 イベント中",
+        prevWeek: "2026-W13",
+        centerWeek: "2026-W14",
+        nextWeek: "2026-W15",
+        centerLabel: "今回" as const,
+        rightLabel: "次回" as const,
+      },
+      // イベント後（火曜）: center=次回(W15)
+      {
+        date: "2026-03-31T12:00:00",
+        label: "3/31(火) イベント終了後",
+        prevWeek: "2026-W14",
+        centerWeek: "2026-W15",
+        nextWeek: "2026-W16",
+        centerLabel: "次回" as const,
+        rightLabel: "次々回" as const,
+      },
+      // イベント後（金曜）: center=次回(W15)
+      {
+        date: "2026-04-03T12:00:00",
+        label: "4/3(金) 週後半",
+        prevWeek: "2026-W14",
+        centerWeek: "2026-W15",
+        nextWeek: "2026-W16",
+        centerLabel: "次回" as const,
+        rightLabel: "次々回" as const,
+      },
+      // イベント後（日曜）: center=次回(W15)
+      {
+        date: "2026-04-05T12:00:00",
+        label: "4/5(日) 翌月曜を待つ",
+        prevWeek: "2026-W14",
+        centerWeek: "2026-W15",
+        nextWeek: "2026-W16",
+        centerLabel: "次回" as const,
+        rightLabel: "次々回" as const,
+      },
+    ];
+
+    it.each(navCases)(
+      "$label → center=$centerWeek($centerLabel)",
+      ({ date, prevWeek, centerWeek, nextWeek, centerLabel, rightLabel }) => {
+        const result = getNavigationWeeks(new Date(date), config);
+        expect(result.prevWeek).toBe(prevWeek);
+        expect(result.centerWeek).toBe(centerWeek);
+        expect(result.nextWeek).toBe(nextWeek);
+        expect(result.centerLabel).toBe(centerLabel);
+        expect(result.rightLabel).toBe(rightLabel);
+      },
+    );
+  });
+});
