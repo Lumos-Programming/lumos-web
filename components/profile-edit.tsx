@@ -74,7 +74,7 @@ const FIELD_LABELS: Partial<
   lastNameRomaji: "姓（ローマ字）",
   firstNameRomaji: "名（ローマ字）",
   nickname: "ニックネーム",
-  currentOrg: "現在の所属",
+  currentOrg: "現在の所属会社・機関",
   birthDate: "誕生日",
   gender: "性別",
   bio: "プロフィール文",
@@ -1800,7 +1800,14 @@ export default function ProfileEdit() {
                 >
                   {key !== "bio" && (
                     <div className="flex items-center justify-between">
-                      <Label>{FIELD_LABELS[key]}</Label>
+                      <div className="flex items-center gap-1.5">
+                        <Label>{FIELD_LABELS[key]}</Label>
+                        {key === "currentOrg" && (
+                          <span className="text-[10px] text-muted-foreground border border-muted-foreground/30 px-1.5 py-0.5 rounded">
+                            任意
+                          </span>
+                        )}
+                      </div>
                     </div>
                   )}
 

@@ -228,7 +228,7 @@ export default async function ProfilePage() {
                 {member.memberType === "卒業生" && (
                   <div>
                     <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">
-                      現在の所属
+                      現在の所属会社・機関
                     </p>
                     <p className="text-sm font-medium mt-0.5">
                       {member.currentOrg || "未設定"}
