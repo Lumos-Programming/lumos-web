@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Users,
   CalendarDays,
+  Cake,
   UserCircle,
   Settings,
   ExternalLink,
@@ -35,6 +36,7 @@ const NAV_ITEMS = [
   { href: "/internal", icon: LayoutDashboard, label: "ホーム", exact: true },
   { href: "/internal/members", icon: Users, label: "メンバー" },
   { href: "/internal/events", icon: CalendarDays, label: "イベント" },
+  { href: "/internal/birthdays", icon: Cake, label: "誕生日" },
   { href: "/internal/profile", icon: UserCircle, label: "プロフィール" },
   { href: "/internal/settings", icon: Settings, label: "設定" },
 ];
