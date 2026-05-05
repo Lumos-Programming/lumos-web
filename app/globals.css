@@ -249,19 +249,19 @@
 }
 
 .bg-slide-1 {
-  animation: backgroundSlide1 48s ease-in-out infinite;
+  animation: backgroundSlide1 24s ease-in-out infinite;
 }
 
 .bg-slide-2 {
-  animation: backgroundSlide2 48s ease-in-out infinite;
+  animation: backgroundSlide2 24s ease-in-out infinite;
 }
 
 .bg-slide-3 {
-  animation: backgroundSlide3 48s ease-in-out infinite;
+  animation: backgroundSlide3 24s ease-in-out infinite;
 }
 
 .bg-slide-4 {
-  animation: backgroundSlide4 48s ease-in-out infinite;
+  animation: backgroundSlide4 24s ease-in-out infinite;
 }
 
 /* 浮遊バブルアニメーション（サンプル顔写真） */
