@@ -77,9 +77,9 @@ export default async function AdminPage() {
           指定した日時以降にDiscordサーバーへ参加し、まだ対象ロールを持っていないメンバーへ一括でロールを付与します。
         </p>
         <RoleAssignmentPanel
-          defaultRoleId={process.env.ADMIN_ROLE_ASSIGN_DEFAULT_ROLE_ID}
+          defaultRoleId={process.env.NEW_MEMBER_ROLE_ID}
           defaultJoinedAfterLocal={isoToJstDatetimeLocal(
-            process.env.ADMIN_ROLE_ASSIGN_DEFAULT_JOINED_AFTER,
+            process.env.NEW_MEMBER_JOINED_AFTER,
           )}
         />
       </section>
