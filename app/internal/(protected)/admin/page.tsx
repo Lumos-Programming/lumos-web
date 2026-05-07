@@ -1,5 +1,6 @@
 import { getUnregisteredMembers } from "@/lib/admin/actions";
 import { AdminNotificationPanel } from "@/components/admin/notification-panel";
+import { RoleAssignmentPanel } from "@/components/admin/role-assignment-panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Shield, AlertCircle } from "lucide-react";
 
@@ -44,6 +45,14 @@ export default async function AdminPage() {
         ) : (
           <AdminNotificationPanel members={members!} />
         )}
+      </section>
+
+      <section className="mt-12">
+        <h2 className="text-lg font-semibold mb-4">参加日時によるロール付与</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          指定した日時以降にDiscordサーバーへ参加し、まだ対象ロールを持っていないメンバーへ一括でロールを付与します。
+        </p>
+        <RoleAssignmentPanel />
       </section>
     </div>
   );
