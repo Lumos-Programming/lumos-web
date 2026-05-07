@@ -6,6 +6,30 @@ import { Shield, AlertCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * 環境変数の絶対 ISO タイムスタンプを、JST(+09:00) 表示の
+ * "YYYY-MM-DDTHH:mm" に変換する。datetime-local input の初期値として使う。
+ * SSR/CSR で結果が一致するよう、ブラウザのタイムゾーンに依存しない変換にする。
+ */
+function isoToJstDatetimeLocal(iso: string | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  // Asia/Tokyo の各フィールドをロケール非依存で取り出す
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
+  const lookup = (type: string) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  return `${lookup("year")}-${lookup("month")}-${lookup("day")}T${lookup("hour")}:${lookup("minute")}`;
+}
+
 export default async function AdminPage() {
   let members;
   let error: string | null = null;
@@ -52,7 +76,12 @@ export default async function AdminPage() {
         <p className="text-sm text-muted-foreground mb-4">
           指定した日時以降にDiscordサーバーへ参加し、まだ対象ロールを持っていないメンバーへ一括でロールを付与します。
         </p>
-        <RoleAssignmentPanel />
+        <RoleAssignmentPanel
+          defaultRoleId={process.env.ADMIN_ROLE_ASSIGN_DEFAULT_ROLE_ID}
+          defaultJoinedAfterLocal={isoToJstDatetimeLocal(
+            process.env.ADMIN_ROLE_ASSIGN_DEFAULT_JOINED_AFTER,
+          )}
+        />
       </section>
     </div>
   );

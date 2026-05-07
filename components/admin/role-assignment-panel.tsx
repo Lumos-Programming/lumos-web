@@ -17,9 +17,20 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle, AlertCircle, Loader2, Search, Send } from "lucide-react";
 
-export function RoleAssignmentPanel() {
-  const [roleId, setRoleId] = useState("");
-  const [joinedAfter, setJoinedAfter] = useState("");
+type Props = {
+  defaultRoleId?: string;
+  /** "YYYY-MM-DDTHH:mm" string already converted to the desired display
+   *  timezone (e.g. JST). Server Component is responsible for the conversion
+   *  to avoid SSR/CSR hydration mismatches. */
+  defaultJoinedAfterLocal?: string;
+};
+
+export function RoleAssignmentPanel({
+  defaultRoleId = "",
+  defaultJoinedAfterLocal = "",
+}: Props = {}) {
+  const [roleId, setRoleId] = useState(defaultRoleId);
+  const [joinedAfter, setJoinedAfter] = useState(defaultJoinedAfterLocal);
   const [candidates, setCandidates] = useState<
     RoleAssignmentCandidate[] | null
   >(null);
