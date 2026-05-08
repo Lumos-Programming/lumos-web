@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Button,
   Input,
@@ -25,28 +25,21 @@ interface SubmitFormProps {
 }
 
 const DURATION_OPTIONS = [1, 3, 5, 7, 10, 15] as const;
+const DEFAULT_DURATION = 5;
 
 export function SubmitForm({
   onSubmit,
   editingTalk,
   onCancelEdit,
 }: SubmitFormProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [duration, setDuration] = useState<number>(5); // Default 5 minutes
+  const [title, setTitle] = useState(editingTalk?.title ?? "");
+  const [description, setDescription] = useState(
+    editingTalk?.description ?? "",
+  );
+  const [duration, setDuration] = useState<number>(
+    editingTalk?.duration ?? DEFAULT_DURATION,
+  );
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (editingTalk) {
-      setTitle(editingTalk.title);
-      setDescription(editingTalk.description);
-      setDuration(editingTalk.duration);
-    } else {
-      setTitle("");
-      setDescription("");
-      setDuration(5); // Reset to default
-    }
-  }, [editingTalk]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +49,7 @@ export function SubmitForm({
       if (!editingTalk) {
         setTitle("");
         setDescription("");
-        setDuration(5);
+        setDuration(DEFAULT_DURATION);
       }
     } finally {
       setLoading(false);
