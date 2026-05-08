@@ -729,7 +729,12 @@ export function Step2Enrollment({
         {/* 卒業生のみ：現在の所属 */}
         {form.memberType === "卒業生" && (
           <div className="space-y-1.5 animate-[fadeInUp_300ms_ease_both]">
-            <Label htmlFor="currentOrg">現在の所属</Label>
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="currentOrg">現在の所属会社・機関</Label>
+              <span className="text-[10px] text-muted-foreground border border-muted-foreground/30 px-1.5 py-0.5 rounded">
+                任意
+              </span>
+            </div>
             <Input
               id="currentOrg"
               value={form.currentOrg}
