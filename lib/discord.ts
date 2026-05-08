@@ -282,6 +282,43 @@ export async function fetchDiscordDisplayName(
 }
 
 /**
+ * Add a role to a guild member.
+ * PUT /guilds/{guild.id}/members/{user.id}/roles/{role.id}
+ */
+export async function addRoleToMember(
+  userId: string,
+  roleId: string,
+): Promise<void> {
+  const guildId = process.env.DISCORD_GUILD_ID;
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+
+  if (!guildId) {
+    throw new Error("DISCORD_GUILD_ID is not configured");
+  }
+  if (!botToken) {
+    throw new Error("DISCORD_BOT_TOKEN is not configured");
+  }
+
+  const response = await fetch(
+    `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}/roles/${roleId}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bot ${botToken}`,
+        "Content-Length": "0",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(
+      `Failed to add role to member: ${response.status} ${error}`,
+    );
+  }
+}
+
+/**
  * Get avatar URL for a Discord user
  */
 export function getDiscordAvatarUrl(

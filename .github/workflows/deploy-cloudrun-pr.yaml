@@ -46,6 +46,7 @@ jobs:
           file: ./cloudrun/Dockerfile
           build-args: |
             NEXT_PUBLIC_APP_ENV=development
+            COMMIT_SHA=${{ github.sha }}
       - name: Deploy to Cloud Run
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
