@@ -62,9 +62,9 @@ export default function Home() {
 
   useEffect(() => {
     if (!emblaApi) return;
-    onSelect();
     emblaApi.on("select", onSelect);
     emblaApi.on("reInit", onSelect);
+    emblaApi.emit("select");
 
     return () => {
       emblaApi.off("select", onSelect);

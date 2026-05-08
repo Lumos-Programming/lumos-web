@@ -70,6 +70,7 @@ export function ManageTalks({
       {/* 編集中または未登録の場合のみフォームを表示 */}
       {editingTalk || !hasRegistered ? (
         <SubmitForm
+          key={editingTalk?.id ?? "new"}
           weekId={weekId}
           onSubmit={async (data) => {
             await onAction(data);
