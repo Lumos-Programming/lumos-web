@@ -13,6 +13,8 @@ export type DiscordGuildMember = {
     bot?: boolean;
   };
   nick: string | null;
+  roles: string[];
+  joined_at: string;
 };
 
 /**
