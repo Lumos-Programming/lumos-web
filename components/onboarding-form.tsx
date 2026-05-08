@@ -314,9 +314,9 @@ export default function OnboardingForm({
     const stepParam = searchParams.get("step");
 
     if (success === "line_linked") {
-      setLineLinked(true);
       fetchProfile()
         .then((data) => {
+          setLineLinked(true);
           if (data?.line) {
             setLineUsername(data.line);
             setLineAvatar(data.lineAvatar ?? "");
@@ -340,9 +340,9 @@ export default function OnboardingForm({
         })
         .catch(console.error);
     } else if (success === "github_linked") {
-      setGithubLinked(true);
       fetchProfile()
         .then((data) => {
+          setGithubLinked(true);
           if (data?.github) {
             setGithubUsername(data.github);
             setGithubAvatar(data.githubAvatar ?? "");
@@ -350,21 +350,27 @@ export default function OnboardingForm({
         })
         .catch(console.error);
     } else if (success === "x_linked") {
-      setXLinked(true);
       fetchProfile()
         .then((data) => {
+          setXLinked(true);
           if (data?.x) {
             setXUsername(data.x);
             setXAvatar(data.xAvatar ?? "");
           }
         })
         .catch(console.error);
-    } else if (error === "line_link_failed") {
-      setStep3Error("LINE連携に失敗しました。もう一度お試しください。");
-    } else if (error === "github_link_failed") {
-      setStep3Error("GitHub連携に失敗しました。もう一度お試しください。");
-    } else if (error === "x_link_failed") {
-      setStep3Error("X連携に失敗しました。もう一度お試しください。");
+    } else if (error) {
+      const errorMessage =
+        error === "line_link_failed"
+          ? "LINE連携に失敗しました。もう一度お試しください。"
+          : error === "github_link_failed"
+            ? "GitHub連携に失敗しました。もう一度お試しください。"
+            : error === "x_link_failed"
+              ? "X連携に失敗しました。もう一度お試しください。"
+              : null;
+      if (errorMessage) {
+        queueMicrotask(() => setStep3Error(errorMessage));
+      }
     }
 
     if (success || error) {
