@@ -219,7 +219,13 @@ export async function syncAllMemberDiscordRoles(): Promise<SyncRolesResult> {
   const snap = await db
     .collection("members")
     .where("onboardingCompleted", "==", true)
-    .select("discordUsername", "optedOut", "yearByFiscal", "enrollments")
+    .select(
+      "discordUsername",
+      "optedOut",
+      "yearByFiscal",
+      "enrollments",
+      "memberType",
+    )
     .get();
 
   const result: SyncRolesResult = {
@@ -242,15 +248,19 @@ export async function syncAllMemberDiscordRoles(): Promise<SyncRolesResult> {
   // 全メンバーのプロフィール値を集めてまとめてロールを作成（重複作成を防ぐ）
   const allProfileKeys = new Set<string>();
   for (const doc of targets) {
-    const { yearByFiscal, enrollments } = doc.data();
-    const year = (yearByFiscal as Record<string, string> | undefined)?.[
-      currentYear
-    ];
-    const faculty = (enrollments as EnrollmentRecord[] | undefined)?.find(
-      (e) => e.isCurrent,
-    )?.faculty;
-    if (year) allProfileKeys.add(year);
-    if (faculty) allProfileKeys.add(faculty);
+    const { yearByFiscal, enrollments, memberType } = doc.data();
+    if (memberType === "卒業生" || memberType === "その他") {
+      allProfileKeys.add(memberType as string);
+    } else {
+      const year = (yearByFiscal as Record<string, string> | undefined)?.[
+        currentYear
+      ];
+      const faculty = (enrollments as EnrollmentRecord[] | undefined)?.find(
+        (e) => e.isCurrent,
+      )?.faculty;
+      if (year) allProfileKeys.add(year);
+      if (faculty) allProfileKeys.add(faculty);
+    }
   }
   await ensureRolesInMap([...allProfileKeys], roleNameMap);
 
@@ -264,7 +274,8 @@ export async function syncAllMemberDiscordRoles(): Promise<SyncRolesResult> {
     const batch = targets.slice(i, i + CONCURRENCY);
     await Promise.all(
       batch.map(async (doc) => {
-        const { discordUsername, yearByFiscal, enrollments } = doc.data();
+        const { discordUsername, yearByFiscal, enrollments, memberType } =
+          doc.data();
         const year = (yearByFiscal as Record<string, string> | undefined)?.[
           currentYear
         ];
@@ -273,7 +284,7 @@ export async function syncAllMemberDiscordRoles(): Promise<SyncRolesResult> {
         )?.faculty;
         const roleResult = await syncMemberDiscordRoles(
           doc.id,
-          { year, faculty },
+          { year, faculty, memberType: memberType as string | undefined },
           roleNameMap,
         );
         const detail: MemberSyncDetail = {
