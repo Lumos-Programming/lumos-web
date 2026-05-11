@@ -186,5 +186,15 @@ export async function getAdminMembers(): Promise<AdminMemberRow[]> {
         createdAt: d.createdAt?.toDate().toISOString() ?? "",
       } satisfies AdminMemberRow;
     })
-    .sort((a, b) => a.lastName.localeCompare(b.lastName, "ja"));
+    .sort((a, b) => {
+      // 退会済を末尾へ
+      if (a.optedOut !== b.optedOut) return a.optedOut ? 1 : -1;
+      // 登録済を未完了より前へ
+      if (a.onboardingCompleted !== b.onboardingCompleted)
+        return a.onboardingCompleted ? -1 : 1;
+      // 名前なし（未登録）を後ろへ
+      if (!a.lastName && b.lastName) return 1;
+      if (a.lastName && !b.lastName) return -1;
+      return a.lastName.localeCompare(b.lastName, "ja");
+    });
 }
