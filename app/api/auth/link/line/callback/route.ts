@@ -10,6 +10,8 @@ import {
   checkLineGroupMembership,
   checkLineBotFriendship,
   createLineInvitation,
+  buildLineSnsData,
+  buildLinePendingData,
 } from "@/lib/line-invite";
 
 export async function GET(request: NextRequest) {
@@ -49,18 +51,7 @@ export async function GET(request: NextRequest) {
     const member = await getMember(discordId);
     const isAlumni = member?.memberType === "卒業生";
 
-    /** LINE SNS データ（全フローで共通） */
-    const snsData = {
-      line: user.username,
-      lineId: user.id,
-      lineAvatar: user.avatar,
-      lineLinkedAt: Math.floor(Date.now() / 1000),
-      lineAccessToken: tokenResponse.access_token,
-      lineRefreshToken: tokenResponse.refresh_token,
-      lineTokenExpiresAt: tokenResponse.expires_in
-        ? Math.floor(Date.now() / 1000) + tokenResponse.expires_in
-        : undefined,
-    };
+    const snsData = buildLineSnsData(user, tokenResponse);
 
     /**
      * Bot友だち状態を遅延判定（グループ招待が必要な非卒業生フローでのみ使用）
@@ -105,16 +96,11 @@ export async function GET(request: NextRequest) {
       }
 
       // 未参加 → 仮情報付き招待コード発行（push DMは送らず、Bot友だち追加を促す）
-      await createLineInvitation(discordId, user.id, {
-        pendingLine: user.username,
-        pendingLineId: user.id,
-        pendingLineAvatar: user.avatar,
-        pendingLineAccessToken: tokenResponse.access_token,
-        pendingLineRefreshToken: tokenResponse.refresh_token,
-        pendingLineTokenExpiresAt: tokenResponse.expires_in
-          ? Math.floor(Date.now() / 1000) + tokenResponse.expires_in
-          : undefined,
-      });
+      await createLineInvitation(
+        discordId,
+        user.id,
+        buildLinePendingData(user, tokenResponse),
+      );
 
       const successUrl = new URL(redirectTo, origin);
       successUrl.searchParams.set("success", "line_linked");
