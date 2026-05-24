@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { getDb } from "@/lib/firebase";
 import { Timestamp } from "firebase-admin/firestore";
 import type { LineFlexMessage, LineFlexBubble } from "@/lib/mini-lt/line-flex";
+import type { OAuthTokenResponse } from "@/lib/oauth-link";
 
 export interface LineInvitation {
   userId: string; // Discord ID
@@ -25,6 +26,82 @@ interface PendingData {
   pendingLineAccessToken: string;
   pendingLineRefreshToken?: string;
   pendingLineTokenExpiresAt?: number;
+}
+
+export interface LineSnsData {
+  line: string;
+  lineId: string;
+  lineLinkedAt: number;
+  lineAccessToken: string;
+  lineAvatar?: string;
+  lineRefreshToken?: string;
+  lineTokenExpiresAt?: number;
+}
+
+/**
+ * LINE 連携時に Firestore へ書き込む SNS データを構築する。
+ * Firestore は undefined フィールドを受け付けないため、未設定のものは含めない
+ * (例: LINE プロフィール画像未設定ユーザー — #252)
+ */
+export function buildLineSnsData(
+  lineUser: { id: string; username: string; avatar?: string },
+  token: OAuthTokenResponse,
+): LineSnsData {
+  const nowSec = Math.floor(Date.now() / 1000);
+  return {
+    line: lineUser.username,
+    lineId: lineUser.id,
+    lineLinkedAt: nowSec,
+    lineAccessToken: token.access_token,
+    ...(lineUser.avatar ? { lineAvatar: lineUser.avatar } : {}),
+    ...(token.refresh_token ? { lineRefreshToken: token.refresh_token } : {}),
+    ...(token.expires_in
+      ? { lineTokenExpiresAt: nowSec + token.expires_in }
+      : {}),
+  };
+}
+
+/** 再連携フローで招待コードに仮保存する pending データ。同じく undefined を含めない (#252) */
+export function buildLinePendingData(
+  lineUser: { id: string; username: string; avatar?: string },
+  token: OAuthTokenResponse,
+): PendingData {
+  const nowSec = Math.floor(Date.now() / 1000);
+  return {
+    pendingLine: lineUser.username,
+    pendingLineId: lineUser.id,
+    pendingLineAccessToken: token.access_token,
+    ...(lineUser.avatar ? { pendingLineAvatar: lineUser.avatar } : {}),
+    ...(token.refresh_token
+      ? { pendingLineRefreshToken: token.refresh_token }
+      : {}),
+    ...(token.expires_in
+      ? { pendingLineTokenExpiresAt: nowSec + token.expires_in }
+      : {}),
+  };
+}
+
+/**
+ * 招待コードに仮保存された pending データを SNS データに変換（再連携完了時）。
+ * pendingLine / pendingLineId / pendingLineAccessToken は buildLinePendingData が
+ * 必ず一緒に書き込むため、呼び出し側で `pendingLineId` の存在を確認していれば他も存在する。
+ */
+export function pendingToLineSnsData(invitation: LineInvitation): LineSnsData {
+  return {
+    line: invitation.pendingLine!,
+    lineId: invitation.pendingLineId!,
+    lineLinkedAt: Math.floor(Date.now() / 1000),
+    lineAccessToken: invitation.pendingLineAccessToken!,
+    ...(invitation.pendingLineAvatar
+      ? { lineAvatar: invitation.pendingLineAvatar }
+      : {}),
+    ...(invitation.pendingLineRefreshToken
+      ? { lineRefreshToken: invitation.pendingLineRefreshToken }
+      : {}),
+    ...(invitation.pendingLineTokenExpiresAt
+      ? { lineTokenExpiresAt: invitation.pendingLineTokenExpiresAt }
+      : {}),
+  };
 }
 
 export interface MemberByLineId {

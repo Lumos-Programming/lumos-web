@@ -11,6 +11,7 @@ import {
   findMemberByLineId,
   findPendingInvitationByLineId,
   markInvitationUsed,
+  pendingToLineSnsData,
   sendLineReply,
   buildGroupInviteFlexMessage,
   buildGroupJoinedFlexMessage,
@@ -193,15 +194,10 @@ async function handleMemberJoined(event: LineWebhookEvent): Promise<void> {
 
       // 再連携フロー: pending情報がある場合、連携情報を切り替え
       if (invitation.pendingLineId) {
-        await updateMemberSns(invitation.userId, {
-          line: invitation.pendingLine,
-          lineId: invitation.pendingLineId,
-          lineAvatar: invitation.pendingLineAvatar,
-          lineLinkedAt: Math.floor(Date.now() / 1000),
-          lineAccessToken: invitation.pendingLineAccessToken,
-          lineRefreshToken: invitation.pendingLineRefreshToken,
-          lineTokenExpiresAt: invitation.pendingLineTokenExpiresAt,
-        });
+        await updateMemberSns(
+          invitation.userId,
+          pendingToLineSnsData(invitation),
+        );
       }
 
       await markInvitationUsed(code);
