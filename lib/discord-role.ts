@@ -3,11 +3,16 @@ import { ALL_PRESET_TAGS } from "@/types/interests";
 
 const DISCORD_API_BASE = "https://discord.com/api/v10";
 
-// "学部1年" / "修士2年" / "博士3年" / "その他1年" などの学年文字列にマッチ
-const YEAR_ROLE_PATTERN = /^(学部|修士|博士|その他)[1-9]\d*年$/;
+// "学部1年" / "修士2年" / "博士3年" などの学年文字列にマッチ
+const YEAR_ROLE_PATTERN = /^(学部|修士|博士)[1-9]\d*年$/;
 
+const RESIGNED_ROLE_NAME = "退会者";
+
+// 管理対象ロール判定（削除候補になりうるロール）
+// 付与はしないが過去に付与した興味分野・種別ロールも削除できるよう全種類を含む
 function isProfileValueName(name: string): boolean {
   return (
+    name === RESIGNED_ROLE_NAME ||
     (MEMBER_TYPES as readonly string[]).includes(name) ||
     (FACULTIES as readonly string[]).includes(name) ||
     (GRADUATE_SCHOOLS as readonly string[]).includes(name) ||
@@ -23,10 +28,10 @@ export type SyncRolesResult = {
 };
 
 export type MemberRoleParams = {
-  memberType?: string;
   year?: string;
   faculty?: string;
-  interests?: string[];
+  memberType?: string;
+  optedOut?: boolean;
 };
 
 type DiscordRole = { id: string; name: string };
@@ -148,41 +153,63 @@ export async function ensureRolesInMap(
   }
 }
 
+// params から付与すべきロール ID 一覧を返す。
+// 退会者: 退会者ロールのみ
+// 卒業生: 卒業生ロールのみ
+// その他: その他ロールのみ
+// 学部生・院生: MEMBER_ROLE_ID + 学年 + 学部/学府
 function getTargetRoleIds(
   params: MemberRoleParams,
   roleNameMap: Map<string, string>,
 ): { roleIds: string[]; matched: string[]; notFound: string[] } {
-  const roles: string[] = [];
   const matched: string[] = [];
   const notFound: string[] = [];
 
-  // 年度メンバーロール（env var で固定指定）
+  const resolveByName = (name: string) => {
+    const id = roleNameMap.get(name);
+    if (id) {
+      matched.push(`"${name}"→${id}`);
+    } else {
+      notFound.push(`"${name}"`);
+    }
+    return id;
+  };
+
+  if (params.optedOut) {
+    const id = resolveByName(RESIGNED_ROLE_NAME);
+    return { roleIds: id ? [id] : [], matched, notFound };
+  }
+
+  if (params.memberType === "卒業生" || params.memberType === "その他") {
+    const id = resolveByName(params.memberType);
+    return { roleIds: id ? [id] : [], matched, notFound };
+  }
+
+  // 学部生・院生（memberType が未設定の場合も含む）
+  const roles: string[] = [];
+
   const memberRoleId = process.env.MEMBER_ROLE_ID;
   if (memberRoleId) {
     roles.push(memberRoleId);
     matched.push(`MEMBER_ROLE_ID(${memberRoleId})`);
   }
 
-  // メンバー種別・学年・学部・興味分野はロール名でマッチング
-  const nameKeys = [
-    params.memberType,
-    params.year,
-    params.faculty,
-    ...(params.interests ?? []),
-  ];
-
-  for (const key of nameKeys) {
+  for (const key of [params.year, params.faculty]) {
     if (!key) continue;
-    const id = roleNameMap.get(key);
-    if (id) {
-      roles.push(id);
-      matched.push(`"${key}"→${id}`);
-    } else {
-      notFound.push(`"${key}"`);
-    }
+    const id = resolveByName(key);
+    if (id) roles.push(id);
   }
 
   return { roleIds: [...new Set(roles.filter(Boolean))], matched, notFound };
+}
+
+// params から ensureRolesInMap に渡すロール名一覧を返す。
+function getRoleNamesToEnsure(params: MemberRoleParams): string[] {
+  if (params.optedOut) return [RESIGNED_ROLE_NAME];
+  if (params.memberType === "卒業生" || params.memberType === "その他") {
+    return [params.memberType];
+  }
+  return [params.year, params.faculty].filter(Boolean) as string[];
 }
 
 export async function syncMemberDiscordRoles(
@@ -192,14 +219,7 @@ export async function syncMemberDiscordRoles(
 ): Promise<SyncRolesResult> {
   const map = roleNameMap ?? (await getGuildRoleNameMap());
 
-  // マップにないロールを作成
-  const nameKeys = [
-    params.memberType,
-    params.year,
-    params.faculty,
-    ...(params.interests ?? []),
-  ].filter(Boolean) as string[];
-  await ensureRolesInMap(nameKeys, map);
+  await ensureRolesInMap(getRoleNamesToEnsure(params), map);
 
   const {
     roleIds: targetRoleIds,

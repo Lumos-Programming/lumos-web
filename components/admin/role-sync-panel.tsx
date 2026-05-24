@@ -66,11 +66,11 @@ export function RoleSyncPanel() {
                       </div>
                     </td>
                     <td className="px-3 py-2">
-                      {d.addedRoleIds.length > 0 ? (
+                      {(d.addedRoleNames ?? []).length > 0 ? (
                         <ul className="space-y-0.5">
-                          {d.addedRoleIds.map((id) => (
-                            <li key={id} className="font-mono text-xs">
-                              {id}
+                          {(d.addedRoleNames ?? []).map((name) => (
+                            <li key={name} className="text-xs">
+                              {name}
                             </li>
                           ))}
                         </ul>
@@ -79,14 +79,11 @@ export function RoleSyncPanel() {
                       )}
                     </td>
                     <td className="px-3 py-2">
-                      {d.removedRoleIds.length > 0 ? (
+                      {(d.removedRoleNames ?? []).length > 0 ? (
                         <ul className="space-y-0.5">
-                          {d.removedRoleIds.map((id) => (
-                            <li
-                              key={id}
-                              className="font-mono text-xs text-orange-600"
-                            >
-                              {id}
+                          {(d.removedRoleNames ?? []).map((name) => (
+                            <li key={name} className="text-xs text-orange-600">
+                              {name}
                             </li>
                           ))}
                         </ul>

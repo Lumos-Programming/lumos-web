@@ -198,8 +198,8 @@ export async function getAdminMembers(): Promise<AdminMemberRow[]> {
 export type MemberSyncDetail = {
   discordId: string;
   discordUsername: string;
-  addedRoleIds: string[];
-  removedRoleIds: string[];
+  addedRoleNames: string[];
+  removedRoleNames: string[];
   errors: string[];
 };
 
@@ -221,11 +221,10 @@ export async function syncAllMemberDiscordRoles(): Promise<SyncRolesResult> {
     .where("onboardingCompleted", "==", true)
     .select(
       "discordUsername",
-      "memberType",
       "optedOut",
       "yearByFiscal",
       "enrollments",
-      "interests",
+      "memberType",
     )
     .get();
 
@@ -249,34 +248,34 @@ export async function syncAllMemberDiscordRoles(): Promise<SyncRolesResult> {
   // 全メンバーのプロフィール値を集めてまとめてロールを作成（重複作成を防ぐ）
   const allProfileKeys = new Set<string>();
   for (const doc of targets) {
-    const { memberType, yearByFiscal, enrollments, interests } = doc.data();
-    const year = (yearByFiscal as Record<string, string> | undefined)?.[
-      currentYear
-    ];
-    const faculty = (enrollments as EnrollmentRecord[] | undefined)?.find(
-      (e) => e.isCurrent,
-    )?.faculty;
-    if (memberType) allProfileKeys.add(memberType);
-    if (year) allProfileKeys.add(year);
-    if (faculty) allProfileKeys.add(faculty);
-    for (const tag of (interests as string[] | undefined) ?? []) {
-      allProfileKeys.add(tag);
+    const { yearByFiscal, enrollments, memberType } = doc.data();
+    if (memberType === "卒業生" || memberType === "その他") {
+      allProfileKeys.add(memberType as string);
+    } else {
+      const year = (yearByFiscal as Record<string, string> | undefined)?.[
+        currentYear
+      ];
+      const faculty = (enrollments as EnrollmentRecord[] | undefined)?.find(
+        (e) => e.isCurrent,
+      )?.faculty;
+      if (year) allProfileKeys.add(year);
+      if (faculty) allProfileKeys.add(faculty);
     }
   }
   await ensureRolesInMap([...allProfileKeys], roleNameMap);
+
+  // ensureRolesInMap で新規作成されたロールも含めて逆引きマップを構築
+  const roleIdToName = new Map(
+    [...roleNameMap].map(([name, id]) => [id, name]),
+  );
 
   const CONCURRENCY = 2;
   for (let i = 0; i < targets.length; i += CONCURRENCY) {
     const batch = targets.slice(i, i + CONCURRENCY);
     await Promise.all(
       batch.map(async (doc) => {
-        const {
-          discordUsername,
-          memberType,
-          yearByFiscal,
-          enrollments,
-          interests,
-        } = doc.data();
+        const { discordUsername, yearByFiscal, enrollments, memberType } =
+          doc.data();
         const year = (yearByFiscal as Record<string, string> | undefined)?.[
           currentYear
         ];
@@ -285,14 +284,18 @@ export async function syncAllMemberDiscordRoles(): Promise<SyncRolesResult> {
         )?.faculty;
         const roleResult = await syncMemberDiscordRoles(
           doc.id,
-          { memberType, year, faculty, interests },
+          { year, faculty, memberType: memberType as string | undefined },
           roleNameMap,
         );
         const detail: MemberSyncDetail = {
           discordId: doc.id,
           discordUsername: discordUsername ?? doc.id,
-          addedRoleIds: roleResult.added,
-          removedRoleIds: roleResult.removed,
+          addedRoleNames: roleResult.added.map(
+            (id) => roleIdToName.get(id) ?? id,
+          ),
+          removedRoleNames: roleResult.removed.map(
+            (id) => roleIdToName.get(id) ?? id,
+          ),
           errors: roleResult.errors,
         };
         result.details.push(detail);
