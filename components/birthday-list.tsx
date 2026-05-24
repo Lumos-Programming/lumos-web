@@ -1,13 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 import { formatBirthDate } from "@/lib/date";
-import { sendBirthdayJokeDm } from "@/lib/birthday/actions";
 import { BirthdayYearCalendar } from "@/components/birthday-year-calendar";
 
 type BirthdayEntry = {
@@ -31,29 +27,6 @@ const MONTH_NAMES = [
   "10月",
   "11月",
   "12月",
-];
-
-const GEEK_JOKES = [
-  {
-    label: "age++",
-    message:
-      "age++ を実行しました。コンパイルエラー: 0件。テスト: all passed。",
-  },
-  {
-    label: "git tag",
-    message:
-      "git tag -a birthday-$(date +%Y) -m 'Happy Birthday! No breaking changes detected in this release.'",
-  },
-  {
-    label: "console.log",
-    message:
-      'console.log("Happy Birthday! Stack usage: optimal. Memory leaks: none. Uptime: 1 year+.");',
-  },
-  {
-    label: "deploy",
-    message:
-      "本番環境へのデプロイが完了しました。ロールバック: 不要。ステータス: healthy。今年もよろしくお願いします。",
-  },
 ];
 
 function daysUntilNextBirthday(birthDate: string): number {
@@ -83,62 +56,6 @@ function MyBirthdayCountdown({ birthDate }: { birthDate: string }) {
       <p className="text-xs text-muted-foreground mt-1">
         {formatBirthDate(birthDate)}
       </p>
-    </div>
-  );
-}
-
-function JokeButtons({ discordId, name }: { discordId: string; name: string }) {
-  const [sending, setSending] = useState<string | null>(null);
-  const [sent, setSent] = useState<Set<string>>(new Set());
-  const [isPending, startTransition] = useTransition();
-  const { toast } = useToast();
-
-  function handleSend(joke: (typeof GEEK_JOKES)[number]) {
-    if (isPending) return;
-    setSending(joke.label);
-    startTransition(async () => {
-      const result = await sendBirthdayJokeDm(discordId, name, joke.message);
-      setSending(null);
-      if (result.success) {
-        setSent((prev) => new Set(prev).add(joke.label));
-        toast({
-          title: "Discord DM を送信しました",
-          description: `${name}さんに「${joke.label}」を届けました`,
-        });
-      } else {
-        toast({
-          title: "送信に失敗しました",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    });
-  }
-
-  return (
-    <div className="mt-3">
-      <p className="text-xs text-muted-foreground mb-2">
-        Discord DM でジョークを送る
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {GEEK_JOKES.map((j) => {
-          const isSending = sending === j.label;
-          const isSent = sent.has(j.label);
-          return (
-            <Button
-              key={j.label}
-              variant={isSent ? "secondary" : "outline"}
-              size="sm"
-              className="text-xs h-7"
-              disabled={isPending}
-              onClick={() => handleSend(j)}
-            >
-              {isSending ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-              {isSent ? `${j.label} ✓` : j.label}
-            </Button>
-          );
-        })}
-      </div>
     </div>
   );
 }
@@ -254,9 +171,6 @@ export function BirthdayList({
                           </span>
                         </div>
                       </div>
-                      {isToday && (
-                        <JokeButtons discordId={entry.id} name={displayName} />
-                      )}
                     </li>
                   );
                 })}
