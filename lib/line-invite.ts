@@ -2,7 +2,12 @@ import crypto from "crypto";
 import { getDb } from "@/lib/firebase";
 import { Timestamp } from "firebase-admin/firestore";
 import type { LineFlexMessage, LineFlexBubble } from "@/lib/mini-lt/line-flex";
-import type { OAuthTokenResponse } from "@/lib/oauth-link";
+import {
+  fetchProviderUser,
+  refreshLineAccessToken,
+  type OAuthTokenResponse,
+} from "@/lib/oauth-link";
+import { updateMemberSns, type MemberDocument } from "@/lib/members";
 
 export interface LineInvitation {
   userId: string; // Discord ID
@@ -107,6 +112,98 @@ export function pendingToLineSnsData(invitation: LineInvitation): LineSnsData {
 export interface MemberByLineId {
   discordId: string;
   lineId: string;
+}
+
+/** トークン期限が切れる前にリフレッシュする猶予（秒）。期限の5分前から再発行する。 */
+const TOKEN_REFRESH_LEEWAY_SECONDS = 5 * 60;
+
+/** lineAvatar 再取得対象として `getMembersWithLine` が返すメンバー情報 */
+export interface LineLinkedMember {
+  discordId: string;
+  lineAvatar?: string;
+  lineAccessToken?: string;
+  lineRefreshToken?: string;
+  lineTokenExpiresAt?: number;
+}
+
+export type RefreshAvatarResult =
+  | { status: "updated"; discordId: string }
+  | { status: "skipped"; discordId: string; reason: string }
+  | { status: "failed"; discordId: string; error: string };
+
+/**
+ * 1メンバーの LINE プロフィール画像を最新化する。
+ *
+ * LINE が返す pictureUrl は CDN の生 URL で、ユーザーが画像を変更すると古い URL は
+ * 404 になる（リンク切れ）。本人のアクセストークンで /v2/profile を叩き直し、
+ * 最新の pictureUrl を取得して lineAvatar を上書きすることで追従させる。
+ *
+ * アクセストークンが期限切れ間近なら refresh_token で再発行し、更新後のトークンも保存する。
+ * トークンが無い／リフレッシュ不能なメンバーはスキップ（次回本人の再連携まで旧画像のまま）。
+ */
+export async function refreshSingleMemberLineAvatar(
+  member: LineLinkedMember,
+): Promise<RefreshAvatarResult> {
+  const { discordId } = member;
+  try {
+    let accessToken = member.lineAccessToken;
+    const tokenUpdate: Partial<
+      Pick<
+        MemberDocument,
+        "lineAccessToken" | "lineRefreshToken" | "lineTokenExpiresAt"
+      >
+    > = {};
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    const expired =
+      member.lineTokenExpiresAt !== undefined &&
+      member.lineTokenExpiresAt - TOKEN_REFRESH_LEEWAY_SECONDS <= nowSec;
+
+    // 期限切れ間近、またはアクセストークン未保持ならリフレッシュを試みる
+    if (!accessToken || expired) {
+      if (!member.lineRefreshToken) {
+        return {
+          status: "skipped",
+          discordId,
+          reason: "no refresh token to renew expired/missing access token",
+        };
+      }
+      const token = await refreshLineAccessToken(member.lineRefreshToken);
+      accessToken = token.access_token;
+      tokenUpdate.lineAccessToken = token.access_token;
+      if (token.refresh_token)
+        tokenUpdate.lineRefreshToken = token.refresh_token;
+      if (token.expires_in)
+        tokenUpdate.lineTokenExpiresAt = nowSec + token.expires_in;
+    }
+
+    const user = await fetchProviderUser("line", accessToken);
+    const newAvatar = user.avatar;
+
+    const avatarChanged = newAvatar !== member.lineAvatar;
+    const hasTokenUpdate = Object.keys(tokenUpdate).length > 0;
+
+    // 画像にもトークンにも変化がなければ書き込みを省略
+    if (!avatarChanged && !hasTokenUpdate) {
+      return { status: "skipped", discordId, reason: "no change" };
+    }
+
+    await updateMemberSns(discordId, {
+      ...tokenUpdate,
+      // Firestore は undefined を受け付けないため、画像が未設定なら lineAvatar は触らない
+      ...(avatarChanged && newAvatar ? { lineAvatar: newAvatar } : {}),
+    });
+
+    return avatarChanged
+      ? { status: "updated", discordId }
+      : { status: "skipped", discordId, reason: "token refreshed only" };
+  } catch (e) {
+    return {
+      status: "failed",
+      discordId,
+      error: e instanceof Error ? e.message : String(e),
+    };
+  }
 }
 
 /**
