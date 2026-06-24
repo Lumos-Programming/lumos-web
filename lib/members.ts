@@ -198,6 +198,35 @@ export async function getMembersWithLine(): Promise<
   });
 }
 
+/**
+ * 全メンバーの discordAvatar を列挙する（Discord アバター定期更新バッチ用）。
+ * doc id が Discord ID。退会済み（optedOut）は除外する。
+ */
+export async function getMembersForDiscordAvatarRefresh(): Promise<
+  { discordId: string; discordAvatar?: string }[]
+> {
+  const db = getDb();
+  const snap = await db.collection("members").get();
+
+  return snap.docs.flatMap((doc) => {
+    const data = doc.data() as MemberDocument;
+    if (isMemberOptedOut(data)) return [];
+    return [{ discordId: doc.id, discordAvatar: data.discordAvatar }];
+  });
+}
+
+/** discordAvatar (avatar hash) を更新する。定期更新バッチ用。 */
+export async function updateMemberDiscordAvatar(
+  discordId: string,
+  discordAvatar: string,
+): Promise<void> {
+  const db = getDb();
+  await db.collection("members").doc(discordId).update({
+    discordAvatar,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
 export async function getMember(
   discordId: string,
 ): Promise<MemberDocument | null> {
@@ -390,10 +419,12 @@ function resolveDiscordAvatar(
   discordAvatar?: string,
 ): string {
   if (!discordAvatar) return "/placeholder.svg";
-  // Already a full URL (stored from token.picture)
+  // 旧データ: token.picture の完全 URL がそのまま保存されているケース。
+  // アバター変更後にリンク切れになり得るが、定期バッチが hash へ移行するまでは尊重する。
   if (discordAvatar.startsWith("http")) return discordAvatar;
-  // Legacy: hash only
-  return `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`;
+  // 通常: avatar hash から URL を組み立てる。アニメーションアバター (a_ 始まり) は gif。
+  const format = discordAvatar.startsWith("a_") ? "gif" : "png";
+  return `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.${format}`;
 }
 
 const DEFAULT_AVATAR = "/assets/lumos_logo-full.png";
