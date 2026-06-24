@@ -160,6 +160,15 @@ resource "google_cloud_run_service" "web" {
             }
           }
         }
+        env {
+          name = "CRON_SECRET"
+          value_from {
+            secret_key_ref {
+              name = google_secret_manager_secret.per_env["cron-secret-${each.key}"].secret_id
+              key  = "latest"
+            }
+          }
+        }
       }
     }
   }

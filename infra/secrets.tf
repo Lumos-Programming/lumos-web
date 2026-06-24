@@ -16,7 +16,8 @@ locals {
     "line-webhook-secret",
     "line-channel-access-token",
     "line-bot-friend-url",
-    "admin-notification-channel-webhook"
+    "admin-notification-channel-webhook",
+    "cron-secret"
   ]
 
   # Build a flat map: "github-oauth-secret-dev" => { secret_suffix, env }
@@ -50,4 +51,22 @@ resource "google_secret_manager_secret_iam_member" "per_env_accessor" {
   secret_id = google_secret_manager_secret.per_env[each.key].id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.cloud_run[each.value.env].email}"
+}
+
+# ---------------------------------------------------------------------------
+# cron-secret – Cloud Scheduler → Cron エンドポイント認可用の値を Terraform で生成
+# Cloud Scheduler の Authorization: Bearer ヘッダと Cloud Run の CRON_SECRET env で共有する
+# ---------------------------------------------------------------------------
+resource "random_password" "cron_secret" {
+  for_each = toset(local.cloud_run_envs)
+
+  length  = 48
+  special = false
+}
+
+resource "google_secret_manager_secret_version" "cron_secret" {
+  for_each = toset(local.cloud_run_envs)
+
+  secret      = google_secret_manager_secret.per_env["cron-secret-${each.key}"].id
+  secret_data = random_password.cron_secret[each.key].result
 }

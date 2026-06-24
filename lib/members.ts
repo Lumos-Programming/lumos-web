@@ -167,6 +167,37 @@ export async function getMembersInternal(): Promise<Member[]> {
   });
 }
 
+/**
+ * LINE 連携済みメンバーを列挙する（lineAvatar 定期更新バッチ用）。
+ * 退会済み（optedOut）は除外。トークンが無い古い連携は呼び出し側でスキップ判定する。
+ */
+export async function getMembersWithLine(): Promise<
+  {
+    discordId: string;
+    lineAvatar?: string;
+    lineAccessToken?: string;
+    lineRefreshToken?: string;
+    lineTokenExpiresAt?: number;
+  }[]
+> {
+  const db = getDb();
+  const snap = await db.collection("members").where("lineId", "!=", null).get();
+
+  return snap.docs.flatMap((doc) => {
+    const data = doc.data() as MemberDocument;
+    if (isMemberOptedOut(data)) return [];
+    return [
+      {
+        discordId: doc.id,
+        lineAvatar: data.lineAvatar,
+        lineAccessToken: data.lineAccessToken,
+        lineRefreshToken: data.lineRefreshToken,
+        lineTokenExpiresAt: data.lineTokenExpiresAt,
+      },
+    ];
+  });
+}
+
 export async function getMember(
   discordId: string,
 ): Promise<MemberDocument | null> {
