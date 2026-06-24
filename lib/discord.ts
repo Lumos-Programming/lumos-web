@@ -319,6 +319,37 @@ export async function addRoleToMember(
 }
 
 /**
+ * Bot トークンで Discord ユーザーの現在の avatar hash を取得する。
+ * ユーザーが見つからない場合 (退会・削除など) は null を返す。
+ * avatar 未設定ユーザーは hash が null のため、空文字を返す。
+ * @see https://discord.com/developers/docs/resources/user#get-user
+ */
+export async function fetchDiscordUserAvatarHash(
+  userId: string,
+): Promise<string | null> {
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!botToken) {
+    throw new Error("DISCORD_BOT_TOKEN is not configured");
+  }
+
+  const res = await fetch(`${DISCORD_API_BASE}/users/${userId}`, {
+    headers: { Authorization: `Bot ${botToken}` },
+  });
+
+  // ユーザーが存在しない（退会・削除）場合は更新対象外として null
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `Failed to fetch Discord user ${userId}: ${res.status} ${body}`,
+    );
+  }
+
+  const data = (await res.json()) as { avatar?: string | null };
+  return data.avatar ?? "";
+}
+
+/**
  * Get avatar URL for a Discord user
  */
 export function getDiscordAvatarUrl(
