@@ -1,6 +1,6 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase";
-import type { Blog } from "@/types/blog";
+import { BLOG_ERROR_CODES, BlogError, type Blog } from "@/types/blog";
 
 export type BlogInput = Omit<Blog, "id" | "authorId" | "createdAt">;
 
@@ -10,10 +10,10 @@ function isValidBlogUrl(url: string): boolean {
 
 function assertValidBlogInput(input: BlogInput): void {
   if (!isValidBlogUrl(input.url)) {
-    throw new Error("Invalid URL");
+    throw new BlogError(BLOG_ERROR_CODES.INVALID_URL);
   }
   if (!input.title || input.title.trim() === "") {
-    throw new Error("Title is required");
+    throw new BlogError(BLOG_ERROR_CODES.TITLE_REQUIRED);
   }
 }
 
@@ -88,8 +88,9 @@ export async function updateBlog(
   const db = getDb();
   const ref = db.collection("blogs").doc(id);
   const snap = await ref.get();
-  if (!snap.exists) throw new Error("Blog not found");
-  if (snap.data()?.authorId !== authorId) throw new Error("Unauthorized");
+  if (!snap.exists) throw new BlogError(BLOG_ERROR_CODES.NOT_FOUND);
+  if (snap.data()?.authorId !== authorId)
+    throw new BlogError(BLOG_ERROR_CODES.FORBIDDEN);
 
   await ref.update({
     url: input.url,
@@ -106,7 +107,8 @@ export async function deleteBlog(id: string, authorId: string): Promise<void> {
   const ref = db.collection("blogs").doc(id);
   const snap = await ref.get();
   if (!snap.exists) return;
-  if (snap.data()?.authorId !== authorId) throw new Error("Unauthorized");
+  if (snap.data()?.authorId !== authorId)
+    throw new BlogError(BLOG_ERROR_CODES.FORBIDDEN);
 
   await ref.delete();
 }

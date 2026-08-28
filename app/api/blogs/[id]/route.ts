@@ -1,31 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { updateBlog, deleteBlog } from "@/lib/blogs";
-
-function toErrorResponse(error: unknown) {
-  if (error instanceof Error) {
-    if (
-      error.message === "Invalid URL" ||
-      error.message === "Title is required"
-    ) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    if (error.message === "Unauthorized") {
-      return NextResponse.json(
-        { error: "他人の記事は操作できません" },
-        { status: 403 },
-      );
-    }
-    if (error.message === "Blog not found") {
-      return NextResponse.json(
-        { error: "記事が見つかりません" },
-        { status: 404 },
-      );
-    }
-  }
-  console.error("Failed to update blog:", error);
-  return NextResponse.json({ error: "Failed to update blog" }, { status: 500 });
-}
+import { toBlogErrorResponse } from "@/lib/blog-response";
 
 export async function PUT(
   request: Request,
@@ -57,7 +33,7 @@ export async function PUT(
     });
     return NextResponse.json({ success: true });
   } catch (error) {
-    return toErrorResponse(error);
+    return toBlogErrorResponse(error, "Failed to update blog");
   }
 }
 
@@ -81,6 +57,6 @@ export async function DELETE(
     await deleteBlog(id, session.user.id);
     return NextResponse.json({ success: true });
   } catch (error) {
-    return toErrorResponse(error);
+    return toBlogErrorResponse(error, "Failed to delete blog");
   }
 }

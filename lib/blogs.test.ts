@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { BLOG_ERROR_CODES, BlogError } from "@/types/blog";
 import * as firebaseAdmin from "firebase-admin";
 import {
   listPublishedBlogs,
@@ -12,6 +13,15 @@ if (!firebaseAdmin.apps.length) {
   firebaseAdmin.initializeApp({
     projectId: process.env.FIREBASE_PROJECT_ID || "test-project",
   });
+}
+
+/** 例外が期待した BlogError かどうかをコードで確かめる */
+async function expectBlogError(
+  promise: Promise<unknown>,
+  code: (typeof BLOG_ERROR_CODES)[keyof typeof BLOG_ERROR_CODES],
+) {
+  await expect(promise).rejects.toBeInstanceOf(BlogError);
+  await promise.catch((e) => expect((e as BlogError).code).toBe(code));
 }
 
 describe("Blogs CRUD", () => {
@@ -67,12 +77,13 @@ describe("Blogs CRUD", () => {
   it("rejects updating another author's blog", async () => {
     const created = await createBlog(authorId, validInput);
 
-    await expect(
+    await expectBlogError(
       updateBlog(created.id, otherAuthorId, {
         ...validInput,
         title: "書き換えたタイトル",
       }),
-    ).rejects.toThrow("Unauthorized");
+      BLOG_ERROR_CODES.FORBIDDEN,
+    );
 
     const [mine] = await listBlogsByAuthor(authorId);
     expect(mine.title).toBe(validInput.title);
@@ -81,8 +92,9 @@ describe("Blogs CRUD", () => {
   it("rejects deleting another author's blog", async () => {
     const created = await createBlog(authorId, validInput);
 
-    await expect(deleteBlog(created.id, otherAuthorId)).rejects.toThrow(
-      "Unauthorized",
+    await expectBlogError(
+      deleteBlog(created.id, otherAuthorId),
+      BLOG_ERROR_CODES.FORBIDDEN,
     );
 
     expect(await listBlogsByAuthor(authorId)).toHaveLength(1);
@@ -103,34 +115,38 @@ describe("Blogs CRUD", () => {
   });
 
   it("rejects an invalid URL on create", async () => {
-    await expect(
+    await expectBlogError(
       createBlog(authorId, { ...validInput, url: "not-a-url" }),
-    ).rejects.toThrow();
+      BLOG_ERROR_CODES.INVALID_URL,
+    );
   });
 
   it("rejects an empty title on create", async () => {
-    await expect(
+    await expectBlogError(
       createBlog(authorId, { ...validInput, title: "" }),
-    ).rejects.toThrow();
+      BLOG_ERROR_CODES.TITLE_REQUIRED,
+    );
   });
 
   it("rejects an invalid URL on update", async () => {
     const created = await createBlog(authorId, validInput);
 
-    await expect(
+    await expectBlogError(
       updateBlog(created.id, authorId, {
         ...validInput,
         url: "ftp://example.com",
       }),
-    ).rejects.toThrow();
+      BLOG_ERROR_CODES.INVALID_URL,
+    );
   });
 
   it("rejects an empty title on update", async () => {
     const created = await createBlog(authorId, validInput);
 
-    await expect(
+    await expectBlogError(
       updateBlog(created.id, authorId, { ...validInput, title: "" }),
-    ).rejects.toThrow();
+      BLOG_ERROR_CODES.TITLE_REQUIRED,
+    );
   });
 
   it("orders published blogs by publishedAt descending", async () => {

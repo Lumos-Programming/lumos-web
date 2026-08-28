@@ -1,17 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { createBlog } from "@/lib/blogs";
-
-function toErrorResponse(error: unknown) {
-  if (
-    error instanceof Error &&
-    (error.message === "Invalid URL" || error.message === "Title is required")
-  ) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-  console.error("Failed to create blog:", error);
-  return NextResponse.json({ error: "Failed to create blog" }, { status: 500 });
-}
+import { toBlogErrorResponse } from "@/lib/blog-response";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -39,6 +29,6 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(blog);
   } catch (error) {
-    return toErrorResponse(error);
+    return toBlogErrorResponse(error, "Failed to create blog");
   }
 }
