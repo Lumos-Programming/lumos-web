@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { updateArticle, deleteArticle } from "@/lib/articles";
+import { updateBlog, deleteBlog } from "@/lib/blogs";
 
 function toErrorResponse(error: unknown) {
   if (error instanceof Error) {
@@ -16,18 +16,15 @@ function toErrorResponse(error: unknown) {
         { status: 403 },
       );
     }
-    if (error.message === "Article not found") {
+    if (error.message === "Blog not found") {
       return NextResponse.json(
         { error: "記事が見つかりません" },
         { status: 404 },
       );
     }
   }
-  console.error("Failed to update article:", error);
-  return NextResponse.json(
-    { error: "Failed to update article" },
-    { status: 500 },
-  );
+  console.error("Failed to update blog:", error);
+  return NextResponse.json({ error: "Failed to update blog" }, { status: 500 });
 }
 
 export async function PUT(
@@ -50,7 +47,7 @@ export async function PUT(
     const body = await request.json();
     const { url, title, publishedAt, description, thumbnailUrl, platform } =
       body;
-    await updateArticle(id, session.user.id, {
+    await updateBlog(id, session.user.id, {
       url,
       title,
       publishedAt,
@@ -81,7 +78,7 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-    await deleteArticle(id, session.user.id);
+    await deleteBlog(id, session.user.id);
     return NextResponse.json({ success: true });
   } catch (error) {
     return toErrorResponse(error);

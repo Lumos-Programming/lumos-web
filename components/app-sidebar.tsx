@@ -7,7 +7,7 @@ import {
   Users,
   CalendarDays,
   UserCircle,
-  Newspaper,
+  BookOpen,
   Settings,
   ExternalLink,
   LogOut,
@@ -37,7 +37,7 @@ const NAV_ITEMS = [
   { href: "/internal/members", icon: Users, label: "メンバー" },
   { href: "/internal/events", icon: CalendarDays, label: "イベント" },
   { href: "/internal/profile", icon: UserCircle, label: "プロフィール" },
-  { href: "/internal/articles", icon: Newspaper, label: "記事管理" },
+  { href: "/internal/blogs", icon: BookOpen, label: "ブログ管理" },
   { href: "/internal/settings", icon: Settings, label: "設定" },
 ];
 

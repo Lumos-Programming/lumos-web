@@ -1,15 +1,15 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase";
-import type { Article } from "@/types/article";
+import type { Blog } from "@/types/blog";
 
-export type ArticleInput = Omit<Article, "id" | "authorId" | "createdAt">;
+export type BlogInput = Omit<Blog, "id" | "authorId" | "createdAt">;
 
-function isValidArticleUrl(url: string): boolean {
+function isValidBlogUrl(url: string): boolean {
   return /^https?:\/\//.test(url);
 }
 
-function assertValidArticleInput(input: ArticleInput): void {
-  if (!isValidArticleUrl(input.url)) {
+function assertValidBlogInput(input: BlogInput): void {
+  if (!isValidBlogUrl(input.url)) {
     throw new Error("Invalid URL");
   }
   if (!input.title || input.title.trim() === "") {
@@ -17,7 +17,7 @@ function assertValidArticleInput(input: ArticleInput): void {
   }
 }
 
-function toArticle(id: string, data: FirebaseFirestore.DocumentData): Article {
+function toBlog(id: string, data: FirebaseFirestore.DocumentData): Blog {
   return {
     id,
     authorId: data.authorId,
@@ -31,40 +31,38 @@ function toArticle(id: string, data: FirebaseFirestore.DocumentData): Article {
   };
 }
 
-function byPublishedAtDesc(a: Article, b: Article): number {
+function byPublishedAtDesc(a: Blog, b: Blog): number {
   return b.publishedAt.localeCompare(a.publishedAt);
 }
 
-export async function listPublishedArticles(): Promise<Article[]> {
+export async function listPublishedBlogs(): Promise<Blog[]> {
   const db = getDb();
   const snap = await db
-    .collection("articles")
+    .collection("blogs")
     .orderBy("publishedAt", "desc")
     .get();
-  return snap.docs.map((doc) => toArticle(doc.id, doc.data()));
+  return snap.docs.map((doc) => toBlog(doc.id, doc.data()));
 }
 
-export async function listArticlesByAuthor(
-  authorId: string,
-): Promise<Article[]> {
+export async function listBlogsByAuthor(authorId: string): Promise<Blog[]> {
   const db = getDb();
   const snap = await db
-    .collection("articles")
+    .collection("blogs")
     .where("authorId", "==", authorId)
     .get();
   return snap.docs
-    .map((doc) => toArticle(doc.id, doc.data()))
+    .map((doc) => toBlog(doc.id, doc.data()))
     .sort(byPublishedAtDesc);
 }
 
-export async function createArticle(
+export async function createBlog(
   authorId: string,
-  input: ArticleInput,
-): Promise<Article> {
-  assertValidArticleInput(input);
+  input: BlogInput,
+): Promise<Blog> {
+  assertValidBlogInput(input);
 
   const db = getDb();
-  const ref = db.collection("articles").doc();
+  const ref = db.collection("blogs").doc();
   const data: FirebaseFirestore.DocumentData = {
     authorId,
     url: input.url,
@@ -77,20 +75,20 @@ export async function createArticle(
   if (input.platform) data.platform = input.platform;
 
   await ref.set(data);
-  return toArticle(ref.id, data);
+  return toBlog(ref.id, data);
 }
 
-export async function updateArticle(
+export async function updateBlog(
   id: string,
   authorId: string,
-  input: ArticleInput,
+  input: BlogInput,
 ): Promise<void> {
-  assertValidArticleInput(input);
+  assertValidBlogInput(input);
 
   const db = getDb();
-  const ref = db.collection("articles").doc(id);
+  const ref = db.collection("blogs").doc(id);
   const snap = await ref.get();
-  if (!snap.exists) throw new Error("Article not found");
+  if (!snap.exists) throw new Error("Blog not found");
   if (snap.data()?.authorId !== authorId) throw new Error("Unauthorized");
 
   await ref.update({
@@ -103,12 +101,9 @@ export async function updateArticle(
   });
 }
 
-export async function deleteArticle(
-  id: string,
-  authorId: string,
-): Promise<void> {
+export async function deleteBlog(id: string, authorId: string): Promise<void> {
   const db = getDb();
-  const ref = db.collection("articles").doc(id);
+  const ref = db.collection("blogs").doc(id);
   const snap = await ref.get();
   if (!snap.exists) return;
   if (snap.data()?.authorId !== authorId) throw new Error("Unauthorized");

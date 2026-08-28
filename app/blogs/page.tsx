@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { listPublishedArticles } from "@/lib/articles";
+import { listPublishedBlogs } from "@/lib/blogs";
 import { getMember } from "@/lib/members";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -9,8 +9,8 @@ async function resolveAuthorName(authorId: string): Promise<string> {
 }
 
 export default async function BlogsPage() {
-  const articles = await listPublishedArticles();
-  const uniqueAuthorIds = [...new Set(articles.map((a) => a.authorId))];
+  const blogs = await listPublishedBlogs();
+  const uniqueAuthorIds = [...new Set(blogs.map((a) => a.authorId))];
   const authorNames = new Map(
     await Promise.all(
       uniqueAuthorIds.map(
@@ -36,19 +36,19 @@ export default async function BlogsPage() {
         </div>
       </section>
 
-      {/* Article Cards */}
+      {/* Blog Cards */}
       <section className="section-padding bg-background">
         <div className="container mx-auto px-4 md:px-6">
-          {articles.length === 0 ? (
+          {blogs.length === 0 ? (
             <p className="text-center text-muted-foreground py-16">
               まだ記事がありません。
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {articles.map((article) => (
+              {blogs.map((blog) => (
                 <a
-                  key={article.id}
-                  href={article.url}
+                  key={blog.id}
+                  href={blog.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block h-full"
@@ -56,33 +56,33 @@ export default async function BlogsPage() {
                   <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card">
                     <div className="aspect-video relative bg-muted">
                       <Image
-                        src={article.thumbnailUrl || "/placeholder.svg"}
-                        alt={article.title}
+                        src={blog.thumbnailUrl || "/placeholder.svg"}
+                        alt={blog.title}
                         fill
                         className="object-cover"
                       />
-                      {article.platform && (
+                      {blog.platform && (
                         <div className="absolute top-4 left-4">
                           <span className="bg-gradient-orange text-white text-xs font-medium px-2 py-1 rounded-full">
-                            {article.platform}
+                            {blog.platform}
                           </span>
                         </div>
                       )}
                     </div>
                     <CardContent className="p-6 flex-1 flex flex-col">
                       <p className="text-sm font-semibold text-gradient-orange mb-2">
-                        {article.publishedAt}
+                        {blog.publishedAt}
                       </p>
                       <h3 className="text-xl font-bold mb-2 text-foreground">
-                        {article.title}
+                        {blog.title}
                       </h3>
-                      {article.description && (
+                      {blog.description && (
                         <p className="text-muted-foreground mb-4 line-clamp-3">
-                          {article.description}
+                          {blog.description}
                         </p>
                       )}
                       <p className="text-sm text-muted-foreground mt-auto">
-                        {authorNames.get(article.authorId)}
+                        {authorNames.get(blog.authorId)}
                       </p>
                     </CardContent>
                   </Card>

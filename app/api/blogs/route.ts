@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { createArticle } from "@/lib/articles";
+import { createBlog } from "@/lib/blogs";
 
 function toErrorResponse(error: unknown) {
   if (
@@ -9,11 +9,8 @@ function toErrorResponse(error: unknown) {
   ) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
-  console.error("Failed to create article:", error);
-  return NextResponse.json(
-    { error: "Failed to create article" },
-    { status: 500 },
-  );
+  console.error("Failed to create blog:", error);
+  return NextResponse.json({ error: "Failed to create blog" }, { status: 500 });
 }
 
 export async function POST(request: Request) {
@@ -32,7 +29,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { url, title, publishedAt, description, thumbnailUrl, platform } =
       body;
-    const article = await createArticle(session.user.id, {
+    const blog = await createBlog(session.user.id, {
       url,
       title,
       publishedAt,
@@ -40,7 +37,7 @@ export async function POST(request: Request) {
       thumbnailUrl,
       platform,
     });
-    return NextResponse.json(article);
+    return NextResponse.json(blog);
   } catch (error) {
     return toErrorResponse(error);
   }

@@ -1,4 +1,4 @@
-export interface Article {
+export interface Blog {
   id: string;
   authorId: string;
   url: string;

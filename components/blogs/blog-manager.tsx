@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Article } from "@/types/article";
+import type { Blog } from "@/types/blog";
 
-type ArticleFormValues = {
+type BlogFormValues = {
   url: string;
   title: string;
   description: string;
@@ -17,7 +17,7 @@ type ArticleFormValues = {
   platform: string;
 };
 
-const EMPTY_FORM: ArticleFormValues = {
+const EMPTY_FORM: BlogFormValues = {
   url: "",
   title: "",
   description: "",
@@ -26,32 +26,32 @@ const EMPTY_FORM: ArticleFormValues = {
   platform: "",
 };
 
-function toFormValues(article: Article): ArticleFormValues {
+function toFormValues(blog: Blog): BlogFormValues {
   return {
-    url: article.url,
-    title: article.title,
-    description: article.description ?? "",
-    thumbnailUrl: article.thumbnailUrl ?? "",
-    publishedAt: article.publishedAt,
-    platform: article.platform ?? "",
+    url: blog.url,
+    title: blog.title,
+    description: blog.description ?? "",
+    thumbnailUrl: blog.thumbnailUrl ?? "",
+    publishedAt: blog.publishedAt,
+    platform: blog.platform ?? "",
   };
 }
 
-interface ArticleManagerProps {
-  initialArticles: Article[];
+interface BlogManagerProps {
+  initialBlogs: Blog[];
 }
 
-export function ArticleManager({ initialArticles }: ArticleManagerProps) {
+export function BlogManager({ initialBlogs }: BlogManagerProps) {
   const router = useRouter();
-  const [articles, setArticles] = useState(initialArticles);
+  const [blogs, setBlogs] = useState(initialBlogs);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<ArticleFormValues>(EMPTY_FORM);
+  const [form, setForm] = useState<BlogFormValues>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const startEdit = (article: Article) => {
-    setEditingId(article.id);
-    setForm(toFormValues(article));
+  const startEdit = (blog: Blog) => {
+    setEditingId(blog.id);
+    setForm(toFormValues(blog));
     setError(null);
   };
 
@@ -67,7 +67,7 @@ export function ArticleManager({ initialArticles }: ArticleManagerProps) {
     setError(null);
     try {
       const res = await fetch(
-        editingId ? `/api/articles/${editingId}` : "/api/articles",
+        editingId ? `/api/blogs/${editingId}` : "/api/blogs",
         {
           method: editingId ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -80,13 +80,13 @@ export function ArticleManager({ initialArticles }: ArticleManagerProps) {
         return;
       }
       if (editingId) {
-        setArticles((prev) =>
+        setBlogs((prev) =>
           prev.map((a) =>
-            a.id === editingId ? ({ ...a, ...form } as Article) : a,
+            a.id === editingId ? ({ ...a, ...form } as Blog) : a,
           ),
         );
       } else {
-        setArticles((prev) => [data as Article, ...prev]);
+        setBlogs((prev) => [data as Blog, ...prev]);
       }
       cancelEdit();
       router.refresh();
@@ -97,9 +97,9 @@ export function ArticleManager({ initialArticles }: ArticleManagerProps) {
 
   const handleDelete = async (id: string) => {
     if (!confirm("この記事を削除しますか？")) return;
-    const res = await fetch(`/api/articles/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/blogs/${id}`, { method: "DELETE" });
     if (res.ok) {
-      setArticles((prev) => prev.filter((a) => a.id !== id));
+      setBlogs((prev) => prev.filter((a) => a.id !== id));
       if (editingId === id) cancelEdit();
       router.refresh();
     }
@@ -112,25 +112,25 @@ export function ArticleManager({ initialArticles }: ArticleManagerProps) {
           <CardTitle className="text-base">登録済みの記事</CardTitle>
         </CardHeader>
         <CardContent>
-          {articles.length === 0 ? (
+          {blogs.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               まだ記事が登録されていません。下のフォームから登録できます。
             </p>
           ) : (
             <div className="space-y-3">
-              {articles.map((article) => (
+              {blogs.map((blog) => (
                 <div
-                  key={article.id}
+                  key={blog.id}
                   className="flex items-start justify-between gap-4 rounded-lg border p-4"
                 >
                   <div className="min-w-0">
-                    <p className="font-medium truncate">{article.title}</p>
+                    <p className="font-medium truncate">{blog.title}</p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {article.url}
+                      {blog.url}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {article.publishedAt}
-                      {article.platform ? ` ・ ${article.platform}` : ""}
+                      {blog.publishedAt}
+                      {blog.platform ? ` ・ ${blog.platform}` : ""}
                     </p>
                   </div>
                   <div className="flex gap-2 shrink-0">
@@ -138,7 +138,7 @@ export function ArticleManager({ initialArticles }: ArticleManagerProps) {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => startEdit(article)}
+                      onClick={() => startEdit(blog)}
                     >
                       編集
                     </Button>
@@ -146,7 +146,7 @@ export function ArticleManager({ initialArticles }: ArticleManagerProps) {
                       type="button"
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDelete(article.id)}
+                      onClick={() => handleDelete(blog.id)}
                     >
                       削除
                     </Button>
