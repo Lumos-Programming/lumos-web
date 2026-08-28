@@ -67,7 +67,9 @@ export default async function BlogsPage() {
                         <div className="absolute top-4 left-4">
                           <span
                             className={cn(
-                              "text-white text-xs font-medium px-2 py-1 rounded-full",
+                              // inline のままだと背景ボックスの高さがフォントの
+                              // ascent/descent で決まり、文字が上下中央に見えない
+                              "inline-flex items-center text-white text-xs font-medium px-2 py-1 rounded-full",
                               getPlatformBadgeClass(blog.platform),
                             )}
                           >
