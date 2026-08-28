@@ -49,6 +49,21 @@ describe("Blogs CRUD", () => {
     expect(published[0].id).toBe(created.id);
   });
 
+  it("excludes other authors' blogs from the author's own list", async () => {
+    const mineDoc = await createBlog(authorId, validInput);
+    await createBlog(otherAuthorId, {
+      ...validInput,
+      title: "他人の記事",
+      url: "https://example.com/other",
+    });
+
+    const mine = await listBlogsByAuthor(authorId);
+    expect(mine.map((b) => b.id)).toEqual([mineDoc.id]);
+
+    // 公開一覧のほうは両方出る
+    expect(await listPublishedBlogs()).toHaveLength(2);
+  });
+
   it("rejects updating another author's blog", async () => {
     const created = await createBlog(authorId, validInput);
 

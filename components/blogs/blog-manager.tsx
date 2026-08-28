@@ -74,9 +74,10 @@ export function BlogManager({ initialBlogs }: BlogManagerProps) {
           body: JSON.stringify(form),
         },
       );
-      const data = await res.json();
+      // エラー時にサーバーが JSON を返さないことがあるので、パース失敗も握る
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setError(data.error ?? "保存に失敗しました");
+        setError(data?.error ?? "保存に失敗しました");
         return;
       }
       if (editingId) {
@@ -90,6 +91,8 @@ export function BlogManager({ initialBlogs }: BlogManagerProps) {
       }
       cancelEdit();
       router.refresh();
+    } catch {
+      setError("通信に失敗しました。時間をおいて試してください");
     } finally {
       setSubmitting(false);
     }
@@ -97,11 +100,19 @@ export function BlogManager({ initialBlogs }: BlogManagerProps) {
 
   const handleDelete = async (id: string) => {
     if (!confirm("この記事を削除しますか？")) return;
-    const res = await fetch(`/api/blogs/${id}`, { method: "DELETE" });
-    if (res.ok) {
+    setError(null);
+    try {
+      const res = await fetch(`/api/blogs/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "削除に失敗しました");
+        return;
+      }
       setBlogs((prev) => prev.filter((a) => a.id !== id));
       if (editingId === id) cancelEdit();
       router.refresh();
+    } catch {
+      setError("通信に失敗しました。時間をおいて試してください");
     }
   };
 
