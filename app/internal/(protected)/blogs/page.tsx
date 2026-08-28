@@ -13,7 +13,7 @@ export default async function BlogsPage() {
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto animate-spring-up">
       <PageHeader
-        title="ブログ管理"
+        title="記事管理"
         description="Qiita / Zenn / Medium など、外部に書いた記事を登録できます。"
       />
       <BlogManager initialBlogs={blogs} />
