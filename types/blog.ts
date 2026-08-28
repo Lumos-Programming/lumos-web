@@ -11,6 +11,26 @@ export interface Blog {
 }
 
 /**
+ * 媒体の選択肢。「その他」を選んだときだけ自由記述させ、
+ * 保存するのは自由記述した値そのもの (platform は string のまま)。
+ */
+export const BLOG_PLATFORM_PRESETS = ["Qiita", "Zenn", "Medium"] as const;
+export type BlogPlatformPreset = (typeof BLOG_PLATFORM_PRESETS)[number];
+
+export const BLOG_PLATFORM_OTHER = "その他";
+
+/** 保存済みの platform が、フォーム上でどの選択肢にあたるかを返す */
+export function toPlatformSelection(platform: string | undefined): {
+  preset: string;
+  other: string;
+} {
+  if (!platform) return { preset: "", other: "" };
+  return BLOG_PLATFORM_PRESETS.includes(platform as BlogPlatformPreset)
+    ? { preset: platform, other: "" }
+    : { preset: BLOG_PLATFORM_OTHER, other: platform };
+}
+
+/**
  * ブログまわりのエラーコード。lib と API ルートの両方がこれを見るので、
  * 例外メッセージの文字列比較でハンドリングしない。
  */

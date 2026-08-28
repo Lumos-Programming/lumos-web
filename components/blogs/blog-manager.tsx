@@ -6,7 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Blog } from "@/types/blog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  BLOG_PLATFORM_OTHER,
+  BLOG_PLATFORM_PRESETS,
+  toPlatformSelection,
+  type Blog,
+} from "@/types/blog";
 
 type BlogFormValues = {
   url: string;
@@ -14,8 +26,24 @@ type BlogFormValues = {
   description: string;
   thumbnailUrl: string;
   publishedAt: string;
-  platform: string;
+  /** プリセットのいずれか、または「その他」。未選択は空文字 */
+  platformPreset: string;
+  /** 「その他」を選んだときだけ使う自由記述 */
+  platformOther: string;
 };
+
+/** フォームの 2 つの入力から、保存する platform の値を決める */
+function resolvePlatform(form: BlogFormValues): string {
+  return form.platformPreset === BLOG_PLATFORM_OTHER
+    ? form.platformOther.trim()
+    : form.platformPreset;
+}
+
+/** API に送る形。platform は 1 つの文字列に畳む */
+function toPayload(form: BlogFormValues) {
+  const { platformPreset: _p, platformOther: _o, ...rest } = form;
+  return { ...rest, platform: resolvePlatform(form) };
+}
 
 const EMPTY_FORM: BlogFormValues = {
   url: "",
@@ -23,17 +51,21 @@ const EMPTY_FORM: BlogFormValues = {
   description: "",
   thumbnailUrl: "",
   publishedAt: "",
-  platform: "",
+  platformPreset: "",
+  platformOther: "",
 };
 
 function toFormValues(blog: Blog): BlogFormValues {
+  // 保存済みの値がプリセットに無ければ「その他」+ 自由記述として復元する
+  const { preset, other } = toPlatformSelection(blog.platform);
   return {
     url: blog.url,
     title: blog.title,
     description: blog.description ?? "",
     thumbnailUrl: blog.thumbnailUrl ?? "",
     publishedAt: blog.publishedAt,
-    platform: blog.platform ?? "",
+    platformPreset: preset,
+    platformOther: other,
   };
 }
 
@@ -71,7 +103,7 @@ export function BlogManager({ initialBlogs }: BlogManagerProps) {
         {
           method: editingId ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
+          body: JSON.stringify(toPayload(form)),
         },
       );
       // エラー時にサーバーが JSON を返さないことがあるので、パース失敗も握る
@@ -83,7 +115,7 @@ export function BlogManager({ initialBlogs }: BlogManagerProps) {
       if (editingId) {
         setBlogs((prev) =>
           prev.map((a) =>
-            a.id === editingId ? ({ ...a, ...form } as Blog) : a,
+            a.id === editingId ? ({ ...a, ...toPayload(form) } as Blog) : a,
           ),
         );
       } else {
@@ -219,13 +251,42 @@ export function BlogManager({ initialBlogs }: BlogManagerProps) {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">媒体（任意）</label>
-                <Input
-                  value={form.platform}
-                  onChange={(e) =>
-                    setForm({ ...form, platform: e.target.value })
+                <Select
+                  value={form.platformPreset}
+                  onValueChange={(v) =>
+                    setForm({
+                      ...form,
+                      platformPreset: v,
+                      // 「その他」以外に切り替えたら自由記述は捨てる
+                      platformOther:
+                        v === BLOG_PLATFORM_OTHER ? form.platformOther : "",
+                    })
                   }
-                  placeholder="Qiita / Zenn / Medium など"
-                />
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="選択してください" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BLOG_PLATFORM_PRESETS.map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {opt}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value={BLOG_PLATFORM_OTHER}>
+                      {BLOG_PLATFORM_OTHER}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.platformPreset === BLOG_PLATFORM_OTHER && (
+                  <Input
+                    value={form.platformOther}
+                    onChange={(e) =>
+                      setForm({ ...form, platformOther: e.target.value })
+                    }
+                    placeholder="媒体名を入力（例: はてなブログ）"
+                    aria-label="媒体名"
+                  />
+                )}
               </div>
             </div>
             <div className="space-y-2">
