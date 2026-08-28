@@ -3,6 +3,7 @@ import {
   BLOG_ERROR_CODES,
   BLOG_ERROR_RESPONSES,
   BLOG_PLATFORM_OTHER,
+  getPlatformBadgeClass,
   BlogError,
   toPlatformSelection,
 } from "./blog";
@@ -22,6 +23,21 @@ describe("toPlatformSelection", () => {
   it("未設定はどちらも空にする", () => {
     expect(toPlatformSelection(undefined)).toEqual({ preset: "", other: "" });
     expect(toPlatformSelection("")).toEqual({ preset: "", other: "" });
+  });
+});
+
+describe("getPlatformBadgeClass", () => {
+  it("プリセットの媒体はそれぞれのブランドカラーを返す", () => {
+    expect(getPlatformBadgeClass("Qiita")).toBe("bg-[#54C500]");
+    expect(getPlatformBadgeClass("Zenn")).toBe("bg-[#3C83F6]");
+    expect(getPlatformBadgeClass("Medium")).toBe("bg-[#1D1D1D]");
+  });
+
+  it("プリセットに無い媒体は既定の色のままにする", () => {
+    expect(getPlatformBadgeClass("はてなブログ")).toBe("bg-gradient-orange");
+    expect(getPlatformBadgeClass(BLOG_PLATFORM_OTHER)).toBe(
+      "bg-gradient-orange",
+    );
   });
 });
 

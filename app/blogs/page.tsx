@@ -2,6 +2,8 @@ import Image from "next/image";
 import { listPublishedBlogs } from "@/lib/blogs";
 import { getMember } from "@/lib/members";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { getPlatformBadgeClass } from "@/types/blog";
 
 async function resolveAuthorName(authorId: string): Promise<string> {
   const member = await getMember(authorId);
@@ -63,7 +65,12 @@ export default async function BlogsPage() {
                       />
                       {blog.platform && (
                         <div className="absolute top-4 left-4">
-                          <span className="bg-gradient-orange text-white text-xs font-medium px-2 py-1 rounded-full">
+                          <span
+                            className={cn(
+                              "text-white text-xs font-medium px-2 py-1 rounded-full",
+                              getPlatformBadgeClass(blog.platform),
+                            )}
+                          >
                             {blog.platform}
                           </span>
                         </div>
