@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { updateBlog, deleteBlog } from "@/lib/blogs";
+import { updateBlog, deleteBlog, parseBlogInput } from "@/lib/blogs";
 import { toBlogErrorResponse } from "@/lib/blog-response";
 
 export async function PUT(
@@ -20,17 +20,9 @@ export async function PUT(
 
   try {
     const { id } = await params;
-    const body = await request.json();
-    const { url, title, publishedAt, description, thumbnailUrl, platform } =
-      body;
-    await updateBlog(id, session.user.id, {
-      url,
-      title,
-      publishedAt,
-      description,
-      thumbnailUrl,
-      platform,
-    });
+    // JSON として読めない本文も「不正な入力」として 400 に落とす
+    const body = await request.json().catch(() => null);
+    await updateBlog(id, session.user.id, parseBlogInput(body));
     return NextResponse.json({ success: true });
   } catch (error) {
     return toBlogErrorResponse(error, "Failed to update blog");

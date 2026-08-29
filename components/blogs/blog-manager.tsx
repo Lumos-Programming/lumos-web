@@ -16,6 +16,7 @@ import {
 import {
   BLOG_PLATFORM_OTHER,
   BLOG_PLATFORM_PRESETS,
+  byPublishedAtDesc,
   toPlatformSelection,
   type Blog,
 } from "@/types/blog";
@@ -70,12 +71,13 @@ function toFormValues(blog: Blog): BlogFormValues {
 }
 
 interface BlogManagerProps {
-  initialBlogs: Blog[];
+  /** サーバーで取得した自分の記事。以降の増減はこのコンポーネントが持つ */
+  myBlogs: Blog[];
 }
 
-export function BlogManager({ initialBlogs }: BlogManagerProps) {
+export function BlogManager({ myBlogs }: BlogManagerProps) {
   const router = useRouter();
-  const [blogs, setBlogs] = useState(initialBlogs);
+  const [blogs, setBlogs] = useState(myBlogs);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<BlogFormValues>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -112,14 +114,17 @@ export function BlogManager({ initialBlogs }: BlogManagerProps) {
         setError(data?.error ?? "保存に失敗しました");
         return;
       }
+      // 公開日が変わる/古い記事が増えるので、どちらも並べ直す
       if (editingId) {
         setBlogs((prev) =>
-          prev.map((a) =>
-            a.id === editingId ? ({ ...a, ...toPayload(form) } as Blog) : a,
-          ),
+          prev
+            .map((a) =>
+              a.id === editingId ? ({ ...a, ...toPayload(form) } as Blog) : a,
+            )
+            .sort(byPublishedAtDesc),
         );
       } else {
-        setBlogs((prev) => [data as Blog, ...prev]);
+        setBlogs((prev) => [data as Blog, ...prev].sort(byPublishedAtDesc));
       }
       cancelEdit();
       router.refresh();

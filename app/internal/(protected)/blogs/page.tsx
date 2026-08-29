@@ -16,7 +16,7 @@ export default async function BlogsPage() {
         title="記事管理"
         description="Qiita / Zenn / Medium など、外部に書いた記事を登録できます。"
       />
-      <BlogManager initialBlogs={blogs} />
+      <BlogManager myBlogs={blogs} />
     </div>
   );
 }

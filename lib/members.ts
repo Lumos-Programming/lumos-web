@@ -334,6 +334,21 @@ export function isMemberOptedOut(member: MemberDocument | null): boolean {
   return member?.optedOut === true;
 }
 
+/**
+ * 公開ページに名前を出してよいメンバーか。getPublicMembers の絞り込みと同じ条件を
+ * doc 単体に対して判定する。表示名そのものは profileToMember に任せる。
+ */
+export function isMemberPubliclyVisible(
+  member: MemberDocument | null,
+): member is MemberDocument {
+  return (
+    member !== null &&
+    member.onboardingCompleted === true &&
+    member.allowPublic === true &&
+    !isMemberOptedOut(member)
+  );
+}
+
 /** discordId から直接退会済みかを判定する (members コレクションが source of truth) */
 export async function isDiscordIdOptedOut(discordId: string): Promise<boolean> {
   const member = await getMember(discordId);

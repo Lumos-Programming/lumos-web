@@ -3,9 +3,11 @@ import {
   BLOG_ERROR_CODES,
   BLOG_ERROR_RESPONSES,
   BLOG_PLATFORM_OTHER,
+  byPublishedAtDesc,
   getPlatformBadgeClass,
   BlogError,
   toPlatformSelection,
+  type Blog,
 } from "./blog";
 
 describe("toPlatformSelection", () => {
@@ -38,6 +40,24 @@ describe("getPlatformBadgeClass", () => {
     expect(getPlatformBadgeClass(BLOG_PLATFORM_OTHER)).toBe(
       "bg-gradient-orange",
     );
+  });
+});
+
+describe("byPublishedAtDesc", () => {
+  const blog = (publishedAt: string): Blog => ({
+    id: publishedAt,
+    authorId: "user-123",
+    url: "https://example.com/a",
+    title: "記事",
+    publishedAt,
+    createdAt: 0,
+  });
+
+  it("公開日の新しい順に並べる", () => {
+    const sorted = [blog("2026-01-15"), blog("2026-08-01"), blog("2026-03-01")]
+      .sort(byPublishedAtDesc)
+      .map((b) => b.publishedAt);
+    expect(sorted).toEqual(["2026-08-01", "2026-03-01", "2026-01-15"]);
   });
 });
 

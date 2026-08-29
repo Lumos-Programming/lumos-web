@@ -1,25 +1,12 @@
 import Image from "next/image";
-import { listPublishedBlogs } from "@/lib/blogs";
-import { getMember } from "@/lib/members";
+import { listPublicBlogs } from "@/lib/blogs";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { getPlatformBadgeClass } from "@/types/blog";
 
-async function resolveAuthorName(authorId: string): Promise<string> {
-  const member = await getMember(authorId);
-  return member?.nickname || member?.discordUsername || "Lumosメンバー";
-}
-
 export default async function BlogsPage() {
-  const blogs = await listPublishedBlogs();
-  const uniqueAuthorIds = [...new Set(blogs.map((a) => a.authorId))];
-  const authorNames = new Map(
-    await Promise.all(
-      uniqueAuthorIds.map(
-        async (id) => [id, await resolveAuthorName(id)] as const,
-      ),
-    ),
-  );
+  // 著者名の公開可否と退会済みの除外は listPublicBlogs が持っている
+  const blogs = await listPublicBlogs();
 
   return (
     <>
@@ -91,7 +78,7 @@ export default async function BlogsPage() {
                         </p>
                       )}
                       <p className="text-sm text-muted-foreground mt-auto">
-                        {authorNames.get(blog.authorId)}
+                        {blog.authorName}
                       </p>
                     </CardContent>
                   </Card>

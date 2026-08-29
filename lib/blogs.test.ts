@@ -1,12 +1,17 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { BLOG_ERROR_CODES, BlogError } from "@/types/blog";
 import * as firebaseAdmin from "firebase-admin";
+import type { MemberDocument } from "@/lib/members";
+import type { VisibilityLevel } from "@/types/profile";
 import {
-  listPublishedBlogs,
+  listAllBlogs,
+  listPublicBlogs,
   listBlogsByAuthor,
   createBlog,
   updateBlog,
   deleteBlog,
+  parseBlogInput,
+  PUBLIC_AUTHOR_FALLBACK_NAME,
 } from "./blogs";
 
 if (!firebaseAdmin.apps.length) {
@@ -22,6 +27,43 @@ async function expectBlogError(
 ) {
   await expect(promise).rejects.toBeInstanceOf(BlogError);
   await promise.catch((e) => expect((e as BlogError).code).toBe(code));
+}
+
+const VISIBILITY_KEYS = [
+  "studentId",
+  "nickname",
+  "lastName",
+  "firstName",
+  "faculty",
+  "currentOrg",
+  "birthDate",
+  "gender",
+  "bio",
+  "github",
+  "x",
+  "linkedin",
+  "line",
+  "discord",
+] as const;
+
+function visibility(
+  overrides: Partial<Record<(typeof VISIBILITY_KEYS)[number], VisibilityLevel>>,
+): MemberDocument["visibility"] {
+  return Object.fromEntries(
+    VISIBILITY_KEYS.map((key) => [key, overrides[key] ?? "private"]),
+  ) as MemberDocument["visibility"];
+}
+
+/** members ドキュメントを直に書く。公開判定はこの中身にしか依存しない */
+async function putMember(
+  discordId: string,
+  data: Record<string, unknown>,
+): Promise<void> {
+  await firebaseAdmin
+    .firestore()
+    .collection("members")
+    .doc(discordId)
+    .set(data);
 }
 
 describe("Blogs CRUD", () => {
@@ -54,9 +96,9 @@ describe("Blogs CRUD", () => {
     expect(mine).toHaveLength(1);
     expect(mine[0].title).toBe(validInput.title);
 
-    const published = await listPublishedBlogs();
-    expect(published).toHaveLength(1);
-    expect(published[0].id).toBe(created.id);
+    const all = await listAllBlogs();
+    expect(all).toHaveLength(1);
+    expect(all[0].id).toBe(created.id);
   });
 
   it("excludes other authors' blogs from the author's own list", async () => {
@@ -70,8 +112,8 @@ describe("Blogs CRUD", () => {
     const mine = await listBlogsByAuthor(authorId);
     expect(mine.map((b) => b.id)).toEqual([mineDoc.id]);
 
-    // 公開一覧のほうは両方出る
-    expect(await listPublishedBlogs()).toHaveLength(2);
+    // コレクション全体のほうは両方出る
+    expect(await listAllBlogs()).toHaveLength(2);
   });
 
   it("rejects updating another author's blog", async () => {
@@ -114,6 +156,13 @@ describe("Blogs CRUD", () => {
     expect(await listBlogsByAuthor(authorId)).toHaveLength(0);
   });
 
+  it("rejects deleting a blog that does not exist", async () => {
+    await expectBlogError(
+      deleteBlog("no-such-id", authorId),
+      BLOG_ERROR_CODES.NOT_FOUND,
+    );
+  });
+
   it("rejects an invalid URL on create", async () => {
     await expectBlogError(
       createBlog(authorId, { ...validInput, url: "not-a-url" }),
@@ -125,6 +174,23 @@ describe("Blogs CRUD", () => {
     await expectBlogError(
       createBlog(authorId, { ...validInput, title: "" }),
       BLOG_ERROR_CODES.TITLE_REQUIRED,
+    );
+  });
+
+  it("rejects an invalid thumbnail URL on create", async () => {
+    await expectBlogError(
+      createBlog(authorId, {
+        ...validInput,
+        thumbnailUrl: "javascript:alert(1)",
+      }),
+      BLOG_ERROR_CODES.INVALID_THUMBNAIL_URL,
+    );
+  });
+
+  it("rejects a publishedAt that is not YYYY-MM-DD on create", async () => {
+    await expectBlogError(
+      createBlog(authorId, { ...validInput, publishedAt: "2026/01/01" }),
+      BLOG_ERROR_CODES.INVALID_PUBLISHED_AT,
     );
   });
 
@@ -149,15 +215,183 @@ describe("Blogs CRUD", () => {
     );
   });
 
-  it("orders published blogs by publishedAt descending", async () => {
+  it("orders blogs by publishedAt descending", async () => {
     await createBlog(authorId, { ...validInput, publishedAt: "2026-01-01" });
     await createBlog(authorId, { ...validInput, publishedAt: "2026-03-01" });
     await createBlog(authorId, { ...validInput, publishedAt: "2026-02-01" });
 
-    const published = await listPublishedBlogs();
-    expect(published.map((a) => a.publishedAt)).toEqual([
+    const all = await listAllBlogs();
+    expect(all.map((a) => a.publishedAt)).toEqual([
       "2026-03-01",
       "2026-02-01",
+      "2026-01-01",
+    ]);
+  });
+});
+
+describe("parseBlogInput", () => {
+  const validBody = {
+    url: "https://example.com/my-blog",
+    title: "はじめての記事",
+    publishedAt: "2026-01-01",
+  };
+
+  it("文字列だけのボディをそのまま BlogInput にする", () => {
+    expect(
+      parseBlogInput({ ...validBody, platform: "Zenn", description: "説明" }),
+    ).toEqual({
+      url: validBody.url,
+      title: validBody.title,
+      publishedAt: validBody.publishedAt,
+      description: "説明",
+      thumbnailUrl: undefined,
+      platform: "Zenn",
+    });
+  });
+
+  it("空文字の任意項目は未入力として落とす", () => {
+    const parsed = parseBlogInput({
+      ...validBody,
+      description: "",
+      thumbnailUrl: "",
+      platform: "",
+    });
+    expect(parsed.description).toBeUndefined();
+    expect(parsed.thumbnailUrl).toBeUndefined();
+    expect(parsed.platform).toBeUndefined();
+  });
+
+  it("知らないキーは無視する (authorId を本文から奪えない)", () => {
+    expect(
+      parseBlogInput({ ...validBody, authorId: "someone-else" }),
+    ).not.toHaveProperty("authorId");
+  });
+
+  it("publishedAt が文字列でなければ弾く", () => {
+    // これを通すと byPublishedAtDesc が落ちて記事管理ページが開けなくなる
+    expect(() =>
+      parseBlogInput({ ...validBody, publishedAt: 20260101 }),
+    ).toThrow(BlogError);
+    try {
+      parseBlogInput({ ...validBody, publishedAt: 20260101 });
+    } catch (e) {
+      expect((e as BlogError).code).toBe(BLOG_ERROR_CODES.INVALID_INPUT);
+    }
+  });
+
+  it("publishedAt が欠けていれば弾く", () => {
+    expect(() => parseBlogInput({ url: validBody.url, title: "t" })).toThrow(
+      BlogError,
+    );
+  });
+
+  it("本文が JSON として読めなかった場合 (null) も弾く", () => {
+    expect(() => parseBlogInput(null)).toThrow(BlogError);
+  });
+
+  it("形が正しくても中身が不正なら該当するコードで弾く", () => {
+    try {
+      parseBlogInput({ ...validBody, thumbnailUrl: "not-a-url" });
+    } catch (e) {
+      expect((e as BlogError).code).toBe(
+        BLOG_ERROR_CODES.INVALID_THUMBNAIL_URL,
+      );
+    }
+  });
+});
+
+describe("listPublicBlogs", () => {
+  const authorId = "user-123";
+  const validInput = {
+    url: "https://example.com/my-blog",
+    title: "はじめての記事",
+    publishedAt: "2026-01-01",
+  };
+
+  beforeEach(async () => {
+    const db = firebaseAdmin.firestore();
+    const collections = await db.listCollections();
+    for (const collection of collections) {
+      const docs = await collection.listDocuments();
+      for (const doc of docs) {
+        await doc.delete();
+      }
+    }
+  });
+
+  it("公開を許可しているメンバーは公開ページと同じ表示名で出る", async () => {
+    await putMember(authorId, {
+      nickname: "ともや",
+      discordUsername: "tomoya_discord",
+      onboardingCompleted: true,
+      allowPublic: true,
+      visibility: visibility({ nickname: "public" }),
+    });
+    await createBlog(authorId, validInput);
+
+    const [blog] = await listPublicBlogs();
+    expect(blog.authorName).toBe("ともや");
+  });
+
+  it("公開を許可していないメンバーの名前は出さない", async () => {
+    await putMember(authorId, {
+      nickname: "ともや",
+      discordUsername: "tomoya_discord",
+      onboardingCompleted: true,
+      allowPublic: false,
+      visibility: visibility({ nickname: "public" }),
+    });
+    await createBlog(authorId, validInput);
+
+    const [blog] = await listPublicBlogs();
+    // 記事そのものは出す。出さないのは名前だけ
+    expect(blog.title).toBe(validInput.title);
+    expect(blog.authorName).toBe(PUBLIC_AUTHOR_FALLBACK_NAME);
+  });
+
+  it("ニックネームを非公開にしているメンバーの名前は出さない", async () => {
+    await putMember(authorId, {
+      nickname: "ともや",
+      discordUsername: "tomoya_discord",
+      onboardingCompleted: true,
+      allowPublic: true,
+      visibility: visibility({ nickname: "private" }),
+    });
+    await createBlog(authorId, validInput);
+
+    const [blog] = await listPublicBlogs();
+    expect(blog.authorName).not.toBe("ともや");
+  });
+
+  it("members ドキュメントが無い著者の名前は出さない", async () => {
+    await createBlog(authorId, validInput);
+
+    const [blog] = await listPublicBlogs();
+    expect(blog.authorName).toBe(PUBLIC_AUTHOR_FALLBACK_NAME);
+  });
+
+  it("退会済みメンバーの記事は公開一覧に出さない", async () => {
+    await putMember(authorId, {
+      nickname: "ともや",
+      discordUsername: "tomoya_discord",
+      onboardingCompleted: true,
+      allowPublic: true,
+      optedOut: true,
+      visibility: visibility({ nickname: "public" }),
+    });
+    await createBlog(authorId, validInput);
+
+    expect(await listPublicBlogs()).toHaveLength(0);
+    // 記事自体は消していないので、再加入すればまた出る
+    expect(await listAllBlogs()).toHaveLength(1);
+  });
+
+  it("公開日の新しい順のまま返す", async () => {
+    await createBlog(authorId, { ...validInput, publishedAt: "2026-01-01" });
+    await createBlog(authorId, { ...validInput, publishedAt: "2026-03-01" });
+
+    expect((await listPublicBlogs()).map((b) => b.publishedAt)).toEqual([
+      "2026-03-01",
       "2026-01-01",
     ]);
   });

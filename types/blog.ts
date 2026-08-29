@@ -10,6 +10,14 @@ export interface Blog {
   createdAt: number;
 }
 
+/** publishedAt は YYYY-MM-DD 固定。辞書順の比較が日付順になることに依存している */
+export const BLOG_PUBLISHED_AT_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/** 公開日の新しい順。サーバーの一覧とフォームの楽観更新で同じ並びを使う */
+export function byPublishedAtDesc(a: Blog, b: Blog): number {
+  return b.publishedAt.localeCompare(a.publishedAt);
+}
+
 /**
  * 媒体の選択肢。「その他」を選んだときだけ自由記述させ、
  * 保存するのは自由記述した値そのもの (platform は string のまま)。
@@ -54,8 +62,11 @@ export function toPlatformSelection(platform: string | undefined): {
  * 例外メッセージの文字列比較でハンドリングしない。
  */
 export const BLOG_ERROR_CODES = {
+  INVALID_INPUT: "INVALID_INPUT",
   INVALID_URL: "INVALID_URL",
+  INVALID_THUMBNAIL_URL: "INVALID_THUMBNAIL_URL",
   TITLE_REQUIRED: "TITLE_REQUIRED",
+  INVALID_PUBLISHED_AT: "INVALID_PUBLISHED_AT",
   NOT_FOUND: "NOT_FOUND",
   FORBIDDEN: "FORBIDDEN",
 } as const;
@@ -67,11 +78,21 @@ export const BLOG_ERROR_RESPONSES: Record<
   BlogErrorCode,
   { status: number; message: string }
 > = {
+  INVALID_INPUT: { status: 400, message: "入力の形式が正しくありません" },
   INVALID_URL: {
     status: 400,
     message: "記事URLは http:// または https:// で始まる必要があります",
   },
+  INVALID_THUMBNAIL_URL: {
+    status: 400,
+    message:
+      "サムネイル画像URLは http:// または https:// で始まる必要があります",
+  },
   TITLE_REQUIRED: { status: 400, message: "タイトルを入力してください" },
+  INVALID_PUBLISHED_AT: {
+    status: 400,
+    message: "公開日は YYYY-MM-DD の形式で入力してください",
+  },
   NOT_FOUND: { status: 404, message: "記事が見つかりません" },
   FORBIDDEN: { status: 403, message: "他人の記事は操作できません" },
 };
