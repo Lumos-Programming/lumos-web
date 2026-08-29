@@ -30,15 +30,22 @@ describe("toPlatformSelection", () => {
 
 describe("getPlatformBadgeClass", () => {
   it("プリセットの媒体はそれぞれのブランドカラーを返す", () => {
-    expect(getPlatformBadgeClass("Qiita")).toBe("bg-[#54C500]");
-    expect(getPlatformBadgeClass("Zenn")).toBe("bg-[#3C83F6]");
-    expect(getPlatformBadgeClass("Medium")).toBe("bg-[#1D1D1D]");
+    expect(getPlatformBadgeClass("Qiita")).toBe("bg-[#54C500] text-[#1D1D1D]");
+    expect(getPlatformBadgeClass("Zenn")).toBe("bg-[#3C83F6] text-white");
+    expect(getPlatformBadgeClass("Medium")).toBe("bg-[#1D1D1D] text-white");
+  });
+
+  it("背景が明るい Qiita だけ文字色を濃くする", () => {
+    // 白文字だと 2.24:1 しか出ないため
+    expect(getPlatformBadgeClass("Qiita")).not.toContain("text-white");
   });
 
   it("プリセットに無い媒体は既定の色のままにする", () => {
-    expect(getPlatformBadgeClass("はてなブログ")).toBe("bg-gradient-orange");
+    expect(getPlatformBadgeClass("はてなブログ")).toBe(
+      "bg-gradient-orange text-white",
+    );
     expect(getPlatformBadgeClass(BLOG_PLATFORM_OTHER)).toBe(
-      "bg-gradient-orange",
+      "bg-gradient-orange text-white",
     );
   });
 });

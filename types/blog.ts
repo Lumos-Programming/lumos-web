@@ -26,16 +26,18 @@ export const BLOG_PLATFORM_PRESETS = ["Qiita", "Zenn", "Medium"] as const;
 export type BlogPlatformPreset = (typeof BLOG_PLATFORM_PRESETS)[number];
 
 /**
- * 媒体チップの背景色。各サービスのブランドカラーを使う。
+ * 媒体チップの配色。背景は各サービスのブランドカラー。
+ * 文字色は背景ごとに変える — Qiita の緑は明るく、白文字だと 2.24:1 しか出ないため
+ * 濃い文字にして 7.5:1 まで上げている。
  * プリセットに無い媒体(「その他」の自由記述)は既定の色のままにする。
  */
 const PLATFORM_BADGE_CLASSES: Record<BlogPlatformPreset, string> = {
-  Qiita: "bg-[#54C500]",
-  Zenn: "bg-[#3C83F6]",
-  Medium: "bg-[#1D1D1D]",
+  Qiita: "bg-[#54C500] text-[#1D1D1D]",
+  Zenn: "bg-[#3C83F6] text-white",
+  Medium: "bg-[#1D1D1D] text-white",
 };
 
-const DEFAULT_PLATFORM_BADGE_CLASS = "bg-gradient-orange";
+const DEFAULT_PLATFORM_BADGE_CLASS = "bg-gradient-orange text-white";
 
 export function getPlatformBadgeClass(platform: string): string {
   return (
