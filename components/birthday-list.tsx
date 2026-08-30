@@ -8,7 +8,7 @@ import {
   daysUntilNextBirthday,
   type JstToday,
 } from "@/lib/date";
-import { BirthdayYearCalendar } from "@/components/birthday-year-calendar";
+import { BirthdayCalendar } from "@/components/birthday-calendar";
 
 type BirthdayEntry = {
   id: string;
@@ -178,7 +178,7 @@ export function BirthdayList({
       </div>
 
       <div className="pt-4 border-t">
-        <BirthdayYearCalendar entries={entries} today={today} />
+        <BirthdayCalendar entries={entries} today={today} />
       </div>
     </div>
   );
