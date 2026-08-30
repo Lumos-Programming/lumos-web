@@ -322,26 +322,53 @@ describe("sendDiscordDm", () => {
 });
 
 describe("buildBirthdayNotification", () => {
-  it("1人の場合、メンション1件だけを本文にする", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  // お祝い文はランダム選択のため、検証時は先頭の1件に固定する
+  function pinFirstGreeting() {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+  }
+
+  it("1人の場合、メンションとお祝い文を空行で区切って並べる", () => {
+    pinFirstGreeting();
     const payload = buildBirthdayNotification(["123456789"]);
 
     expect(payload.embeds).toHaveLength(1);
     expect(payload.embeds[0].title).toBe("本日の誕生日");
-    expect(payload.embeds[0].description).toBe("<@123456789>");
+    expect(payload.embeds[0].description).toBe(
+      "<@123456789>\n\nage++ 完了です！新しい1年もよろしくお願いします🎂",
+    );
     expect(payload.embeds[0].color).toBe(0xf59e0b);
   });
 
-  it("複数人の場合、メンションを改行で並べる", () => {
+  it("複数人の場合、メンションを改行で並べ、お祝い文は1つだけ添える", () => {
+    pinFirstGreeting();
     const payload = buildBirthdayNotification(["111", "222", "333"]);
 
-    expect(payload.embeds[0].description).toBe("<@111>\n<@222>\n<@333>");
+    expect(payload.embeds[0].description).toBe(
+      "<@111>\n<@222>\n<@333>\n\nage++ 完了です！新しい1年もよろしくお願いします🎂",
+    );
   });
 
   it("名前や敬称を本文に持たない（表示はメンションに任せる）", () => {
     const payload = buildBirthdayNotification(["123456789"]);
+    expect(payload.embeds[0].description).not.toContain("さん、");
+  });
 
-    expect(payload.embeds[0].description).not.toContain("さん");
-    expect(payload.embeds[0].description).not.toContain("お祝い");
+  it("どのお祝い文が選ばれても、コードやシェルコマンドをそのまま含まない", () => {
+    // 「ニッチすぎて伝わらない」を避けるため、生のコードは載せない方針
+    for (let i = 0; i < 8; i++) {
+      vi.spyOn(Math, "random").mockReturnValue(i / 8);
+      const description = buildBirthdayNotification(["1"]).embeds[0]
+        .description;
+
+      expect(description).not.toContain("```");
+      expect(description).not.toContain("console.log");
+      expect(description).not.toContain("git ");
+      expect(description).not.toMatch(/[;{}]/);
+    }
   });
 
   it("ボタンを含まない", () => {
