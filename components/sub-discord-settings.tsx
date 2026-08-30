@@ -37,17 +37,24 @@ export default function SubDiscordSettings({ subAccount }: Props) {
     if (!subAccount) return;
     if (!confirm("サブDiscordアカウントの連携を解除しますか？")) return;
     setDisconnecting(true);
-    const res = await fetch("/api/auth/link/sub-discord", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subDiscordId: subAccount.discordId }),
-    });
-    setDisconnecting(false);
-    if (res.ok) {
-      router.refresh();
-    } else {
+    try {
+      const res = await fetch("/api/auth/link/sub-discord", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subDiscordId: subAccount.discordId }),
+      });
+      if (res.ok) {
+        // 解除後の行はサーバー側の再レンダリングで消えるので、
+        // それが届くまでボタンは disabled のままにする (二重送信で偽エラーが出るのを防ぐ)
+        router.refresh();
+        return;
+      }
       alert("解除に失敗しました。");
+    } catch {
+      // 通信自体に失敗した場合 (オフライン等)
+      alert("解除に失敗しました。通信状況を確認してください。");
     }
+    setDisconnecting(false);
   };
 
   return (
