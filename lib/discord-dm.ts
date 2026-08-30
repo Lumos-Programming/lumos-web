@@ -853,18 +853,12 @@ const BIRTHDAY_COLOR = 0xf59e0b; // Amber
 export function buildBirthdayNotification(
   names: string[],
 ): DiscordMessagePayload {
-  const label =
-    names.length === 1
-      ? `**${names[0]}** さん`
-      : names.map((n) => `**${n}**`).join(" さん・") + " さん";
-
   return {
     embeds: [
       {
-        title: "誕生日おめでとうございます！",
-        description: `本日は ${label} の誕生日です！\nLumos メンバーで一緒にお祝いしましょう。`,
+        title: "本日の誕生日",
+        description: names.map((n) => `**${n}**さん`).join("・"),
         color: BIRTHDAY_COLOR,
-        fields: [],
       },
     ],
   };

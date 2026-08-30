@@ -322,21 +322,26 @@ describe("sendDiscordDm", () => {
 });
 
 describe("buildBirthdayNotification", () => {
-  it("1人の場合、名前に「さん」を付けて本文に含める", () => {
+  it("1人の場合、名前に「さん」を付けて本文にする", () => {
     const payload = buildBirthdayNotification(["田中"]);
 
     expect(payload.embeds).toHaveLength(1);
-    expect(payload.embeds[0].title).toContain("誕生日");
-    expect(payload.embeds[0].description).toContain("**田中** さん");
+    expect(payload.embeds[0].title).toBe("本日の誕生日");
+    expect(payload.embeds[0].description).toBe("**田中**さん");
     expect(payload.embeds[0].color).toBe(0xf59e0b);
   });
 
   it("複数人の場合、全員に「さん」を付けて中黒で連結する", () => {
     const payload = buildBirthdayNotification(["田中", "佐藤", "鈴木"]);
 
-    expect(payload.embeds[0].description).toContain(
-      "**田中** さん・**佐藤** さん・**鈴木** さん",
+    expect(payload.embeds[0].description).toBe(
+      "**田中**さん・**佐藤**さん・**鈴木**さん",
     );
+  });
+
+  it("お祝いを促す文言など、名前以外の本文を含まない", () => {
+    const payload = buildBirthdayNotification(["田中"]);
+    expect(payload.embeds[0].description).not.toContain("お祝い");
   });
 
   it("ボタンを含まない", () => {
