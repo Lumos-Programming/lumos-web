@@ -850,14 +850,18 @@ export async function editDiscordDm(
 
 const BIRTHDAY_COLOR = 0xf59e0b; // Amber
 
+/**
+ * 運営チャンネルへ「今日が誕生日のメンバー」を知らせる通知。
+ * 表示名は Discord のメンション（<@id>）に任せ、本文には名前を持たない。
+ */
 export function buildBirthdayNotification(
-  names: string[],
+  discordIds: string[],
 ): DiscordMessagePayload {
   return {
     embeds: [
       {
         title: "本日の誕生日",
-        description: names.map((n) => `**${n}**さん`).join("・"),
+        description: discordIds.map((id) => `<@${id}>`).join("\n"),
         color: BIRTHDAY_COLOR,
       },
     ],

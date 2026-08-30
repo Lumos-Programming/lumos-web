@@ -30,20 +30,25 @@ export async function GET(request: NextRequest) {
 
   const today = getJstToday();
   const members = await getMembersInternal();
-  const names = members
+  // Member.id は Firestore の doc id = Discord ID。表示名はメンションに任せる。
+  const discordIds = members
     .filter((m) => m.birthDate && isBirthdayToday(m.birthDate, today))
-    .map((m) => m.nickname || m.name);
+    .map((m) => m.id);
 
-  if (names.length === 0) {
+  if (discordIds.length === 0) {
     return NextResponse.json({ notified: false, count: 0 });
   }
 
   try {
-    await notifyAdminChannel(buildBirthdayNotification(names));
+    await notifyAdminChannel(buildBirthdayNotification(discordIds));
   } catch (e) {
     console.error("[cron/birthday] Failed to notify:", e);
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
 
-  return NextResponse.json({ notified: true, count: names.length, names });
+  return NextResponse.json({
+    notified: true,
+    count: discordIds.length,
+    discordIds,
+  });
 }
