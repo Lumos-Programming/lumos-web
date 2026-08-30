@@ -5,8 +5,13 @@ export type SubAccountInfo = {
   discordId: string;
   discordUsername: string;
   discordHandle?: string;
+  /** Discord の avatar hash。表示時に URL へ組み立てる。 */
   discordAvatar: string;
-  linkedAt?: FirebaseFirestore.Timestamp;
+  /**
+   * 連携日時 (Unix ms)。Firestore の Timestamp はクラスインスタンスで
+   * Server Component → Client Component の境界を越えられないため数値で返す。
+   */
+  linkedAt?: number;
 };
 
 export type LinkSubAccountResult =
@@ -21,6 +26,20 @@ export type LinkSubAccountResult =
     };
 
 /**
+ * その doc が「実際に Lumos の会員として使われているか」を判定する。
+ *
+ * サブアカウントはギルドに居るので登録案内 DM の対象になり、そこで
+ * ログインすると getOrCreateMember が、退会を押すと markMemberOptedOut が
+ * members doc を作る。どちらも会員ではないので、サブアカウントとして
+ * 引き継いでよい (退会の記録自体は optout_submissions に残る)。
+ * 逆に登録済み・オンボーディング入力済みの doc は奪わない。
+ */
+function isRegisteredMemberDoc(data: FirebaseFirestore.DocumentData): boolean {
+  if (data.onboardingCompleted === true) return true;
+  return Boolean(data.studentId || data.lastName || data.firstName);
+}
+
+/**
  * メインアカウントにサブアカウントを連携する。
  * メイン側 doc に subAccountDiscordId をセットし、サブ側 doc を新規作成する。
  * 両方の更新を 1 つのトランザクションで行う。
@@ -31,6 +50,7 @@ export async function linkSubAccount(params: {
     discordId: string;
     username: string;
     handle?: string;
+    /** Discord の avatar hash (完全 URL ではない)。未設定は空文字。 */
     avatar: string;
   };
 }): Promise<LinkSubAccountResult> {
@@ -57,15 +77,17 @@ export async function linkSubAccount(params: {
 
     if (subSnap.exists) {
       const subData = subSnap.data() ?? {};
-      // 既に Lumos の (メイン) メンバーとして登録済み
       if (subData.isSubAccount !== true) {
-        return { ok: false, error: "already_member" } as LinkSubAccountResult;
-      }
-      // 既に別のメインに紐づいているサブ
-      if (
+        // 既に Lumos の (メイン) メンバーとして使われている doc は奪わない
+        if (isRegisteredMemberDoc(subData)) {
+          return { ok: false, error: "already_member" } as LinkSubAccountResult;
+        }
+        // ログイン記録 / 退会スタブだけの doc はサブアカウントとして引き継ぐ
+      } else if (
         subData.primaryDiscordId &&
         subData.primaryDiscordId !== primaryDiscordId
       ) {
+        // 既に別のメインに紐づいているサブ
         return {
           ok: false,
           error: "already_linked_to_other",
@@ -84,6 +106,10 @@ export async function linkSubAccount(params: {
         linkedAt: FieldValue.serverTimestamp(),
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
+        // 引き継いだ doc に残っている会員向けフラグを消す
+        onboardingCompleted: FieldValue.delete(),
+        optedOut: FieldValue.delete(),
+        optedOutAt: FieldValue.delete(),
       },
       { merge: true },
     );
@@ -140,28 +166,51 @@ export async function unlinkSubAccount(params: {
 }
 
 /**
- * メインアカウントに紐づくサブアカウント情報を取得する。
+ * メインアカウントの退会時に、連携済みサブアカウントを解除する。
+ * 退会後は設定画面から解除できず、サブアカウントがログイン不能なまま
+ * members に残り続けるため、退会フローから呼び出す。連携が無ければ何もしない。
  */
-export async function getSubAccount(
+export async function unlinkSubAccountOnOptout(
   primaryDiscordId: string,
-): Promise<SubAccountInfo | null> {
+): Promise<void> {
   const db = getDb();
   const primarySnap = await db
     .collection("members")
     .doc(primaryDiscordId)
     .get();
-  const subId = primarySnap.data()?.subAccountDiscordId as string | undefined;
-  if (!subId) return null;
+  const subDiscordId = primarySnap.data()?.subAccountDiscordId as
+    string | undefined;
+  if (!subDiscordId) return;
 
-  const subSnap = await db.collection("members").doc(subId).get();
-  if (!subSnap.exists) return null;
-  const data = subSnap.data() ?? {};
+  await unlinkSubAccount({ primaryDiscordId, subDiscordId });
+}
+
+/**
+ * サブアカウントの情報を doc ID から直接取得する。
+ *
+ * ID はメイン doc の `subAccountDiscordId` から得る。呼び出し側が既にメイン doc を
+ * 読んでいる (設定ページの `getMember` など) 前提にすることで、同じ doc を
+ * 二度読まずに済ませる。
+ */
+export async function getSubAccountById(
+  subDiscordId: string,
+): Promise<SubAccountInfo | null> {
+  const db = getDb();
+  const snap = await db.collection("members").doc(subDiscordId).get();
+  if (!snap.exists) return null;
+
+  const data = snap.data() ?? {};
+  // サブアカウント以外の doc (通常のメンバー) を読み出させない
+  if (data.isSubAccount !== true) return null;
+
   return {
-    discordId: subId,
+    discordId: subDiscordId,
     discordUsername: data.discordUsername ?? "",
     discordHandle: data.discordHandle,
     discordAvatar: data.discordAvatar ?? "",
-    linkedAt: data.linkedAt,
+    linkedAt: (
+      data.linkedAt as FirebaseFirestore.Timestamp | undefined
+    )?.toMillis(),
   };
 }
 

@@ -66,6 +66,7 @@ Tests require the Firestore emulator. `just test` wraps `firebase emulators:exec
 - `lib/members.ts` — Member CRUD operations against Firestore
 - `lib/discord.ts`, `lib/discord-guild.ts`, `lib/discord-dm.ts`, `lib/discord-optout.ts` — Discord API integration (guild validation, event creation, DM sending, opt-out flow)
 - `lib/oauth-link.ts` — Secondary OAuth account linking helpers (GitHub, X, LINE)
+- `lib/sub-account.ts` — Discord sub-account linking (one per member, stored in `members` with `isSubAccount`); see `docs/sub-account-flow.md`
 - `lib/admin/` — Admin-only operations gated on Discord guild role
 - `lib/mini-lt/` — Mini LT module: Firestore ops (`firebase.ts`), utility functions (`utils.ts`), LINE Flex messages (`line-flex.ts`)
 - `lib/mini-lt/actions/` — Server Actions (`"use server"`): `discord-events.ts` (Discord event creation), `line.ts` (LINE push notifications)
@@ -81,7 +82,7 @@ Tests require the Firestore emulator. `just test` wraps `firebase emulators:exec
 
 ### Authentication Flow
 
-Discord OAuth login → JWT token with guild/admin info → Firestore member record. Protected routes under `app/internal/` redirect unauthenticated users to Discord login. Admin role is detected by checking Discord guild roles (via `ADMIN_ROLE_ID`). Secondary OAuth linking (GitHub, X, LINE) uses dedicated API routes under `app/api/auth/link/`.
+Discord OAuth login → JWT token with guild/admin info → Firestore member record. Protected routes under `app/internal/` redirect unauthenticated users to Discord login. Admin role is detected by checking Discord guild roles (via `ADMIN_ROLE_ID`). Secondary OAuth linking (GitHub, X, LINE) uses dedicated API routes under `app/api/auth/link/`. Members may also link one Discord sub-account (`app/api/auth/link/sub-discord/`); linked sub-accounts are rejected at sign-in and redirected to `/error/sub-account`.
 
 ### External Integrations
 
