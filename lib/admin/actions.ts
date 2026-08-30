@@ -3,13 +3,19 @@
 import { isAdmin } from "@/lib/auth";
 import { getGuildMembers, type DiscordGuildMember } from "@/lib/discord-guild";
 import { getMemberRegistrationStatus } from "@/lib/members";
+import { getDb } from "@/lib/firebase";
 import {
   sendDiscordDm,
   buildRegistrationNudgeMessage,
   buildOnboardingNudgeMessage,
 } from "@/lib/discord-dm";
 import { getOptoutSubmissionIds } from "@/lib/discord-optout";
-import { getDb } from "@/lib/firebase";
+import {
+  syncMemberDiscordRoles,
+  getGuildRoleNameMap,
+  ensureRolesInMap,
+} from "@/lib/discord-role";
+import type { EnrollmentRecord } from "@/types/profile";
 
 export type MemberStatus = "unregistered" | "onboarding";
 
@@ -186,5 +192,144 @@ export async function getAdminMembers(): Promise<AdminMemberRow[]> {
         createdAt: d.createdAt?.toDate().toISOString() ?? "",
       } satisfies AdminMemberRow;
     })
-    .sort((a, b) => a.lastName.localeCompare(b.lastName, "ja"));
+    .sort((a, b) => {
+      // 退会済を末尾へ
+      if (a.optedOut !== b.optedOut) return a.optedOut ? 1 : -1;
+      // 登録済を未完了より前へ
+      if (a.onboardingCompleted !== b.onboardingCompleted)
+        return a.onboardingCompleted ? -1 : 1;
+      // 名前なし（未登録）を後ろへ
+      if (!a.lastName && b.lastName) return 1;
+      if (a.lastName && !b.lastName) return -1;
+      return a.lastName.localeCompare(b.lastName, "ja");
+    });
+}
+
+export type MemberSyncDetail = {
+  discordId: string;
+  discordUsername: string;
+  addedRoleNames: string[];
+  removedRoleNames: string[];
+  errors: string[];
+};
+
+export type SyncRolesResult = {
+  total: number;
+  success: number;
+  failed: number;
+  details: MemberSyncDetail[];
+};
+
+export async function syncAllMemberDiscordRoles(): Promise<SyncRolesResult> {
+  if (!(await isAdmin())) {
+    throw new Error("管理者権限が必要です");
+  }
+
+  const db = getDb();
+  const snap = await db
+    .collection("members")
+    .where("onboardingCompleted", "==", true)
+    .select(
+      "discordUsername",
+      "optedOut",
+      "yearByFiscal",
+      "enrollments",
+      "memberType",
+    )
+    .get();
+
+  const result: SyncRolesResult = {
+    total: 0,
+    success: 0,
+    failed: 0,
+    details: [],
+  };
+
+  const currentYear = String(new Date().getFullYear());
+  const targets = snap.docs.filter((doc) => doc.data().optedOut !== true);
+  result.total = targets.length;
+
+  const roleNameMap = await getGuildRoleNameMap();
+  console.log(
+    `[role-sync] ギルドロール ${roleNameMap.size}件を取得: [${[...roleNameMap.keys()].join(", ")}]`,
+  );
+  console.log(`[role-sync] 対象メンバー: ${result.total}件`);
+
+  // 全メンバーのプロフィール値を集めてまとめてロールを作成（重複作成を防ぐ）
+  const allProfileKeys = new Set<string>();
+  for (const doc of targets) {
+    const { yearByFiscal, enrollments, memberType } = doc.data();
+    if (memberType === "卒業生" || memberType === "その他") {
+      allProfileKeys.add(memberType as string);
+    } else {
+      const year = (yearByFiscal as Record<string, string> | undefined)?.[
+        currentYear
+      ];
+      const faculty = (enrollments as EnrollmentRecord[] | undefined)?.find(
+        (e) => e.isCurrent,
+      )?.faculty;
+      if (year) allProfileKeys.add(year);
+      if (faculty) allProfileKeys.add(faculty);
+    }
+  }
+  await ensureRolesInMap([...allProfileKeys], roleNameMap);
+
+  // ensureRolesInMap で新規作成されたロールも含めて逆引きマップを構築
+  const roleIdToName = new Map(
+    [...roleNameMap].map(([name, id]) => [id, name]),
+  );
+
+  const CONCURRENCY = 2;
+  for (let i = 0; i < targets.length; i += CONCURRENCY) {
+    const batch = targets.slice(i, i + CONCURRENCY);
+    await Promise.all(
+      batch.map(async (doc) => {
+        const { discordUsername, yearByFiscal, enrollments, memberType } =
+          doc.data();
+        const year = (yearByFiscal as Record<string, string> | undefined)?.[
+          currentYear
+        ];
+        const faculty = (enrollments as EnrollmentRecord[] | undefined)?.find(
+          (e) => e.isCurrent,
+        )?.faculty;
+        const roleResult = await syncMemberDiscordRoles(
+          doc.id,
+          { year, faculty, memberType: memberType as string | undefined },
+          roleNameMap,
+        );
+        const detail: MemberSyncDetail = {
+          discordId: doc.id,
+          discordUsername: discordUsername ?? doc.id,
+          addedRoleNames: roleResult.added.map(
+            (id) => roleIdToName.get(id) ?? id,
+          ),
+          removedRoleNames: roleResult.removed.map(
+            (id) => roleIdToName.get(id) ?? id,
+          ),
+          errors: roleResult.errors,
+        };
+        result.details.push(detail);
+        if (roleResult.errors.length > 0) {
+          result.failed++;
+          console.error(
+            `[role-sync] NG ${discordUsername ?? doc.id}: errors=${roleResult.errors.join(" | ")}`,
+          );
+        } else {
+          result.success++;
+          console.log(
+            `[role-sync] OK ${discordUsername ?? doc.id}: added=[${roleResult.added.join(", ") || "なし"}] removed=[${roleResult.removed.join(", ") || "なし"}]`,
+          );
+        }
+      }),
+    );
+
+    if (i + CONCURRENCY < targets.length) {
+      await sleep(1000);
+    }
+  }
+
+  console.log(
+    `[role-sync] 完了: 成功=${result.success}, 失敗=${result.failed}`,
+  );
+  return result;
 }

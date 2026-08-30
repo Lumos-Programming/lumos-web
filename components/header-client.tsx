@@ -13,6 +13,7 @@ const navigation = [
   { name: "サークル紹介", href: "/about" },
   { name: "メンバー", href: "/members" },
   { name: "プロジェクト紹介", href: "/projects" },
+  { name: "ブログ", href: "/blogs" },
   { name: "お知らせ", href: "/news" },
 ];
 

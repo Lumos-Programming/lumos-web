@@ -31,6 +31,34 @@ export function formatWeekDate(weekId: string): string {
   }
 }
 
+// weekId format: "2026-W09" (ISO week 01-53)
+const WEEK_ID_PATTERN = /^\d{4}-W(0[1-9]|[1-4]\d|5[0-3])$/;
+
+// URLの ?week= など外部から渡された値が weekId として使えるか検証する
+export function isValidWeekId(weekId: string | undefined): weekId is string {
+  if (!weekId || !WEEK_ID_PATTERN.test(weekId)) return false;
+  const monday = getWeekDateFromWeekId(weekId);
+  if (Number.isNaN(monday.getTime())) return false;
+  // その年に存在しない週(例: 2021-W53)を弾くため往復で一致するか確認する
+  return getWeekId(monday) === weekId;
+}
+
+// 不正な weekId は次回イベント週にフォールバックさせる
+export function resolveWeekId(
+  weekId: string | undefined,
+  now: Date = new Date(),
+  config: EventConfig = EVENT_CONFIG,
+): string {
+  return isValidWeekId(weekId) ? weekId : getNextEventWeekId(now, config);
+}
+
+// "2026-W12" -> "2026 / W12"
+export function formatWeekIsoLabel(weekId: string): string {
+  if (!isValidWeekId(weekId)) return weekId;
+  const [year, week] = weekId.split("-W");
+  return `${year} / W${week}`;
+}
+
 // Event configuration type
 export type EventConfig = {
   dayOfWeek: number; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
@@ -144,19 +172,22 @@ export function getNextEventWeekId(
   }
 }
 
+export type RelativeWeekLabel = "前回" | "今回" | "次回" | "次々回";
+
 // Get label for a specific week ID
+// ナビゲーション範囲(前回/今回/次回/次々回)の外側は相対表現が成立しないため null を返す
 export function getWeekLabel(
   weekId: string,
   now: Date = new Date(),
   config: EventConfig = EVENT_CONFIG,
-): "前回" | "今回" | "次回" | "次々回" | "今週" {
+): RelativeWeekLabel | null {
   const { prevWeek, centerWeek, nextWeek, centerLabel, rightLabel } =
     getNavigationWeeks(now, config);
 
   if (weekId === prevWeek) return "前回";
   if (weekId === centerWeek) return centerLabel;
   if (weekId === nextWeek) return rightLabel;
-  return "今週";
+  return null;
 }
 
 // Get the next event date from a given date

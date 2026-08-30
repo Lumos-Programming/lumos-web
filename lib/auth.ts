@@ -120,10 +120,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const discordId = account.providerAccountId;
         token.sub = discordId;
 
+        // 完全 URL ではなく avatar hash を保存する（リンク切れ耐性・形式追従のため）。
+        // hash は resolveDiscordAvatar で URL に組み立てる。未設定 (null) は空文字で保存。
+        const discordAvatarHash =
+          (profile as { avatar?: string | null })?.avatar ?? "";
+
         const { isNewMember, lastLoginAt } = await getOrCreateMember(
           discordId,
           token.name ?? "",
-          token.picture ?? "",
+          discordAvatarHash,
           (profile as { username?: string })?.username ?? undefined,
         );
 

@@ -167,6 +167,66 @@ export async function getMembersInternal(): Promise<Member[]> {
   });
 }
 
+/**
+ * LINE 連携済みメンバーを列挙する（lineAvatar 定期更新バッチ用）。
+ * 退会済み（optedOut）は除外。トークンが無い古い連携は呼び出し側でスキップ判定する。
+ */
+export async function getMembersWithLine(): Promise<
+  {
+    discordId: string;
+    lineAvatar?: string;
+    lineAccessToken?: string;
+    lineRefreshToken?: string;
+    lineTokenExpiresAt?: number;
+  }[]
+> {
+  const db = getDb();
+  const snap = await db.collection("members").where("lineId", "!=", null).get();
+
+  return snap.docs.flatMap((doc) => {
+    const data = doc.data() as MemberDocument;
+    if (isMemberOptedOut(data)) return [];
+    return [
+      {
+        discordId: doc.id,
+        lineAvatar: data.lineAvatar,
+        lineAccessToken: data.lineAccessToken,
+        lineRefreshToken: data.lineRefreshToken,
+        lineTokenExpiresAt: data.lineTokenExpiresAt,
+      },
+    ];
+  });
+}
+
+/**
+ * 全メンバーの discordAvatar を列挙する（Discord アバター定期更新バッチ用）。
+ * doc id が Discord ID。退会済み（optedOut）は除外する。
+ */
+export async function getMembersForDiscordAvatarRefresh(): Promise<
+  { discordId: string; discordAvatar?: string }[]
+> {
+  const db = getDb();
+  const snap = await db.collection("members").get();
+
+  return snap.docs.flatMap((doc) => {
+    const data = doc.data() as MemberDocument;
+    if (isMemberOptedOut(data)) return [];
+    return [{ discordId: doc.id, discordAvatar: data.discordAvatar }];
+  });
+}
+
+/** discordAvatar (avatar hash) を更新する。定期更新バッチ用。 */
+export async function updateMemberDiscordAvatar(
+  discordId: string,
+  discordAvatar: string,
+): Promise<void> {
+  const db = getDb();
+  await db.collection("members").doc(discordId).update({
+    discordAvatar,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
 export async function getMember(
   discordId: string,
 ): Promise<MemberDocument | null> {
@@ -274,6 +334,21 @@ export function isMemberOptedOut(member: MemberDocument | null): boolean {
   return member?.optedOut === true;
 }
 
+/**
+ * 公開ページに名前を出してよいメンバーか。getPublicMembers の絞り込みと同じ条件を
+ * doc 単体に対して判定する。表示名そのものは profileToMember に任せる。
+ */
+export function isMemberPubliclyVisible(
+  member: MemberDocument | null,
+): member is MemberDocument {
+  return (
+    member !== null &&
+    member.onboardingCompleted === true &&
+    member.allowPublic === true &&
+    !isMemberOptedOut(member)
+  );
+}
+
 /** discordId から直接退会済みかを判定する (members コレクションが source of truth) */
 export async function isDiscordIdOptedOut(discordId: string): Promise<boolean> {
   const member = await getMember(discordId);
@@ -359,10 +434,12 @@ function resolveDiscordAvatar(
   discordAvatar?: string,
 ): string {
   if (!discordAvatar) return "/placeholder.svg";
-  // Already a full URL (stored from token.picture)
+  // 旧データ: token.picture の完全 URL がそのまま保存されているケース。
+  // アバター変更後にリンク切れになり得るが、定期バッチが hash へ移行するまでは尊重する。
   if (discordAvatar.startsWith("http")) return discordAvatar;
-  // Legacy: hash only
-  return `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.png`;
+  // 通常: avatar hash から URL を組み立てる。アニメーションアバター (a_ 始まり) は gif。
+  const format = discordAvatar.startsWith("a_") ? "gif" : "png";
+  return `https://cdn.discordapp.com/avatars/${discordId}/${discordAvatar}.${format}`;
 }
 
 const DEFAULT_AVATAR = "/assets/lumos_logo-full.png";

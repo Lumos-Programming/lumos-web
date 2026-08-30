@@ -176,6 +176,45 @@ export async function exchangeCodeForTokenFull(
   return data as OAuthTokenResponse;
 }
 
+/**
+ * LINE のリフレッシュトークンでアクセストークンを再発行する。
+ * アクセストークンは有効期限切れになるため、プロフィール再取得前に必要なら更新する。
+ * @see https://developers.line.biz/ja/reference/line-login/#refresh-access-token
+ */
+export async function refreshLineAccessToken(
+  refreshToken: string,
+): Promise<OAuthTokenResponse> {
+  const config = PROVIDER_CONFIGS.line;
+  const clientId = process.env[config.clientIdEnv];
+  const clientSecret = process.env[config.clientSecretEnv];
+
+  if (!clientId || !clientSecret) {
+    throw new Error("Missing env vars for line");
+  }
+
+  const body = new URLSearchParams({
+    grant_type: "refresh_token",
+    refresh_token: refreshToken,
+    client_id: clientId,
+    client_secret: clientSecret,
+  });
+
+  const res = await fetch(config.tokenUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    body: body.toString(),
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.access_token) {
+    throw new Error(`LINE token refresh failed: ${JSON.stringify(data)}`);
+  }
+  return data as OAuthTokenResponse;
+}
+
 export async function fetchProviderUser(
   provider: OAuthLinkProvider,
   accessToken: string,

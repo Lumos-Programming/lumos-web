@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Cake,
   UserCircle,
+  BookOpen,
   Settings,
   ExternalLink,
   LogOut,
@@ -38,6 +39,7 @@ const NAV_ITEMS = [
   { href: "/internal/events", icon: CalendarDays, label: "イベント" },
   { href: "/internal/birthdays", icon: Cake, label: "誕生日" },
   { href: "/internal/profile", icon: UserCircle, label: "プロフィール" },
+  { href: "/internal/blogs", icon: BookOpen, label: "記事管理" },
   { href: "/internal/settings", icon: Settings, label: "設定" },
 ];
 

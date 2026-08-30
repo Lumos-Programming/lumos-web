@@ -1,6 +1,6 @@
 import { auth, signIn, signOut, isValidSnowflake } from "@/lib/auth";
 import { getWeekData, addTalk, updateTalk, deleteTalk } from "@/lib/firebase";
-import { getNextEventWeekId } from "@/lib/mini-lt/utils";
+import { resolveWeekId } from "@/lib/mini-lt/utils";
 import {
   createWeekEvent,
   syncWeekEventDescription,
@@ -22,7 +22,7 @@ export default async function SubmitPage({
 }) {
   const session = await auth();
   const params = await searchParams;
-  const weekId = params.week || getNextEventWeekId();
+  const weekId = resolveWeekId(params.week);
 
   // Force logout if session has invalid user ID (old UUID format instead of Snowflake)
   if (session && !isValidSnowflake(session.user?.id)) {
