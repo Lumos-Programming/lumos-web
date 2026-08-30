@@ -3,6 +3,7 @@ import {
   getNextEventWeekId,
   formatWeekDate,
   getWeekLabel,
+  resolveWeekId,
 } from "@/lib/mini-lt/utils";
 import { auth } from "@/lib/auth";
 import { LTCard } from "@/components/mini-lt/LTCard";
@@ -21,12 +22,14 @@ export default async function HomePage({
 }) {
   const params = await searchParams;
   const nextEventWeekId = getNextEventWeekId();
-  const weekId = params.week || nextEventWeekId;
+  const weekId = resolveWeekId(params.week);
   const data = await getWeekData(weekId);
   const nextEventDate = formatWeekDate(nextEventWeekId);
 
   // Get label for the current week
-  const weekLabel = getWeekLabel(weekId);
+  // 相対ラベルが無い週(過去週など)は日付そのものを見出しに使う
+  const weekDateDisplay = formatWeekDate(weekId);
+  const weekLabel = getWeekLabel(weekId) ?? weekDateDisplay;
 
   // Get current user ID if logged in
   const session = await auth();

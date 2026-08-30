@@ -1,6 +1,6 @@
 import { auth, isAdmin } from "@/lib/auth";
 import { getWeekData } from "@/lib/firebase";
-import { getNextEventWeekId, formatWeekDate } from "@/lib/mini-lt/utils";
+import { formatWeekDate, resolveWeekId } from "@/lib/mini-lt/utils";
 import {
   createWeekEvent,
   syncWeekEventDescription,
@@ -70,7 +70,7 @@ export default async function AdminPage({
   }
 
   const params = await searchParams;
-  const weekId = params.week || getNextEventWeekId();
+  const weekId = resolveWeekId(params.week);
   const data = await getWeekData(weekId);
   const weekDateDisplay = formatWeekDate(weekId);
 
