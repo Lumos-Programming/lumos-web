@@ -2,11 +2,15 @@ import { describe, it, expect } from "vitest";
 import {
   getWeekId,
   getRelativeWeekId,
+  getWeekDateFromWeekId,
   isDuringEvent,
   getNavigationWeeks,
   getNextEventWeekId,
   getWeekLabel,
   getNextEventDate,
+  isValidWeekId,
+  resolveWeekId,
+  formatWeekIsoLabel,
   EVENT_CONFIG,
   type EventConfig,
 } from "./utils";
@@ -306,14 +310,28 @@ describe("週次ロジックのテスト", () => {
     });
 
     describe("エッジケース", () => {
-      it("ナビゲーション週に含まれない週は「今週」を返す", () => {
+      it("ナビゲーション週に含まれない週はnullを返す", () => {
         const notDuringEvent = createDateForDayAndTime(
           EVENT_CONFIG.dayOfWeek + 1,
           15,
           0,
         );
         const farPastWeek = "2026-W01";
-        expect(getWeekLabel(farPastWeek, notDuringEvent)).toBe("今週");
+        expect(getWeekLabel(farPastWeek, notDuringEvent)).toBeNull();
+      });
+
+      it("2週以上前の週を「今週」と誤表示しない", () => {
+        const notDuringEvent = createDateForDayAndTime(
+          EVENT_CONFIG.dayOfWeek + 1,
+          15,
+          0,
+        );
+        const { prevWeek } = getNavigationWeeks(notDuringEvent);
+        const twoWeeksBefore = getRelativeWeekId(
+          -1,
+          getWeekDateFromWeekId(prevWeek),
+        );
+        expect(getWeekLabel(twoWeeksBefore, notDuringEvent)).toBeNull();
       });
     });
   });
@@ -567,6 +585,84 @@ describe("週次ロジックのテスト", () => {
 
 // 2026-03-30(月)〜2026-04-05(日) の実際の日付を使ったテーブルテスト
 // ISO週: 2026-W14, イベント: 月曜21:00〜24:00
+describe("weekIdのバリデーションとフォーマット", () => {
+  describe("isValidWeekId", () => {
+    it.each(["2026-W01", "2026-W09", "2026-W12", "2026-W53", "2020-W53"])(
+      "妥当な週ID %s を受け入れる",
+      (weekId) => {
+        expect(isValidWeekId(weekId)).toBe(true);
+      },
+    );
+
+    it.each([
+      undefined,
+      "",
+      "foo",
+      "2026",
+      "2026-W",
+      "2026-W1",
+      "2026-W00",
+      "2026-W54",
+      "2026-W99",
+      "26-W09",
+      "2026-w09",
+      "2026-W09-1",
+      "../../etc/passwd",
+    ])("不正な週ID %p を弾く", (weekId) => {
+      expect(isValidWeekId(weekId)).toBe(false);
+    });
+
+    it("その年に存在しない第53週を弾く", () => {
+      // 2021年はISO週が52週までしかない
+      expect(isValidWeekId("2021-W53")).toBe(false);
+    });
+  });
+
+  describe("resolveWeekId", () => {
+    it("妥当な週IDはそのまま返す", () => {
+      const notDuringEvent = createDateForDayAndTime(
+        EVENT_CONFIG.dayOfWeek + 1,
+        15,
+        0,
+      );
+      expect(resolveWeekId("2026-W01", notDuringEvent)).toBe("2026-W01");
+    });
+
+    it.each([undefined, "", "foo", "2026-W99"])(
+      "不正な週ID %p は次回イベント週にフォールバックする",
+      (weekId) => {
+        const notDuringEvent = createDateForDayAndTime(
+          EVENT_CONFIG.dayOfWeek + 1,
+          15,
+          0,
+        );
+        expect(resolveWeekId(weekId, notDuringEvent)).toBe(
+          getNextEventWeekId(notDuringEvent),
+        );
+      },
+    );
+
+    it("不正な週IDでも例外を投げない", () => {
+      expect(() => resolveWeekId("foo")).not.toThrow();
+      expect(() => getWeekDateFromWeekId(resolveWeekId("foo"))).not.toThrow();
+    });
+  });
+
+  describe("formatWeekIsoLabel", () => {
+    it.each([
+      ["2026-W01", "2026 / W01"],
+      ["2026-W12", "2026 / W12"],
+      ["2025-W52", "2025 / W52"],
+    ])("%s を %s に整形する", (weekId, expected) => {
+      expect(formatWeekIsoLabel(weekId)).toBe(expected);
+    });
+
+    it("不正な週IDは入力をそのまま返す", () => {
+      expect(formatWeekIsoLabel("foo")).toBe("foo");
+    });
+  });
+});
+
 describe("先週(2026-W14)の実際の日付によるテーブルテスト", () => {
   // EVENT_CONFIGが変わってもテストが壊れないよう固定値を使用
   const config: EventConfig = {
