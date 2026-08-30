@@ -1,6 +1,5 @@
 "use client";
 
-import { useTheme } from "@/components/theme-provider";
 import dynamic from "next/dynamic";
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
@@ -18,10 +17,8 @@ export function MarkdownEditor({
   height = 200,
   placeholder,
 }: MarkdownEditorProps) {
-  const { resolvedTheme } = useTheme();
-
   return (
-    <div data-color-mode={resolvedTheme === "dark" ? "dark" : "light"}>
+    <div data-color-mode="light">
       <MDEditor
         value={value}
         onChange={(val) => onChange(val ?? "")}
