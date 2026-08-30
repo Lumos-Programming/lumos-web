@@ -41,6 +41,21 @@ export const PROVIDER_CONFIGS: Record<OAuthLinkProvider, ProviderConfig> = {
   },
 };
 
+/**
+ * OAuth 連携後の戻り先として安全なパスだけを返す (オープンリダイレクト防止)。
+ * `redirectTo` はクエリ由来なので、絶対 URL や `//evil.com` を渡されると
+ * `new URL(value, origin)` が外部オリジンに解決されてしまう。
+ */
+export function safeRedirectPath(
+  value: string | undefined | null,
+  fallback = "/internal/settings",
+): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return fallback;
+  }
+  return value;
+}
+
 export function generateState(): string {
   return randomBytes(32).toString("hex");
 }

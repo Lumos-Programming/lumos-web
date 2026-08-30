@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { linkSubAccount } from "@/lib/sub-account";
+import { safeRedirectPath } from "@/lib/oauth-link";
 
 const DISCORD_TOKEN_URL = "https://discord.com/api/oauth2/token";
 const DISCORD_USER_URL = "https://discord.com/api/users/@me";
@@ -27,8 +28,9 @@ export async function GET(request: NextRequest) {
   const primaryDiscordId = cookieStore.get(
     "oauth_link_primary_discord_id",
   )?.value;
-  const redirectTo =
-    cookieStore.get("oauth_link_redirect")?.value ?? "/internal/settings";
+  const redirectTo = safeRedirectPath(
+    cookieStore.get("oauth_link_redirect")?.value,
+  );
 
   cookieStore.delete("oauth_link_state_sub_discord");
   cookieStore.delete("oauth_link_primary_discord_id");
