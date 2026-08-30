@@ -55,6 +55,14 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href="/blogs"
+                  className="text-sm text-white/80 hover:text-white transition-colors"
+                >
+                  ブログ
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/news"
                   className="text-sm text-white/80 hover:text-white transition-colors"
                 >

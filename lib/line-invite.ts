@@ -2,6 +2,12 @@ import crypto from "crypto";
 import { getDb } from "@/lib/firebase";
 import { Timestamp } from "firebase-admin/firestore";
 import type { LineFlexMessage, LineFlexBubble } from "@/lib/mini-lt/line-flex";
+import {
+  fetchProviderUser,
+  refreshLineAccessToken,
+  type OAuthTokenResponse,
+} from "@/lib/oauth-link";
+import { updateMemberSns, type MemberDocument } from "@/lib/members";
 
 export interface LineInvitation {
   userId: string; // Discord ID
@@ -27,9 +33,177 @@ interface PendingData {
   pendingLineTokenExpiresAt?: number;
 }
 
+export interface LineSnsData {
+  line: string;
+  lineId: string;
+  lineLinkedAt: number;
+  lineAccessToken: string;
+  lineAvatar?: string;
+  lineRefreshToken?: string;
+  lineTokenExpiresAt?: number;
+}
+
+/**
+ * LINE 連携時に Firestore へ書き込む SNS データを構築する。
+ * Firestore は undefined フィールドを受け付けないため、未設定のものは含めない
+ * (例: LINE プロフィール画像未設定ユーザー — #252)
+ */
+export function buildLineSnsData(
+  lineUser: { id: string; username: string; avatar?: string },
+  token: OAuthTokenResponse,
+): LineSnsData {
+  const nowSec = Math.floor(Date.now() / 1000);
+  return {
+    line: lineUser.username,
+    lineId: lineUser.id,
+    lineLinkedAt: nowSec,
+    lineAccessToken: token.access_token,
+    ...(lineUser.avatar ? { lineAvatar: lineUser.avatar } : {}),
+    ...(token.refresh_token ? { lineRefreshToken: token.refresh_token } : {}),
+    ...(token.expires_in
+      ? { lineTokenExpiresAt: nowSec + token.expires_in }
+      : {}),
+  };
+}
+
+/** 再連携フローで招待コードに仮保存する pending データ。同じく undefined を含めない (#252) */
+export function buildLinePendingData(
+  lineUser: { id: string; username: string; avatar?: string },
+  token: OAuthTokenResponse,
+): PendingData {
+  const nowSec = Math.floor(Date.now() / 1000);
+  return {
+    pendingLine: lineUser.username,
+    pendingLineId: lineUser.id,
+    pendingLineAccessToken: token.access_token,
+    ...(lineUser.avatar ? { pendingLineAvatar: lineUser.avatar } : {}),
+    ...(token.refresh_token
+      ? { pendingLineRefreshToken: token.refresh_token }
+      : {}),
+    ...(token.expires_in
+      ? { pendingLineTokenExpiresAt: nowSec + token.expires_in }
+      : {}),
+  };
+}
+
+/**
+ * 招待コードに仮保存された pending データを SNS データに変換（再連携完了時）。
+ * pendingLine / pendingLineId / pendingLineAccessToken は buildLinePendingData が
+ * 必ず一緒に書き込むため、呼び出し側で `pendingLineId` の存在を確認していれば他も存在する。
+ */
+export function pendingToLineSnsData(invitation: LineInvitation): LineSnsData {
+  return {
+    line: invitation.pendingLine!,
+    lineId: invitation.pendingLineId!,
+    lineLinkedAt: Math.floor(Date.now() / 1000),
+    lineAccessToken: invitation.pendingLineAccessToken!,
+    ...(invitation.pendingLineAvatar
+      ? { lineAvatar: invitation.pendingLineAvatar }
+      : {}),
+    ...(invitation.pendingLineRefreshToken
+      ? { lineRefreshToken: invitation.pendingLineRefreshToken }
+      : {}),
+    ...(invitation.pendingLineTokenExpiresAt
+      ? { lineTokenExpiresAt: invitation.pendingLineTokenExpiresAt }
+      : {}),
+  };
+}
+
 export interface MemberByLineId {
   discordId: string;
   lineId: string;
+}
+
+/** トークン期限が切れる前にリフレッシュする猶予（秒）。期限の5分前から再発行する。 */
+const TOKEN_REFRESH_LEEWAY_SECONDS = 5 * 60;
+
+/** lineAvatar 再取得対象として `getMembersWithLine` が返すメンバー情報 */
+export interface LineLinkedMember {
+  discordId: string;
+  lineAvatar?: string;
+  lineAccessToken?: string;
+  lineRefreshToken?: string;
+  lineTokenExpiresAt?: number;
+}
+
+export type RefreshAvatarResult =
+  | { status: "updated"; discordId: string }
+  | { status: "skipped"; discordId: string; reason: string }
+  | { status: "failed"; discordId: string; error: string };
+
+/**
+ * 1メンバーの LINE プロフィール画像を最新化する。
+ *
+ * LINE が返す pictureUrl は CDN の生 URL で、ユーザーが画像を変更すると古い URL は
+ * 404 になる（リンク切れ）。本人のアクセストークンで /v2/profile を叩き直し、
+ * 最新の pictureUrl を取得して lineAvatar を上書きすることで追従させる。
+ *
+ * アクセストークンが期限切れ間近なら refresh_token で再発行し、更新後のトークンも保存する。
+ * トークンが無い／リフレッシュ不能なメンバーはスキップ（次回本人の再連携まで旧画像のまま）。
+ */
+export async function refreshSingleMemberLineAvatar(
+  member: LineLinkedMember,
+): Promise<RefreshAvatarResult> {
+  const { discordId } = member;
+  try {
+    let accessToken = member.lineAccessToken;
+    const tokenUpdate: Partial<
+      Pick<
+        MemberDocument,
+        "lineAccessToken" | "lineRefreshToken" | "lineTokenExpiresAt"
+      >
+    > = {};
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    const expired =
+      member.lineTokenExpiresAt !== undefined &&
+      member.lineTokenExpiresAt - TOKEN_REFRESH_LEEWAY_SECONDS <= nowSec;
+
+    // 期限切れ間近、またはアクセストークン未保持ならリフレッシュを試みる
+    if (!accessToken || expired) {
+      if (!member.lineRefreshToken) {
+        return {
+          status: "skipped",
+          discordId,
+          reason: "no refresh token to renew expired/missing access token",
+        };
+      }
+      const token = await refreshLineAccessToken(member.lineRefreshToken);
+      accessToken = token.access_token;
+      tokenUpdate.lineAccessToken = token.access_token;
+      if (token.refresh_token)
+        tokenUpdate.lineRefreshToken = token.refresh_token;
+      if (token.expires_in)
+        tokenUpdate.lineTokenExpiresAt = nowSec + token.expires_in;
+    }
+
+    const user = await fetchProviderUser("line", accessToken);
+    const newAvatar = user.avatar;
+
+    const avatarChanged = newAvatar !== member.lineAvatar;
+    const hasTokenUpdate = Object.keys(tokenUpdate).length > 0;
+
+    // 画像にもトークンにも変化がなければ書き込みを省略
+    if (!avatarChanged && !hasTokenUpdate) {
+      return { status: "skipped", discordId, reason: "no change" };
+    }
+
+    await updateMemberSns(discordId, {
+      ...tokenUpdate,
+      // Firestore は undefined を受け付けないため、画像が未設定なら lineAvatar は触らない
+      ...(avatarChanged && newAvatar ? { lineAvatar: newAvatar } : {}),
+    });
+
+    return avatarChanged
+      ? { status: "updated", discordId }
+      : { status: "skipped", discordId, reason: "token refreshed only" };
+  } catch (e) {
+    return {
+      status: "failed",
+      discordId,
+      error: e instanceof Error ? e.message : String(e),
+    };
+  }
 }
 
 /**

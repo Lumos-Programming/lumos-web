@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { MemberDocument } from "@/lib/members";
 import {
   calcProfileCompletion,
@@ -209,7 +209,14 @@ describe("buildOnboardingCompleteMessage", () => {
 });
 
 describe("buildLoginMessage", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("正しいEmbed構造を返す", () => {
+    // 挨拶文はランダム選択で {name} を含まないものもあるため、
+    // {name} を含むテンプレート (index 1) に固定して名前展開を検証する
+    vi.spyOn(Math, "random").mockReturnValue(1 / 8);
     const payload = buildLoginMessage("テストユーザー");
 
     expect(payload.embeds).toHaveLength(1);
@@ -253,8 +260,8 @@ describe("buildWelcomeBackMessage", () => {
     expect(payload.components).toHaveLength(1);
     const buttons = payload.components![0].components;
     expect(buttons).toHaveLength(2);
-    expect(buttons[0].label).toBe("✨プロフィールを充実させる");
-    expect(buttons[1].label).toBe("👀自分のプロフィールを確認する");
+    expect(buttons[0].label).toBe("プロフィールを充実させる");
+    expect(buttons[1].label).toBe("自分のプロフィールを確認する");
   });
 
   it("全項目入力済みの場合、プロフィール見直しを案内する", () => {
@@ -270,7 +277,7 @@ describe("buildWelcomeBackMessage", () => {
     expect(payload.embeds[0].fields).toBeUndefined();
     expect(payload.components).toHaveLength(1);
     const button = payload.components![0].components[0];
-    expect(button.label).toBe("👀自分のプロフィールを確認する");
+    expect(button.label).toBe("自分のプロフィールを確認する");
     expect(button.url).toContain("/internal/members?member=987654321");
   });
 });

@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { getFirestore } from "firebase-admin/firestore";
 
 // Initialize Firebase lazily
 function initializeFirebase() {
@@ -48,8 +49,7 @@ export function getDb() {
   initializeFirebase();
   const databaseId = process.env.FIRESTORE_DATABASE_ID;
   if (databaseId) {
-    const { getFirestore } = require("firebase-admin/firestore");
-    return getFirestore(databaseId) as admin.firestore.Firestore;
+    return getFirestore(databaseId);
   }
   return admin.firestore();
 }

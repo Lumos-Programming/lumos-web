@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -187,43 +188,55 @@ const COLUMNS: ColumnDef[] = [
   },
 ];
 
-export function MemberDashboardTable({
+const MEMBER_TYPES = ["学部生", "院生", "その他", "卒業生"] as const;
+
+// 各タブで独立して機能するフィルターパネル
+function FilterPanel({
   members,
+  visibleColumns,
+  onToggleColumn,
 }: {
   members: AdminMemberRow[];
+  visibleColumns: Set<string>;
+  onToggleColumn: (id: string) => void;
 }) {
   const [query, setQuery] = useState("");
-  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
-    () => new Set(COLUMNS.filter((c) => c.defaultVisible).map((c) => c.id)),
+  // 空 = すべての種別を表示、選択あり = 選択した種別のみ表示
+  const [typeFilter, setTypeFilter] = useState<Set<string>>(
+    () => new Set<string>(),
   );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return members;
-    return members.filter(
-      (m) =>
+    return members.filter((m) => {
+      if (typeFilter.size > 0 && !typeFilter.has(m.memberType ?? "")) {
+        return false;
+      }
+      if (!q) return true;
+      return (
         `${m.lastName}${m.firstName}`.includes(q) ||
         m.nickname.toLowerCase().includes(q) ||
         m.discordUsername.toLowerCase().includes(q) ||
         (m.discordHandle ?? "").toLowerCase().includes(q) ||
-        m.studentId.includes(q),
-    );
-  }, [members, query]);
+        m.studentId.includes(q)
+      );
+    });
+  }, [members, query, typeFilter]);
 
   const visibleCols = COLUMNS.filter((c) => visibleColumns.has(c.id));
 
-  function toggleColumn(id: string) {
-    setVisibleColumns((prev) => {
+  function toggleType(t: string) {
+    setTypeFilter((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(t)) next.delete(t);
+      else next.add(t);
       return next;
     });
   }
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           placeholder="氏名・Discord・学籍番号で検索"
           value={query}
@@ -244,7 +257,7 @@ export function MemberDashboardTable({
               <DropdownMenuCheckboxItem
                 key={col.id}
                 checked={visibleColumns.has(col.id)}
-                onCheckedChange={() => toggleColumn(col.id)}
+                onCheckedChange={() => onToggleColumn(col.id)}
               >
                 {col.label}
               </DropdownMenuCheckboxItem>
@@ -254,6 +267,31 @@ export function MemberDashboardTable({
         <span className="text-sm text-muted-foreground">
           {filtered.length} / {members.length} 件
         </span>
+      </div>
+
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-muted-foreground">種別</span>
+        {MEMBER_TYPES.map((t) => (
+          <button
+            key={t}
+            onClick={() => toggleType(t)}
+            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors cursor-pointer ${
+              typeFilter.has(t)
+                ? "bg-foreground text-background border-foreground"
+                : "border-dashed text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+        {typeFilter.size > 0 && (
+          <button
+            onClick={() => setTypeFilter(new Set())}
+            className="text-xs text-muted-foreground hover:text-foreground underline ml-1"
+          >
+            解除
+          </button>
+        )}
       </div>
 
       <div className="rounded-md border overflow-x-auto">
@@ -292,5 +330,68 @@ export function MemberDashboardTable({
         </Table>
       </div>
     </div>
+  );
+}
+
+export function MemberDashboardTable({
+  members,
+}: {
+  members: AdminMemberRow[];
+}) {
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
+    () => new Set(COLUMNS.filter((c) => c.defaultVisible).map((c) => c.id)),
+  );
+
+  const activeMembers = useMemo(
+    () => members.filter((m) => !m.optedOut),
+    [members],
+  );
+  const retiredMembers = useMemo(
+    () => members.filter((m) => m.optedOut),
+    [members],
+  );
+
+  function toggleColumn(id: string) {
+    setVisibleColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  return (
+    <Tabs defaultValue="active">
+      <TabsList>
+        <TabsTrigger value="active">
+          在籍中
+          <span className="ml-1.5 text-xs opacity-70">
+            {activeMembers.length}
+          </span>
+        </TabsTrigger>
+        <TabsTrigger value="retired">
+          退会済
+          <span className="ml-1.5 text-xs opacity-70">
+            {retiredMembers.length}
+          </span>
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="active" className="mt-4">
+        <FilterPanel
+          members={activeMembers}
+          visibleColumns={visibleColumns}
+          onToggleColumn={toggleColumn}
+        />
+      </TabsContent>
+
+      <TabsContent value="retired" className="mt-4">
+        <FilterPanel
+          members={retiredMembers}
+          visibleColumns={visibleColumns}
+          onToggleColumn={toggleColumn}
+        />
+      </TabsContent>
+    </Tabs>
   );
 }
