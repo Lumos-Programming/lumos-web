@@ -850,40 +850,19 @@ export async function editDiscordDm(
 
 const BIRTHDAY_COLOR = 0xf59e0b; // Amber
 
-// お祝いの一言。LOGIN_GREETINGS と同じく、開発ネタは「読んで意味が分かる」範囲に
-// とどめ、コードやステータス出力をそのまま貼らない（伝わらないため）。
-// 誕生日が複数人の日でもそのまま使えるよう、名前は差し込まない。
-const BIRTHDAY_GREETINGS = [
-  "age++ 完了です！新しい1年もよろしくお願いします🎂",
-  "新しい1年が無事リリースされました🚀",
-  "お誕生日おめでとうございます！素敵な1年になりますように🎉",
-  "今年もエラーなく、健やかな1年になりますように🙏",
-  "ハッピーバースデー！今日は主役です🎊",
-  "おめでとうございます！今日はケーキで糖分補給を🍰",
-  "新しい年齢、本番環境へデプロイ完了です✨",
-  "お誕生日おめでとうございます！最高の1年になりますように🥳",
-];
-
 /**
  * 運営チャンネルへ「今日が誕生日のメンバー」を知らせる通知。
+ * お祝いはタイトルで済ませ、本文はメンションの列挙だけにする。
  * 表示名は Discord のメンション（<@id>）に任せ、本文には名前を持たない。
- * お祝いの一言はランダムに1つ選ぶ（buildLoginMessage と同じ方式）。
  */
 export function buildBirthdayNotification(
   discordIds: string[],
 ): DiscordMessagePayload {
-  const greeting =
-    BIRTHDAY_GREETINGS[Math.floor(Math.random() * BIRTHDAY_GREETINGS.length)];
-
   return {
     embeds: [
       {
-        title: "本日の誕生日",
-        description: [
-          discordIds.map((id) => `<@${id}>`).join("\n"),
-          "",
-          greeting,
-        ].join("\n"),
+        title: "今日の誕生日!! Happy Birthday🎂",
+        description: discordIds.map((id) => `<@${id}>`).join("\n"),
         color: BIRTHDAY_COLOR,
       },
     ],

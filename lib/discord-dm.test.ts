@@ -322,53 +322,25 @@ describe("sendDiscordDm", () => {
 });
 
 describe("buildBirthdayNotification", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  // お祝い文はランダム選択のため、検証時は先頭の1件に固定する
-  function pinFirstGreeting() {
-    vi.spyOn(Math, "random").mockReturnValue(0);
-  }
-
-  it("1人の場合、メンションとお祝い文を空行で区切って並べる", () => {
-    pinFirstGreeting();
+  it("1人の場合、タイトルでお祝いし、本文はメンション1件だけにする", () => {
     const payload = buildBirthdayNotification(["123456789"]);
 
     expect(payload.embeds).toHaveLength(1);
-    expect(payload.embeds[0].title).toBe("本日の誕生日");
-    expect(payload.embeds[0].description).toBe(
-      "<@123456789>\n\nage++ 完了です！新しい1年もよろしくお願いします🎂",
-    );
+    expect(payload.embeds[0].title).toBe("今日の誕生日!! Happy Birthday🎂");
+    expect(payload.embeds[0].description).toBe("<@123456789>");
     expect(payload.embeds[0].color).toBe(0xf59e0b);
   });
 
-  it("複数人の場合、メンションを改行で並べ、お祝い文は1つだけ添える", () => {
-    pinFirstGreeting();
+  it("複数人の場合、メンションを改行で並べる", () => {
     const payload = buildBirthdayNotification(["111", "222", "333"]);
 
-    expect(payload.embeds[0].description).toBe(
-      "<@111>\n<@222>\n<@333>\n\nage++ 完了です！新しい1年もよろしくお願いします🎂",
-    );
+    expect(payload.embeds[0].description).toBe("<@111>\n<@222>\n<@333>");
   });
 
-  it("名前や敬称を本文に持たない（表示はメンションに任せる）", () => {
+  it("本文にメンション以外の文言を持たない", () => {
     const payload = buildBirthdayNotification(["123456789"]);
-    expect(payload.embeds[0].description).not.toContain("さん、");
-  });
 
-  it("どのお祝い文が選ばれても、コードやシェルコマンドをそのまま含まない", () => {
-    // 「ニッチすぎて伝わらない」を避けるため、生のコードは載せない方針
-    for (let i = 0; i < 8; i++) {
-      vi.spyOn(Math, "random").mockReturnValue(i / 8);
-      const description = buildBirthdayNotification(["1"]).embeds[0]
-        .description;
-
-      expect(description).not.toContain("```");
-      expect(description).not.toContain("console.log");
-      expect(description).not.toContain("git ");
-      expect(description).not.toMatch(/[;{}]/);
-    }
+    expect(payload.embeds[0].description).not.toMatch(/[ぁ-んァ-ヶ一-龠]/);
   });
 
   it("ボタンを含まない", () => {
