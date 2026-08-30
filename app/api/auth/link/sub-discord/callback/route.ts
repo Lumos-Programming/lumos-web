@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { auth } from "@/lib/auth";
 import { linkSubAccount } from "@/lib/sub-account";
-import { safeRedirectPath } from "@/lib/oauth-link";
 
+const SETTINGS_PATH = "/internal/settings";
 const DISCORD_TOKEN_URL = "https://discord.com/api/oauth2/token";
 const DISCORD_USER_URL = "https://discord.com/api/users/@me";
 
@@ -13,11 +14,6 @@ type DiscordUser = {
   avatar?: string | null;
 };
 
-function buildAvatarUrl(user: DiscordUser): string {
-  if (!user.avatar) return "";
-  return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
-}
-
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");
@@ -25,25 +21,27 @@ export async function GET(request: NextRequest) {
 
   const cookieStore = await cookies();
   const savedState = cookieStore.get("oauth_link_state_sub_discord")?.value;
-  const primaryDiscordId = cookieStore.get(
-    "oauth_link_primary_discord_id",
-  )?.value;
-  const redirectTo = safeRedirectPath(
-    cookieStore.get("oauth_link_redirect")?.value,
-  );
 
   cookieStore.delete("oauth_link_state_sub_discord");
-  cookieStore.delete("oauth_link_primary_discord_id");
-  cookieStore.delete("oauth_link_redirect");
 
   const origin = process.env.AUTH_URL ?? request.nextUrl.origin;
+  // 戻り先は設定ページ固定。外から渡させないのでオープンリダイレクトにならない。
   const failRedirect = (errorCode: string) => {
-    const url = new URL(redirectTo, origin);
+    const url = new URL(SETTINGS_PATH, origin);
     url.searchParams.set("error", errorCode);
     return NextResponse.redirect(url.toString());
   };
 
-  if (!code || !state || state !== savedState || !primaryDiscordId) {
+  // state は CSRF 対策として必要 (攻撃者の code を被害者のブラウザで踏ませても、
+  // 被害者側の cookie と一致しないので弾ける)。
+  if (!code || !state || state !== savedState) {
+    return failRedirect("sub_discord_link_failed");
+  }
+
+  // 書き込み対象のメインアカウントはセッションだけを根拠に決める。
+  // Cookie は送信側が自由に書き換えられるので身元の根拠にはできない。
+  const session = await auth();
+  if (!session?.user?.id || session.user.optedOut) {
     return failRedirect("sub_discord_link_failed");
   }
 
@@ -84,12 +82,13 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await linkSubAccount({
-      primaryDiscordId,
+      primaryDiscordId: session.user.id,
       sub: {
         discordId: user.id,
         username: user.global_name ?? user.username,
         handle: user.username,
-        avatar: buildAvatarUrl(user),
+        // members コレクションと同様、完全 URL ではなく avatar hash を保存する
+        avatar: user.avatar ?? "",
       },
     });
 
@@ -97,7 +96,7 @@ export async function GET(request: NextRequest) {
       return failRedirect(`sub_discord_${result.error}`);
     }
 
-    const successUrl = new URL(redirectTo, origin);
+    const successUrl = new URL(SETTINGS_PATH, origin);
     successUrl.searchParams.set("success", "sub_discord_linked");
     return NextResponse.redirect(successUrl.toString());
   } catch (e) {

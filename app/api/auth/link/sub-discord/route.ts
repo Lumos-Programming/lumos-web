@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { auth } from "@/lib/auth";
+import { auth, isValidSnowflake } from "@/lib/auth";
 import { generateState } from "@/lib/oauth-link";
 import { unlinkSubAccount } from "@/lib/sub-account";
 
 const DISCORD_AUTHORIZE_URL = "https://discord.com/api/oauth2/authorize";
 const SCOPE = "identify";
 
-export async function GET(request: Request) {
+export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -40,12 +40,6 @@ export async function GET(request: Request) {
     sameSite: "lax" as const,
   };
   cookieStore.set("oauth_link_state_sub_discord", state, cookieBase);
-  cookieStore.set("oauth_link_primary_discord_id", session.user.id, cookieBase);
-  cookieStore.set(
-    "oauth_link_redirect",
-    new URL(request.url).searchParams.get("redirectTo") ?? "/internal/settings",
-    cookieBase,
-  );
 
   const url = new URL(DISCORD_AUTHORIZE_URL);
   url.searchParams.set("client_id", clientId);
@@ -74,7 +68,9 @@ export async function DELETE(request: Request) {
   const body = (await request.json().catch(() => null)) as {
     subDiscordId?: string;
   } | null;
-  if (!body?.subDiscordId) {
+  // Firestore の doc() は "a/b" のような値で例外を投げるので、
+  // Discord ID の形式を満たさない入力は 400 で返す
+  if (!body?.subDiscordId || !isValidSnowflake(body.subDiscordId)) {
     return NextResponse.json({ error: "Bad Request" }, { status: 400 });
   }
 
