@@ -3,7 +3,11 @@
 import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { formatBirthDate } from "@/lib/date";
+import {
+  formatBirthDate,
+  daysUntilNextBirthday,
+  type JstToday,
+} from "@/lib/date";
 import { BirthdayYearCalendar } from "@/components/birthday-year-calendar";
 
 type BirthdayEntry = {
@@ -29,24 +33,14 @@ const MONTH_NAMES = [
   "12月",
 ];
 
-function daysUntilNextBirthday(birthDate: string): number {
-  const now = new Date();
-  const [, m, d] = birthDate.split("-").map(Number);
-  const next = new Date(now.getFullYear(), m - 1, d);
-  if (
-    next.getMonth() < now.getMonth() ||
-    (next.getMonth() === now.getMonth() && next.getDate() < now.getDate())
-  ) {
-    next.setFullYear(now.getFullYear() + 1);
-  }
-  const diff =
-    next.getTime() -
-    new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  return Math.round(diff / (1000 * 60 * 60 * 24));
-}
-
-function MyBirthdayCountdown({ birthDate }: { birthDate: string }) {
-  const days = daysUntilNextBirthday(birthDate);
+function MyBirthdayCountdown({
+  birthDate,
+  today,
+}: {
+  birthDate: string;
+  today: JstToday;
+}) {
+  const days = daysUntilNextBirthday(birthDate, today);
   if (days === 0) return null;
 
   return (
@@ -63,13 +57,14 @@ function MyBirthdayCountdown({ birthDate }: { birthDate: string }) {
 export function BirthdayList({
   entries,
   myBirthDate,
+  today,
 }: {
   entries: BirthdayEntry[];
   myBirthDate?: string | null;
+  today: JstToday;
 }) {
-  const now = new Date();
-  const todayMonth = now.getMonth() + 1;
-  const todayDay = now.getDate();
+  const todayMonth = today.month;
+  const todayDay = today.day;
 
   const grouped = useMemo(() => {
     const map = new Map<number, BirthdayEntry[]>();
@@ -103,7 +98,9 @@ export function BirthdayList({
 
   return (
     <div className="space-y-8">
-      {myBirthDate && <MyBirthdayCountdown birthDate={myBirthDate} />}
+      {myBirthDate && (
+        <MyBirthdayCountdown birthDate={myBirthDate} today={today} />
+      )}
 
       <div className="space-y-8">
         {grouped.map(({ month, entries: monthEntries }) => {
@@ -181,7 +178,7 @@ export function BirthdayList({
       </div>
 
       <div className="pt-4 border-t">
-        <BirthdayYearCalendar entries={entries} />
+        <BirthdayYearCalendar entries={entries} today={today} />
       </div>
     </div>
   );

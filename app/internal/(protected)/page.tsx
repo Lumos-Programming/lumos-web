@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getMember, getMembersInternal } from "@/lib/members";
+import { getJstToday, isBirthdayToday } from "@/lib/date";
 import { TodayBirthdayBanner } from "@/components/today-birthday-banner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -76,11 +77,9 @@ function getProfileCompletionItems(
 function getTodayBirthdayNames(
   members: { name: string; nickname?: string; birthDate?: string }[],
 ): string[] {
-  const now = new Date();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
+  const today = getJstToday();
   return members
-    .filter((m) => m.birthDate?.slice(5) === `${mm}-${dd}`)
+    .filter((m) => m.birthDate && isBirthdayToday(m.birthDate, today))
     .map((m) => m.nickname || m.name);
 }
 

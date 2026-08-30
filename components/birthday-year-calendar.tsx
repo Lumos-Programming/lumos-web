@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { formatBirthDate } from "@/lib/date";
+import { formatBirthDate, type JstToday } from "@/lib/date";
 
 type BirthdayEntry = {
   id: string;
@@ -38,13 +38,14 @@ const WEEK_DAYS = ["月", "火", "水", "木", "金", "土", "日"];
 
 export function BirthdayYearCalendar({
   entries,
+  today,
 }: {
   entries: BirthdayEntry[];
+  today: JstToday;
 }) {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const todayMonth = now.getMonth() + 1;
-  const todayDay = now.getDate();
+  const currentYear = today.year;
+  const todayMonth = today.month;
+  const todayDay = today.day;
 
   const [month, setMonth] = useState(todayMonth); // 1-12
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
