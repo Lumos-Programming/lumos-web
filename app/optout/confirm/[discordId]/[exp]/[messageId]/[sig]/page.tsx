@@ -22,6 +22,7 @@ import {
   buildAdminOptoutNotification,
 } from "@/lib/discord-dm";
 import { fetchDiscordDisplayName } from "@/lib/discord";
+import { syncMemberDiscordRoles } from "@/lib/discord-role";
 import OptoutStatusCard from "@/components/optout/status-card";
 
 export const dynamic = "force-dynamic";
@@ -168,6 +169,11 @@ export default async function OptoutConfirmPage({
   } catch (e) {
     console.error("Failed to notify admin channel (optout):", e);
   }
+
+  // 退会者ロール付与 (fire-and-forget)
+  syncMemberDiscordRoles(discordId, { optedOut: true }).catch((e) => {
+    console.error("Failed to sync Discord roles (optout):", e);
+  });
 
   // 副作用完了後は専用ページへリダイレクト (リロードでも副作用が再走しないように)
   redirect("/optout/done");

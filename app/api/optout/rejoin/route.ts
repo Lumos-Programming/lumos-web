@@ -4,6 +4,7 @@ import { deleteOptoutSubmission } from "@/lib/discord-optout";
 import { getMember, markMemberRejoined } from "@/lib/members";
 import { sendDiscordDm, buildRejoinCompletedMessage } from "@/lib/discord-dm";
 import { fetchDiscordDisplayName } from "@/lib/discord";
+import { syncMemberDiscordRoles } from "@/lib/discord-role";
 
 export async function POST() {
   const session = await auth();
@@ -24,9 +25,10 @@ export async function POST() {
     );
   }
 
-  // 再加入歓迎 DM (失敗してもレスポンスには影響させない)
+  // 再加入歓迎 DM + ロール同期 (失敗してもレスポンスには影響させない)
+  let member: Awaited<ReturnType<typeof getMember>> = null;
   try {
-    const member = await getMember(discordId);
+    member = await getMember(discordId);
     const displayName =
       member?.discordUsername ??
       member?.nickname ??
@@ -35,6 +37,17 @@ export async function POST() {
     await sendDiscordDm(discordId, buildRejoinCompletedMessage(displayName));
   } catch (e) {
     console.error("Failed to send rejoin DM:", e);
+  }
+
+  // 退会者ロール削除 + 通常ロール付与 (fire-and-forget)
+  if (member) {
+    syncMemberDiscordRoles(discordId, {
+      year: member.yearByFiscal?.[String(new Date().getFullYear())],
+      faculty: member.enrollments?.find((e) => e.isCurrent)?.faculty,
+      memberType: member.memberType,
+    }).catch((e) => {
+      console.error("Failed to sync Discord roles (rejoin):", e);
+    });
   }
 
   return NextResponse.json({ success: true });
