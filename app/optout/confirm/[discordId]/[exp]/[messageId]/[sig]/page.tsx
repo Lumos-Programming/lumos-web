@@ -13,6 +13,7 @@ import {
   isDiscordIdOptedOut,
 } from "@/lib/members";
 import { isValidSnowflake } from "@/lib/auth";
+import { unlinkSubAccountOnOptout } from "@/lib/sub-account";
 import {
   sendDiscordDm,
   editDiscordDm,
@@ -132,6 +133,14 @@ export default async function OptoutConfirmPage({
         description="サーバーで保存に失敗しました。しばらくしてからもう一度お試しください。"
       />
     );
+  }
+
+  // 連携済みサブアカウントを解除する (退会後は設定画面から解除できないため)。
+  // 失敗しても退会自体は成立しているのでログのみ。
+  try {
+    await unlinkSubAccountOnOptout(discordId);
+  } catch (e) {
+    console.error("Failed to unlink sub-account on opt-out:", e);
   }
 
   // 元の最終確認 DM のボタンを無効化 (再加入後に誤って再押下されるのを防ぐ)
