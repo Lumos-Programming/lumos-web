@@ -40,12 +40,15 @@ export async function getUnregisteredMembers(): Promise<UnregisteredMember[]> {
     throw new Error("管理者権限が必要です");
   }
 
-  const [guildMembers, { registeredIds, onboardingIds, optedOutIds }] =
-    await Promise.all([getGuildMembers(), getMemberRegistrationStatus()]);
+  const [
+    guildMembers,
+    { registeredIds, onboardingIds, optedOutIds, subAccountIds },
+  ] = await Promise.all([getGuildMembers(), getMemberRegistrationStatus()]);
 
   return guildMembers
     .filter((m) => !registeredIds.has(m.user.id))
     .filter((m) => !optedOutIds.has(m.user.id))
+    .filter((m) => !subAccountIds.has(m.user.id))
     .map((m) => ({
       discordId: m.user.id,
       username: m.user.username,
@@ -159,42 +162,46 @@ export async function getAdminMembers(): Promise<AdminMemberRow[]> {
   const snap = await db.collection("members").get();
   const currentYear = String(new Date().getFullYear());
 
-  return snap.docs
-    .map((doc) => {
-      const d = doc.data();
-      const currentEnrollment = (d.enrollments ?? []).find(
-        (e: { isCurrent: boolean }) => e.isCurrent,
-      );
-      return {
-        discordId: doc.id,
-        discordUsername: d.discordUsername ?? "",
-        discordHandle: d.discordHandle,
-        lastName: d.lastName ?? "",
-        firstName: d.firstName ?? "",
-        nickname: d.nickname ?? "",
-        studentId: d.studentId ?? "",
-        memberType: d.memberType,
-        year: d.yearByFiscal?.[currentYear],
-        faculty: currentEnrollment?.faculty,
-        interests: d.interests ?? [],
-        github: d.github,
-        x: d.x,
-        lineName: d.line,
-        hasLine: !!d.lineId,
-        onboardingCompleted: d.onboardingCompleted === true,
-        optedOut: d.optedOut === true,
-        createdAt: d.createdAt?.toDate().toISOString() ?? "",
-      } satisfies AdminMemberRow;
-    })
-    .sort((a, b) => {
-      // 退会済を末尾へ
-      if (a.optedOut !== b.optedOut) return a.optedOut ? 1 : -1;
-      // 登録済を未完了より前へ
-      if (a.onboardingCompleted !== b.onboardingCompleted)
-        return a.onboardingCompleted ? -1 : 1;
-      // 名前なし（未登録）を後ろへ
-      if (!a.lastName && b.lastName) return 1;
-      if (a.lastName && !b.lastName) return -1;
-      return a.lastName.localeCompare(b.lastName, "ja");
-    });
+  return (
+    snap.docs
+      // サブアカウントは会員ではないので一覧に出さない
+      .filter((doc) => doc.data().isSubAccount !== true)
+      .map((doc) => {
+        const d = doc.data();
+        const currentEnrollment = (d.enrollments ?? []).find(
+          (e: { isCurrent: boolean }) => e.isCurrent,
+        );
+        return {
+          discordId: doc.id,
+          discordUsername: d.discordUsername ?? "",
+          discordHandle: d.discordHandle,
+          lastName: d.lastName ?? "",
+          firstName: d.firstName ?? "",
+          nickname: d.nickname ?? "",
+          studentId: d.studentId ?? "",
+          memberType: d.memberType,
+          year: d.yearByFiscal?.[currentYear],
+          faculty: currentEnrollment?.faculty,
+          interests: d.interests ?? [],
+          github: d.github,
+          x: d.x,
+          lineName: d.line,
+          hasLine: !!d.lineId,
+          onboardingCompleted: d.onboardingCompleted === true,
+          optedOut: d.optedOut === true,
+          createdAt: d.createdAt?.toDate().toISOString() ?? "",
+        } satisfies AdminMemberRow;
+      })
+      .sort((a, b) => {
+        // 退会済を末尾へ
+        if (a.optedOut !== b.optedOut) return a.optedOut ? 1 : -1;
+        // 登録済を未完了より前へ
+        if (a.onboardingCompleted !== b.onboardingCompleted)
+          return a.onboardingCompleted ? -1 : 1;
+        // 名前なし（未登録）を後ろへ
+        if (!a.lastName && b.lastName) return 1;
+        if (a.lastName && !b.lastName) return -1;
+        return a.lastName.localeCompare(b.lastName, "ja");
+      })
+  );
 }
