@@ -9,6 +9,7 @@ import {
   buildAdminOnboardingCompletedNotification,
 } from "@/lib/discord-dm";
 import { checkLineGroupMembership } from "@/lib/line-invite";
+import { syncMemberDiscordRoles } from "@/lib/discord-role";
 
 export async function POST() {
   const session = await auth();
@@ -100,6 +101,14 @@ export async function POST() {
       }),
     ).catch((e) => {
       console.error("Failed to notify admin channel (onboarding):", e);
+    });
+
+    syncMemberDiscordRoles(session.user.id, {
+      year: updatedMember.yearByFiscal?.[String(new Date().getFullYear())],
+      faculty: updatedMember.enrollments?.find((e) => e.isCurrent)?.faculty,
+      memberType: updatedMember.memberType,
+    }).catch((e) => {
+      console.error("Failed to sync Discord roles (onboarding):", e);
     });
   }
 
