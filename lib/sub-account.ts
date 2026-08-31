@@ -63,7 +63,27 @@ export async function linkSubAccount(params: {
   const db = getDb();
   const primaryRef = db.collection("members").doc(primaryDiscordId);
   const subRef = db.collection("members").doc(sub.discordId);
-
+  /*
+   * メイン側とサブ側の doc を両方読む。
+   *
+   * メイン側に subAccountDiscordId が入っていたら、もうサブを持っているので
+   * primary_has_sub を返して終わり。
+   *
+   * サブ側の doc が既にある場合だけ、中身を見る。
+   *   isSubAccount が true でない (= サブとして使われている doc ではない) なら、
+   *     会員として登録済みの doc なら already_member を返して終わり。
+   *     登録済みでなければ何もしない (このあと上書きして引き継ぐ)。
+   *   isSubAccount が true なら、
+   *     primaryDiscordId が入っていて、それが今のメインと違うなら
+   *     already_linked_to_other を返して終わり。
+   * サブ側の doc がまだ無ければ、何も見ずに次へ進む。
+   *
+   * ここまで抜けたら書き込む。
+   *   サブ側 doc に isSubAccount / primaryDiscordId / Discord のプロフィールを
+   *   merge で書き、引き継いだ doc に残っている会員フラグは delete で消す。
+   *   メイン側 doc に subAccountDiscordId を書く。
+   *   ok: true を返す。
+   */
   return await db.runTransaction(async (tx) => {
     const [primarySnap, subSnap] = await Promise.all([
       tx.get(primaryRef),
