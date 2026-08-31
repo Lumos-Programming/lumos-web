@@ -78,7 +78,7 @@ export function BirthdayList({
 
       <section>
         <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          今後 {UPCOMING_WITHIN_DAYS} 日以内の誕生日
+          直近の誕生日
           <Badge variant="outline" className="text-xs font-normal">
             {upcoming.length} 件
           </Badge>
@@ -86,7 +86,7 @@ export function BirthdayList({
 
         {upcoming.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            今後 {UPCOMING_WITHIN_DAYS} 日以内に誕生日のメンバーはいません。
+            近日中に誕生日のメンバーはいません。
           </p>
         ) : (
           <ul className="space-y-2">

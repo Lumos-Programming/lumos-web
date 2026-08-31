@@ -49,6 +49,29 @@ const MONTH_VISIBILITY = [
   "hidden xl:block",
 ];
 
+// MONTH_VISIBILITY と対応する Tailwind のブレークポイント。
+// 実際に何か月見えているかは CSS が決めるので、めくり幅を合わせるには JS 側でも
+// 同じ境界を知る必要がある。どちらかを変えたら両方直すこと。
+const MONTH_BREAKPOINTS = [
+  { minWidth: 1280, count: 4 }, // xl
+  { minWidth: 1024, count: 3 }, // lg
+  { minWidth: 640, count: 2 }, // sm
+];
+
+/**
+ * 画面に見えている月数。描画中には呼ばず、クリックハンドラからのみ呼ぶこと。
+ * 描画結果がウィンドウ幅に依存すると、サーバー描画と食い違ってしまう。
+ */
+function visibleMonthCount(): number {
+  if (typeof window === "undefined") return 1;
+  for (const bp of MONTH_BREAKPOINTS) {
+    if (window.matchMedia(`(min-width: ${bp.minWidth}px)`).matches) {
+      return bp.count;
+    }
+  }
+  return 1;
+}
+
 function displayNameOf(entry: BirthdayEntry): string {
   return entry.nickname && entry.nickname !== entry.name
     ? entry.nickname
@@ -196,8 +219,8 @@ export function BirthdayCalendar({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => setOffset((o) => o - 1)}
-            aria-label="前の月"
+            onClick={() => setOffset((o) => o - visibleMonthCount())}
+            aria-label="前へ"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -205,8 +228,8 @@ export function BirthdayCalendar({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => setOffset((o) => o + 1)}
-            aria-label="次の月"
+            onClick={() => setOffset((o) => o + visibleMonthCount())}
+            aria-label="次へ"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
