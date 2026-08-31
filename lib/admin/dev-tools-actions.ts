@@ -21,6 +21,7 @@ import {
   type DiscordMessagePayload,
 } from "@/lib/discord-dm";
 import { getOptoutFinalizeUrl } from "@/lib/discord-optout";
+import { getJstToday } from "@/lib/date";
 import { sendLineNextEvent } from "@/lib/mini-lt/actions/line";
 
 // --- Types ---
@@ -186,7 +187,9 @@ export async function sendTestBirthdayNotification(
   }
 
   try {
-    await notifyAdminChannel(buildBirthdayNotification(discordIds));
+    await notifyAdminChannel(
+      buildBirthdayNotification(discordIds, getJstToday()),
+    );
     return { success: true };
   } catch (e) {
     return {

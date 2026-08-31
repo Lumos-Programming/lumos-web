@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await notifyAdminChannel(buildBirthdayNotification(discordIds));
+    await notifyAdminChannel(buildBirthdayNotification(discordIds, today));
   } catch (e) {
     console.error("[cron/birthday] Failed to notify:", e);
     return NextResponse.json({ error: String(e) }, { status: 500 });
