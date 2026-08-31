@@ -18,20 +18,14 @@ type BirthdayEntry = {
   avatarUrl?: string;
 };
 
-const MONTH_NAMES = [
-  "1月",
-  "2月",
-  "3月",
-  "4月",
-  "5月",
-  "6月",
-  "7月",
-  "8月",
-  "9月",
-  "10月",
-  "11月",
-  "12月",
-];
+// 一覧に載せるのは直近のみ。それより先はカレンダーで辿る。
+const UPCOMING_WITHIN_DAYS = 20;
+
+function displayNameOf(entry: BirthdayEntry): string {
+  return entry.nickname && entry.nickname !== entry.name
+    ? entry.nickname
+    : entry.name;
+}
 
 function MyBirthdayCountdown({
   birthDate,
@@ -63,38 +57,18 @@ export function BirthdayList({
   myBirthDate?: string | null;
   today: JstToday;
 }) {
-  const todayMonth = today.month;
-  const todayDay = today.day;
-
-  const grouped = useMemo(() => {
-    const map = new Map<number, BirthdayEntry[]>();
-    for (const entry of entries) {
-      const month = parseInt(entry.birthDate.split("-")[1]);
-      if (!map.has(month)) map.set(month, []);
-      map.get(month)!.push(entry);
-    }
-    for (const list of map.values()) {
-      list.sort(
-        (a, b) =>
-          parseInt(a.birthDate.split("-")[2]) -
-          parseInt(b.birthDate.split("-")[2]),
-      );
-    }
-    const months: number[] = [];
-    for (let i = 0; i < 12; i++) {
-      const m = ((todayMonth - 1 + i) % 12) + 1;
-      if (map.has(m)) months.push(m);
-    }
-    return months.map((m) => ({ month: m, entries: map.get(m)! }));
-  }, [entries, todayMonth]);
-
-  if (entries.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        誕生日を公開しているメンバーがいません。
-      </p>
-    );
-  }
+  // 誕生日までの日数で昇順。同日どうしは元の並びを保つ。
+  const upcoming = useMemo(
+    () =>
+      entries
+        .map((entry) => ({
+          entry,
+          days: daysUntilNextBirthday(entry.birthDate, today),
+        }))
+        .filter(({ days }) => days <= UPCOMING_WITHIN_DAYS)
+        .sort((a, b) => a.days - b.days),
+    [entries, today],
+  );
 
   return (
     <div className="space-y-8">
@@ -102,80 +76,70 @@ export function BirthdayList({
         <MyBirthdayCountdown birthDate={myBirthDate} today={today} />
       )}
 
-      <div className="space-y-8">
-        {grouped.map(({ month, entries: monthEntries }) => {
-          const isCurrentMonth = month === todayMonth;
-          return (
-            <section key={month}>
-              <h2
-                className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
-                  isCurrentMonth ? "text-primary" : ""
-                }`}
-              >
-                {MONTH_NAMES[month - 1]}
-                {isCurrentMonth && (
-                  <Badge variant="outline" className="text-xs font-normal">
-                    今月
-                  </Badge>
-                )}
-              </h2>
-              <ul className="space-y-2">
-                {monthEntries.map((entry) => {
-                  const displayName =
-                    entry.nickname && entry.nickname !== entry.name
-                      ? entry.nickname
-                      : entry.name;
-                  const isToday =
-                    month === todayMonth &&
-                    parseInt(entry.birthDate.split("-")[2]) === todayDay;
-                  return (
-                    <li
-                      key={entry.id}
-                      className={`p-3 rounded-lg border ${
-                        isToday
-                          ? "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-900"
-                          : "bg-card"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 shrink-0">
-                          <AvatarImage
-                            src={entry.avatarUrl}
-                            alt={displayName}
-                          />
-                          <AvatarFallback className="text-sm">
-                            {displayName.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">
-                            {displayName}
-                          </p>
-                          {entry.nickname && entry.nickname !== entry.name && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              {entry.name}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {isToday && (
-                            <Badge className="bg-yellow-400 text-yellow-900 border-yellow-300 text-xs">
-                              今日
-                            </Badge>
-                          )}
-                          <span className="text-sm text-muted-foreground whitespace-nowrap">
-                            {formatBirthDate(entry.birthDate)}
-                          </span>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          );
-        })}
-      </div>
+      <section>
+        <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+          今後 {UPCOMING_WITHIN_DAYS} 日以内の誕生日
+          <Badge variant="outline" className="text-xs font-normal">
+            {upcoming.length} 件
+          </Badge>
+        </h2>
+
+        {upcoming.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            今後 {UPCOMING_WITHIN_DAYS} 日以内に誕生日のメンバーはいません。
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {upcoming.map(({ entry, days }) => {
+              const displayName = displayNameOf(entry);
+              const isToday = days === 0;
+              return (
+                <li
+                  key={entry.id}
+                  className={`p-3 rounded-lg border ${
+                    isToday
+                      ? "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-900"
+                      : "bg-card"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9 shrink-0">
+                      <AvatarImage src={entry.avatarUrl} alt={displayName} />
+                      <AvatarFallback className="text-sm">
+                        {displayName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {displayName}
+                      </p>
+                      {entry.nickname && entry.nickname !== entry.name && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          {entry.name}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isToday ? (
+                        <Badge className="bg-yellow-400 text-yellow-900 border-yellow-300 text-xs">
+                          今日
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
+                          あと {days} 日
+                        </Badge>
+                      )}
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">
+                        {formatBirthDate(entry.birthDate)}
+                      </span>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
 
       <div className="pt-4 border-t">
         <BirthdayCalendar entries={entries} today={today} />

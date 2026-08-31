@@ -86,6 +86,15 @@ describe("daysUntilNextBirthday", () => {
     expect(daysUntilNextBirthday("2001-01-01", today)).toBe(123);
   });
 
+  it("年をまたぐ直近の誕生日を正しく数える（一覧の20日絞り込みが依存）", () => {
+    // 12/25 時点で 1/3 の誕生日は 9 日後。年をまたいでも小さい値になる
+    const dec = getJstToday(new Date("2026-12-25T00:00:00Z"));
+    expect(daysUntilNextBirthday("2001-01-03", dec)).toBe(9);
+    // 12/31 の翌日 1/1 は 1 日後
+    const yearEnd = getJstToday(new Date("2026-12-31T00:00:00Z"));
+    expect(daysUntilNextBirthday("2001-01-01", yearEnd)).toBe(1);
+  });
+
   it("サマータイムを持たない JST でも日数がズレない", () => {
     // 日数計算は UTC 基準の固定オフセットで行うため、境界月でも整数日になる
     const march = getJstToday(new Date("2026-03-01T00:00:00Z"));

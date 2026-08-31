@@ -31,9 +31,6 @@ export default async function BirthdaysPage() {
       <div className="flex items-center gap-3 mb-6">
         <Cake className="h-6 w-6" />
         <h1 className="text-2xl font-bold">誕生日カレンダー</h1>
-        <span className="text-sm text-muted-foreground">
-          {entries.length} 件
-        </span>
       </div>
       <BirthdayList entries={entries} myBirthDate={myBirthDate} today={today} />
     </div>
