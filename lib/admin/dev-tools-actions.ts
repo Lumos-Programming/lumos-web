@@ -16,9 +16,12 @@ import {
   buildOptoutConfirmRequestButtons,
   buildOptoutCompletedMessage,
   buildRejoinCompletedMessage,
+  buildBirthdayNotification,
+  notifyAdminChannel,
   type DiscordMessagePayload,
 } from "@/lib/discord-dm";
 import { getOptoutFinalizeUrl } from "@/lib/discord-optout";
+import { getJstToday } from "@/lib/date";
 import { sendLineNextEvent } from "@/lib/mini-lt/actions/line";
 
 // --- Types ---
@@ -146,6 +149,47 @@ export async function sendTestLineMessage(): Promise<{
 
   try {
     await sendLineNextEvent();
+    return { success: true };
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : String(e),
+    };
+  }
+}
+
+/**
+ * 誕生日通知のテスト送信。
+ *
+ * DM ではなく ADMIN_NOTIFICATION_CHANNEL_WEBHOOK への webhook 投稿なので、
+ * Discord メッセージタブ（sendDiscordDm）とは経路が異なる点に注意。
+ * 本番の cron (/api/cron/birthday) と同じ payload を同じ宛先へ送る。
+ */
+export async function sendTestBirthdayNotification(
+  discordIds: string[],
+): Promise<{ success: boolean; error?: string }> {
+  if (!(await isAdmin())) {
+    return { success: false, error: "管理者権限が必要です" };
+  }
+  if (isProduction()) {
+    return { success: false, error: "本番環境では使用できません" };
+  }
+  if (discordIds.length === 0) {
+    return { success: false, error: "メンバーを1人以上選択してください" };
+  }
+  // notifyAdminChannel は webhook 未設定だと黙って no-op するため、
+  // 「送信しました」と嘘の成功を返さないよう手前で弾く
+  if (!process.env.ADMIN_NOTIFICATION_CHANNEL_WEBHOOK?.trim()) {
+    return {
+      success: false,
+      error: "ADMIN_NOTIFICATION_CHANNEL_WEBHOOK が未設定です",
+    };
+  }
+
+  try {
+    await notifyAdminChannel(
+      buildBirthdayNotification(discordIds, getJstToday()),
+    );
     return { success: true };
   } catch (e) {
     return {

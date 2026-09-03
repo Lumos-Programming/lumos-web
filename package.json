@@ -48,6 +48,7 @@
     "@radix-ui/react-tooltip": "1.2.8",
     "@uiw/react-md-editor": "^4.1.2",
     "autoprefixer": "^10.5.4",
+    "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
@@ -77,6 +78,7 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.20",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
