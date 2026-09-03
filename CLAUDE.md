@@ -57,7 +57,7 @@ Tests require the Firestore emulator. `just test` wraps `firebase emulators:exec
   - `(protected)/` — Route group for authenticated pages (profile, members, settings, events)
   - `onboarding/` — New member onboarding flow
 - `app/optout/` — Two-step opt-out (Web form + Discord DM confirmation); see `docs/optout-flow.md`
-- `app/api/` — API routes: `auth/`, `profile/`, `onboarding/`, `events/`, `discord/`, `optout/`, `line-invite/`, `survey/`, `webhook/`
+- `app/api/` — API routes: `auth/`, `profile/`, `onboarding/`, `events/`, `discord/`, `optout/`, `line-invite/`, `survey/`, `webhook/`, `cron/`
 
 ### Key Modules
 
@@ -70,6 +70,7 @@ Tests require the Firestore emulator. `just test` wraps `firebase emulators:exec
 - `lib/admin/` — Admin-only operations gated on Discord guild role
 - `lib/mini-lt/` — Mini LT module: Firestore ops (`firebase.ts`), utility functions (`utils.ts`), LINE Flex messages (`line-flex.ts`)
 - `lib/mini-lt/actions/` — Server Actions (`"use server"`): `discord-events.ts` (Discord event creation), `line.ts` (LINE push notifications)
+- `lib/lusy/` — Lusy GitHub Reminder Bot: GitHub App client (`github.ts`), Issue/PR classification (`classify.ts`), GitHub→Discord roster (`roster.ts`), digest builders (`digest.ts`), notification templates (`templates.ts`); see `docs/lusy-reminder-flow.md`
 - `types/` — Shared TypeScript types (member, profile, event, interests, next-auth session augmentation)
 
 ### Component Patterns

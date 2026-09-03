@@ -42,6 +42,28 @@ export type DiscordMessagePayload = {
   components?: DiscordActionRow[];
 };
 
+/**
+ * Mention の許可範囲。指定したユーザー / ロール以外への Mention を無効化する。
+ * Digest のように多数を Mention するメッセージでは必ず絞ること。
+ */
+export type DiscordAllowedMentions = {
+  parse?: ("users" | "roles" | "everyone")[];
+  users?: string[];
+  roles?: string[];
+};
+
+/**
+ * content ベースの平文メッセージ。
+ * embed の description に `<@id>` を書いても通知は飛ばないため、
+ * 実際に ping したい Mention は必ず content に入れてこちらで送る。
+ */
+export type DiscordTextPayload = {
+  content: string;
+  allowed_mentions?: DiscordAllowedMentions;
+};
+
+export type DiscordSendable = DiscordMessagePayload | DiscordTextPayload;
+
 // --- Constants ---
 
 const LOGO_URL = "https://lumos-ynu.jp/assets/lumos_logo-full.png";
@@ -668,9 +690,9 @@ async function createDmChannel(recipientId: string): Promise<string> {
   return data.id;
 }
 
-async function sendChannelMessage(
+export async function sendChannelMessage(
   channelId: string,
-  payload: DiscordMessagePayload,
+  payload: DiscordSendable,
 ): Promise<{ messageId: string }> {
   const botToken = process.env.DISCORD_BOT_TOKEN;
   if (!botToken) {
@@ -700,7 +722,7 @@ async function sendChannelMessage(
 
 export async function sendDiscordDm(
   recipientId: string,
-  payload: DiscordMessagePayload,
+  payload: DiscordSendable,
 ): Promise<{ channelId: string; messageId: string }> {
   const channelId = await createDmChannel(recipientId);
   const { messageId } = await sendChannelMessage(channelId, payload);
