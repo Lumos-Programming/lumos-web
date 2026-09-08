@@ -3,13 +3,13 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Tag } from "lucide-react";
 import { notFound } from "next/navigation";
-import { newsArticles } from "../news-data";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { getPublishedNewsArticleWithFallback } from "@/lib/news";
 
-export async function generateStaticParams() {
-  return newsArticles.map((article) => ({
-    id: String(article.id),
-  }));
-}
+// 記事は WebUI からいつでも増えるので、ビルド時に URL を固定しない。
+// Firestore はビルド環境から到達できないため、リクエスト時に取得する。
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -17,13 +17,11 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const article = newsArticles.find((a) => a.id === parseInt(id, 10));
+  const article = await getPublishedNewsArticleWithFallback(id);
   return {
     title: article?.title || "ニュース詳細",
   };
 }
-
-export const revalidate = 3600;
 
 export default async function NewsDetailPage({
   params,
@@ -31,8 +29,7 @@ export default async function NewsDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const articleId = parseInt(id, 10);
-  const article = newsArticles.find((a) => a.id === articleId);
+  const article = await getPublishedNewsArticleWithFallback(id);
 
   if (!article) {
     notFound();
@@ -84,10 +81,11 @@ export default async function NewsDetailPage({
               />
             </div>
 
-            <div
-              className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ __html: article.content }}
-            />
+            <div className="prose prose-lg dark:prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {article.body}
+              </ReactMarkdown>
+            </div>
 
             <div className="mt-12 pt-8 border-t">
               <Button asChild variant="outline">
