@@ -40,13 +40,6 @@ export async function GET(request: Request) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
   });
-  cookieStore.set("oauth_link_discord_id", session.user.id, {
-    httpOnly: true,
-    maxAge: 600,
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-  });
   cookieStore.set(
     "oauth_link_redirect",
     new URL(request.url).searchParams.get("redirectTo") ?? "/internal/settings",
