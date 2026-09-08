@@ -41,6 +41,17 @@ const currentProjects = [
     leaderId: 2,
     leaderName: "Shion",
   },
+  {
+    id: 4,
+    title: "モブプロ",
+    description:
+      "プロジェクトの説明を入力してください。現在取り組んでいる内容や目標を記述します。",
+    image: "/assets/lumoslogo.png",
+    status: "進行中",
+    technologies: ["Unity", "C#", "Blender"],
+    leaderId: 5,
+    leaderName: "しゅん",
+  },
 ];
 
 // 過去のプロジェクト（アーカイブ）
