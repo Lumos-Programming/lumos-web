@@ -11,7 +11,7 @@ const currentProjects = [
     title: "Unityでゲーム開発",
     description:
       "プロジェクトの説明を入力してください。現在取り組んでいる内容や目標を記述します。",
-    image: "/assets/lumoslogo.png",
+    image: "/assets/Lumoslogo.png",
     status: "進行中",
     technologies: ["Unity", "C#", "Blender"],
     leaderId: 5,
@@ -60,7 +60,7 @@ const archivedProjects = [
     id: 102,
     title: "応用情報プロジェクト",
     description: "4月のIPA試験に向けた勉強と情報共有のための会。",
-    image: "/assets/lumoslogo.png",
+    image: "/assets/Lumoslogo.png",
     completedDate: "2025年1月",
     technologies: [],
     leaderId: 1,

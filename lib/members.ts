@@ -56,6 +56,12 @@ export interface MemberDocument {
   interests?: string[]; // 興味分野タグ
   topInterests?: string[]; // 一覧カード表示用 (max 3)
   allowPublic?: boolean;
+  /** 連携中のサブアカウントの Discord ID (メイン側 doc にだけ入る) */
+  subAccountDiscordId?: string;
+  /** この doc がサブアカウントであることの目印 (サブ側 doc にだけ入る) */
+  isSubAccount?: boolean;
+  /** 紐づくメインアカウントの Discord ID (サブ側 doc にだけ入る) */
+  primaryDiscordId?: string;
   onboardingCompleted?: boolean;
   optedOut?: boolean;
   optedOutAt?: FirebaseFirestore.Timestamp;
@@ -400,21 +406,29 @@ export type MemberRegistrationStatus = {
   registeredIds: Set<string>;
   onboardingIds: Set<string>;
   optedOutIds: Set<string>;
+  /** サブアカウントとして連携済みの Discord ID (会員ではないので案内対象外) */
+  subAccountIds: Set<string>;
 };
 
 export async function getMemberRegistrationStatus(): Promise<MemberRegistrationStatus> {
   const db = getDb();
   const snap = await db
     .collection("members")
-    .select("onboardingCompleted", "optedOut")
+    .select("onboardingCompleted", "optedOut", "isSubAccount")
     .get();
 
   const registeredIds = new Set<string>();
   const onboardingIds = new Set<string>();
   const optedOutIds = new Set<string>();
+  const subAccountIds = new Set<string>();
 
   for (const doc of snap.docs) {
     const data = doc.data();
+    // サブアカウントは会員登録の対象外。未登録メンバーとして数えない。
+    if (data.isSubAccount === true) {
+      subAccountIds.add(doc.id);
+      continue;
+    }
     if (data.optedOut === true) {
       optedOutIds.add(doc.id);
       continue;
@@ -426,7 +440,7 @@ export async function getMemberRegistrationStatus(): Promise<MemberRegistrationS
     }
   }
 
-  return { registeredIds, onboardingIds, optedOutIds };
+  return { registeredIds, onboardingIds, optedOutIds, subAccountIds };
 }
 
 function resolveDiscordAvatar(

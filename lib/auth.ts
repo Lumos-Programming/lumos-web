@@ -5,6 +5,7 @@ import {
   getMember,
   isDiscordIdOptedOut,
 } from "@/lib/members";
+import { isSubAccountDiscordId } from "@/lib/sub-account";
 import {
   sendDiscordDm,
   buildWelcomeMessage,
@@ -169,6 +170,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     async signIn({ account }) {
       if (account?.provider !== "discord") return true;
+
+      // 連携済みのサブアカウントは Lumos Web にログインできない。
+      // 判定に失敗した場合はログインを止めず、通常のギルド検証にフォールバックする。
+      try {
+        if (await isSubAccountDiscordId(account.providerAccountId)) {
+          return "/error/sub-account";
+        }
+      } catch (e) {
+        console.error("Failed to check sub-account status", e);
+      }
 
       const guildId = process.env.DISCORD_GUILD_ID;
       if (!guildId) return true; // 未設定なら検証をバイパス

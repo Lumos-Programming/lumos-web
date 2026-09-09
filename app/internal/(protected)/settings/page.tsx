@@ -6,19 +6,44 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import SnsSettings from "@/components/sns-settings";
+import { getSubAccountById } from "@/lib/sub-account";
 
 const SUCCESS_MESSAGES: Record<string, string> = {
   github_linked: "GitHubと連携しました。",
   x_linked: "Xと連携しました。",
   line_linked: "LINEと連携しました。",
   line_relinked: "LINEを再連携しました。",
+  sub_discord_linked: "サブDiscordアカウントを連携しました。",
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
   github_link_failed: "GitHub連携に失敗しました。もう一度お試しください。",
   x_link_failed: "X連携に失敗しました。もう一度お試しください。",
   line_link_failed: "LINE連携に失敗しました。もう一度お試しください。",
+  sub_discord_link_failed:
+    "サブDiscordアカウントの連携に失敗しました。もう一度お試しください。",
+  sub_discord_self_link:
+    "メインアカウントで認証されました。サブDiscordアカウントとして登録したいアカウントで認証してください。",
+  sub_discord_already_member:
+    "そのアカウントはLumosのメンバーとして登録済みです。サブアカウントには設定できません。",
+  sub_discord_already_linked_to_other:
+    "そのアカウントは既に別のメンバーのサブアカウントとして連携されています。",
+  sub_discord_primary_has_sub:
+    "サブアカウントは1つまでです。連携済みのアカウントを解除してからお試しください。",
 };
+
+/**
+ * searchParams は任意の文字列が来るので、プロトタイプ由来のキー
+ * (`constructor` / `toString` など) を引かないよう自前プロパティに限定する。
+ * 関数がそのまま Client Component に渡ると実行時エラーになる。
+ */
+function lookupMessage(
+  messages: Record<string, string>,
+  key: string | undefined,
+): string | undefined {
+  if (!key || !Object.hasOwn(messages, key)) return undefined;
+  return messages[key];
+}
 
 export default async function SettingPage({
   searchParams,
@@ -34,6 +59,10 @@ export default async function SettingPage({
   const discordId = session!.user!.id;
   const member = await getMember(discordId);
   const { success, error, line_group, not_friend } = (await searchParams) ?? {};
+  // member は上で取得済みなので、サブの doc だけを追加で引く
+  const subAccount = member?.subAccountDiscordId
+    ? await getSubAccountById(member.subAccountDiscordId)
+    : null;
   const optoutPath = `/optout/${discordId}/${signOptoutRequest(discordId)}`;
 
   return (
@@ -78,8 +107,9 @@ export default async function SettingPage({
                 lineGroupPending={line_group === "not_joined"}
                 lineBotFriendUrl={process.env.LINE_BOT_FRIEND_URL}
                 isBotFriend={line_group === "not_joined" && not_friend !== "1"}
-                successMessage={success ? SUCCESS_MESSAGES[success] : undefined}
-                errorMessage={error ? ERROR_MESSAGES[error] : undefined}
+                successMessage={lookupMessage(SUCCESS_MESSAGES, success)}
+                errorMessage={lookupMessage(ERROR_MESSAGES, error)}
+                subAccount={subAccount}
               />
             </CardContent>
           </Card>
