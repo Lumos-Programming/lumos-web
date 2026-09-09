@@ -39,13 +39,18 @@ const MONTH_NAMES = [
 ];
 const WEEK_DAYS = ["月", "火", "水", "木", "金", "土", "日"];
 
-// 常に4か月ぶん描画し、実際に何か月見せるかは CSS のブレークポイントで決める。
+// 常に8か月ぶん描画し、実際に何か月見せるかは CSS のブレークポイントで決める。
 // JS でウィンドウ幅を見るとサーバー描画と食い違うため、表示制御は CSS に寄せる。
-const MONTHS_RENDERED = 4;
+// モバイルでは1か月のみ、sm 以降はグリッドが折り返して2段表示になる。
+const MONTHS_RENDERED = 8;
 const MONTH_VISIBILITY = [
   "",
   "hidden sm:block",
+  "hidden sm:block",
+  "hidden sm:block",
   "hidden lg:block",
+  "hidden lg:block",
+  "hidden xl:block",
   "hidden xl:block",
 ];
 
@@ -53,9 +58,9 @@ const MONTH_VISIBILITY = [
 // 実際に何か月見えているかは CSS が決めるので、めくり幅を合わせるには JS 側でも
 // 同じ境界を知る必要がある。どちらかを変えたら両方直すこと。
 const MONTH_BREAKPOINTS = [
-  { minWidth: 1280, count: 4 }, // xl
-  { minWidth: 1024, count: 3 }, // lg
-  { minWidth: 640, count: 2 }, // sm
+  { minWidth: 1280, count: 8 }, // xl: 4列×2段
+  { minWidth: 1024, count: 6 }, // lg: 3列×2段
+  { minWidth: 640, count: 4 }, //  sm: 2列×2段
 ];
 
 /**

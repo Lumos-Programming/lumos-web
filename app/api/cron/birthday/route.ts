@@ -1,10 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getMembersInternal } from "@/lib/members";
 import { getJstToday, isBirthdayToday } from "@/lib/date";
-import {
-  notifyAdminChannel,
-  buildBirthdayNotification,
-} from "@/lib/discord-dm";
+import { notifyAdminChannel } from "@/lib/discord-dm";
+import { buildBirthdayNotification } from "@/lib/birthday-notification";
 
 /**
  * Cloud Scheduler から毎朝 09:00 JST に呼ばれる誕生日通知エンドポイント。

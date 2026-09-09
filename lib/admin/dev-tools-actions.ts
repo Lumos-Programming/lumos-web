@@ -16,10 +16,10 @@ import {
   buildOptoutConfirmRequestButtons,
   buildOptoutCompletedMessage,
   buildRejoinCompletedMessage,
-  buildBirthdayNotification,
   notifyAdminChannel,
   type DiscordMessagePayload,
 } from "@/lib/discord-dm";
+import { buildBirthdayNotification } from "@/lib/birthday-notification";
 import { getOptoutFinalizeUrl } from "@/lib/discord-optout";
 import { getJstToday } from "@/lib/date";
 import { sendLineNextEvent } from "@/lib/mini-lt/actions/line";
