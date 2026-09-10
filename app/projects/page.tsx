@@ -41,6 +41,17 @@ const currentProjects = [
     leaderId: 2,
     leaderName: "Shion",
   },
+  {
+    id: 4,
+    title: "モブプロ",
+    description:
+      "Lumosのメンバー全員で、lumos-web の開発に取り組むモブプログラミングを9月に開催します。実際にコードを書きながら、開発の進め方やコードレビューの方法を学び、メンバー全員が開発とレビューに参加できる状態を目指します。",
+    image: "/assets/Lumoslogo.png",
+    status: "進行中",
+    technologies: ["next.js", "typescript", "css", "firebase", "react"],
+    leaderId: 967802261201887242,
+    leaderName: "しゅん",
+  },
 ];
 
 // 過去のプロジェクト（アーカイブ）
