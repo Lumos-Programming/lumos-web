@@ -6,7 +6,7 @@ import {
   NewsArticleBody,
   NewsArticleHeader,
 } from "@/components/news/news-article-view";
-import { getPublishedNewsArticleWithFallback } from "@/lib/news";
+import { getPublishedNewsArticle } from "@/lib/news";
 
 // 記事は WebUI からいつでも増えるので、ビルド時に URL を固定しない。
 // Firestore はビルド環境から到達できないため、リクエスト時に取得する。
@@ -18,7 +18,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const article = await getPublishedNewsArticleWithFallback(id);
+  const article = await getPublishedNewsArticle(id);
   return {
     title: article?.title || "ニュース詳細",
   };
@@ -30,7 +30,7 @@ export default async function NewsDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const article = await getPublishedNewsArticleWithFallback(id);
+  const article = await getPublishedNewsArticle(id);
 
   if (!article) {
     notFound();

@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
-import { listPublishedNewsWithFallback } from "@/lib/news";
+import { listPublishedNews } from "@/lib/news";
 
 // Firestore はビルド環境から到達できないので、ここを静的プリレンダリングの対象にしない。
 // ISR にすると、デプロイ直後にビルド時のスナップショットが revalidate まで居座ってしまう。
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NewsPage() {
   // 並べ替えは publishedAt で済んでいる (旧データの日本語表記を毎回パースしなくてよい)
-  const sortedNewsArticles = await listPublishedNewsWithFallback();
+  const sortedNewsArticles = await listPublishedNews();
 
   return (
     <>

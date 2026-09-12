@@ -231,30 +231,3 @@ export async function deleteNews(id: string): Promise<void> {
   }
   await ref.delete();
 }
-
-/**
- * 公開ページ用の一覧。Firestore にまだ 1 件も無い間は移行前のお知らせを返す。
- *
- * 移行が終わるまで公開ページが空にならないようにするための繋ぎで、
- * scripts/migrate-news.ts を本番で流したあとは lib/news-legacy.ts ごと消せる。
- */
-export async function listPublishedNewsWithFallback(): Promise<NewsArticle[]> {
-  const articles = await listPublishedNews();
-  if (articles.length > 0) return articles;
-
-  const { LEGACY_NEWS_ARTICLES } = await import("@/lib/news-legacy");
-  return [...LEGACY_NEWS_ARTICLES].sort(byPublishedAtDesc);
-}
-
-/** 公開ページ用の 1 件取得。listPublishedNewsWithFallback と同じ繋ぎ */
-export async function getPublishedNewsArticleWithFallback(
-  id: string,
-): Promise<NewsArticle | null> {
-  const article = await getPublishedNewsArticle(id);
-  if (article) return article;
-
-  if ((await listPublishedNews()).length > 0) return null;
-
-  const { LEGACY_NEWS_ARTICLES } = await import("@/lib/news-legacy");
-  return LEGACY_NEWS_ARTICLES.find((a) => a.id === id) ?? null;
-}

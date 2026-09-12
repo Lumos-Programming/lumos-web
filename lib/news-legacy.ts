@@ -4,9 +4,8 @@ import type { NewsArticle } from "@/types/news";
 /**
  * Firestore へ移行する前のお知らせ (app/news/news-data.ts) を NewsArticle に変換する。
  *
- * Firestore が空の間も公開ページが従来どおり出るように、公開ページはこれをフォールバックに使う。
- * 移行スクリプト (scripts/migrate-news.ts) を本番で流し終えたら、
- * news-data.ts ごとこのファイルも消せる。
+ * 移行スクリプト (scripts/migrate-news.ts) の入力にだけ使う。公開ページは Firestore のみを読むので、
+ * この PR をデプロイする前に本番で移行を流しておくこと。流し終えたら news-data.ts ごとこのファイルも消せる。
  */
 
 /**

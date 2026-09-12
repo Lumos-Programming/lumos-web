@@ -151,7 +151,9 @@ export function NewsManager({ initialArticles }: NewsManagerProps) {
       updatedAt: null,
     };
     setArticles((prev) => [...prev, created].sort(byPublishedAtDesc));
-    return data.id as string;
+    // 続く公開が失敗して再試行されたとき、新規作成を繰り返さず同じ下書きを更新する
+    setEditingId(created.id);
+    return created.id;
   };
 
   /** プレビューを開く。入力の不備はサーバーに送る前にここで気づけるようにする */

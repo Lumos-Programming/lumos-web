@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { listPublishedNewsWithFallback } from "@/lib/news";
+import { listPublishedNews } from "@/lib/news";
 
 const BASE_URL = "https://lumos-ynu.jp";
 
@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/contact`, priority: 0.5, changeFrequency: "monthly" },
   ];
 
-  const articles = await listPublishedNewsWithFallback();
+  const articles = await listPublishedNews();
   const newsPages: MetadataRoute.Sitemap = articles.map((article) => ({
     url: `${BASE_URL}/news/${article.id}`,
     priority: 0.5,

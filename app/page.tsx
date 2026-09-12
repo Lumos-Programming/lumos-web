@@ -3,13 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Code, Users, Calendar } from "lucide-react";
 import { NewsCarousel } from "@/components/news-carousel";
-import { listPublishedNewsWithFallback } from "@/lib/news";
+import { listPublishedNews } from "@/lib/news";
 
 // お知らせを Firestore から読むので、ビルド時ではなくリクエスト時にレンダリングする
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const sortedNewsArticles = await listPublishedNewsWithFallback();
+  const sortedNewsArticles = await listPublishedNews();
   return (
     <>
       {/* Hero Section */}
