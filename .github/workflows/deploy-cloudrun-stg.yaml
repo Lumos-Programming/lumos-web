@@ -1,3 +1,4 @@
+# Pre-release のタグを検証し、staging Environment を使用して Staging の Cloud Run へデプロイする。
 name: Deploy to Cloud Run (Staging)
 on:
   release:

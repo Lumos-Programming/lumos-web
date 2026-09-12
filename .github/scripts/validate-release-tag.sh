@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Release / Pre-release タグの命名規則と、直前の通常リリースからの
+# セマンティックバージョン遷移を検証する。
+# 公開済み通常リリースのタグ一覧は標準入力から受け取る。
 
 set -euo pipefail
 

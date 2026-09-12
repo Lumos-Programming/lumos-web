@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# リリースタグ検証スクリプトの命名規則とバージョン遷移をテーブルテストする。
 
 set -euo pipefail
 

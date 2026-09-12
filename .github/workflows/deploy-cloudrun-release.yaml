@@ -1,3 +1,4 @@
+# 通常リリースのタグを検証し、production Environment を使用して本番の Cloud Run へデプロイする。
 name: Deploy to Cloud Run (Release)
 on:
   release:

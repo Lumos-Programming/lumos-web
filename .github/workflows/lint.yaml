@@ -1,3 +1,4 @@
+# コード品質の検査とリリースタグ検証スクリプトのテストを実行する。
 name: Lint & Format Check
 on:
   pull_request:
