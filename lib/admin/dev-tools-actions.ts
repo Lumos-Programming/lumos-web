@@ -187,6 +187,7 @@ export async function sendTestBirthdayNotification(
   }
 
   try {
+    // テスト用に運営チャンネルに送信
     await notifyAdminChannel(
       buildBirthdayNotification(discordIds, getJstToday()),
     );
