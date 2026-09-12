@@ -221,6 +221,23 @@ export async function getMembersForDiscordAvatarRefresh(): Promise<
   });
 }
 
+/**
+ * GitHub 連携済みメンバーを列挙する（草の定期更新バッチ用）。
+ * 退会済み（optedOut）は除外する。
+ */
+export async function getMembersWithGithub(): Promise<
+  { discordId: string; github: string }[]
+> {
+  const db = getDb();
+  const snap = await db.collection("members").where("github", "!=", null).get();
+
+  return snap.docs.flatMap((doc) => {
+    const data = doc.data() as MemberDocument;
+    if (isMemberOptedOut(data) || !data.github) return [];
+    return [{ discordId: doc.id, github: data.github }];
+  });
+}
+
 /** discordAvatar (avatar hash) を更新する。定期更新バッチ用。 */
 export async function updateMemberDiscordAvatar(
   discordId: string,
