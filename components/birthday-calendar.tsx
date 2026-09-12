@@ -10,13 +10,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { formatBirthDate, type JstToday } from "@/lib/date";
+import { formatBirthDate, type ISODateString, type JstToday } from "@/lib/date";
 
 type BirthdayEntry = {
   id: string;
   name: string;
   nickname?: string;
-  birthDate: string;
+  birthDate: ISODateString;
   avatarUrl?: string;
 };
 

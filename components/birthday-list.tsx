@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   formatBirthDate,
   daysUntilNextBirthday,
+  type ISODateString,
   type JstToday,
 } from "@/lib/date";
 import { BirthdayCalendar } from "@/components/birthday-calendar";
@@ -14,7 +15,7 @@ type BirthdayEntry = {
   id: string;
   name: string;
   nickname?: string;
-  birthDate: string;
+  birthDate: ISODateString;
   avatarUrl?: string;
 };
 
@@ -31,7 +32,7 @@ function MyBirthdayCountdown({
   birthDate,
   today,
 }: {
-  birthDate: string;
+  birthDate: ISODateString;
   today: JstToday;
 }) {
   const days = daysUntilNextBirthday(birthDate, today);
@@ -54,7 +55,7 @@ export function BirthdayList({
   today,
 }: {
   entries: BirthdayEntry[];
-  myBirthDate?: string | null;
+  myBirthDate?: ISODateString | null;
   today: JstToday;
 }) {
   // 誕生日までの日数で昇順。同日どうしは元の並びを保つ。

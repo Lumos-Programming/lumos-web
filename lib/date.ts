@@ -7,6 +7,43 @@ export function formatBirthDate(dateStr: string): string {
   return `${parseInt(m)}月${parseInt(d)}日`;
 }
 
+declare const isoDateStringBrand: unique symbol;
+
+/** YYYY-MM-DD 形式かつ実在する日付であることを検証済みの日付文字列。 */
+export type ISODateString = string & { readonly [isoDateStringBrand]: true };
+
+const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+export type ISODateParts = {
+  year: number;
+  month: number;
+  day: number;
+};
+
+export function getDateParts(value: unknown): ISODateParts | null {
+  if (typeof value !== "string") return null;
+
+  // 正規表現として取り出す
+  const match = ISO_DATE_PATTERN.exec(value);
+  if (!match) return null;
+
+  const [, yearText, monthText, dayText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+
+  if (year < 1000 || month < 1 || month > 12 || day < 1) return null;
+
+  const lastDayOfMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  if (day > lastDayOfMonth) return null;
+
+  return { year, month, day };
+}
+
+export function isISODateString(value: unknown): value is ISODateString {
+  return getDateParts(value) !== null;
+}
+
 /**
  * Asia/Tokyo における「今日」。
  *
@@ -19,8 +56,6 @@ export type JstToday = {
   year: number;
   month: number; // 1-12
   day: number; // 1-31
-  /** "MM-DD" 形式。birthDate.slice(5) と直接比較できる */
-  monthDay: string;
 };
 
 const JST_PARTS_FORMATTER = new Intl.DateTimeFormat("en-US", {
@@ -30,27 +65,39 @@ const JST_PARTS_FORMATTER = new Intl.DateTimeFormat("en-US", {
   day: "2-digit",
 });
 
+function getDatePart(
+  parts: Intl.DateTimeFormatPart[],
+  type: Intl.DateTimeFormatPartTypes,
+): number {
+  const part = parts.find((candidate) => candidate.type === type);
+  if (!part) {
+    throw new Error(`Intl.DateTimeFormat did not return a ${type} part`);
+  }
+  return Number(part.value);
+}
+
 export function getJstToday(now: Date = new Date()): JstToday {
   const parts = JST_PARTS_FORMATTER.formatToParts(now);
-  const pick = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((p) => p.type === type)!.value;
-
-  const mm = pick("month");
-  const dd = pick("day");
 
   return {
-    year: Number(pick("year")),
-    month: Number(mm),
-    day: Number(dd),
-    monthDay: `${mm}-${dd}`,
+    year: getDatePart(parts, "year"),
+    month: getDatePart(parts, "month"),
+    day: getDatePart(parts, "day"),
   };
 }
 
 /**
  * 誕生日（YYYY-MM-DD）が JST の今日かどうか。
  */
-export function isBirthdayToday(birthDate: string, today: JstToday): boolean {
-  return birthDate.slice(5) === today.monthDay;
+export function isBirthdayToday(
+  birthDate: ISODateString,
+  today: JstToday,
+): boolean {
+  const parts = getDateParts(birthDate);
+  if (!parts) return false;
+
+  const { month, day } = parts;
+  return month === today.month && day === today.day;
 }
 
 /**
@@ -58,10 +105,15 @@ export function isBirthdayToday(birthDate: string, today: JstToday): boolean {
  * うるう日 (02-29) は平年では 03-01 に繰り上がる JS の挙動をそのまま利用する。
  */
 export function daysUntilNextBirthday(
-  birthDate: string,
+  birthDate: ISODateString,
   today: JstToday,
 ): number {
-  const [, month, day] = birthDate.split("-").map(Number);
+  const parts = getDateParts(birthDate);
+  if (!parts) {
+    throw new TypeError(`Invalid ISO date string: ${birthDate}`);
+  }
+
+  const { month, day } = parts;
 
   const todayUtc = Date.UTC(today.year, today.month - 1, today.day);
   let nextUtc = Date.UTC(today.year, month - 1, day);
