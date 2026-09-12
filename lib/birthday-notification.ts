@@ -3,7 +3,10 @@
  * 個人宛ての DM ではないため、DM 用のメッセージビルダーとは分離する。
  */
 
-import type { DiscordMessagePayload } from "@/lib/discord-dm";
+import {
+  sendDiscordChannelMessage,
+  type DiscordMessagePayload,
+} from "@/lib/discord-dm";
 import type { JstToday } from "@/lib/date";
 
 const BIRTHDAY_COLOR = 0xf59e0b; // Amber
@@ -29,4 +32,19 @@ export function buildBirthdayNotification(
       },
     ],
   };
+}
+
+/**
+ * 環境ごとに設定された誕生日通知チャンネルへ Bot で送る。
+ * 本番は専用チャンネル、非本番は運営チャンネルの ID を設定する。
+ */
+export async function notifyBirthdayChannel(
+  payload: DiscordMessagePayload,
+): Promise<void> {
+  const channelId = process.env.BIRTHDAY_NOTIFICATION_CHANNEL_ID?.trim();
+  if (!channelId) {
+    throw new Error("BIRTHDAY_NOTIFICATION_CHANNEL_ID is not configured");
+  }
+
+  await sendDiscordChannelMessage(channelId, payload);
 }

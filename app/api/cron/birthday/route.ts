@@ -1,12 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getMembersInternal } from "@/lib/members";
 import { getJstToday, isBirthdayToday } from "@/lib/date";
-import { notifyAdminChannel } from "@/lib/discord-dm";
-import { buildBirthdayNotification } from "@/lib/birthday-notification";
+import {
+  buildBirthdayNotification,
+  notifyBirthdayChannel,
+} from "@/lib/birthday-notification";
 
 /**
  * Cloud Scheduler から毎朝 09:00 JST に呼ばれる誕生日通知エンドポイント。
- * その日が誕生日のメンバーがいれば運営チャンネルへ webhook 通知を送る。
+ * その日が誕生日のメンバーがいれば、環境ごとに設定されたチャンネルへ Bot で通知する。
+ * 本番は専用チャンネル、非本番は運営チャンネルを設定する。
  *
  * 認可は他の /api/cron/* と同じく CRON_SECRET の Bearer ヘッダ。
  * スケジュール定義は infra/scheduler.tf を参照。
@@ -38,7 +41,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await notifyAdminChannel(buildBirthdayNotification(discordIds, today));
+    await notifyBirthdayChannel(buildBirthdayNotification(discordIds, today));
   } catch (e) {
     console.error("[cron/birthday] Failed to notify:", e);
     return NextResponse.json({ error: String(e) }, { status: 500 });

@@ -1,6 +1,24 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getJstToday } from "@/lib/date";
-import { buildBirthdayNotification } from "./birthday-notification";
+import {
+  buildBirthdayNotification,
+  notifyBirthdayChannel,
+} from "./birthday-notification";
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ id: "message-id" }),
+    } satisfies Partial<Response>),
+  );
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+});
 
 describe("buildBirthdayNotification", () => {
   // 2026-09-05 JST
@@ -37,5 +55,41 @@ describe("buildBirthdayNotification", () => {
   it("ボタンを含まない", () => {
     const payload = buildBirthdayNotification(["123456789"], today);
     expect(payload.components).toBeUndefined();
+  });
+});
+
+describe("notifyBirthdayChannel", () => {
+  const payload = buildBirthdayNotification(
+    ["123456789"],
+    getJstToday(new Date("2026-09-05T00:00:00Z")),
+  );
+
+  it("設定されたチャンネルへ既存のBotで送る", async () => {
+    vi.stubEnv("BIRTHDAY_NOTIFICATION_CHANNEL_ID", "123456789012345678");
+    vi.stubEnv("DISCORD_BOT_TOKEN", "test-bot-token");
+
+    await notifyBirthdayChannel(payload);
+
+    expect(fetch).toHaveBeenCalledWith(
+      "https://discord.com/api/v10/channels/123456789012345678/messages",
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          Authorization: "Bot test-bot-token",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }),
+    );
+  });
+
+  it("チャンネルIDが未設定なら送信しない", async () => {
+    vi.stubEnv("BIRTHDAY_NOTIFICATION_CHANNEL_ID", "");
+    vi.stubEnv("DISCORD_BOT_TOKEN", "test-bot-token");
+
+    await expect(notifyBirthdayChannel(payload)).rejects.toThrow(
+      "BIRTHDAY_NOTIFICATION_CHANNEL_ID is not configured",
+    );
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

@@ -31,7 +31,7 @@ resource "google_cloud_scheduler_job" "refresh_avatars" {
   depends_on = [google_project_service.cloudscheduler]
 }
 
-# 誕生日通知: その日が誕生日のメンバーを運営チャンネルへ通知する。
+# 誕生日通知: 環境ごとの BIRTHDAY_NOTIFICATION_CHANNEL_ID へ Bot で通知する。
 # 対象がいない日は no-op（notified: false）で返るため毎日叩いて問題ない。
 resource "google_cloud_scheduler_job" "birthday" {
   for_each = toset(local.cloud_run_envs)

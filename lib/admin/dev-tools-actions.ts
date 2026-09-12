@@ -163,7 +163,8 @@ export async function sendTestLineMessage(): Promise<{
  *
  * DM ではなく ADMIN_NOTIFICATION_CHANNEL_WEBHOOK への webhook 投稿なので、
  * Discord メッセージタブ（sendDiscordDm）とは経路が異なる点に注意。
- * 本番の cron (/api/cron/birthday) と同じ payload を同じ宛先へ送る。
+ * 本番の cron (/api/cron/birthday) と同じ payload を、Webhook 経由で
+ * 開発用の運営チャンネルへ送る。
  */
 export async function sendTestBirthdayNotification(
   discordIds: string[],
