@@ -3,9 +3,14 @@ import { getDb } from "@/lib/firebase";
 import {
   getMembersWithLine,
   getMembersForDiscordAvatarRefresh,
+  getMembersWithGithub,
 } from "@/lib/members";
 import { refreshSingleMemberLineAvatar } from "@/lib/line-invite";
 import { refreshSingleMemberDiscordAvatar } from "@/lib/discord-avatar";
+import {
+  isGithubContributionsEnabled,
+  refreshSingleMemberGithubContributions,
+} from "@/lib/github-contributions";
 
 export const runtime = "nodejs";
 // メンバー数が増えても外部 API 呼び出しを処理しきれるよう延長
@@ -80,7 +85,40 @@ async function refreshDiscordAvatars(): Promise<RefreshSummary> {
 }
 
 /**
+ * GitHub 連携メンバーの草 (contribution calendar) を取り直す。
+ * GITHUB_TOKEN が無い環境では何もしない (ローカルなど)。
+ */
+async function refreshGithubContributions(): Promise<RefreshSummary | null> {
+  if (!isGithubContributionsEnabled()) return null;
+
+  const members = await getMembersWithGithub();
+  const summary: RefreshSummary = {
+    total: members.length,
+    updated: 0,
+    skipped: 0,
+    failed: 0,
+  };
+
+  for (const member of members) {
+    const result = await refreshSingleMemberGithubContributions(member);
+    if (result.status === "updated") summary.updated++;
+    else if (result.status === "skipped") summary.skipped++;
+    else {
+      summary.failed++;
+      console.error(
+        `GitHub contributions refresh failed for ${result.discordId}: ${result.error}`,
+      );
+    }
+    // GraphQL は 5000pt/h で余裕があるが、連打はしない
+    await sleep(REQUEST_INTERVAL_MS);
+  }
+
+  return summary;
+}
+
+/**
  * Cloud Scheduler から定期実行される、外部連携アバター（LINE / Discord）の更新バッチ。
+ * GitHub の草もここに相乗りして 1 日 1 回取り直す。
  * LINE は保存トークンで /v2/profile を、Discord は Bot トークンで /users/{id} を叩き、
  * 最新のアバターに追従させてリンク切れを解消する。
  */
@@ -121,6 +159,7 @@ export async function GET(request: NextRequest) {
 
   const line = await refreshLineAvatars();
   const discord = await refreshDiscordAvatars();
+  const github = await refreshGithubContributions();
 
-  return NextResponse.json({ line, discord });
+  return NextResponse.json({ line, discord, github });
 }

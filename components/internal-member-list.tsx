@@ -53,6 +53,7 @@ export default function InternalMemberList({ members }: Props) {
               year={member.year}
               currentOrg={member.currentOrg}
               topInterests={member.topInterests}
+              contributions={member.githubContributions}
               onClick={() => handleSelect(member)}
             />
           </div>
