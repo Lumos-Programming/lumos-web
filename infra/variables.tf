@@ -23,6 +23,8 @@ variable "cloud_run_env_vars" {
       NEXT_PUBLIC_APP_ENV      = "development"
       ADMIN_ROLE_ID            = "1368939833162076200"
       RETURNING_MEMBER_ROLE_ID = "1492146121663971409"
+      # Lusy Server に存在する Dev 環境用のメンバーロール
+      MEMBER_ROLE_ID = "1548449451117641758"
 
       NEW_MEMBER_ROLE_ID      = "1501834368744947805"
       NEW_MEMBER_JOINED_AFTER = "2026-05-06T00:00:00+09:00"
@@ -44,6 +46,8 @@ variable "cloud_run_env_vars" {
       NEXT_PUBLIC_APP_ENV      = "staging"
       ADMIN_ROLE_ID            = "1368939833162076200"
       RETURNING_MEMBER_ROLE_ID = "1492146121663971409"
+      # Lusy Server に存在する Stg 環境用のメンバーロール
+      MEMBER_ROLE_ID = "1548449273325027438"
 
       NEW_MEMBER_ROLE_ID      = "1501834368744947805"
       NEW_MEMBER_JOINED_AFTER = "2026-05-06T00:00:00+09:00"
@@ -65,6 +69,7 @@ variable "cloud_run_env_vars" {
       NEXT_PUBLIC_APP_ENV      = "production"
       ADMIN_ROLE_ID            = "1478450042749849670"
       RETURNING_MEMBER_ROLE_ID = "1356896104351793154"
+      MEMBER_ROLE_ID           = "1547350472774652045"
 
       NEW_MEMBER_ROLE_ID      = "1501185602756808804"
       NEW_MEMBER_JOINED_AFTER = "2026-05-06T00:00:00+09:00"
