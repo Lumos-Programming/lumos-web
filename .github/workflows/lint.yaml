@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Test release tag validation
+        run: bash .github/scripts/validate-release-tag.test.sh
       - name: Install pnpm
         uses: pnpm/action-setup@v4
       - name: Setup Node.js
