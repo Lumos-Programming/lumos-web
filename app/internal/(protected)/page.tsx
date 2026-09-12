@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getMember, getMembersInternal } from "@/lib/members";
-import { getJstToday, isBirthdayToday } from "@/lib/date";
+import { getTodayBirthdayNames } from "@/lib/birthday";
 import { TodayBirthdayBanner } from "@/components/today-birthday-banner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -72,15 +72,6 @@ function getProfileCompletionItems(
       done: !!(member.interests && (member.interests as string[]).length > 0),
     },
   ];
-}
-
-function getTodayBirthdayNames(
-  members: { name: string; nickname?: string; birthDate?: string }[],
-): string[] {
-  const today = getJstToday();
-  return members
-    .filter((m) => m.birthDate && isBirthdayToday(m.birthDate, today))
-    .map((m) => m.nickname || m.name);
 }
 
 export default async function InternalPage() {
