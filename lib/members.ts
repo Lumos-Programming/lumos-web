@@ -6,6 +6,7 @@ import type {
   EnrollmentRecord,
 } from "@/types/profile";
 import { FieldValue } from "firebase-admin/firestore";
+import { isISODateString } from "@/lib/date";
 
 export const PUBLIC_IMAGE_OPTIONS = [
   "face",
@@ -32,7 +33,8 @@ export interface MemberDocument {
   memberType?: MemberType;
   enrollments?: EnrollmentRecord[];
   currentOrg?: string; // 卒業生の現在の所属
-  birthDate?: string; // YYYY-MM-DD
+  // Firestore 由来の未検証値。Member へ変換するときに検証する。
+  birthDate?: string;
   gender?: string;
   github?: string;
   githubId?: string;
@@ -603,7 +605,9 @@ export function profileToMemberInternal(
       v.currentOrg !== "private" ? data.currentOrg || undefined : undefined,
     gender: v.gender !== "private" ? data.gender || undefined : undefined,
     birthDate:
-      v.birthDate !== "private" ? data.birthDate || undefined : undefined,
+      v.birthDate !== "private" && isISODateString(data.birthDate)
+        ? data.birthDate
+        : undefined,
     ringColor: data.ringColor,
     interests: data.interests ?? [],
     topInterests: data.topInterests ?? [],
