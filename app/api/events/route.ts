@@ -1,25 +1,21 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { authorizeAdminApi } from "@/lib/admin-api-auth";
+import { isAdminSession } from "@/lib/admin-api-auth";
 import { createEvent, listEventsInMonth, parseEventInput } from "@/lib/events";
 import { isMonthKey, todayJstKey } from "@/lib/events-format";
-import { toEventErrorResponse } from "@/lib/events-response";
+import {
+  EVENT_API_RESPONSES,
+  toEventErrorResponse,
+} from "@/lib/events-response";
 
 /** 月間のイベント一覧。?month=YYYY-MM (省略時は今月、日本時間) */
 export async function GET(request: Request) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!session?.user?.id) return EVENT_API_RESPONSES.unauthorized();
 
   const month =
     new URL(request.url).searchParams.get("month") ?? todayJstKey().slice(0, 7);
-  if (!isMonthKey(month)) {
-    return NextResponse.json(
-      { error: "month は YYYY-MM 形式で指定してください" },
-      { status: 400 },
-    );
-  }
+  if (!isMonthKey(month)) return EVENT_API_RESPONSES.invalidMonth();
 
   try {
     return NextResponse.json(await listEventsInMonth(month));
@@ -29,13 +25,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const authorized = await authorizeAdminApi();
-  if ("response" in authorized) return authorized.response;
+  const session = await auth();
+  if (!session?.user?.id) return EVENT_API_RESPONSES.unauthorized();
+  if (!isAdminSession(session)) return EVENT_API_RESPONSES.forbidden();
 
   try {
     // JSON として読めない本文も「不正な入力」として 400 に落とす
     const body = await request.json().catch(() => null);
-    const id = await createEvent(parseEventInput(body), authorized.userId);
+    const id = await createEvent(parseEventInput(body), session.user.id);
     return NextResponse.json({ id });
   } catch (error) {
     return toEventErrorResponse(error, "Failed to create event");
