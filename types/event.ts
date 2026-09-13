@@ -13,7 +13,7 @@ export type EventSource = (typeof EVENT_SOURCES)[number];
  * 日時はすべて日本時間で入力・表示する。保存は UTC の Timestamp なので、
  * 表示側は必ず Asia/Tokyo で整形する (lib/events-format.ts)。
  */
-export interface CircleEvent {
+export interface LumosEvent {
   id: string;
   title: string;
   /** 説明 (プレーンテキスト。改行はそのまま表示する) */
@@ -36,12 +36,18 @@ export interface CircleEvent {
   updatedAt: string | null;
 }
 
+/** イベントの中身。出どころと作成者は更新で触らないので含めない */
+export type LumosEventInput = Pick<
+  LumosEvent,
+  "title" | "description" | "startAt" | "endAt" | "allDay" | "location"
+>;
+
 export function isEventSource(value: unknown): value is EventSource {
   return EVENT_SOURCES.includes(value as EventSource);
 }
 
 /** 開始が早い順。サーバーの一覧と管理 UI の楽観更新で同じ並びを使う */
-export function byStartAtAsc(a: CircleEvent, b: CircleEvent): number {
+export function byStartAtAsc(a: LumosEvent, b: LumosEvent): number {
   return a.startAt.localeCompare(b.startAt);
 }
 

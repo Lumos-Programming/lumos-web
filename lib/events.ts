@@ -13,16 +13,13 @@ import {
   EVENT_ERROR_CODES,
   EventError,
   byStartAtAsc,
-  type CircleEvent,
+  type LumosEvent,
+  type LumosEventInput,
 } from "@/types/event";
 
 const COLLECTION = "events";
 
-/** イベントの中身。出どころと作成者は更新で触らないので含めない */
-export type EventInput = Pick<
-  CircleEvent,
-  "title" | "description" | "startAt" | "endAt" | "allDay" | "location"
->;
+export type EventInput = LumosEventInput;
 
 /**
  * リクエストボディの形。日時の妥当性は assertValidEventInput が見るので、
@@ -84,10 +81,10 @@ function toIso(value?: FirebaseFirestore.Timestamp | null): string | null {
   return value ? value.toDate().toISOString() : null;
 }
 
-function toCircleEvent(
+function toLumosEvent(
   id: string,
   data: FirebaseFirestore.DocumentData,
-): CircleEvent {
+): LumosEvent {
   return {
     id,
     title: data.title,
@@ -125,7 +122,7 @@ function toDocumentFields(input: EventInput) {
  */
 export async function listEventsInMonth(
   monthKey: string,
-): Promise<CircleEvent[]> {
+): Promise<LumosEvent[]> {
   const db = getDb();
   const from = monthStartIso(shiftMonth(monthKey, -1));
   const to = monthStartIso(shiftMonth(monthKey, 1));
@@ -136,7 +133,7 @@ export async function listEventsInMonth(
     .where("startAt", "<", Timestamp.fromDate(new Date(to)))
     .get();
 
-  const events = snap.docs.map((doc) => toCircleEvent(doc.id, doc.data()));
+  const events = snap.docs.map((doc) => toLumosEvent(doc.id, doc.data()));
   return filterEventsInMonth(events, monthKey).sort(byStartAtAsc);
 }
 
@@ -147,7 +144,7 @@ export async function listEventsInMonth(
 export async function listUpcomingEvents(
   limit = 10,
   now: Date = new Date(),
-): Promise<CircleEvent[]> {
+): Promise<LumosEvent[]> {
   const db = getDb();
   const todayStart = dateKeyToIso(todayJstKey(now));
 
@@ -158,7 +155,7 @@ export async function listUpcomingEvents(
     .limit(limit)
     .get();
 
-  return snap.docs.map((doc) => toCircleEvent(doc.id, doc.data()));
+  return snap.docs.map((doc) => toLumosEvent(doc.id, doc.data()));
 }
 
 /**
@@ -167,7 +164,7 @@ export async function listUpcomingEvents(
  */
 export async function listEventsForAdmin(
   now: Date = new Date(),
-): Promise<CircleEvent[]> {
+): Promise<LumosEvent[]> {
   const db = getDb();
   const from = dateKeyToIso(addDays(todayJstKey(now), -365));
 
@@ -177,14 +174,14 @@ export async function listEventsForAdmin(
     .orderBy("startAt", "asc")
     .get();
 
-  return snap.docs.map((doc) => toCircleEvent(doc.id, doc.data()));
+  return snap.docs.map((doc) => toLumosEvent(doc.id, doc.data()));
 }
 
-export async function getEvent(id: string): Promise<CircleEvent | null> {
+export async function getEvent(id: string): Promise<LumosEvent | null> {
   const db = getDb();
   const snap = await db.collection(COLLECTION).doc(id).get();
   if (!snap.exists) return null;
-  return toCircleEvent(snap.id, snap.data()!);
+  return toLumosEvent(snap.id, snap.data()!);
 }
 
 /** 作成してドキュメント ID を返す。ダッシュボードからの手入力なので source は manual */

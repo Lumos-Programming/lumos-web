@@ -1,24 +1,24 @@
 import { describe, it, expect } from "vitest";
 import type { Session } from "next-auth";
-import { isAdminSession } from "./admin-api-auth";
+import { isEventEditor } from "./event-auth";
 
 function session(user: Partial<Session["user"]>): Session {
   return { user: { id: "u1", isAdmin: false, ...user }, expires: "" };
 }
 
-describe("isAdminSession", () => {
+describe("isEventEditor", () => {
   it("allows admins", () => {
-    expect(isAdminSession(session({ isAdmin: true }))).toBe(true);
+    expect(isEventEditor(session({ isAdmin: true }))).toBe(true);
   });
 
   it("rejects non-admins and missing sessions", () => {
-    expect(isAdminSession(null)).toBe(false);
-    expect(isAdminSession(session({ isAdmin: false }))).toBe(false);
-    expect(isAdminSession(session({ id: "", isAdmin: true }))).toBe(false);
+    expect(isEventEditor(null)).toBe(false);
+    expect(isEventEditor(session({ isAdmin: false }))).toBe(false);
+    expect(isEventEditor(session({ id: "", isAdmin: true }))).toBe(false);
   });
 
   it("rejects opted-out users even if the admin flag lingers in the session", () => {
-    expect(isAdminSession(session({ isAdmin: true, optedOut: true }))).toBe(
+    expect(isEventEditor(session({ isAdmin: true, optedOut: true }))).toBe(
       false,
     );
   });

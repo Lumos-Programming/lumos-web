@@ -11,38 +11,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EventItem } from "@/components/events/event-item";
 import {
-  jstLocalToIso,
   todayJstKey,
   toJstDateKey,
   toJstDatetimeLocal,
 } from "@/lib/events-format";
-import { byStartAtAsc, type CircleEvent } from "@/types/event";
+import {
+  EMPTY_EVENT_FORM,
+  eventFormSchema,
+  toEventInput,
+  type EventFormValues,
+} from "@/lib/events-form";
+import { byStartAtAsc, type LumosEvent } from "@/types/event";
 
-/**
- * フォームの値。日時は datetime-local / date の文字列のまま持ち、
- * 送信時に日本時間として ISO に変換する。
- */
-type EventFormValues = {
-  title: string;
-  allDay: boolean;
-  /** 時刻あり: "YYYY-MM-DDTHH:mm" / 終日: "YYYY-MM-DD" */
-  start: string;
-  /** 空なら終了なし */
-  end: string;
-  location: string;
-  description: string;
-};
-
-const EMPTY_FORM: EventFormValues = {
-  title: "",
-  allDay: false,
-  start: "",
-  end: "",
-  location: "",
-  description: "",
-};
-
-function toFormValues(event: CircleEvent): EventFormValues {
+function toFormValues(event: LumosEvent): EventFormValues {
   const toLocal = (iso: string) =>
     event.allDay ? toJstDateKey(iso) : toJstDatetimeLocal(iso);
   return {
@@ -64,14 +45,14 @@ function switchAllDay(value: string, allDay: boolean): string {
 
 interface EventManagerProps {
   /** サーバーで取得した一覧 (開始順)。以降の増減はこのコンポーネントが持つ */
-  initialEvents: CircleEvent[];
+  initialEvents: LumosEvent[];
 }
 
 export function EventManager({ initialEvents }: EventManagerProps) {
   const router = useRouter();
   const [events, setEvents] = useState(initialEvents);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<EventFormValues>(EMPTY_FORM);
+  const [form, setForm] = useState<EventFormValues>(EMPTY_EVENT_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,7 +64,7 @@ export function EventManager({ initialEvents }: EventManagerProps) {
     .filter((e) => toJstDateKey(e.endAt ?? e.startAt) < today)
     .reverse();
 
-  const startEdit = (event: CircleEvent) => {
+  const startEdit = (event: LumosEvent) => {
     setEditingId(event.id);
     setForm(toFormValues(event));
     setError(null);
@@ -92,7 +73,7 @@ export function EventManager({ initialEvents }: EventManagerProps) {
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm(EMPTY_FORM);
+    setForm(EMPTY_EVENT_FORM);
     setError(null);
   };
 
@@ -105,25 +86,12 @@ export function EventManager({ initialEvents }: EventManagerProps) {
     e.preventDefault();
     setError(null);
 
-    const startAt = jstLocalToIso(form.start);
-    if (!form.title.trim() || !startAt) {
-      setError("タイトルと開始日時を入力してください");
+    const parsed = eventFormSchema.safeParse(form);
+    if (!parsed.success) {
+      setError(parsed.error.issues[0].message);
       return;
     }
-    const endAt = form.end ? jstLocalToIso(form.end) : null;
-    if (form.end && !endAt) {
-      setError("終了日時の形式が正しくありません");
-      return;
-    }
-
-    const payload = {
-      title: form.title,
-      description: form.description,
-      startAt,
-      endAt,
-      allDay: form.allDay,
-      location: form.location,
-    };
+    const payload = toEventInput(parsed.data);
 
     setSubmitting(true);
     try {
@@ -142,7 +110,7 @@ export function EventManager({ initialEvents }: EventManagerProps) {
         return;
       }
 
-      const saved: CircleEvent = editingId
+      const saved: LumosEvent = editingId
         ? { ...events.find((ev) => ev.id === editingId)!, ...payload }
         : {
             ...payload,
@@ -165,7 +133,7 @@ export function EventManager({ initialEvents }: EventManagerProps) {
     }
   };
 
-  const handleDelete = async (event: CircleEvent) => {
+  const handleDelete = async (event: LumosEvent) => {
     if (!confirm(`「${event.title}」を削除しますか？`)) return;
     setError(null);
     try {
@@ -184,7 +152,7 @@ export function EventManager({ initialEvents }: EventManagerProps) {
   };
 
   const inputType = form.allDay ? "date" : "datetime-local";
-  const actionsFor = (event: CircleEvent) => (
+  const actionsFor = (event: LumosEvent) => (
     <>
       <Button
         variant="ghost"
