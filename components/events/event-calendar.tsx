@@ -17,7 +17,7 @@ import {
   toJstTime,
   weekdayOf,
 } from "@/lib/events-format";
-import type { CircleEvent } from "@/types/event";
+import type { LumosEvent } from "@/types/event";
 import { EVENT_SOURCE_STYLES, EventItem } from "@/components/events/event-item";
 
 /** マスに並べるチップの上限。それ以上は "+N" にまとめる */
@@ -27,7 +27,7 @@ interface EventCalendarProps {
   /** 表示する月 ("YYYY-MM"、日本時間) */
   month: string;
   /** その月にかかっているイベント (開始順) */
-  events: CircleEvent[];
+  events: LumosEvent[];
   /** 日本時間の今日。SSR と CSR でずれないようサーバーから渡す */
   today: string;
 }
@@ -42,7 +42,7 @@ export function EventCalendar({ month, events, today }: EventCalendarProps) {
   const thisMonth = today.slice(0, 7);
 
   const eventsByDay = useMemo(() => {
-    const map = new Map<string, CircleEvent[]>();
+    const map = new Map<string, LumosEvent[]>();
     for (const day of days) {
       map.set(
         day,

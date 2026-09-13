@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { isAdminSession } from "@/lib/admin-api-auth";
+import { isEventEditor } from "@/lib/event-auth";
 import { createEvent, listEventsInMonth, parseEventInput } from "@/lib/events";
 import { isMonthKey, todayJstKey } from "@/lib/events-format";
 import {
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) return EVENT_API_RESPONSES.unauthorized();
-  if (!isAdminSession(session)) return EVENT_API_RESPONSES.forbidden();
+  if (!isEventEditor(session)) return EVENT_API_RESPONSES.forbidden();
 
   try {
     // JSON として読めない本文も「不正な入力」として 400 に落とす

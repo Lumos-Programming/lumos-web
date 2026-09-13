@@ -1,4 +1,4 @@
-import type { CircleEvent } from "@/types/event";
+import type { LumosEvent } from "@/types/event";
 
 /**
  * イベントの日時まわりの純粋関数。サーバーとクライアントの両方から使う。
@@ -134,7 +134,7 @@ export function monthGridDays(monthKey: string): string[] {
 }
 
 /** イベントがかかっている日付キーの範囲 (両端含む) */
-export function eventDateRange(event: CircleEvent): {
+export function eventDateRange(event: LumosEvent): {
   start: string;
   end: string;
 } {
@@ -149,16 +149,16 @@ export function eventDateRange(event: CircleEvent): {
 }
 
 /** イベントが指定の日付キーにかかっているか */
-export function eventCoversDate(event: CircleEvent, dateKey: string): boolean {
+export function eventCoversDate(event: LumosEvent, dateKey: string): boolean {
   const { start, end } = eventDateRange(event);
   return start <= dateKey && dateKey <= end;
 }
 
 /** 月キーに 1 日でもかかっているイベントだけ残す */
 export function filterEventsInMonth(
-  events: CircleEvent[],
+  events: LumosEvent[],
   monthKey: string,
-): CircleEvent[] {
+): LumosEvent[] {
   const first = `${monthKey}-01`;
   const last = addDays(`${shiftMonth(monthKey, 1)}-01`, -1);
   return events.filter((e) => {
@@ -188,7 +188,7 @@ export function formatDateKey(dateKey: string, withYear = false): string {
  *   時刻 別日:   "9月20日(土) 22:00〜9月21日(日) 01:00"
  */
 export function formatEventSchedule(
-  event: CircleEvent,
+  event: LumosEvent,
   now: Date = new Date(),
 ): string {
   const startKey = toJstDateKey(event.startAt);

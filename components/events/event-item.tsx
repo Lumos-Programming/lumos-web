@@ -3,11 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatEventSchedule } from "@/lib/events-format";
-import type { CircleEvent } from "@/types/event";
+import type { LumosEvent } from "@/types/event";
 
 /** 出どころごとの色。mini-LT からの取り込みは差し色のオレンジで見分ける */
 export const EVENT_SOURCE_STYLES: Record<
-  CircleEvent["source"],
+  LumosEvent["source"],
   { label: string; chip: string; dot: string }
 > = {
   manual: {
@@ -23,7 +23,7 @@ export const EVENT_SOURCE_STYLES: Record<
 };
 
 interface EventItemProps {
-  event: CircleEvent;
+  event: LumosEvent;
   /** 過去のイベントを薄く出す */
   past?: boolean;
   /** 右側に置く操作ボタンなど */
