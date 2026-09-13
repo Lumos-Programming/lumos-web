@@ -5,24 +5,22 @@ import {
   validateImageUpload,
   UploadValidationError,
 } from "@/lib/upload";
-import { authorizeNewsWriter } from "@/lib/news-auth";
+import { auth } from "@/lib/auth";
+import { isNewsEditor } from "@/lib/news-auth";
+import { NEWS_API_RESPONSES } from "@/lib/news-response";
 
 /** お知らせのアイキャッチ画像。一覧のカードにも出るので大きめに許容する */
 const MAX_BYTES = 5 * 1024 * 1024;
 
 export async function POST(request: Request) {
-  const authorized = await authorizeNewsWriter();
-  if ("response" in authorized) return authorized.response;
+  const session = await auth();
+  if (!session?.user?.id) return NEWS_API_RESPONSES.unauthorized();
+  if (!isNewsEditor(session)) return NEWS_API_RESPONSES.forbidden();
 
   try {
     const formData = await request.formData();
     const file = formData.get("image") as File | null;
-    if (!file) {
-      return NextResponse.json(
-        { error: "画像が選択されていません" },
-        { status: 400 },
-      );
-    }
+    if (!file) return NEWS_API_RESPONSES.imageRequired();
 
     const buffer = await validateImageUpload(file, { maxBytes: MAX_BYTES });
     const url = await uploadToGCS(buffer, `news/${randomUUID()}.webp`, {
@@ -35,9 +33,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error("Failed to upload news image:", error);
-    return NextResponse.json(
-      { error: "画像のアップロードに失敗しました" },
-      { status: 500 },
-    );
+    return NEWS_API_RESPONSES.imageUploadFailed();
   }
 }
