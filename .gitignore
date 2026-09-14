@@ -41,5 +41,6 @@ infra/*.tfstate*
 .sa-key-*.json
 
 # windows auto created files
-*:Zone.Identifier
-*Zone.Identifier
+**/*Zone.Identifier
+
+.pnpm-store
