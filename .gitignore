@@ -30,6 +30,9 @@ next-env.d.ts
 firebase-debug.log
 firestore-debug.log
 
+# macOS
+.DS_Store
+
 .claude
 
 # build version info (generated at build time)

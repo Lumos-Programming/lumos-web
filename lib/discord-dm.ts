@@ -668,7 +668,7 @@ async function createDmChannel(recipientId: string): Promise<string> {
   return data.id;
 }
 
-async function sendChannelMessage(
+export async function sendDiscordChannelMessage(
   channelId: string,
   payload: DiscordMessagePayload,
 ): Promise<{ messageId: string }> {
@@ -691,7 +691,9 @@ async function sendChannelMessage(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Failed to send DM message: ${response.status} ${error}`);
+    throw new Error(
+      `Failed to send Discord channel message: ${response.status} ${error}`,
+    );
   }
 
   const data = (await response.json()) as { id: string };
@@ -703,7 +705,7 @@ export async function sendDiscordDm(
   payload: DiscordMessagePayload,
 ): Promise<{ channelId: string; messageId: string }> {
   const channelId = await createDmChannel(recipientId);
-  const { messageId } = await sendChannelMessage(channelId, payload);
+  const { messageId } = await sendDiscordChannelMessage(channelId, payload);
   return { channelId, messageId };
 }
 

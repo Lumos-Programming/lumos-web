@@ -1,3 +1,5 @@
+import type { ISODateString } from "@/lib/date";
+
 export type Member = {
   id: string; // discordId
   name: string;
@@ -25,7 +27,7 @@ export type Member = {
   memberType?: string; // 学部生/院生/その他/卒業生
   currentOrg?: string; // 卒業生の現在の所属
   gender?: string; // 性別
-  birthDate?: string; // 誕生日 (YYYY-MM-DD)
+  birthDate?: ISODateString;
   ringColor?: string; // リングカラーキー
   interests?: string[]; // 興味分野タグ
   topInterests?: string[]; // 一覧表示用Top 3
