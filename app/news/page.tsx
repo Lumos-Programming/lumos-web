@@ -2,25 +2,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
-import { newsArticles } from "./news-data";
+import { listPublishedNews } from "@/lib/news";
 
-// 日本語の日付文字列をYYYYMMDD形式の数値に変換してソート
-const parseJapaneseDate = (dateStr: string): number => {
-  const match = dateStr.match(/(\d+)年(\d+)月(\d+)?/);
-  if (match) {
-    const year = match[1];
-    const month = match[2].padStart(2, "0");
-    const day = match[3] ? match[3].padStart(2, "0") : "15"; // "中" などの曖昧な表記は15とする
-    return Number(`${year}${month}${day}`);
-  }
-  return 0;
-};
+// Firestore はビルド環境から到達できないので、ここを静的プリレンダリングの対象にしない。
+// ISR にすると、デプロイ直後にビルド時のスナップショットが revalidate まで居座ってしまう。
+export const dynamic = "force-dynamic";
 
-const sortedNewsArticles = [...newsArticles].sort(
-  (a, b) => parseJapaneseDate(b.date) - parseJapaneseDate(a.date),
-);
+export default async function NewsPage() {
+  // 並べ替えは publishedAt で済んでいる (旧データの日本語表記を毎回パースしなくてよい)
+  const sortedNewsArticles = await listPublishedNews();
 
-export default function NewsPage() {
   return (
     <>
       {/* Header Section */}

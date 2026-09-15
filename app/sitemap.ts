@@ -1,9 +1,12 @@
 import type { MetadataRoute } from "next";
-import { newsArticles } from "./news/news-data";
+import { listPublishedNews } from "@/lib/news";
 
 const BASE_URL = "https://lumos-ynu.jp";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// お知らせを Firestore から読むため、ビルド時に生成しない
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE_URL, priority: 1.0, changeFrequency: "weekly" },
     { url: `${BASE_URL}/about`, priority: 0.8, changeFrequency: "monthly" },
@@ -13,7 +16,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/contact`, priority: 0.5, changeFrequency: "monthly" },
   ];
 
-  const newsPages: MetadataRoute.Sitemap = newsArticles.map((article) => ({
+  const articles = await listPublishedNews();
+  const newsPages: MetadataRoute.Sitemap = articles.map((article) => ({
     url: `${BASE_URL}/news/${article.id}`,
     priority: 0.5,
     changeFrequency: "monthly",

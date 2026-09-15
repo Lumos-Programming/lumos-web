@@ -5,7 +5,7 @@ import { RoleSyncPanel } from "@/components/admin/role-sync-panel";
 import { RoleAssignmentPanel } from "@/components/admin/role-assignment-panel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Shield, AlertCircle, Users } from "lucide-react";
+import { Shield, AlertCircle, Users, Newspaper } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +55,19 @@ export default async function AdminPage() {
           <Link href="/internal/admin/members">
             <Users className="h-4 w-4" />
             メンバー一覧ダッシュボード
+          </Link>
+        </Button>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold mb-4">お知らせ管理</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Lumos公式のお知らせを作成・公開します。公開したものが /news に出ます。
+        </p>
+        <Button asChild variant="outline">
+          <Link href="/internal/admin/news">
+            <Newspaper className="h-4 w-4" />
+            お知らせを書く
           </Link>
         </Button>
       </section>
