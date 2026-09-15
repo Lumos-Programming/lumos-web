@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { getWeekData } from "@/lib/firebase";
 import { getNextEventWeekId } from "@/lib/mini-lt/utils";
 import { buildNextEventFlexMessage } from "@/lib/mini-lt/line-flex";
+import { requireMiniLtAdmin } from "@/lib/mini-lt/authorization";
 
 export async function sendLineNextEvent(): Promise<void> {
+  await requireMiniLtAdmin();
   const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
   const toUserId = process.env.LINE_PUSH_TARGET_ID;
 

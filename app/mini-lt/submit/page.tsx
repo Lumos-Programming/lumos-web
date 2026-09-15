@@ -4,7 +4,7 @@ import { resolveWeekId } from "@/lib/mini-lt/utils";
 import {
   createWeekEvent,
   syncWeekEventDescription,
-} from "@/lib/mini-lt/actions/discord-events";
+} from "@/lib/mini-lt/discord-events";
 import { WeekNavigator } from "@/components/mini-lt/WeekNavigator";
 import { ManageTalks } from "@/components/mini-lt/ManageTalks";
 import { Header } from "@/components/mini-lt/Header";
@@ -198,7 +198,7 @@ export default async function SubmitPage({
     if (updatedData.discordEventId) {
       // Event exists, sync the description
       try {
-        await syncWeekEventDescription(weekId, updatedData.discordEventId);
+        await syncWeekEventDescription(weekId);
       } catch (error) {
         console.error("Failed to sync Discord event:", error);
         // Don't fail the entire operation if Discord sync fails
@@ -230,7 +230,7 @@ export default async function SubmitPage({
     const updatedData = await getWeekData(weekId);
     if (updatedData.discordEventId) {
       try {
-        await syncWeekEventDescription(weekId, updatedData.discordEventId);
+        await syncWeekEventDescription(weekId);
       } catch (error) {
         console.error("Failed to sync Discord event:", error);
         // Don't fail the entire operation if Discord sync fails

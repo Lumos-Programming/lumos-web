@@ -132,24 +132,12 @@ export default async function AdminPage({
                   </div>
 
                   <div className="flex gap-2">
-                    <form
-                      action={syncWeekEventDescription.bind(
-                        null,
-                        weekId,
-                        data.discordEventId,
-                      )}
-                    >
+                    <form action={syncWeekEventDescription.bind(null, weekId)}>
                       <Button type="submit" variant="outline">
                         📝 Event説明を更新
                       </Button>
                     </form>
-                    <form
-                      action={deleteWeekEvent.bind(
-                        null,
-                        weekId,
-                        data.discordEventId,
-                      )}
-                    >
+                    <form action={deleteWeekEvent.bind(null, weekId)}>
                       <Button
                         type="submit"
                         variant="outline"

@@ -52,13 +52,6 @@ export async function GET(request: Request) {
     secure: isProduction,
     sameSite: "lax",
   });
-  cookieStore.set("oauth_link_discord_id", session.user.id, {
-    httpOnly: true,
-    maxAge: 600,
-    path: "/",
-    secure: isProduction,
-    sameSite: "lax",
-  });
   cookieStore.set(
     "oauth_link_redirect",
     new URL(request.url).searchParams.get("redirectTo") ?? "/internal/settings",
