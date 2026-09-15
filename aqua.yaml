@@ -13,3 +13,4 @@ registries:
 packages:
   - name: casey/just@1.48.1
   - name: hashicorp/terraform@v1.14.8
+  - name: jqlang/jq@jq-1.8.2
