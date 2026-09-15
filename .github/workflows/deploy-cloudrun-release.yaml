@@ -1,11 +1,49 @@
+# 通常リリースのタグを検証し、production Environment を使用して本番の Cloud Run へデプロイする。
 name: Deploy to Cloud Run (Release)
 on:
   release:
     types:
-      - released
+      - published
 jobs:
-  build-and-deploy:
+  validate-release-tag:
+    # Draft からの公開も検証するため published を使い、通常リリースだけを処理する。
+    if: github.event.release.prerelease == false
     runs-on: ubuntu-latest
+    permissions:
+      contents: "write"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Validate release tag
+        id: validate
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          stable_release_tags=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[] | select(.draft == false and .prerelease == false) | .tag_name')
+          bash .github/scripts/validate-release-tag.sh release "$RELEASE_TAG" <<< "$stable_release_tags"
+
+      # API 取得などの予期しない失敗では削除せず、明示的な検証エラーの場合だけ削除する。
+      - name: Delete invalid release and tag
+        if: steps.validate.outputs.invalid == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release delete "$RELEASE_TAG" --cleanup-tag --yes
+
+      - name: Fail workflow for invalid release tag
+        if: always() && steps.validate.outcome == 'failure'
+        run: exit 1
+
+  build-and-deploy:
+    needs: validate-release-tag
+    runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: "read"
       id-token: "write"
