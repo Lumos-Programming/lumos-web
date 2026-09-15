@@ -17,7 +17,8 @@ locals {
     "line-channel-access-token",
     "line-bot-friend-url",
     "admin-notification-channel-webhook",
-    "cron-secret"
+    "cron-secret",
+    "github-token"
   ]
 
   # Build a flat map: "github-oauth-secret-dev" => { secret_suffix, env }
