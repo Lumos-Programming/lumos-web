@@ -17,7 +17,10 @@ locals {
     "line-channel-access-token",
     "line-bot-friend-url",
     "admin-notification-channel-webhook",
-    "cron-secret"
+    "cron-secret",
+    # Lusy GitHub Reminder Bot (issue #273)
+    "github-app-private-key",
+    "github-webhook-secret"
   ]
 
   # Build a flat map: "github-oauth-secret-dev" => { secret_suffix, env }
