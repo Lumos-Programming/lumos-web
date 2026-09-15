@@ -42,3 +42,8 @@ firestore-debug.log
 infra/.terraform/
 infra/*.tfstate*
 .sa-key-*.json
+
+# windows auto created files
+**/*Zone.Identifier
+
+.pnpm-store
