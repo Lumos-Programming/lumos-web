@@ -11,12 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: "write"
+      deployments: "read"
+      actions: "read"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           persist-credentials: false
           ref: ${{ github.event.repository.default_branch }}
+
+      # 成功済みの再実行では既存の Release / Tag を削除しない。
+      - name: Check previous deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: bash .github/scripts/check-release-deployment.sh staging "$RELEASE_TAG"
 
       - name: Validate pre-release tag
         id: validate
@@ -32,7 +41,7 @@ jobs:
 
       # API 取得などの予期しない失敗では削除せず、明示的な検証エラーの場合だけ削除する。
       - name: Delete invalid pre-release and tag
-        if: steps.validate.outputs.invalid == 'true'
+        if: github.run_attempt == 1 && steps.validate.outputs.invalid == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
@@ -45,11 +54,30 @@ jobs:
   build-and-deploy:
     needs: validate-release-tag
     runs-on: ubuntu-latest
+    # 同じタグの並行デプロイを直列化し、待機後に成功履歴を再確認する。
+    concurrency:
+      group: release-deploy-staging-${{ github.event.release.tag_name }}
+      cancel-in-progress: false
     environment: staging
     permissions:
       contents: "read"
+      deployments: "read"
+      actions: "read"
       id-token: "write"
     steps:
+      # デプロイだけを再実行する場合も、成功済みの同一バージョンは再デプロイしない。
+      - name: Checkout deployment guard
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Check previous deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: bash .github/scripts/check-release-deployment.sh staging "$RELEASE_TAG"
+
       - name: Checkout code
         uses: actions/checkout@v4
 
