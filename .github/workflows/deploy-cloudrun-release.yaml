@@ -24,9 +24,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_ID: ${{ github.event.release.id }}
         run: |
-          stable_release_tags=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[] | select(.draft == false and .prerelease == false) | .tag_name')
-          bash .github/scripts/validate-release-tag.sh release "$RELEASE_TAG" <<< "$stable_release_tags"
+          # 公開イベントの Release 自体だけを ID で除外し、過去の RC も比較する。
+          release_tags=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" | jq -r --argjson release_id "$RELEASE_ID" '.[] | select(.draft == false and .id != $release_id) | .tag_name')
+          bash .github/scripts/validate-release-tag.sh release "$RELEASE_TAG" <<< "$release_tags"
 
       # API 取得などの予期しない失敗では削除せず、明示的な検証エラーの場合だけ削除する。
       - name: Delete invalid release and tag

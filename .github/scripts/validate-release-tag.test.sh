@@ -18,10 +18,10 @@ run_case() {
   case_number=$((case_number + 1))
   github_output="$test_root/case-$case_number-output"
   : > "$github_output"
-  stable_release_tags=$(printf '%s\n' "$@")
+  release_tags=$(printf '%s\n' "$@")
 
   set +e
-  output=$(GITHUB_OUTPUT="$github_output" bash "$validator" "$mode" "$candidate" <<< "$stable_release_tags" 2>&1)
+  output=$(GITHUB_OUTPUT="$github_output" bash "$validator" "$mode" "$candidate" <<< "$release_tags" 2>&1)
   status=$?
   set -e
 
@@ -52,24 +52,67 @@ run_case() {
   echo "PASS: $mode $candidate ($expected)"
 }
 
-run_case pass release v2.0.2 v2.0.1 v2.0.2
-run_case pass release v2.1.0 v2.0.1 v2.1.0
-run_case pass release v3.0.0 v2.0.1 v3.0.0
+# History contains preceding published releases, including release candidates.
+run_case pass release v2.0.2 v2.0.1
+run_case pass release v2.1.0 v2.0.1
+run_case pass release v3.0.0 v2.0.1
+run_case fail release v2.0.2 v2.0.1 v2.0.2
 run_case fail release v2.0.0 v2.0.0 v2.0.1
-run_case fail release v2.0.3 v2.0.1 v2.0.3
-run_case fail release v2.1.1 v2.0.1 v2.1.1
-run_case fail release v2.1.1 v2.0.10 v2.1.1
-run_case fail release v2.0.2-rc.0 v2.0.1 v2.0.2-rc.0
+run_case fail release v2.0.3 v2.0.1
+run_case fail release v2.1.1 v2.0.1
+run_case fail release v2.1.1 v2.0.10
+run_case fail release v2.0.2-rc.0 v2.0.1
 
-run_case pass prerelease v2.0.2-rc.0 v2.0.1 v2.0.2-rc.0
-run_case pass prerelease v2.0.2-rc.2 v2.0.1 v2.0.2-rc.2
-run_case fail prerelease v2.0.3-rc.0 v2.0.1 v2.0.3-rc.0
-run_case fail prerelease v2.0.2 v2.0.1 v2.0.2
-run_case fail prerelease v2.0.2-beta.1 v2.0.1 v2.0.2-beta.1
+run_case pass prerelease v2.0.2-rc.0 v2.0.1
+run_case pass prerelease v2.0.2-rc.1 v2.0.1 v2.0.2-rc.0
+run_case pass prerelease v2.0.2-rc.2 v2.0.1 v2.0.2-rc.0
+run_case pass prerelease v2.0.2-rc.10 v2.0.2-rc.9 v2.0.1 v2.0.2-rc.2
+run_case fail prerelease v2.0.2-rc.0 v2.0.1 v2.0.2-rc.0
+run_case fail prerelease v2.0.2-rc.1 v2.0.1 v2.0.2-rc.2
+run_case fail prerelease v2.0.3-rc.0 v2.0.1
+run_case fail prerelease v2.0.2 v2.0.1
+run_case fail prerelease v2.0.2-beta.1 v2.0.1
 
-run_case pass auto v2.0.2 v2.0.1 v2.0.2
-run_case pass auto v2.0.2-rc.5 v2.0.1 v2.0.2-rc.5
-run_case fail auto v2.0.3 v2.0.1 v2.0.3
-run_case fail auto v2.0.2-beta.1 v2.0.1 v2.0.2-beta.1
+# A release candidate can be promoted to the stable version of the same base.
+run_case pass prerelease v2.0.0-rc.0 v1.9.0
+run_case pass prerelease v2.0.0-rc.1 v1.9.0 v2.0.0-rc.0
+run_case pass release v2.0.0 v1.9.0 v2.0.0-rc.0 v2.0.0-rc.1
+run_case fail release v2.0.0 v1.9.0 v2.0.0-rc.1 v2.0.0
+run_case fail prerelease v2.0.0-rc.2 v1.9.0 v2.0.0-rc.1 v2.0.0
+run_case pass prerelease v2.0.1-rc.0 v2.0.0-rc.1 v2.0.0
 
-echo "All release tag validation tests passed."
+# A patch release can progress through RCs after the preceding stable release.
+run_case pass prerelease v3.0.2-rc.0 v3.0.1
+run_case pass prerelease v3.0.2-rc.1 v3.0.1 v3.0.2-rc.0
+run_case pass release v3.0.2 v3.0.1 v3.0.2-rc.0 v3.0.2-rc.1
+run_case fail release v3.0.2 v3.0.1 v3.0.2-rc.0 v3.0.2-rc.1 v3.0.2
+run_case fail prerelease v3.0.2-rc.2 v3.0.1 v3.0.2-rc.1 v3.0.2
+
+# The same sequence works before the first stable release.
+run_case pass prerelease v2.0.0-rc.0
+run_case pass prerelease v2.0.0-rc.1 v2.0.0-rc.0
+run_case pass release v2.0.0 v2.0.0-rc.0 v2.0.0-rc.1
+run_case fail prerelease v2.0.0-rc.0 v2.0.0-rc.1
+run_case fail prerelease v2.0.0-rc.1 v2.0.0-rc.1
+run_case fail release v2.0.0 v2.0.0
+
+# A higher prerelease also prevents moving back to a lower version series.
+run_case fail release v2.0.2 v2.0.1 v2.1.0-rc.0
+run_case fail prerelease v2.0.2-rc.5 v2.0.1 v2.1.0-rc.0
+run_case pass prerelease v2.1.0-rc.0 v2.0.1 v2.0.2-rc.5
+run_case pass release v2.0.10 v2.0.9 v2.0.10-rc.10
+run_case pass release v2.10.0 v2.9.0 v2.10.0-rc.0
+
+run_case pass auto v2.0.2 v2.0.1 v2.0.2-rc.5
+run_case pass auto v2.0.2-rc.1 v2.0.1 v2.0.2-rc.0
+run_case fail auto v2.0.2 v2.0.1 v2.0.2
+run_case fail auto v2.0.2-rc.1 v2.0.1 v2.0.2-rc.1
+run_case fail auto v2.0.2-rc.0 v2.0.1 v2.0.2-rc.1
+run_case fail auto v2.0.3 v2.0.1
+run_case fail auto v2.0.2-beta.1 v2.0.1
+
+# Irrelevant or malformed historical tags do not affect version precedence.
+run_case pass release v2.0.2 unrelated v02.0.3 v2.0.2-beta.1 v2.0.1
+run_case fail prerelease v2.0.2-rc.01 v2.0.1
+
+echo "All $case_number release tag validation tests passed."

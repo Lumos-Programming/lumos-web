@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Release / Pre-release タグの命名規則と、直前の通常リリースからの
 # セマンティックバージョン遷移を検証する。
-# 公開済み通常リリースのタグ一覧は標準入力から受け取る。
+# 先行する公開済みリリース（RC を含む）のタグ一覧は標準入力から受け取る。
 
 set -euo pipefail
 
@@ -58,6 +58,7 @@ fi
 current_major=${BASH_REMATCH[1]}
 current_minor=${BASH_REMATCH[2]}
 current_patch=${BASH_REMATCH[3]}
+current_rc=${BASH_REMATCH[4]:-}
 
 latest_stable_tag=""
 latest_major=-1
@@ -65,13 +66,35 @@ latest_minor=-1
 latest_patch=-1
 
 while IFS= read -r tag; do
-  if [[ "$tag" == "$current_tag" || ! "$tag" =~ $stable_pattern ]]; then
+  if [[ "$tag" =~ $stable_pattern ]]; then
+    tag_rc=""
+  elif [[ "$tag" =~ $prerelease_pattern ]]; then
+    tag_rc=${BASH_REMATCH[4]}
+  else
     continue
   fi
 
   tag_major=${BASH_REMATCH[1]}
   tag_minor=${BASH_REMATCH[2]}
   tag_patch=${BASH_REMATCH[3]}
+
+  # 同じ基本バージョンでは RC の番号順とし、通常リリースをすべての RC より後とする。
+  if ((current_major < tag_major ||
+    (current_major == tag_major && current_minor < tag_minor) ||
+    (current_major == tag_major && current_minor == tag_minor && current_patch < tag_patch))); then
+    fail_validation "Version must be greater than $tag; got '$current_tag'"
+  fi
+
+  if ((current_major == tag_major && current_minor == tag_minor && current_patch == tag_patch)); then
+    if [[ -z "$tag_rc" ]] || { [[ -n "$current_rc" ]] && ((current_rc <= tag_rc)); }; then
+      fail_validation "Version must be greater than $tag; got '$current_tag'"
+    fi
+  fi
+
+  # 既存の patch / minor / major の遷移規則は直前の通常リリースを基準にする。
+  if [[ -n "$tag_rc" ]]; then
+    continue
+  fi
 
   if ((tag_major > latest_major ||
     (tag_major == latest_major && tag_minor > latest_minor) ||

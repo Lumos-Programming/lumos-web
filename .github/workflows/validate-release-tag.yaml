@@ -21,9 +21,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.ref }}
         run: |
-          stable_release_tags=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[] | select(.draft == false and .prerelease == false) | .tag_name')
+          release_tags=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[] | select(.draft == false) | .tag_name')
+          # Release 公開が先に完了した場合は、Release 側の検証に任せてタグを削除しない。
+          if grep -Fxq -- "$RELEASE_TAG" <<< "$release_tags"; then
+            echo "Release already published; validation is handled by the release workflow."
+            exit 0
+          fi
           # Tag 作成イベントには Release の種別情報が無いため、タグ形式から種別を判定する。
-          bash .github/scripts/validate-release-tag.sh auto "$RELEASE_TAG" <<< "$stable_release_tags"
+          bash .github/scripts/validate-release-tag.sh auto "$RELEASE_TAG" <<< "$release_tags"
 
       # API 取得などの予期しない失敗では削除せず、明示的な検証エラーの場合だけ削除する。
       - name: Delete invalid tag
