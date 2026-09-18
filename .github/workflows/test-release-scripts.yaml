@@ -1,0 +1,21 @@
+# リリース関連スクリプトの回帰テストを実行する。
+name: Test release scripts
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+jobs:
+  test-release-scripts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Test release tag validation
+        run: bash .github/scripts/validate-release-tag.test.sh
+      - name: Test deployment retry guard
+        run: bash .github/scripts/check-release-deployment.test.sh
