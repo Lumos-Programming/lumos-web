@@ -6,12 +6,15 @@ import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import type { ISODateString } from "@/lib/date";
 import {
   WEEKDAY_LABELS,
+  dateKeyParts,
   eventCoversDate,
   formatDateKey,
   formatMonthLabel,
   monthGridDays,
+  monthKeyOf,
   shiftMonth,
   toJstDateKey,
   toJstTime,
@@ -29,7 +32,7 @@ interface EventCalendarProps {
   /** その月にかかっているイベント (開始順) */
   events: LumosEvent[];
   /** 日本時間の今日。SSR と CSR でずれないようサーバーから渡す */
-  today: string;
+  today: ISODateString;
 }
 
 /**
@@ -37,12 +40,12 @@ interface EventCalendarProps {
  * 日付を選ぶとその日の一覧に絞り込み、もう一度押すと月全体に戻る。
  */
 export function EventCalendar({ month, events, today }: EventCalendarProps) {
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<ISODateString | null>(null);
   const days = useMemo(() => monthGridDays(month), [month]);
-  const thisMonth = today.slice(0, 7);
+  const thisMonth = monthKeyOf(today);
 
   const eventsByDay = useMemo(() => {
-    const map = new Map<string, LumosEvent[]>();
+    const map = new Map<ISODateString, LumosEvent[]>();
     for (const day of days) {
       map.set(
         day,
@@ -54,7 +57,7 @@ export function EventCalendar({ month, events, today }: EventCalendarProps) {
 
   const listed = selected ? (eventsByDay.get(selected) ?? []) : events;
 
-  const toggleDay = (day: string) =>
+  const toggleDay = (day: ISODateString) =>
     setSelected((prev) => (prev === day ? null : day));
 
   return (
@@ -102,7 +105,7 @@ export function EventCalendar({ month, events, today }: EventCalendarProps) {
 
         <div className="grid grid-cols-7">
           {days.map((day) => {
-            const inMonth = day.startsWith(month);
+            const inMonth = monthKeyOf(day) === month;
             const dayEvents = eventsByDay.get(day) ?? [];
             const isToday = day === today;
             const isSelected = day === selected;
@@ -133,7 +136,7 @@ export function EventCalendar({ month, events, today }: EventCalendarProps) {
                     !isToday && inMonth && wd === 6 && "text-blue-500",
                   )}
                 >
-                  {Number(day.slice(8))}
+                  {dateKeyParts(day).day}
                 </span>
 
                 {/* スマホは点、それ以上はタイトル入りのチップ */}

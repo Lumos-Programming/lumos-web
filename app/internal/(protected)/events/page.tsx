@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Settings2 } from "lucide-react";
 import { isAdmin } from "@/lib/auth";
 import { listEventsInMonth, listUpcomingEvents } from "@/lib/events";
-import { isMonthKey, todayJstKey } from "@/lib/events-format";
+import { isMonthKey, monthKeyOf, todayJstDateKey } from "@/lib/events-format";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,9 +20,9 @@ export default async function EventsPage({
   searchParams: Promise<{ m?: string }>;
 }) {
   const { m } = await searchParams;
-  const today = todayJstKey();
+  const today = todayJstDateKey();
   // 不正な月指定は黙って今月に倒す (URL を手で書き換えた場合)
-  const month = m && isMonthKey(m) ? m : today.slice(0, 7);
+  const month = m && isMonthKey(m) ? m : monthKeyOf(today);
 
   const [monthEvents, upcoming, admin] = await Promise.all([
     listEventsInMonth(month),

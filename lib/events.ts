@@ -7,7 +7,7 @@ import {
   monthStartIso,
   shiftMonth,
   filterEventsInMonth,
-  todayJstKey,
+  todayJstDateKey,
 } from "@/lib/events-format";
 import {
   EVENT_ERROR_CODES,
@@ -146,7 +146,7 @@ export async function listUpcomingEvents(
   now: Date = new Date(),
 ): Promise<LumosEvent[]> {
   const db = getDb();
-  const todayStart = dateKeyToIso(todayJstKey(now));
+  const todayStart = dateKeyToIso(todayJstDateKey(now));
 
   const snap = await db
     .collection(COLLECTION)
@@ -166,7 +166,7 @@ export async function listEventsForAdmin(
   now: Date = new Date(),
 ): Promise<LumosEvent[]> {
   const db = getDb();
-  const from = dateKeyToIso(addDays(todayJstKey(now), -365));
+  const from = dateKeyToIso(addDays(todayJstDateKey(now), -365));
 
   const snap = await db
     .collection(COLLECTION)
