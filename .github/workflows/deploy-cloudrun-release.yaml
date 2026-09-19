@@ -1,15 +1,83 @@
+# 通常リリースのタグを検証し、production Environment を使用して本番の Cloud Run へデプロイする。
 name: Deploy to Cloud Run (Release)
 on:
   release:
     types:
-      - released
+      - published
 jobs:
-  build-and-deploy:
+  validate-release-tag:
+    # Draft からの公開も検証するため published を使い、通常リリースだけを処理する。
+    if: github.event.release.prerelease == false
     runs-on: ubuntu-latest
     permissions:
+      contents: "write"
+      deployments: "read"
+      actions: "read"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+
+      # 成功済みの再実行では既存の Release / Tag を削除しない。
+      - name: Check previous deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: bash .github/scripts/check-release-deployment.sh production "$RELEASE_TAG"
+
+      - name: Validate release tag
+        id: validate
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_ID: ${{ github.event.release.id }}
+        run: |
+          # 公開イベントの Release 自体だけを ID で除外し、過去の RC も比較する。
+          release_tags=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" | jq -r --argjson release_id "$RELEASE_ID" '.[] | select(.draft == false and .id != $release_id) | .tag_name')
+          bash .github/scripts/validate-release-tag.sh release "$RELEASE_TAG" <<< "$release_tags"
+
+      # API 取得などの予期しない失敗では削除せず、明示的な検証エラーの場合だけ削除する。
+      - name: Delete invalid release and tag
+        if: github.run_attempt == 1 && steps.validate.outputs.invalid == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release delete "$RELEASE_TAG" --cleanup-tag --yes
+
+      - name: Fail workflow for invalid release tag
+        if: always() && steps.validate.outcome == 'failure'
+        run: exit 1
+
+  build-and-deploy:
+    needs: validate-release-tag
+    runs-on: ubuntu-latest
+    # 同じタグの並行デプロイを直列化し、待機後に成功履歴を再確認する。
+    concurrency:
+      group: release-deploy-production-${{ github.event.release.tag_name }}
+      cancel-in-progress: false
+    environment: production
+    permissions:
       contents: "read"
+      deployments: "read"
+      actions: "read"
       id-token: "write"
     steps:
+      # デプロイだけを再実行する場合も、成功済みの同一バージョンは再デプロイしない。
+      - name: Checkout deployment guard
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Check previous deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: bash .github/scripts/check-release-deployment.sh production "$RELEASE_TAG"
+
       - name: Checkout code
         uses: actions/checkout@v4
 
