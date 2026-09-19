@@ -12,11 +12,18 @@ import {
   updateEvent,
 } from "./events";
 import {
+  addDays,
+  datetimeLocalToDateKey,
   eventDateRange,
   formatEventSchedule,
   jstLocalToIso,
+  monthFirstDay,
   monthGridDays,
+  monthKeyOf,
   shiftMonth,
+  toDateKey,
+  todayJstDateKey,
+  todayJstMonthKey,
   toJstDateKey,
   toJstDatetimeLocal,
 } from "./events-format";
@@ -75,6 +82,24 @@ describe("events-format", () => {
   it("uses the JST date even when UTC is still the previous day", () => {
     // 日本時間 9/20 0:30 は UTC では 9/19
     expect(toJstDateKey("2026-09-19T15:30:00.000Z")).toBe("2026-09-20");
+    const now = new Date("2026-12-31T15:30:00.000Z"); // JST 2027-01-01 0:30
+    expect(todayJstDateKey(now)).toBe("2027-01-01");
+    expect(todayJstMonthKey(now)).toBe("2027-01");
+  });
+
+  it("builds and splits date keys without slicing strings", () => {
+    expect(toDateKey({ year: 2026, month: 9, day: 5 })).toBe("2026-09-05");
+    expect(monthKeyOf(toDateKey({ year: 2026, month: 9, day: 5 }))).toBe(
+      "2026-09",
+    );
+    expect(monthFirstDay("2026-02")).toBe("2026-02-01");
+    expect(addDays(monthFirstDay("2026-03"), -1)).toBe("2026-02-28");
+    // 実在しない月は getDateParts が弾く
+    expect(() => monthFirstDay("2026-13")).toThrow(TypeError);
+    expect(datetimeLocalToDateKey("2026-09-20T19:00")).toBe("2026-09-20");
+    expect(datetimeLocalToDateKey("2026-09-20")).toBe("2026-09-20");
+    expect(datetimeLocalToDateKey("2026-09-31")).toBeNull();
+    expect(datetimeLocalToDateKey("19:00")).toBeNull();
   });
 
   it("builds a Sunday-first month grid with whole weeks", () => {

@@ -11,7 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EventItem } from "@/components/events/event-item";
 import {
-  todayJstKey,
+  datetimeLocalToDateKey,
+  todayJstDateKey,
   toJstDateKey,
   toJstDatetimeLocal,
 } from "@/lib/events-format";
@@ -39,8 +40,10 @@ function toFormValues(event: LumosEvent): EventFormValues {
 /** 終日の切り替えで、入力済みの日付を捨てずに形式だけ変える */
 function switchAllDay(value: string, allDay: boolean): string {
   if (!value) return value;
-  if (allDay) return value.slice(0, 10);
-  return value.length === 10 ? `${value}T19:00` : value;
+  const dateKey = datetimeLocalToDateKey(value);
+  if (!dateKey) return value;
+  if (allDay) return dateKey;
+  return value === dateKey ? `${dateKey}T19:00` : value;
 }
 
 interface EventManagerProps {
@@ -56,7 +59,7 @@ export function EventManager({ initialEvents }: EventManagerProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const today = todayJstKey();
+  const today = todayJstDateKey();
   const upcoming = events.filter(
     (e) => toJstDateKey(e.endAt ?? e.startAt) >= today,
   );

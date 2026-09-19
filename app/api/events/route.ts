@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { isEventEditor } from "@/lib/event-auth";
 import { createEvent, listEventsInMonth, parseEventInput } from "@/lib/events";
-import { isMonthKey, todayJstKey } from "@/lib/events-format";
+import { isMonthKey, todayJstMonthKey } from "@/lib/events-format";
 import {
   EVENT_API_RESPONSES,
   toEventErrorResponse,
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   if (!session?.user?.id) return EVENT_API_RESPONSES.unauthorized();
 
   const month =
-    new URL(request.url).searchParams.get("month") ?? todayJstKey().slice(0, 7);
+    new URL(request.url).searchParams.get("month") ?? todayJstMonthKey();
   if (!isMonthKey(month)) return EVENT_API_RESPONSES.invalidMonth();
 
   try {
