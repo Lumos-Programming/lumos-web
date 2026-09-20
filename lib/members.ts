@@ -1,3 +1,4 @@
+import type { Timestamp } from "@/lib/database/values";
 import { getDb } from "@/lib/firebase";
 import type { Member } from "@/types/member";
 import type {
@@ -5,7 +6,7 @@ import type {
   MemberType,
   EnrollmentRecord,
 } from "@/types/profile";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "@/lib/database/values";
 import { isISODateString } from "@/lib/date";
 
 export const PUBLIC_IMAGE_OPTIONS = [
@@ -66,7 +67,7 @@ export interface MemberDocument {
   primaryDiscordId?: string;
   onboardingCompleted?: boolean;
   optedOut?: boolean;
-  optedOutAt?: FirebaseFirestore.Timestamp;
+  optedOutAt?: Timestamp;
   visibility: {
     studentId: VisibilityLevel;
     nickname: VisibilityLevel;
@@ -83,9 +84,9 @@ export interface MemberDocument {
     line: VisibilityLevel;
     discord: VisibilityLevel;
   };
-  lastLoginAt?: FirebaseFirestore.Timestamp;
-  createdAt: FirebaseFirestore.Timestamp;
-  updatedAt: FirebaseFirestore.Timestamp;
+  lastLoginAt?: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export async function getOrCreateMember(

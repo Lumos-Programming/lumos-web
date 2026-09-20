@@ -1,3 +1,4 @@
+import type { Timestamp } from "@/lib/database/values";
 /**
  * 退会 (opt-out) フロー用のトークン生成・検証ヘルパー
  * Discord DMのリンクボタンに埋め込む HMAC 署名付きURLと、Firestore保存ロジック
@@ -20,7 +21,7 @@
 
 import crypto from "crypto";
 import { getDb } from "@/lib/firebase";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "@/lib/database/values";
 
 // Firestore docId キー (既存レコードとの互換維持)
 const OPTOUT_KIND = "continuation-2026";
@@ -164,7 +165,7 @@ export function getOptoutFinalizeUrl(
 export interface OptoutSubmission {
   discordId: string;
   kind: string;
-  confirmedAt: FirebaseFirestore.Timestamp;
+  confirmedAt: Timestamp;
   userAgent?: string;
   ipHash?: string;
 }

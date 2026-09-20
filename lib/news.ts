@@ -1,4 +1,5 @@
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import type { DocumentData } from "@/lib/database/types";
+import { FieldValue, Timestamp } from "@/lib/database/values";
 import { z } from "zod";
 import { getDb } from "@/lib/firebase";
 import {
@@ -74,14 +75,11 @@ export function parseNewsInput(body: unknown): NewsInput {
   return input;
 }
 
-function toIso(value?: FirebaseFirestore.Timestamp): string | null {
+function toIso(value?: Timestamp): string | null {
   return value ? value.toDate().toISOString() : null;
 }
 
-function toNewsArticle(
-  id: string,
-  data: FirebaseFirestore.DocumentData,
-): NewsArticle {
+function toNewsArticle(id: string, data: DocumentData): NewsArticle {
   return {
     id,
     date: data.date,

@@ -1,4 +1,4 @@
-import * as admin from "firebase-admin";
+import { FieldValue, Timestamp } from "@/lib/database/values";
 import { getDb } from "@/lib/firebase";
 
 export type Talk = {
@@ -10,7 +10,7 @@ export type Talk = {
   presenterName: string;
   presenterAvatar: string;
   order: number;
-  createdAt: admin.firestore.Timestamp;
+  createdAt: Timestamp;
 };
 
 export type SerializableTalk = Omit<Talk, "createdAt"> & {
@@ -75,7 +75,7 @@ export async function addTalk(
       id: crypto.randomUUID(),
       presenterUid: userId,
       order: talks.length + 1,
-      createdAt: admin.firestore.Timestamp.now(),
+      createdAt: Timestamp.now(),
     };
 
     talks.push(newTalk);
@@ -177,8 +177,8 @@ export async function removeDiscordEvent(weekId: string): Promise<void> {
     if (!doc.exists) return;
 
     transaction.update(weekRef, {
-      discordEventId: admin.firestore.FieldValue.delete(),
-      discordEventUrl: admin.firestore.FieldValue.delete(),
+      discordEventId: FieldValue.delete(),
+      discordEventUrl: FieldValue.delete(),
     });
   });
 }
