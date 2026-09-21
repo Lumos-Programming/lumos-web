@@ -27,7 +27,7 @@ type Mutation = {
   merge?: boolean;
 };
 
-export class DocumentSnapshot {
+class DocumentSnapshot {
   readonly id: string;
   readonly exists: boolean;
   constructor(
@@ -50,7 +50,7 @@ class QueryDocumentSnapshot extends DocumentSnapshot {
   }
 }
 
-export class DocumentReference {
+class DocumentReference {
   readonly id: string;
   constructor(
     readonly database: Database,
@@ -109,7 +109,7 @@ class Query {
   async get() {
     const rows = await (await this.database.primary()).query(this.spec);
     const docs = rows.map((row) => {
-      const data = row.data!;
+      const data = row.data;
       const projected = this.fields
         ? Object.fromEntries(
             this.fields
@@ -129,7 +129,7 @@ class CollectionReference extends Query {
   }
 }
 
-export class WriteBatch {
+class Writes {
   protected mutations: Mutation[] = [];
   constructor(protected readonly database: Database) {}
   protected check(ref: DocumentReference) {
@@ -160,18 +160,23 @@ export class WriteBatch {
     this.mutations.push({ path: ref.path, kind: "delete" });
     return this;
   }
+}
+
+class WriteBatch extends Writes {
   async commit(): Promise<void> {
     await this.database.write(this.mutations);
   }
 }
 
-export class Transaction extends WriteBatch {
+class Transaction extends Writes {
   private reads = new Map<string, Promise<StoredDocument>>();
   constructor(
     database: Database,
     private readonly backend: DatabaseBackend,
+    mutations: Mutation[] = [],
   ) {
     super(database);
+    this.mutations = [...mutations];
   }
   async get(ref: DocumentReference): Promise<DocumentSnapshot> {
     this.check(ref);
@@ -215,10 +220,6 @@ export class Transaction extends WriteBatch {
     }
     return { checks, documents: [...images.values()] };
   }
-  // Transactions are committed by Database after the callback returns.
-  async commit(): Promise<never> {
-    throw new Error("Do not call commit inside a transaction");
-  }
 }
 
 export class Database {
@@ -249,17 +250,16 @@ export class Database {
   }
   async write(mutations: Mutation[]): Promise<void> {
     if (!mutations.length) return;
-    await this.runTransaction(async (tx) => {
-      for (const mutation of mutations) {
-        const ref = this.doc(mutation.path);
-        if (mutation.kind === "delete") tx.delete(ref);
-        else if (mutation.kind === "update") tx.update(ref, mutation.data!);
-        else tx.set(ref, mutation.data!, { merge: mutation.merge });
-      }
-    });
+    await this.commit(async () => {}, mutations);
   }
   async runTransaction<T>(
     operation: (transaction: Transaction) => Promise<T>,
+  ): Promise<T> {
+    return this.commit(operation);
+  }
+  private async commit<T>(
+    operation: (transaction: Transaction) => Promise<T>,
+    mutations: Mutation[] = [],
   ): Promise<T> {
     if (process.env.DATABASE_WRITES_PAUSED === "true")
       throw new Error("Database writes are paused for migration");
@@ -267,7 +267,7 @@ export class Database {
     const now = Timestamp.now();
     const eventId = crypto.randomUUID();
     for (let attempt = 0; attempt < 8; attempt++) {
-      const tx = new Transaction(this, backend);
+      const tx = new Transaction(this, backend, mutations);
       const result = await operation(tx);
       const request = await tx.finish(now);
       const outbox: OutboxEvent | undefined =
@@ -305,7 +305,7 @@ export class Database {
   }
 }
 
-export async function deliverEvent(
+async function deliverEvent(
   source: DatabaseBackend,
   factory: BackendFactory,
   event: OutboxEvent,

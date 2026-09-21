@@ -23,7 +23,8 @@ import {
   type OutboxEvent,
   type StoredDocument,
 } from "./types";
-import { decodeDocument, encodeDocument, Timestamp } from "./values";
+import { decodeOutboxDocuments, encodeOutboxDocuments } from "./outbox";
+import { Timestamp } from "./values";
 
 const VERSIONS_COLLECTION = "_migration_versions";
 const OUTBOX_COLLECTION = "_migration_outbox";
@@ -169,38 +170,13 @@ function writeImage(
   });
 }
 
-function encodeEvent(event: OutboxEvent): DocumentData {
-  return {
-    target: event.target,
-    createdAt: event.createdAt,
-    // A JSON string keeps custom timestamps and nested arrays out of the
-    // Firestore serializer while retaining their portable value encoding.
-    payload: JSON.stringify(
-      event.documents.map((document) => ({
-        path: document.path,
-        revision: document.revision,
-        data: document.data === null ? null : encodeDocument(document.data),
-      })),
-    ),
-  };
-}
-
-function decodeEvent(snapshot: DocumentSnapshot): OutboxEvent {
-  const data = snapshot.data()!;
-  const documents = JSON.parse(data.payload) as {
-    path: string;
-    revision: number;
-    data: ReturnType<typeof encodeDocument> | null;
-  }[];
-  return {
-    id: snapshot.id,
-    target: data.target,
-    createdAt: data.createdAt,
-    documents: documents.map((document) => ({
-      ...document,
-      data: document.data === null ? null : decodeDocument(document.data),
-    })),
-  };
+function eventChunkRefs(snapshot: DocumentSnapshot) {
+  const count: unknown = snapshot.get("chunkCount");
+  if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 1)
+    throw new Error("Invalid migration outbox chunk count");
+  return Array.from({ length: count }, (_, index) =>
+    snapshot.ref.collection("chunks").doc(String(index)),
+  );
 }
 
 export function createFirestoreBackend(): DatabaseBackend {
@@ -231,19 +207,11 @@ export function createFirestoreBackend(): DatabaseBackend {
         query = query.orderBy(spec.order.field, spec.order.direction);
       }
       if (spec.limit !== undefined) query = query.limit(spec.limit);
-      return db.runTransaction(
-        async (transaction) => {
-          const snapshot = await transaction.get(query);
-          if (snapshot.empty) return [];
-          const versions = await transaction.getAll(
-            ...snapshot.docs.map((doc) => versionRef(db, doc.ref.path)),
-          );
-          return snapshot.docs.map((doc, index) =>
-            storedDocument(doc.ref.path, doc, versions[index]),
-          );
-        },
-        { readOnly: true },
-      );
+      const snapshot = await query.get();
+      return snapshot.docs.map((doc) => ({
+        path: doc.ref.path,
+        data: mapValue(doc.data(), false) as DocumentData,
+      }));
     },
 
     async commit(request: CommitRequest) {
@@ -265,10 +233,19 @@ export function createFirestoreBackend(): DatabaseBackend {
           writeImage(db, transaction, document);
         }
         if (request.outbox) {
-          transaction.create(
-            db.collection(OUTBOX_COLLECTION).doc(request.outbox.id),
-            encodeEvent(request.outbox),
-          );
+          const event = request.outbox;
+          const ref = db.collection(OUTBOX_COLLECTION).doc(event.id);
+          const chunks = encodeOutboxDocuments(event.documents);
+          transaction.create(ref, {
+            target: event.target,
+            createdAt: event.createdAt,
+            chunkCount: chunks.length,
+          });
+          chunks.forEach((payload, index) => {
+            transaction.create(ref.collection("chunks").doc(String(index)), {
+              payload,
+            });
+          });
         }
         return true;
       });
@@ -298,16 +275,48 @@ export function createFirestoreBackend(): DatabaseBackend {
     },
 
     async pendingEvents(limit) {
-      const snapshot = await getFirestoreDb()
-        .collection(OUTBOX_COLLECTION)
-        .orderBy("createdAt")
-        .limit(limit)
-        .get();
-      return snapshot.docs.map(decodeEvent);
+      const db = getFirestoreDb();
+      // Read headers and chunks at one snapshot so a concurrent acknowledgement
+      // cannot remove payload chunks between the two reads.
+      return db.runTransaction(
+        async (transaction) => {
+          const snapshot = await transaction.get(
+            db.collection(OUTBOX_COLLECTION).orderBy("createdAt").limit(limit),
+          );
+          return Promise.all(
+            snapshot.docs.map(async (header): Promise<OutboxEvent> => {
+              const chunks = await transaction.getAll(
+                ...eventChunkRefs(header),
+              );
+              const payloads = chunks.map((chunk) => {
+                const payload: unknown = chunk.get("payload");
+                if (typeof payload !== "string")
+                  throw new Error("Missing migration outbox chunk");
+                return payload;
+              });
+              return {
+                id: header.id,
+                target: header.get("target"),
+                createdAt: header.get("createdAt"),
+                documents: decodeOutboxDocuments(payloads),
+              };
+            }),
+          );
+        },
+        { readOnly: true },
+      );
     },
 
     async acknowledgeEvent(id) {
-      await getFirestoreDb().collection(OUTBOX_COLLECTION).doc(id).delete();
+      const db = getFirestoreDb();
+      await db.runTransaction(async (transaction) => {
+        const header = await transaction.get(
+          db.collection(OUTBOX_COLLECTION).doc(id),
+        );
+        if (!header.exists) return;
+        for (const ref of eventChunkRefs(header)) transaction.delete(ref);
+        transaction.delete(header.ref);
+      });
     },
 
     async scan(collection, after, limit = 100) {
@@ -322,18 +331,20 @@ export function createFirestoreBackend(): DatabaseBackend {
             .orderBy(FieldPath.documentId());
           if (after !== undefined) liveQuery = liveQuery.startAfter(after);
           const live = await transaction.get(liveQuery.limit(limit));
-          // Filtering metadata by collection alone avoids a composite-index
-          // prerequisite during an existing Firestore deployment's upgrade.
-          const versions = await transaction.get(
-            db
-              .collection(VERSIONS_COLLECTION)
-              .where("collection", "==", collection),
-          );
+          // The path prefix uses the existing single-field index. Bound both
+          // streams before merging to keep reads proportional to the page size.
+          let versionQuery = db
+            .collection(VERSIONS_COLLECTION)
+            .orderBy("path")
+            .endBefore(`${collection}0`);
+          versionQuery =
+            after === undefined
+              ? versionQuery.startAt(`${collection}/`)
+              : versionQuery.startAfter(`${collection}/${after}`);
+          const versions = await transaction.get(versionQuery.limit(limit));
           const ids = new Set(live.docs.map((document) => document.id));
           for (const version of versions.docs) {
-            const id = version.get("id") as string;
-            if (after === undefined || compareDocumentIds(id, after) > 0)
-              ids.add(id);
+            ids.add(version.get("id") as string);
           }
           const pageIds = [...ids].sort(compareDocumentIds).slice(0, limit);
           return readDocuments(

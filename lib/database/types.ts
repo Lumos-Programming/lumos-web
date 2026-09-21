@@ -46,6 +46,11 @@ export interface QuerySpec {
   limit?: number;
 }
 
+export interface QueryDocument {
+  path: string;
+  data: DocumentData;
+}
+
 export interface CommitRequest {
   checks: StoredDocument[];
   documents: DocumentImage[];
@@ -55,7 +60,7 @@ export interface CommitRequest {
 export interface DatabaseBackend {
   readonly name: BackendName;
   get(path: string): Promise<StoredDocument>;
-  query(query: QuerySpec): Promise<StoredDocument[]>;
+  query(query: QuerySpec): Promise<QueryDocument[]>;
   // Return false on a stale read. Check all reads and atomically write all images
   // and the outbox event, or write nothing at all.
   commit(request: CommitRequest): Promise<boolean>;

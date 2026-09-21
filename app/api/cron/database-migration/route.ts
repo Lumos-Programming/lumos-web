@@ -1,4 +1,4 @@
-import { createBackend } from "@/lib/database";
+import { createBackend } from "@/lib/database/backend";
 import { replayPendingEvents } from "@/lib/database/database";
 import { getMigrationStage, stageBackends } from "@/lib/database/stage";
 

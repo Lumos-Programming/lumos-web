@@ -29,15 +29,13 @@ export class Timestamp {
     );
   }
   toMillis(): number {
-    return this.seconds * 1000 + this.nanoseconds / 1e6;
+    return this.seconds * 1000 + Math.floor(this.nanoseconds / 1e6);
   }
   toDate(): Date {
-    return new Date(this.toMillis());
+    return new Date(this.seconds * 1000 + Math.round(this.nanoseconds / 1e6));
   }
-  isEqual(other: Timestamp): boolean {
-    return (
-      this.seconds === other.seconds && this.nanoseconds === other.nanoseconds
-    );
+  toJSON(): { _seconds: number; _nanoseconds: number } {
+    return { _seconds: this.seconds, _nanoseconds: this.nanoseconds };
   }
 }
 
@@ -179,25 +177,17 @@ export function applyUpdate(
   now: Timestamp,
 ): DocumentData {
   if (!previous) throw new Error("Document not found");
-  const result = decodeDocument(encodeDocument(previous));
+  const result = { ...previous };
   for (const [field, value] of Object.entries(input)) {
-    const parts = field.split(".");
     if (
-      parts.some(
-        (part) =>
-          !part || ["__proto__", "constructor", "prototype"].includes(part),
-      )
+      !field ||
+      field.includes(".") ||
+      ["__proto__", "constructor", "prototype"].includes(field)
     )
-      throw new Error("Invalid update field path");
-    let target = result;
-    for (const part of parts.slice(0, -1)) {
-      if (!isPlainObject(target[part])) target[part] = {};
-      target = target[part];
-    }
-    const key = parts[parts.length - 1];
+      throw new Error("Updates require a top-level field name");
     if (value instanceof FieldTransform && value.kind === "delete")
-      delete target[key];
-    else target[key] = resolve(value, now);
+      delete result[field];
+    else result[field] = resolve(value, now);
   }
   return result;
 }

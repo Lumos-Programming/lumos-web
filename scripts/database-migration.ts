@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
-import { createBackend } from "../lib/database";
+import { createBackend } from "../lib/database/backend";
 import {
   replayPendingEvents,
   type BackendFactory,

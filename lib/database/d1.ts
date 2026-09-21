@@ -1,4 +1,5 @@
 import { D1_COLUMNS, type Column } from "./d1-schema";
+import { decodeOutboxDocuments, encodeOutboxDocuments } from "./outbox";
 import {
   splitPath,
   type CollectionName,
@@ -7,6 +8,7 @@ import {
   type DocumentData,
   type DocumentImage,
   type OutboxEvent,
+  type QueryDocument,
   type QuerySpec,
   type StoredDocument,
 } from "./types";
@@ -15,6 +17,7 @@ import {
   decodeValue,
   encodeDocument,
   encodeValue,
+  isTimestamp,
 } from "./values";
 
 export interface D1Result {
@@ -76,14 +79,16 @@ function scalarValue(column: Column, value: unknown): SqlValue | undefined {
     return value ? 1 : 0;
   if (
     column.kind === "timestamp" &&
-    typeof value === "object" &&
-    value !== null &&
-    "toMillis" in value &&
-    typeof value.toMillis === "function"
+    isTimestamp(value) &&
+    Number.isInteger(value.seconds) &&
+    Number.isInteger(value.nanoseconds) &&
+    value.nanoseconds >= 0 &&
+    value.nanoseconds < 1e9
   ) {
-    const milliseconds: unknown = value.toMillis();
-    if (typeof milliseconds === "number" && Number.isFinite(milliseconds))
-      return milliseconds;
+    // The public SDK-compatible toMillis() truncates submillisecond precision;
+    // SQL comparisons must retain it when indexing migrated timestamps.
+    const milliseconds = value.seconds * 1000 + value.nanoseconds / 1e6;
+    if (Number.isFinite(milliseconds)) return milliseconds;
   }
   return undefined;
 }
@@ -148,7 +153,7 @@ export class D1Backend implements DatabaseBackend {
       : { path, data: null, revision: -1, token: "-1" };
   }
 
-  async query(query: QuerySpec): Promise<StoredDocument[]> {
+  async query(query: QuerySpec): Promise<QueryDocument[]> {
     // Validate the collection at runtime too: identifiers must never originate
     // from untrusted query text.
     splitPath(`${query.collection}/_`);
@@ -202,7 +207,10 @@ export class D1Backend implements DatabaseBackend {
         .bind(...parameters)
         .all(),
     );
-    return rows.map((row) => storedDocument(query.collection, row));
+    return rows.map((row) => ({
+      path: `${query.collection}/${String(row.id)}`,
+      data: rowData(query.collection, row)!,
+    }));
   }
 
   async scan(
@@ -318,23 +326,20 @@ export class D1Backend implements DatabaseBackend {
     );
     if (request.outbox) {
       const event = request.outbox;
+      const chunks = encodeOutboxDocuments(event.documents);
       statements.push(
         this.client
           .prepare(
-            "INSERT INTO migration_outbox (id, target, created_at, documents) VALUES (?, ?, ?, ?)",
+            "INSERT INTO migration_outbox (id, target, created_at, chunk_count) VALUES (?, ?, ?, ?)",
           )
-          .bind(
-            event.id,
-            event.target,
-            event.createdAt,
-            JSON.stringify(
-              event.documents.map((document) => ({
-                ...document,
-                data:
-                  document.data === null ? null : encodeValue(document.data),
-              })),
-            ),
-          ),
+          .bind(event.id, event.target, event.createdAt, chunks.length),
+        ...chunks.map((payload, ordinal) =>
+          this.client
+            .prepare(
+              "INSERT INTO migration_outbox_chunks (event_id, ordinal, payload) VALUES (?, ?, ?)",
+            )
+            .bind(event.id, ordinal, payload),
+        ),
       );
     }
     if (request.checks.length)
@@ -367,22 +372,45 @@ export class D1Backend implements DatabaseBackend {
     const rows = resultRows(
       await this.client
         .prepare(
-          "SELECT id, target, created_at, documents FROM migration_outbox ORDER BY created_at ASC, id ASC LIMIT ?",
+          `WITH pending AS (
+            SELECT id, target, created_at, chunk_count FROM migration_outbox
+            ORDER BY created_at ASC, id ASC LIMIT ?
+          )
+          SELECT pending.*, chunks.ordinal, chunks.payload FROM pending
+          LEFT JOIN migration_outbox_chunks AS chunks ON chunks.event_id = pending.id
+          ORDER BY pending.created_at ASC, pending.id ASC, chunks.ordinal ASC`,
         )
         .bind(limit)
         .all(),
     );
-    return rows.map((row) => ({
-      id: String(row.id),
-      target: row.target as OutboxEvent["target"],
-      createdAt: Number(row.created_at),
-      documents: (JSON.parse(String(row.documents)) as DocumentImage[]).map(
-        (document) => ({
-          ...document,
-          data: document.data === null ? null : decodeValue(document.data),
-        }),
-      ),
-    }));
+    const events = new Map<
+      string,
+      { header: Record<string, unknown>; chunks: string[] }
+    >();
+    for (const row of rows) {
+      const id = String(row.id);
+      let event = events.get(id);
+      if (!event) {
+        event = { header: row, chunks: [] };
+        events.set(id, event);
+      }
+      if (
+        row.ordinal !== event.chunks.length ||
+        typeof row.payload !== "string"
+      )
+        throw new Error("Missing migration outbox chunk");
+      event.chunks.push(row.payload);
+    }
+    return [...events].map(([id, { header, chunks }]) => {
+      if (chunks.length !== header.chunk_count)
+        throw new Error("Incomplete migration outbox payload");
+      return {
+        id,
+        target: header.target as OutboxEvent["target"],
+        createdAt: Number(header.created_at),
+        documents: decodeOutboxDocuments(chunks),
+      };
+    });
   }
 
   async acknowledgeEvent(id: string): Promise<void> {

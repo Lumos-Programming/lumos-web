@@ -99,11 +99,7 @@ describe.skipIf(!process.env.FIRESTORE_EMULATOR_HOST)(
       const db = getFirestoreDb();
       const collections = await db.listCollections();
       for (const collection of collections) {
-        const docs = await collection.listDocuments();
-        if (!docs.length) continue;
-        const batch = db.batch();
-        for (const document of docs) batch.delete(document);
-        await batch.commit();
+        await db.recursiveDelete(collection);
       }
       await client.batch(
         [...COLLECTIONS, "migration_guard", "migration_outbox"].map((table) =>
@@ -124,18 +120,20 @@ describe.skipIf(!process.env.FIRESTORE_EMULATOR_HOST)(
       );
       const d1 = await miniflare.getD1Database("DB");
       client = d1;
-      const migration = await readFile(
-        new URL("../../migrations/0001_database.sql", import.meta.url),
-        "utf8",
-      );
-      await d1.batch(
-        migration
-          .replace(/^--.*$/gm, "")
-          .split(";")
-          .map((sql) => sql.trim())
-          .filter(Boolean)
-          .map((sql) => d1.prepare(sql)),
-      );
+      for (const name of ["0001_database.sql", "0002_outbox_chunks.sql"]) {
+        const migration = await readFile(
+          new URL(`../../migrations/${name}`, import.meta.url),
+          "utf8",
+        );
+        await d1.batch(
+          migration
+            .replace(/^--.*$/gm, "")
+            .split(";")
+            .map((sql) => sql.trim())
+            .filter(Boolean)
+            .map((sql) => d1.prepare(sql)),
+        );
+      }
       backends = {
         firestore: createFirestoreBackend(),
         d1: new D1Backend(client),
@@ -382,7 +380,7 @@ describe.skipIf(!process.env.FIRESTORE_EMULATOR_HOST)(
     );
 
     it.each(["firestore-primary", "d1-primary"] as const)(
-      "%s resolves merge, nested deletion, dotted updates and server timestamps identically",
+      "%s resolves merge, field deletion, map replacement and server timestamps identically",
       async (stage) => {
         const db = new Database(factory, stage);
         const ref = db.doc("members/transforms");
@@ -407,9 +405,8 @@ describe.skipIf(!process.env.FIRESTORE_EMULATOR_HOST)(
           { merge: true },
         );
         await ref.update({
-          "nested.preferences.enabled": FieldValue.delete(),
-          "nested.keep": "updated",
-          "fresh.nested": new Timestamp(456, 123456789),
+          nested: { keep: "updated", preferences: { color: "blue" } },
+          fresh: { nested: new Timestamp(456, 123456789) },
         });
         const value = (await ref.get()).data()!;
         expect(value.nested).toEqual({

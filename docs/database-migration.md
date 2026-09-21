@@ -21,6 +21,9 @@ Firebase Admin SDKは現在のWorkersランタイムで動作しない。Worker�
   `survey_optout`, `surveys`, `events`, `system` をすべて対象とする。
 - 既存の `lib/firebase.ts` は互換exportとなり、`lib/database/` が全機能の読み書きを制御する。
   新規のDBアクセスもこの入口を通す。Firebase Adminへ直接書く処理を追加しない。
+- 互換APIは現在のアプリで使う操作に限定する。値は有限数・文字列・真偽値・`null`・配列・map・Timestamp、
+  `update` はトップレベルのフィールド置換/削除に対応する。Firestoreの全APIを再実装するものではない。
+  未対応の型を含む過去データはコピー時にエラーとなるため、変換方針を決めてから再実行する。
 - D1はコレクションごとのテーブルと、現在の検索条件に対応する列・indexを持つ。
   既存データの未知フィールド、未設定と `null` の違い、時刻精度も保持する。
 - Mini LTの発表配列は、現在の週単位トランザクションを維持するためJSON列に保存する。
@@ -44,6 +47,11 @@ Firebase Admin SDKは現在のWorkersランタイムで動作しない。Worker�
   再送・コピーの順序が逆転しても古い値で上書きしない。削除後にも番号を残すので復活しない。
 - 時刻: `serverTimestamp()` は主書き込みの開始時刻を共通値として確定する。
   Firestoreに合わせてマイクロ秒精度にそろえ、両DBに同じ値を書く。
+- outbox: 両DBで同じ形式を使い、payloadを256 KiB以下のchunkに分割して更新と一緒に保存する。
+  本文のエスケープや複数レコードの合計サイズでoutboxの1行が上限を超えることを防ぐ。
+  ただし、全データ・更新番号・outboxを含むトランザクション全体のサイズ/書き込み制限は引き続き適用される。
+  上限を超えた更新は原子的に失敗する（[Firestoreの制限](https://firebase.google.com/docs/firestore/quotas)、
+  [D1の制限](https://developers.cloudflare.com/d1/platform/limits/)）。
 
 DB間で同時に確定する分散トランザクションではない。ミラー障害中には一時的な差分があり、
 **outboxが空で、書き込み停止中の照合が一致すること**を切り替え条件とする。
@@ -125,6 +133,15 @@ PR previewをDev/Staging/ProductionのD1に接続しない。
    この段階ではFirestoreへの読み取りも書き込みも行わない。
 8. `d1-only` を維持してWorkersへ実行基盤を移す。Cloud RunとWorkersを同じD1へ接続し、
    認証・アップロードを含む確認後にトラフィックを切り替える。
+
+### 旧outbox形式からの更新
+
+`0001_database.sql` のみを適用したDBを更新する場合は、全書き込みを停止し、
+旧バージョンのCLIでFirestoreとD1両方のoutboxを空にしてから `0002_outbox_chunks.sql` を適用する。
+その後、新バージョンのアプリと再送cronを反映して書き込みを再開する。
+D1に未配信イベントが残っていれば、マイグレーションは
+`migration_outbox_must_be_drained_before_upgrade` エラーで停止し、旧データを保持する。
+Firestore側の旧形式はSQLで検査できないため、両DBの再送完了を先に確認する。
 
 ### CLIの性質
 

@@ -9,7 +9,7 @@ vi.mock("@opennextjs/cloudflare", () => ({
   getCloudflareContext: factories.cloudflare,
 }));
 
-import { createBackend } from "./index";
+import { createBackend } from "./backend";
 
 afterEach(() => {
   vi.unstubAllEnvs();
