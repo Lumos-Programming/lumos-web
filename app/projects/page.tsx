@@ -8,9 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 const currentProjects = [
   {
     id: 1,
-    title: "Unityでゲーム開発",
+    title: "Unityゲーム開発",
     description:
-      "プロジェクトの説明を入力してください。現在取り組んでいる内容や目標を記述します。",
+      "Unityでまったりとゲームを作ります！チーム開発をしたい人、ゲーム制作に触れてみたい人、Unityを学びたい人大歓迎！",
     image: "/assets/Lumoslogo.png",
     status: "進行中",
     technologies: ["Unity", "C#", "Blender"],
