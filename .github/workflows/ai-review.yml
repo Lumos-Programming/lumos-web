@@ -1,0 +1,134 @@
+name: AI PR Review
+
+on:
+  pull_request:
+    # ラベル不要。PR作成・更新・再オープン時などに実行する。
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+
+# 権限はジョブごとに必要なものだけ追加する。
+permissions: {}
+
+concurrency:
+  group: ai-review-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  GEMINI_MODEL: gemini-3.8-flash
+
+jobs:
+  analyze:
+    name: コードを調査
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # 同一リポジトリ内のPRが対象。Draftも調査する。
+    # forkとDependabotは、Secrets・トークン権限の制約から対象外。
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      github.actor != 'dependabot[bot]'
+
+    permissions:
+      contents: read
+
+    outputs:
+      report: ${{ steps.review.outputs.report }}
+
+    steps:
+      - name: APIキーの登録を確認
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$GEMINI_API_KEY" ]]; then
+            echo "::error::Actions Secret に GEMINI_API_KEY を登録してください。"
+            exit 1
+          fi
+
+      - name: PRのコードを取得
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+          # Actionの実装とレビュー対象のcheckoutを分離する。
+          path: source
+
+      - name: 比較対象のコミットを確認
+        working-directory: source
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "${BASE_SHA}^{commit}"
+          git cat-file -e "${HEAD_SHA}^{commit}"
+          git --no-pager diff --no-ext-diff --no-textconv \
+            --stat "${BASE_SHA}...${HEAD_SHA}"
+
+      # pnpm・actionlintを含む既定イメージを使用する。
+      # 必要な依存関係はモデルが判断し、サンドボックス内で取得・検証する。
+      # 必要な検証を代替手段でも完了できない場合はCOMMENTにする。
+      # コマンドの成功件数ではなく、変更内容の評価と根拠で判定する。
+
+      - name: Pydantic AIで調査してJSONを出力
+        id: review
+        uses: Lumos-Programming/ai-review-actions@e201ec19a23cefad232c2a0cf062483ad6b3fcf1
+        with:
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          model: ${{ env.GEMINI_MODEL }}
+          review-language: 日本語
+          sandbox-network: public
+          repository: ${{ github.repository }}
+          pull-request-number: ${{ github.event.pull_request.number }}
+          base-sha: ${{ github.event.pull_request.base.sha }}
+          head-sha: ${{ github.event.pull_request.head.sha }}
+          source-directory: source
+
+  publish:
+    name: 判定して正式なレビューを投稿
+    needs: analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    # このジョブはPRをcheckoutせず、モデルAPIキーも受け取らない。
+    # Geminiが生成したコードやコマンドは実行しない。
+    # GITHUB_TOKENには投稿権限を付与せず、GitHub App名義で投稿する。
+    permissions: {}
+
+    steps:
+      - name: GitHub Appの登録を確認
+        env:
+          APP_CLIENT_ID: ${{ vars.AI_REVIEW_APP_CLIENT_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.AI_REVIEW_APP_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$APP_CLIENT_ID" ]]; then
+            echo "::error::Actions Variable に AI_REVIEW_APP_CLIENT_ID を登録してください。"
+            exit 1
+          fi
+          if [[ -z "$APP_PRIVATE_KEY" ]]; then
+            echo "::error::Actions Secret に AI_REVIEW_APP_PRIVATE_KEY を登録してください。"
+            exit 1
+          fi
+
+      - name: このリポジトリのPR投稿用トークンを発行
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.AI_REVIEW_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AI_REVIEW_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-pull-requests: write
+
+      - name: JSONを検証してPR Reviewを投稿
+        uses: Lumos-Programming/ai-review-actions/publish@e201ec19a23cefad232c2a0cf062483ad6b3fcf1
+        with:
+          report: ${{ needs.analyze.outputs.report }}
+          github-token: ${{ steps.app-token.outputs.token }}
+          reviewer-login: ${{ format('{0}[bot]', steps.app-token.outputs.app-slug) }}
+          model: ${{ env.GEMINI_MODEL }}
