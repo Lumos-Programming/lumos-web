@@ -100,7 +100,7 @@ export default function Footer() {
                 <Github className="h-6 w-6" />
               </Link>
               <Link
-                href="https://www.instagram.com/lumos_programming"
+                href="https://www.instagram.com/ynu_lumos_programming/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-white/80 transition-colors"
