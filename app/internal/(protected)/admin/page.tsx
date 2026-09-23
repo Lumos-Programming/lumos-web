@@ -1,122 +1,113 @@
 import Link from "next/link";
-import { getUnregisteredMembers } from "@/lib/admin/actions";
-import { AdminNotificationPanel } from "@/components/admin/notification-panel";
-import { RoleSyncPanel } from "@/components/admin/role-sync-panel";
-import { RoleAssignmentPanel } from "@/components/admin/role-assignment-panel";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Shield, AlertCircle, Users, Newspaper } from "lucide-react";
+import { isProduction } from "@/lib/env";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Bell,
+  CalendarClock,
+  Newspaper,
+  Shield,
+  ShieldCheck,
+  Users,
+  Wrench,
+} from "lucide-react";
 
-export const dynamic = "force-dynamic";
-
-/**
- * 環境変数の絶対 ISO タイムスタンプを、JST(+09:00) 表示の
- * "YYYY-MM-DDTHH:mm" に変換する。datetime-local input の初期値として使う。
- * SSR/CSR で結果が一致するよう、ブラウザのタイムゾーンに依存しない変換にする。
- */
-function isoToJstDatetimeLocal(iso: string | undefined): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  // Asia/Tokyo の各フィールドをロケール非依存で取り出す
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Tokyo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(d);
-  const lookup = (type: string) =>
-    parts.find((p) => p.type === type)?.value ?? "";
-  return `${lookup("year")}-${lookup("month")}-${lookup("day")}T${lookup("hour")}:${lookup("minute")}`;
-}
+const ADMIN_ACTIONS = [
+  {
+    href: "/internal/admin/members",
+    icon: Users,
+    label: "メンバー管理",
+    description: "登録メンバーの確認・編集を行います",
+    gradient: "from-blue-500 to-cyan-500",
+  },
+  {
+    href: "/internal/admin/news",
+    icon: Newspaper,
+    label: "お知らせ管理",
+    description: "Lumos公式のお知らせを作成・公開します",
+    gradient: "from-pink-500 to-rose-500",
+  },
+  {
+    href: "/internal/admin/notifications",
+    icon: Bell,
+    label: "登録案内通知",
+    description: "未登録メンバーへDiscord DMを送信します",
+    gradient: "from-orange-500 to-amber-500",
+  },
+  {
+    href: "/internal/admin/role-sync",
+    icon: ShieldCheck,
+    label: "Discordロール同期/付与",
+    description: "登録情報をもとにロールを一括同期します",
+    gradient: "from-emerald-500 to-teal-500",
+  },
+  {
+    href: "/internal/admin/role-assignment",
+    icon: CalendarClock,
+    label: "参加日時によるロール付与",
+    description: "参加日時を指定して対象者にロールを付与します",
+    gradient: "from-purple-500 to-indigo-500",
+  },
+  ...(!isProduction()
+    ? [
+        {
+          href: "/internal/admin/dev-tools",
+          icon: Wrench,
+          label: "開発者ツール",
+          description: "開発環境用の管理・検証ツールを開きます",
+          gradient: "from-slate-500 to-zinc-600",
+        },
+      ]
+    : []),
+];
 
 export default async function AdminPage() {
-  let members;
-  let error: string | null = null;
-  try {
-    members = await getUnregisteredMembers();
-  } catch (e) {
-    error = e instanceof Error ? e.message : String(e);
-  }
-
   return (
-    <div className="container max-w-3xl py-8 px-4">
-      <div className="flex items-center gap-3 mb-6">
-        <Shield className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">管理者ページ</h1>
+    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-primary p-6 md:p-8 text-white animate-spring-up">
+        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/5 rounded-full blur-2xl animate-soft-pulse" />
+        <div className="relative z-10 flex items-center gap-3">
+          <Shield className="h-7 w-7" />
+          <div>
+            <p className="text-white/70 text-sm font-medium">
+              Lumos 管理ツール
+            </p>
+            <h1 className="text-2xl md:text-3xl font-bold mt-1 tracking-tight">
+              管理者ポータル
+            </h1>
+          </div>
+        </div>
       </div>
 
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">メンバー管理</h2>
-        <Button asChild variant="outline">
-          <Link href="/internal/admin/members">
-            <Users className="h-4 w-4" />
-            メンバー一覧ダッシュボード
-          </Link>
-        </Button>
-      </section>
-
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">お知らせ管理</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Lumos公式のお知らせを作成・公開します。公開したものが /news に出ます。
-        </p>
-        <Button asChild variant="outline">
-          <Link href="/internal/admin/news">
-            <Newspaper className="h-4 w-4" />
-            お知らせを書く
-          </Link>
-        </Button>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold mb-4">登録案内通知</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Discordサーバーに参加しているがLumos Webに未登録のメンバーに、Discord
-          DMで登録案内を送信できます。
-        </p>
-        {error ? (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>メンバー一覧の取得に失敗しました</AlertTitle>
-            <AlertDescription>
-              <p className="mb-2">{error}</p>
-              {error.includes("Missing Access") && (
-                <p className="text-sm">
-                  Discord Developer PortalでBotの「Server Members
-                  Intent」を有効にしてください。
-                </p>
-              )}
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <AdminNotificationPanel members={members!} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {ADMIN_ACTIONS.map(
+          ({ href, icon: Icon, label, description, gradient }, index) => (
+            <Link
+              key={href}
+              href={href}
+              className={`stagger-tight-${index + 2} animate-spring-up fill-mode-backwards`}
+            >
+              <Card className="h-full hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 cursor-pointer group border-transparent hover:border-purple-200 dark:hover:border-purple-800">
+                <CardContent className="flex items-start gap-4 p-5">
+                  <div
+                    className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} text-white shrink-0 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-lg transition-all duration-300`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
+                      {label}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {description}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ),
         )}
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold mb-4">Discordロール付与</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          登録済みメンバー全員に年度メンバーロールおよびメンバー種別ロールを一括付与します。
-        </p>
-        <RoleSyncPanel />
-      </section>
-
-      <section className="mt-12">
-        <h2 className="text-lg font-semibold mb-4">参加日時によるロール付与</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          指定した日時以降にDiscordサーバーへ参加し、まだ対象ロールを持っていないメンバーへ一括でロールを付与します。
-        </p>
-        <RoleAssignmentPanel
-          defaultRoleId={process.env.NEW_MEMBER_ROLE_ID}
-          defaultJoinedAfterLocal={isoToJstDatetimeLocal(
-            process.env.NEW_MEMBER_JOINED_AFTER,
-          )}
-        />
-      </section>
+      </div>
     </div>
   );
 }
