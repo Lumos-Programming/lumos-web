@@ -44,6 +44,7 @@ export function RoleSyncPanel() {
               <thead>
                 <tr className="border-b bg-muted/50 text-left">
                   <th className="px-3 py-2 font-medium">メンバー</th>
+                  <th className="px-3 py-2 font-medium">同期後のロール</th>
                   <th className="px-3 py-2 font-medium">付与</th>
                   <th className="px-3 py-2 font-medium">削除</th>
                   <th className="px-3 py-2 font-medium">エラー</th>
@@ -65,6 +66,24 @@ export function RoleSyncPanel() {
                         {d.discordId}
                       </div>
                     </td>
+
+                    <td className="px-3 py-2">
+                      {d.syncedRoleNames.length > 0 ? (
+                        <ul className="space-y-0.5">
+                          {d.syncedRoleNames.map((name, index) => (
+                            <li key={`${name}-${index}`} className="text-xs">
+                              {name}
+                            </li>
+                          ))}
+                          <li className="text-xs text-muted-foreground">
+                            {d.syncedRoleIds.join(", ")}
+                          </li>
+                        </ul>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+
                     <td className="px-3 py-2">
                       {(d.addedRoleNames ?? []).length > 0 ? (
                         <ul className="space-y-0.5">
