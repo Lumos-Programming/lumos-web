@@ -52,6 +52,17 @@ const currentProjects = [
     leaderId: 967802261201887242,
     leaderName: "しゅん",
   },
+  {
+    id: 5,
+    title: "ポッドキャスト Lupod",
+    description:
+      "説明文：テックな話題やLumos のサークル情報などをゆるい雑談形式でお届けするポッドキャストを始めました！",
+    image: "/assets/Lumoslogo.png",
+    status: "進行中",
+    technologies: ["RSS"],
+    leaderId: 1233034908662890568,
+    leaderName: "坪井 一馬",
+  },
 ];
 
 // 過去のプロジェクト（アーカイブ）
