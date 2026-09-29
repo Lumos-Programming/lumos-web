@@ -14,7 +14,7 @@ const currentProjects = [
     image: "/assets/Lumoslogo.png",
     status: "進行中",
     technologies: ["Unity", "C#", "Blender"],
-    leaderId: 946721772777123861,
+    leaderId: "946721772777123861",
     leaderName: "ぶりけのあっちょん",
   },
   {
@@ -26,7 +26,7 @@ const currentProjects = [
       "https://storage.googleapis.com/lumos-web-profile-data/20260405_MLProject_TN_v1.jpg",
     status: "計画中",
     technologies: ["Python", "PyTorch"],
-    leaderId: 1233034908662890568,
+    leaderId: "1233034908662890568",
     leaderName: "坪井 一馬",
   },
   {
@@ -38,7 +38,7 @@ const currentProjects = [
       "https://storage.googleapis.com/lumos-web-profile-data/tryhackmeproject.jpg",
     status: "計画中",
     technologies: ["Kali Linux", "Burp Suite", "Metasploit"],
-    leaderId: 706873888461684866,
+    leaderId: "706873888461684866",
     leaderName: "Shion",
   },
   {
@@ -49,7 +49,7 @@ const currentProjects = [
     image: "/assets/Lumoslogo.png",
     status: "進行中",
     technologies: ["Next.js", "TypeScript", "CSS", "Firebase", "React"],
-    leaderId: 967802261201887242,
+    leaderId: "967802261201887242",
     leaderName: "しゅん",
   },
   {
@@ -75,7 +75,7 @@ const archivedProjects = [
     image: "https://storage.googleapis.com/lumos-web-profile-data/hajipro.jpg",
     completedDate: "2025年12月",
     technologies: ["Next.js", "v0"],
-    leaderId: 967802261201887242,
+    leaderId: "967802261201887242",
     leaderName: "しゅん",
   },
   {
@@ -85,7 +85,7 @@ const archivedProjects = [
     image: "/assets/Lumoslogo.png",
     completedDate: "2025年1月",
     technologies: [],
-    leaderId: 967802261201887242,
+    leaderId: "967802261201887242",
     leaderName: "しゅん",
   },
 ];
