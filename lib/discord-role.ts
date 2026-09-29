@@ -22,6 +22,7 @@ function isProfileValueName(name: string): boolean {
 }
 
 export type SyncRolesResult = {
+  syncedRoleIds: string[];
   added: string[];
   removed: string[];
   errors: string[];
@@ -275,5 +276,7 @@ export async function syncMemberDiscordRoles(
     }
   }
 
-  return { added, removed, errors };
+  const syncedRoleIds = await fetchGuildMemberRoles(userId);
+
+  return { syncedRoleIds, added, removed, errors };
 }

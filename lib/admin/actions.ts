@@ -215,6 +215,8 @@ export async function getAdminMembers(): Promise<AdminMemberRow[]> {
 export type MemberSyncDetail = {
   discordId: string;
   discordUsername: string;
+  syncedRoleIds: string[];
+  syncedRoleNames: string[];
   addedRoleNames: string[];
   removedRoleNames: string[];
   errors: string[];
@@ -307,6 +309,10 @@ export async function syncAllMemberDiscordRoles(): Promise<SyncRolesResult> {
         const detail: MemberSyncDetail = {
           discordId: doc.id,
           discordUsername: discordUsername ?? doc.id,
+          syncedRoleIds: roleResult.syncedRoleIds,
+          syncedRoleNames: roleResult.syncedRoleIds.map(
+            (id) => roleIdToName.get(id) ?? id,
+          ),
           addedRoleNames: roleResult.added.map(
             (id) => roleIdToName.get(id) ?? id,
           ),
