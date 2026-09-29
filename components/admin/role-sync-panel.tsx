@@ -69,18 +69,23 @@ export function RoleSyncPanel() {
 
                     <td className="px-3 py-2">
                       {d.syncedRoleNames.length > 0 ? (
-                        <ul className="space-y-0.5">
+                        <div className="flex flex-wrap gap-1.5">
                           {d.syncedRoleNames.map((name, index) => (
-                            <li key={`${name}-${index}`} className="text-xs">
+                            <span
+                              key={`${name}-${index}`}
+                              className="inline-flex items-center rounded-lg border-2 border-border/100 bg-background px-2 py-0.5 text-xs font-thin text-foreground"
+                            >
                               {name}
-                            </li>
+                            </span>
                           ))}
-                          <li className="text-xs text-muted-foreground">
-                            {d.syncedRoleIds.join(", ")}
-                          </li>
-                        </ul>
+                        </div>
                       ) : (
                         <span className="text-muted-foreground">—</span>
+                      )}
+                      {d.syncedRoleIds.length > 0 && (
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {d.syncedRoleIds.join(", ")}
+                        </div>
                       )}
                     </td>
 
