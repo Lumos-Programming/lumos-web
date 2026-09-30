@@ -7,7 +7,7 @@ import {
   validateImageUpload,
   UploadValidationError,
 } from "@/lib/upload";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "@/lib/database/values";
 import { getDb } from "@/lib/firebase";
 
 export async function POST(request: Request) {

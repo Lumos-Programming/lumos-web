@@ -1,9 +1,11 @@
 allowBuilds:
   "@firebase/util": true
+  esbuild: true
   protobufjs: true
   re2: true
   sharp: true
   unrs-resolver: true
+  workerd: true
 minimumReleaseAgeExclude:
   - cookie@0.7.0
   - vite@8.0.5

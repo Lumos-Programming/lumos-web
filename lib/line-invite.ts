@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { getDb } from "@/lib/firebase";
-import { Timestamp } from "firebase-admin/firestore";
+import { Timestamp } from "@/lib/database/values";
 import type { LineFlexMessage, LineFlexBubble } from "@/lib/mini-lt/line-flex";
 import {
   fetchProviderUser,
