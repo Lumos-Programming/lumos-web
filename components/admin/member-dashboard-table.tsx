@@ -63,6 +63,37 @@ const COLUMNS: ColumnDef[] = [
     ),
   },
   {
+    id: "discordMfa",
+    label: "Discord 2FA",
+    defaultVisible: true,
+    render: (r) => (
+      <div className="space-y-1 whitespace-nowrap">
+        {r.discordMfaEnabled === true ? (
+          <Badge>有効</Badge>
+        ) : r.discordMfaEnabled === false ? (
+          <Badge variant="destructive">未設定</Badge>
+        ) : (
+          <Badge variant="outline" className="text-muted-foreground">
+            未確認
+          </Badge>
+        )}
+        {r.discordMfaCheckedAt !== null && (
+          <div
+            className="text-xs text-muted-foreground"
+            title={new Date(r.discordMfaCheckedAt).toLocaleString("ja-JP", {
+              timeZone: "Asia/Tokyo",
+            })}
+          >
+            確認:{" "}
+            {new Date(r.discordMfaCheckedAt).toLocaleDateString("ja-JP", {
+              timeZone: "Asia/Tokyo",
+            })}
+          </div>
+        )}
+      </div>
+    ),
+  },
+  {
     id: "studentId",
     label: "学籍番号",
     defaultVisible: true,
@@ -376,6 +407,12 @@ export function MemberDashboardTable({
           </span>
         </TabsTrigger>
       </TabsList>
+
+      <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
+        Discord 2FA は、Discord で Lumos Web
+        にログインした時点の二要素認証の設定状況です。
+        未確認のメンバーは、次回の Discord ログイン時に取得します。
+      </p>
 
       <TabsContent value="active" className="mt-4">
         <FilterPanel
