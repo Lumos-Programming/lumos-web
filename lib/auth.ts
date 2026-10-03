@@ -125,12 +125,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // hash は resolveDiscordAvatar で URL に組み立てる。未設定 (null) は空文字で保存。
         const discordAvatarHash =
           (profile as { avatar?: string | null })?.avatar ?? "";
+        const discordMfaEnabled = profile?.mfa_enabled;
 
         const { isNewMember, lastLoginAt } = await getOrCreateMember(
           discordId,
           token.name ?? "",
           discordAvatarHash,
           (profile as { username?: string })?.username ?? undefined,
+          typeof discordMfaEnabled === "boolean"
+            ? discordMfaEnabled
+            : undefined,
         );
 
         await sendLoginDm(

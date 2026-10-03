@@ -21,6 +21,9 @@ export interface MemberDocument {
   discordUsername: string; // Display name (token.name)
   discordHandle?: string; // Discord username (@handle)
   discordAvatar: string;
+  /** Discord OAuth で確認した二要素認証の状態。未取得の場合はフィールドなし。 */
+  discordMfaEnabled?: boolean;
+  discordMfaCheckedAt?: FirebaseFirestore.Timestamp;
   studentId: string;
   nickname: string;
   lastName: string;
@@ -93,16 +96,27 @@ export async function getOrCreateMember(
   username: string,
   avatar: string,
   handle?: string,
+  mfaEnabled?: boolean,
 ): Promise<{ isNewMember: boolean; lastLoginAt: Date | null }> {
   const db = getDb();
   const ref = db.collection("members").doc(discordId);
   const snap = await ref.get();
+  // 既存ドキュメントの欠損も次回の Discord 認証で補完する。
+  // API が値を返さなかった場合は、過去の確認結果と日時を維持する。
+  const mfaUpdate =
+    typeof mfaEnabled === "boolean"
+      ? {
+          discordMfaEnabled: mfaEnabled,
+          discordMfaCheckedAt: FieldValue.serverTimestamp(),
+        }
+      : {};
 
   if (!snap.exists) {
     await ref.set({
       discordUsername: username,
       ...(handle ? { discordHandle: handle } : {}),
       discordAvatar: avatar,
+      ...mfaUpdate,
       studentId: "",
       nickname: "",
       lastName: "",
@@ -139,6 +153,7 @@ export async function getOrCreateMember(
       discordUsername: username,
       ...(handle ? { discordHandle: handle } : {}),
       discordAvatar: avatar,
+      ...mfaUpdate,
       lastLoginAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
@@ -260,6 +275,8 @@ export async function updateMember(
       MemberDocument,
       | "discordUsername"
       | "discordAvatar"
+      | "discordMfaEnabled"
+      | "discordMfaCheckedAt"
       | "github"
       | "githubId"
       | "x"

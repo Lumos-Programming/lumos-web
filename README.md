@@ -19,6 +19,7 @@
   - Mini LT management: weekly lightning-talk event scheduling, admin panel, automated Discord event creation via bot, LINE push notifications (Flex Messages)
 - **権限管理**: Discord ギルドのロールに基づく管理者判定
   - Role-based admin detection via Discord guild roles
+- **二要素認証の確認**: 管理者のメンバー一覧で Discord 2FA の有効・未設定・未確認と確認日を表示。Discord ログイン時に更新し、既存データの欠損も補完します。未確認のメンバーは再ログインが必要です。表示は確認時点の状態です。
 
 ## 技術スタック / Tech Stack
 
