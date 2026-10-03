@@ -138,6 +138,8 @@ export async function linkSubAccount(params: {
       subAccountDiscordId: sub.discordId,
       updatedAt: FieldValue.serverTimestamp(),
     });
+    // メインとしてログインした際の OAuth トークンはサブアカウントに引き継がない。
+    tx.delete(db.collection("discord_oauth_tokens").doc(sub.discordId));
 
     return { ok: true } as LinkSubAccountResult;
   });
@@ -180,6 +182,7 @@ export async function unlinkSubAccount(params: {
       updatedAt: FieldValue.serverTimestamp(),
     });
     tx.delete(subRef);
+    tx.delete(db.collection("discord_oauth_tokens").doc(subDiscordId));
 
     return { ok: true } as const;
   });

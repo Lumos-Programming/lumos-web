@@ -100,65 +100,67 @@ export async function getOrCreateMember(
 ): Promise<{ isNewMember: boolean; lastLoginAt: Date | null }> {
   const db = getDb();
   const ref = db.collection("members").doc(discordId);
-  const snap = await ref.get();
-  // 既存ドキュメントの欠損も次回の Discord 認証で補完する。
-  // API が値を返さなかった場合は、過去の確認結果と日時を維持する。
-  const mfaUpdate =
-    typeof mfaEnabled === "boolean"
-      ? {
-          discordMfaEnabled: mfaEnabled,
-          discordMfaCheckedAt: FieldValue.serverTimestamp(),
-        }
-      : {};
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    // 既存ドキュメントの欠損も次回の Discord 認証で補完する。
+    // API が値を返さなかった場合は、過去の確認結果と日時を維持する。
+    const mfaUpdate =
+      typeof mfaEnabled === "boolean"
+        ? {
+            discordMfaEnabled: mfaEnabled,
+            discordMfaCheckedAt: FieldValue.serverTimestamp(),
+          }
+        : {};
 
-  if (!snap.exists) {
-    await ref.set({
-      discordUsername: username,
-      ...(handle ? { discordHandle: handle } : {}),
-      discordAvatar: avatar,
-      ...mfaUpdate,
-      studentId: "",
-      nickname: "",
-      lastName: "",
-      firstName: "",
-      lastNameRomaji: "",
-      firstNameRomaji: "",
-      bio: "",
-      allowPublic: true,
-      visibility: {
-        studentId: "private",
-        nickname: "public",
-        lastName: "public",
-        firstName: "public",
-        faculty: "public",
-        currentOrg: "public",
-        birthDate: "internal",
-        gender: "internal",
-        bio: "public",
-        github: "public",
-        x: "public",
-        linkedin: "public",
-        line: "internal",
-        discord: "public",
-      },
-      lastLoginAt: FieldValue.serverTimestamp(),
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    return { isNewMember: true, lastLoginAt: null };
-  } else {
-    const data = snap.data() as MemberDocument;
-    const lastLoginAt = data.lastLoginAt?.toDate() ?? null;
-    await ref.update({
-      discordUsername: username,
-      ...(handle ? { discordHandle: handle } : {}),
-      discordAvatar: avatar,
-      ...mfaUpdate,
-      lastLoginAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    return { isNewMember: false, lastLoginAt };
-  }
+    if (!snap.exists) {
+      tx.set(ref, {
+        discordUsername: username,
+        ...(handle ? { discordHandle: handle } : {}),
+        discordAvatar: avatar,
+        ...mfaUpdate,
+        studentId: "",
+        nickname: "",
+        lastName: "",
+        firstName: "",
+        lastNameRomaji: "",
+        firstNameRomaji: "",
+        bio: "",
+        allowPublic: true,
+        visibility: {
+          studentId: "private",
+          nickname: "public",
+          lastName: "public",
+          firstName: "public",
+          faculty: "public",
+          currentOrg: "public",
+          birthDate: "internal",
+          gender: "internal",
+          bio: "public",
+          github: "public",
+          x: "public",
+          linkedin: "public",
+          line: "internal",
+          discord: "public",
+        },
+        lastLoginAt: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      return { isNewMember: true, lastLoginAt: null };
+    } else {
+      const data = snap.data() as MemberDocument;
+      const lastLoginAt = data.lastLoginAt?.toDate() ?? null;
+      tx.update(ref, {
+        discordUsername: username,
+        ...(handle ? { discordHandle: handle } : {}),
+        discordAvatar: avatar,
+        ...mfaUpdate,
+        lastLoginAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      return { isNewMember: false, lastLoginAt };
+    }
+  });
 }
 
 export async function getPublicMembers(): Promise<Member[]> {
@@ -388,22 +390,25 @@ export async function isDiscordIdOptedOut(discordId: string): Promise<boolean> {
 export async function markMemberOptedOut(discordId: string): Promise<void> {
   const db = getDb();
   const ref = db.collection("members").doc(discordId);
-  const snap = await ref.get();
-  if (snap.exists) {
-    await ref.update({
-      optedOut: true,
-      optedOutAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    return;
-  }
-  // メンバーが会員登録そもそもしていない場合
-  await ref.set({
-    optedOut: true,
-    optedOutAt: FieldValue.serverTimestamp(),
-    onboardingCompleted: false,
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    tx.set(
+      ref,
+      {
+        optedOut: true,
+        optedOutAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+        ...(!snap.exists
+          ? {
+              onboardingCompleted: false,
+              createdAt: FieldValue.serverTimestamp(),
+            }
+          : {}),
+      },
+      { merge: true },
+    );
+    // ログイン時の保存と競合しても、退会済みメンバーのトークンを残さない。
+    tx.delete(db.collection("discord_oauth_tokens").doc(discordId));
   });
 }
 
