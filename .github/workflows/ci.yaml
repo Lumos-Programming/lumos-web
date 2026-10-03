@@ -37,5 +37,8 @@ jobs:
       - name: CLI Install
         run: aqua i -l
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Run test
         run: just test
