@@ -91,6 +91,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   providers: [
     Discord({
+      // Discord はコールバックに iss=https://discord.com を付けて返す (RFC 9207)。
+      // 未設定だと Auth.js が https://authjs.dev を期待値にして検証に失敗する。
+      issuer: "https://discord.com",
       authorization:
         "https://discord.com/api/oauth2/authorize?scope=identify+guilds+guilds.members.read",
     }),
