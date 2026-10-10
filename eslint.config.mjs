@@ -19,7 +19,14 @@ const eslintConfig = [
     },
   },
   {
-    ignores: ["node_modules/", ".next/", "out/"],
+    ignores: [
+      "node_modules/",
+      ".next/",
+      ".open-next/",
+      ".wrangler/",
+      ".claude/",
+      "out/",
+    ],
   },
 ];
 

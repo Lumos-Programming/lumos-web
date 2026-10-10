@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/firebase";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "@/lib/database/values";
 
 export async function POST(req: Request) {
   const session = await auth();

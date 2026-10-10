@@ -1,4 +1,5 @@
-import { FieldValue } from "firebase-admin/firestore";
+import type { DocumentData } from "@/lib/database/types";
+import { FieldValue } from "@/lib/database/values";
 import { z } from "zod";
 import { getDb } from "@/lib/firebase";
 import {
@@ -77,7 +78,7 @@ export function parseBlogInput(body: unknown): BlogInput {
   return input;
 }
 
-function toBlog(id: string, data: FirebaseFirestore.DocumentData): Blog {
+function toBlog(id: string, data: DocumentData): Blog {
   return {
     id,
     authorId: data.authorId,
@@ -150,7 +151,7 @@ export async function createBlog(
 
   const db = getDb();
   const ref = db.collection("blogs").doc();
-  const data: FirebaseFirestore.DocumentData = {
+  const data: DocumentData = {
     authorId,
     url: input.url,
     title: input.title,

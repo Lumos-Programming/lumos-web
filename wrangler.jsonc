@@ -1,0 +1,69 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "lumos-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-18",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  // No resources are provisioned by this configuration. Replace each placeholder
+  // ID with the corresponding existing D1 database ID before a remote command.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lumos-web-local",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // Workers is enabled after completing the Firestore stages on Cloud Run.
+  "vars": {
+    "DATABASE_MIGRATION_STAGE": "d1-only",
+  },
+  "env": {
+    "dev": {
+      "name": "lumos-web-dev",
+      "vars": {
+        "DATABASE_MIGRATION_STAGE": "d1-only",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "lumos-web-dev",
+          "database_id": "00000000-0000-0000-0000-000000000001",
+          "migrations_dir": "migrations",
+        },
+      ],
+    },
+    "stg": {
+      "name": "lumos-web-stg",
+      "vars": {
+        "DATABASE_MIGRATION_STAGE": "d1-only",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "lumos-web-stg",
+          "database_id": "00000000-0000-0000-0000-000000000002",
+          "migrations_dir": "migrations",
+        },
+      ],
+    },
+    "prd": {
+      "name": "lumos-web-prd",
+      "vars": {
+        "DATABASE_MIGRATION_STAGE": "d1-only",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "lumos-web-prd",
+          "database_id": "00000000-0000-0000-0000-000000000003",
+          "migrations_dir": "migrations",
+        },
+      ],
+    },
+  },
+}

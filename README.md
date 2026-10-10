@@ -89,6 +89,10 @@ just emulator-reset # エミュレータを再起動（データをリセット�
 
 ## 環境変数
 
+Firestore → Cloudflare D1 / Workers の段階移行は
+[データベース移行手順](docs/database-migration.md) を参照してください。
+`DATABASE_MIGRATION_STAGE` 未設定時は Firestore 単独で動作し、Cloudflare の設定は不要です。
+
 `.env.example` を参照してください。主要な変数：
 
 | 変数                  | 説明                                   |

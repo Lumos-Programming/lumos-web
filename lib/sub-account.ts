@@ -1,5 +1,7 @@
+import type { DocumentData } from "@/lib/database/types";
+import type { Timestamp } from "@/lib/database/values";
 import { getDb } from "@/lib/firebase";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue } from "@/lib/database/values";
 
 export type SubAccountInfo = {
   discordId: string;
@@ -34,7 +36,7 @@ export type LinkSubAccountResult =
  * 引き継いでよい (退会の記録自体は optout_submissions に残る)。
  * 逆に登録済み・オンボーディング入力済みの doc は奪わない。
  */
-function isRegisteredMemberDoc(data: FirebaseFirestore.DocumentData): boolean {
+function isRegisteredMemberDoc(data: DocumentData): boolean {
   if (data.onboardingCompleted === true) return true;
   return Boolean(data.studentId || data.lastName || data.firstName);
 }
@@ -228,9 +230,7 @@ export async function getSubAccountById(
     discordUsername: data.discordUsername ?? "",
     discordHandle: data.discordHandle,
     discordAvatar: data.discordAvatar ?? "",
-    linkedAt: (
-      data.linkedAt as FirebaseFirestore.Timestamp | undefined
-    )?.toMillis(),
+    linkedAt: (data.linkedAt as Timestamp | undefined)?.toMillis(),
   };
 }
 
