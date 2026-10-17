@@ -5,6 +5,7 @@ import {
   type GuildMemberInfo,
   sendTestDiscordMessage,
   sendTestLineMessage,
+  sendTestBirthdayNotification,
 } from "@/lib/admin/dev-tools-actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -98,9 +99,17 @@ export function DevToolsPanel({
       <TabsList className="mb-4">
         <TabsTrigger value="discord">Discord メッセージ</TabsTrigger>
         <TabsTrigger value="line">LINE メッセージ</TabsTrigger>
+        <TabsTrigger value="birthday">誕生日通知</TabsTrigger>
       </TabsList>
       <TabsContent value="discord">
         <DiscordTab
+          members={members}
+          myDiscordId={myDiscordId}
+          myName={myName}
+        />
+      </TabsContent>
+      <TabsContent value="birthday">
+        <BirthdayTab
           members={members}
           myDiscordId={myDiscordId}
           myName={myName}
@@ -396,6 +405,154 @@ function LineTab() {
             )}
             {isPending ? "送信中..." : "テスト送信"}
           </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// --- Birthday Tab ---
+// 誕生日通知は DM ではなく運営チャンネルへの webhook 投稿なので、
+// Discord メッセージタブとは別タブに分けている。
+// buildBirthdayNotification が配列を受けるため、選択した複数人を1通で送れる。
+
+function BirthdayTab({
+  members,
+  myDiscordId,
+  myName,
+}: {
+  members: GuildMemberInfo[];
+  myDiscordId: string;
+  myName: string;
+}) {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [result, setResult] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function toggleMember(discordId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(discordId)) {
+        next.delete(discordId);
+      } else {
+        next.add(discordId);
+      }
+      return next;
+    });
+  }
+
+  function send(discordIds: string[], label: string) {
+    setResult(null);
+    startTransition(async () => {
+      const res = await sendTestBirthdayNotification(discordIds);
+      setResult(
+        res.success
+          ? {
+              type: "success",
+              message: `運営チャンネルへ送信しました（${label}）`,
+            }
+          : { type: "error", message: res.error ?? "送信に失敗しました" },
+      );
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      {result && (
+        <Alert variant={result.type === "error" ? "destructive" : "default"}>
+          {result.type === "error" ? (
+            <AlertCircle className="h-4 w-4" />
+          ) : (
+            <CheckCircle className="h-4 w-4" />
+          )}
+          <AlertTitle>
+            {result.type === "success" ? "送信完了" : "エラー"}
+          </AlertTitle>
+          <AlertDescription>{result.message}</AlertDescription>
+        </Alert>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">誕生日通知 テスト送信</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            毎朝 9:00 に cron が送るのと同じ通知を、
+            <code className="text-xs bg-muted px-1 py-0.5 rounded mx-1">
+              ADMIN_NOTIFICATION_CHANNEL_WEBHOOK
+            </code>
+            の運営チャンネルへ投稿します。DM ではありません。
+            選択した複数人はまとめて1通で送信されます。
+          </p>
+          <Button
+            onClick={() => send([myDiscordId], myName)}
+            disabled={isPending}
+            className="w-full"
+          >
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+            {isPending ? "送信中..." : "自分を誕生日として送信"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">
+              メンバーを選んで送信
+              <Badge variant="secondary" className="ml-2">
+                {members.length}人
+              </Badge>
+            </CardTitle>
+            <Button
+              onClick={() => send(Array.from(selected), `${selected.size}人`)}
+              disabled={selected.size === 0 || isPending}
+              size="sm"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              {isPending ? "送信中..." : `送信（${selected.size}人）`}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {members.map((member) => (
+              <label
+                key={member.discordId}
+                className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
+              >
+                <Checkbox
+                  checked={selected.has(member.discordId)}
+                  onCheckedChange={() => toggleMember(member.discordId)}
+                  disabled={isPending}
+                />
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src={member.avatarUrl ?? undefined}
+                    alt={member.displayName}
+                  />
+                  <AvatarFallback className="text-xs">
+                    {member.displayName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <p className="text-sm font-medium truncate">
+                  {member.displayName}
+                </p>
+              </label>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>

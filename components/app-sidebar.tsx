@@ -6,12 +6,17 @@ import {
   LayoutDashboard,
   Users,
   CalendarDays,
+  Cake,
   UserCircle,
   BookOpen,
   Settings,
   ExternalLink,
   LogOut,
-  Shield,
+  ShieldCheck,
+  UserCog,
+  BellRing,
+  RefreshCw,
+  CalendarClock,
   Wrench,
 } from "lucide-react";
 import { isProduction } from "@/lib/env";
@@ -31,18 +36,54 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const NAV_ITEMS = [
   { href: "/internal", icon: LayoutDashboard, label: "ホーム", exact: true },
   { href: "/internal/members", icon: Users, label: "メンバー" },
   { href: "/internal/events", icon: CalendarDays, label: "イベント" },
+  { href: "/internal/birthdays", icon: Cake, label: "誕生日" },
   { href: "/internal/profile", icon: UserCircle, label: "プロフィール" },
   { href: "/internal/blogs", icon: BookOpen, label: "記事管理" },
   { href: "/internal/settings", icon: Settings, label: "設定" },
 ];
 
 const ADMIN_NAV_ITEMS = [
-  { href: "/internal/admin", icon: Shield, label: "管理者ページ", exact: true },
+  {
+    href: "/internal/admin",
+    icon: ShieldCheck,
+    label: "管理者ポータル",
+    exact: true,
+  },
+  {
+    href: "/internal/admin/members",
+    icon: UserCog,
+    label: "メンバー管理",
+    exact: false,
+  },
+  {
+    href: "/internal/admin/notifications",
+    icon: BellRing,
+    label: "登録案内通知",
+    exact: false,
+  },
+  {
+    href: "/internal/admin/role-sync",
+    icon: RefreshCw,
+    label: "Discordロール同期/付与",
+    exact: false,
+  },
+  {
+    href: "/internal/admin/role-assignment",
+    icon: CalendarClock,
+    label: "参加日時によるロール付与",
+    exact: false,
+  },
   ...(!isProduction()
     ? [
         {
@@ -77,22 +118,50 @@ export function AppSidebar({
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-4 group-data-[collapsible=icon]:p-2">
         <div className="flex items-center gap-3 overflow-hidden group-data-[collapsible=icon]:justify-start">
-          <Avatar className="h-9 w-9 shrink-0 border-2 border-sidebar-primary/20 transition-all duration-200 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7">
-            <AvatarImage src={userImage} alt={userName} />
-            <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">
-              {(memberNickname || userName).charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold truncate">
-              {memberNickname || userName}
-            </span>
-            {memberRole && (
-              <span className="text-[11px] text-sidebar-foreground/50 truncate">
-                {memberRole}
-              </span>
-            )}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="ユーザーメニューを開く"
+                className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left outline-none ring-offset-sidebar focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2"
+              >
+                <Avatar className="h-9 w-9 shrink-0 border-2 border-sidebar-primary/20 transition-all duration-200 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7">
+                  <AvatarImage src={userImage} alt={userName} />
+                  <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">
+                    {(memberNickname || userName).charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex min-w-0 flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
+                  <span className="truncate text-sm font-semibold">
+                    {memberNickname || userName}
+                  </span>
+                  {memberRole && (
+                    <span className="truncate text-[11px] text-sidebar-foreground/50">
+                      {memberRole}
+                    </span>
+                  )}
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="bottom" align="start" className="w-64">
+              <DropdownMenuItem
+                asChild
+                className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground"
+              >
+                <Link href="/" onClick={() => setOpenMobile(false)}>
+                  <ExternalLink />
+                  <span>サイトに戻る</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => signOut({ redirectTo: "/" })}
+                className="text-red-500 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:bg-sidebar-accent focus:text-sidebar-accent-foreground"
+              >
+                <LogOut />
+                <span>ログアウト</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -131,12 +200,16 @@ export function AppSidebar({
           <SidebarGroupLabel>管理</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {ADMIN_NAV_ITEMS.map((item) => {
+              {ADMIN_NAV_ITEMS.map((item, index) => {
                 const isActive = isAdmin
                   ? item.exact
                     ? pathname === item.href
                     : pathname.startsWith(item.href)
                   : false;
+                const nestedClassName =
+                  index === 0
+                    ? undefined
+                    : "ml-3 group-data-[collapsible=icon]:ml-0";
                 return (
                   <SidebarMenuItem key={item.href}>
                     {isAdmin ? (
@@ -144,6 +217,7 @@ export function AppSidebar({
                         asChild
                         isActive={isActive}
                         tooltip={item.label}
+                        className={nestedClassName}
                       >
                         <Link
                           href={item.href}
@@ -154,7 +228,11 @@ export function AppSidebar({
                         </Link>
                       </SidebarMenuButton>
                     ) : (
-                      <SidebarMenuButton disabled tooltip={item.label}>
+                      <SidebarMenuButton
+                        disabled
+                        tooltip={item.label}
+                        className={nestedClassName}
+                      >
                         <item.icon />
                         <span>{item.label}</span>
                       </SidebarMenuButton>
@@ -184,7 +262,7 @@ export function AppSidebar({
             <SidebarMenuButton
               tooltip="ログアウト"
               onClick={() => signOut({ redirectTo: "/" })}
-              className="text-red-500 hover:text-red-600 hover:bg-red-50"
+              className="text-red-500 hover:bg-red-50 hover:text-red-600"
             >
               <LogOut />
               <span>ログアウト</span>

@@ -33,7 +33,10 @@ export function InternalMemberSearch({ members }: MemberSearchProps) {
       result = result.filter(
         (m) =>
           m.name.toLowerCase().includes(q) ||
-          (m.nickname && m.nickname.toLowerCase().includes(q)),
+          (m.nickname && m.nickname.toLowerCase().includes(q)) ||
+          (m.social?.discordUsername &&
+            m.social?.discordUsername.toLowerCase().includes(q)) ||
+          (m.social?.line && m.social?.line.toLowerCase().includes(q)),
       );
     }
     return result;
