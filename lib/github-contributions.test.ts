@@ -9,6 +9,13 @@ import {
   saveGithubContributions,
 } from "./github-contributions";
 import type { Member } from "@/types/member";
+import { getInstallationToken } from "@/lib/github-app";
+
+// App の認証まわりは lib/github-app.test.ts で見るので、ここではトークンだけ差し替える
+vi.mock("@/lib/github-app", () => ({
+  getInstallationToken: vi.fn(),
+  isGithubAppConfigured: vi.fn(() => true),
+}));
 
 if (!firebaseAdmin.apps.length) {
   firebaseAdmin.initializeApp({
@@ -76,14 +83,14 @@ describe("github-contributions", () => {
   beforeEach(async () => {
     fetchMock = vi.fn();
     globalThis.fetch = fetchMock as unknown as typeof fetch;
-    vi.stubEnv("GITHUB_TOKEN", "test-token");
+    vi.mocked(getInstallationToken).mockReset();
+    vi.mocked(getInstallationToken).mockResolvedValue("test-token");
     const docs = await db.collection("github_contributions").listDocuments();
     for (const doc of docs) await doc.delete();
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
-    vi.unstubAllEnvs();
   });
 
   describe("fetchGithubContributions", () => {
@@ -135,10 +142,12 @@ describe("github-contributions", () => {
       );
     });
 
-    it("throws when GITHUB_TOKEN is missing", async () => {
-      vi.stubEnv("GITHUB_TOKEN", "");
+    it("throws without calling GraphQL when no token is available", async () => {
+      vi.mocked(getInstallationToken).mockRejectedValueOnce(
+        new Error("GitHub App is not configured"),
+      );
       await expect(fetchGithubContributions("x")).rejects.toThrow(
-        "GITHUB_TOKEN",
+        "not configured",
       );
       expect(fetchMock).not.toHaveBeenCalled();
     });

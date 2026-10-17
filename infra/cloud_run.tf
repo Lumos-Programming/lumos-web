@@ -161,10 +161,10 @@ resource "google_cloud_run_service" "web" {
           }
         }
         env {
-          name = "GITHUB_TOKEN"
+          name = "GITHUB_APP_PRIVATE_KEY"
           value_from {
             secret_key_ref {
-              name = google_secret_manager_secret.per_env["github-token-${each.key}"].secret_id
+              name = google_secret_manager_secret.per_env["github-app-private-key-${each.key}"].secret_id
               key  = "latest"
             }
           }

@@ -1,5 +1,6 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase";
+import { getInstallationToken, isGithubAppConfigured } from "@/lib/github-app";
 import type { Member } from "@/types/member";
 import {
   CONTRIBUTION_LEVELS,
@@ -53,24 +54,23 @@ interface GraphqlResponse {
   errors?: { type?: string; message: string }[];
 }
 
-/** GITHUB_TOKEN が未設定なら草の取得は丸ごとスキップする (他のバッチは動かす) */
+/** GitHub App が未設定なら草の取得は丸ごとスキップする (他のバッチは動かす) */
 export function isGithubContributionsEnabled(): boolean {
-  return Boolean(process.env.GITHUB_TOKEN);
+  return isGithubAppConfigured();
 }
 
 /**
  * GitHub GraphQL API から 1 年分の草を取る。
  * ユーザーが見つからなければ null。それ以外の失敗は例外。
  *
- * どのトークンでも公開分は取れる。本人が GitHub 側で
+ * Lumos の GitHub App の installation token で叩く。公開分は権限無しで取れ、本人が GitHub 側で
  * "Include private contributions" を有効にしていれば非公開分も数に入る。
  */
 export async function fetchGithubContributions(
   login: string,
   now: Date = new Date(),
 ): Promise<GithubContributions | null> {
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) throw new Error("GITHUB_TOKEN is not configured");
+  const token = await getInstallationToken(now);
 
   const res = await fetch(GRAPHQL_ENDPOINT, {
     method: "POST",

@@ -86,7 +86,7 @@ async function refreshDiscordAvatars(): Promise<RefreshSummary> {
 
 /**
  * GitHub 連携メンバーの草 (contribution calendar) を取り直す。
- * GITHUB_TOKEN が無い環境では何もしない (ローカルなど)。
+ * GitHub App が未設定の環境では何もしない (ローカルなど)。
  */
 async function refreshGithubContributions(): Promise<RefreshSummary | null> {
   if (!isGithubContributionsEnabled()) return null;
