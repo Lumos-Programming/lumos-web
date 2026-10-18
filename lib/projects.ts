@@ -244,3 +244,126 @@ export async function deleteProject(
     transaction.delete(ref);
   });
 }
+
+async function runProjectTransition(
+  actor: ProjectActor,
+  id: string,
+  transition: (project: Project, data: DocumentData) => Record<string, unknown>,
+): Promise<Project> {
+  const db = getDb();
+  const ref = db.collection(COLLECTION).doc(id);
+
+  await db.runTransaction(async (transaction) => {
+    await requireEligibleActorInTransaction(transaction, actor);
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists) {
+      throw new ProjectError(PROJECT_ERROR_CODES.NOT_FOUND);
+    }
+    const updates = transition(
+      toProject(snapshot.id, snapshot.data()!),
+      snapshot.data()!,
+    );
+    transaction.update(ref, {
+      ...updates,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  });
+
+  return readProject(ref);
+}
+
+function assertOwner(actor: ProjectActor, project: Project): void {
+  if (project.authorId !== actor.id) {
+    throw new ProjectError(PROJECT_ERROR_CODES.FORBIDDEN);
+  }
+}
+
+function assertStatus(project: Project, expected: string): void {
+  if (project.publicationStatus !== expected) {
+    throw new ProjectError(PROJECT_ERROR_CODES.INVALID_TRANSITION);
+  }
+}
+
+export async function submitProject(
+  actor: ProjectActor,
+  id: string,
+): Promise<Project> {
+  return runProjectTransition(actor, id, (project) => {
+    assertOwner(actor, project);
+    assertStatus(project, "draft");
+    parseProjectSubmissionInput(project);
+    return {
+      publicationStatus: "pending",
+      submittedAt: FieldValue.serverTimestamp(),
+    };
+  });
+}
+
+export async function approveProject(
+  actor: ProjectActor,
+  id: string,
+): Promise<Project> {
+  return runProjectTransition(actor, id, (project, data) => {
+    assertAdmin(actor);
+    assertStatus(project, "pending");
+    return {
+      publicationStatus: "published",
+      approvedBy: actor.id,
+      ...(!data.publishedAt
+        ? { publishedAt: FieldValue.serverTimestamp() }
+        : {}),
+    };
+  });
+}
+
+export async function hideProjectByCreator(
+  actor: ProjectActor,
+  id: string,
+): Promise<Project> {
+  return runProjectTransition(actor, id, (project) => {
+    assertOwner(actor, project);
+    assertStatus(project, "published");
+    return { publicationStatus: "hidden_by_creator" };
+  });
+}
+
+export async function restoreProjectByCreator(
+  actor: ProjectActor,
+  id: string,
+): Promise<Project> {
+  return runProjectTransition(actor, id, (project) => {
+    assertOwner(actor, project);
+    if (project.publicationStatus === "hidden_by_admin") {
+      throw new ProjectError(PROJECT_ERROR_CODES.FORBIDDEN);
+    }
+    assertStatus(project, "hidden_by_creator");
+    return { publicationStatus: "published" };
+  });
+}
+
+export async function hideProjectByAdmin(
+  actor: ProjectActor,
+  id: string,
+): Promise<Project> {
+  return runProjectTransition(actor, id, (project) => {
+    assertAdmin(actor);
+    assertStatus(project, "published");
+    return { publicationStatus: "hidden_by_admin" };
+  });
+}
+
+export async function restoreProjectByAdmin(
+  actor: ProjectActor,
+  id: string,
+): Promise<Project> {
+  return runProjectTransition(actor, id, (project) => {
+    assertAdmin(actor);
+    if (
+      project.publicationStatus !== "hidden_by_creator" &&
+      project.publicationStatus !== "hidden_by_admin"
+    ) {
+      throw new ProjectError(PROJECT_ERROR_CODES.INVALID_TRANSITION);
+    }
+    return { publicationStatus: "published" };
+  });
+}

@@ -9,13 +9,19 @@ import {
   type ProjectPublicationStatus,
 } from "@/types/project";
 import {
+  approveProject,
   createProjectDraft,
   deleteProject,
   getProjectForActor,
+  hideProjectByAdmin,
+  hideProjectByCreator,
   listAllProjects,
   listPendingProjects,
   listProjectsByAuthor,
   listPublishedProjects,
+  restoreProjectByAdmin,
+  restoreProjectByCreator,
+  submitProject,
   updateProjectContent,
 } from "./projects";
 
@@ -314,5 +320,196 @@ describe("project Firestore operations", () => {
       deleteProject(author, "missing"),
       PROJECT_ERROR_CODES.NOT_FOUND,
     );
+  });
+});
+
+describe("project publication transitions", () => {
+  beforeEach(async () => {
+    const db = firebaseAdmin.firestore();
+    const collections = await db.listCollections();
+    for (const collection of collections) {
+      const documents = await collection.listDocuments();
+      for (const document of documents) await document.delete();
+    }
+
+    await Promise.all([
+      putMember(author),
+      putMember(otherMember),
+      putMember(admin),
+    ]);
+  });
+
+  async function createSubmittableProject() {
+    const project = await createProjectDraft(author, completeInput);
+    return project;
+  }
+
+  async function createPublishedProject() {
+    const project = await createSubmittableProject();
+    await submitProject(author, project.id);
+    return approveProject(admin, project.id);
+  }
+
+  it("moves a complete draft through pending to its first publication", async () => {
+    const draft = await createSubmittableProject();
+
+    const pending = await submitProject(author, draft.id);
+    expect(pending.publicationStatus).toBe("pending");
+    expect(pending.submittedAt).not.toBeNull();
+    expect(pending.publishedAt).toBeNull();
+
+    const published = await approveProject(admin, draft.id);
+    expect(published.publicationStatus).toBe("published");
+    expect(published.publishedAt).not.toBeNull();
+    expect(published.approvedBy).toBe(admin.id);
+  });
+
+  it("re-validates persisted draft content before submission", async () => {
+    const incomplete = await createProjectDraft(author, { name: "未完成" });
+
+    await expectProjectError(
+      submitProject(author, incomplete.id),
+      PROJECT_ERROR_CODES.DESCRIPTION_REQUIRED,
+    );
+    expect(
+      (await getProjectForActor(author, incomplete.id)).publicationStatus,
+    ).toBe("draft");
+  });
+
+  it("allows only the author to submit a draft", async () => {
+    const project = await createSubmittableProject();
+
+    await expectProjectError(
+      submitProject(otherMember, project.id),
+      PROJECT_ERROR_CODES.FORBIDDEN,
+    );
+    await expectProjectError(
+      submitProject(admin, project.id),
+      PROJECT_ERROR_CODES.FORBIDDEN,
+    );
+  });
+
+  it("allows only admins to approve pending projects", async () => {
+    const project = await createSubmittableProject();
+    await submitProject(author, project.id);
+
+    await expectProjectError(
+      approveProject(author, project.id),
+      PROJECT_ERROR_CODES.ADMIN_REQUIRED,
+    );
+    expect((await approveProject(admin, project.id)).publicationStatus).toBe(
+      "published",
+    );
+  });
+
+  it("rejects transitions from states that are not their declared source", async () => {
+    const draft = await createSubmittableProject();
+    await expectProjectError(
+      approveProject(admin, draft.id),
+      PROJECT_ERROR_CODES.INVALID_TRANSITION,
+    );
+    await expectProjectError(
+      hideProjectByCreator(author, draft.id),
+      PROJECT_ERROR_CODES.INVALID_TRANSITION,
+    );
+
+    const published = await createPublishedProject();
+    await expectProjectError(
+      submitProject(author, published.id),
+      PROJECT_ERROR_CODES.INVALID_TRANSITION,
+    );
+    await expectProjectError(
+      restoreProjectByCreator(author, published.id),
+      PROJECT_ERROR_CODES.INVALID_TRANSITION,
+    );
+  });
+
+  it("lets the creator hide and restore a published project without reapproval", async () => {
+    const published = await createPublishedProject();
+    const originalPublishedAt = published.publishedAt;
+
+    const hidden = await hideProjectByCreator(author, published.id);
+    expect(hidden.publicationStatus).toBe("hidden_by_creator");
+    expect(hidden.publishedAt).toBe(originalPublishedAt);
+
+    const restored = await restoreProjectByCreator(author, published.id);
+    expect(restored.publicationStatus).toBe("published");
+    expect(restored.publishedAt).toBe(originalPublishedAt);
+    expect(restored.approvedBy).toBe(admin.id);
+  });
+
+  it("lets an admin hide and restore while blocking creator restoration", async () => {
+    const published = await createPublishedProject();
+    const originalPublishedAt = published.publishedAt;
+
+    const hidden = await hideProjectByAdmin(admin, published.id);
+    expect(hidden.publicationStatus).toBe("hidden_by_admin");
+
+    await expectProjectError(
+      restoreProjectByCreator(author, published.id),
+      PROJECT_ERROR_CODES.FORBIDDEN,
+    );
+
+    const restored = await restoreProjectByAdmin(admin, published.id);
+    expect(restored.publicationStatus).toBe("published");
+    expect(restored.publishedAt).toBe(originalPublishedAt);
+  });
+
+  it("allows an admin to restore a creator-hidden project", async () => {
+    const published = await createPublishedProject();
+    await hideProjectByCreator(author, published.id);
+
+    expect(
+      (await restoreProjectByAdmin(admin, published.id)).publicationStatus,
+    ).toBe("published");
+  });
+
+  it("requires admin privileges for admin moderation transitions", async () => {
+    const published = await createPublishedProject();
+
+    await expectProjectError(
+      hideProjectByAdmin(otherMember, published.id),
+      PROJECT_ERROR_CODES.ADMIN_REQUIRED,
+    );
+    await hideProjectByAdmin(admin, published.id);
+    await expectProjectError(
+      restoreProjectByAdmin(otherMember, published.id),
+      PROJECT_ERROR_CODES.ADMIN_REQUIRED,
+    );
+  });
+
+  it("keeps approved projects published when their author edits content", async () => {
+    const published = await createPublishedProject();
+
+    const updated = await updateProjectContent(author, published.id, {
+      ...completeInput,
+      name: "即時反映される変更",
+    });
+
+    expect(updated.name).toBe("即時反映される変更");
+    expect(updated.publicationStatus).toBe("published");
+    expect(updated.publishedAt).toBe(published.publishedAt);
+    expect(updated.approvedBy).toBe(admin.id);
+  });
+
+  it("serializes competing hide transitions so only one can succeed", async () => {
+    const published = await createPublishedProject();
+
+    const results = await Promise.allSettled([
+      hideProjectByCreator(author, published.id),
+      hideProjectByAdmin(admin, published.id),
+    ]);
+
+    expect(
+      results.filter((result) => result.status === "fulfilled"),
+    ).toHaveLength(1);
+    const rejected = results.find((result) => result.status === "rejected");
+    expect(rejected?.status).toBe("rejected");
+    if (rejected?.status === "rejected") {
+      expect(rejected.reason).toBeInstanceOf(ProjectError);
+      expect((rejected.reason as ProjectError).code).toBe(
+        PROJECT_ERROR_CODES.INVALID_TRANSITION,
+      );
+    }
   });
 });
