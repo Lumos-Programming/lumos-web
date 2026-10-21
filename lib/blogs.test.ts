@@ -6,6 +6,7 @@ import type { VisibilityLevel } from "@/types/profile";
 import {
   listAllBlogs,
   listPublicBlogs,
+  getPublicBlog,
   listBlogsByAuthor,
   createBlog,
   updateBlog,
@@ -394,5 +395,102 @@ describe("listPublicBlogs", () => {
       "2026-03-01",
       "2026-01-01",
     ]);
+  });
+});
+
+describe("getPublicBlog", () => {
+  const authorId = "user-123";
+  const validInput = {
+    url: "https://qiita.com/someone/items/abc",
+    title: "はじめての記事",
+    publishedAt: "2026-01-01",
+    description: "説明文",
+    platform: "Qiita",
+  };
+
+  beforeEach(async () => {
+    const db = firebaseAdmin.firestore();
+    const collections = await db.listCollections();
+    for (const collection of collections) {
+      const docs = await collection.listDocuments();
+      for (const doc of docs) {
+        await doc.delete();
+      }
+    }
+  });
+
+  it("公開を許可しているメンバーの記事を表示名つきで返す", async () => {
+    await putMember(authorId, {
+      nickname: "ともや",
+      discordUsername: "tomoya_discord",
+      onboardingCompleted: true,
+      allowPublic: true,
+      visibility: visibility({ nickname: "public" }),
+    });
+    const created = await createBlog(authorId, validInput);
+
+    const blog = await getPublicBlog(created.id);
+    expect(blog).toMatchObject({
+      id: created.id,
+      url: validInput.url,
+      title: validInput.title,
+      description: validInput.description,
+      platform: validInput.platform,
+      authorName: "ともや",
+    });
+  });
+
+  it("一覧と同じ表示名になる", async () => {
+    await putMember(authorId, {
+      nickname: "ともや",
+      discordUsername: "tomoya_discord",
+      onboardingCompleted: true,
+      allowPublic: false,
+      visibility: visibility({ nickname: "public" }),
+    });
+    const created = await createBlog(authorId, validInput);
+
+    const [fromList] = await listPublicBlogs();
+    const single = await getPublicBlog(created.id);
+    expect(single?.authorName).toBe(fromList.authorName);
+    expect(single?.authorName).toBe(PUBLIC_AUTHOR_FALLBACK_NAME);
+  });
+
+  it("members ドキュメントが無い著者でも記事は返し、名前は出さない", async () => {
+    const created = await createBlog(authorId, validInput);
+
+    const blog = await getPublicBlog(created.id);
+    expect(blog?.authorName).toBe(PUBLIC_AUTHOR_FALLBACK_NAME);
+  });
+
+  it("退会済みメンバーの記事は返さない", async () => {
+    await putMember(authorId, {
+      nickname: "ともや",
+      discordUsername: "tomoya_discord",
+      onboardingCompleted: true,
+      allowPublic: true,
+      optedOut: true,
+      visibility: visibility({ nickname: "public" }),
+    });
+    const created = await createBlog(authorId, validInput);
+
+    expect(await getPublicBlog(created.id)).toBeNull();
+  });
+
+  it("存在しない ID は null", async () => {
+    expect(await getPublicBlog("does-not-exist")).toBeNull();
+  });
+
+  it("削除済みの記事は null", async () => {
+    const created = await createBlog(authorId, validInput);
+    await deleteBlog(created.id, authorId);
+
+    expect(await getPublicBlog(created.id)).toBeNull();
+  });
+
+  it("空文字や / を含む ID は Firestore に問い合わせず null", async () => {
+    expect(await getPublicBlog("")).toBeNull();
+    expect(await getPublicBlog("blogs/abc")).toBeNull();
+    expect(await getPublicBlog("/")).toBeNull();
   });
 });

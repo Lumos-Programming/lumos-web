@@ -3,6 +3,8 @@ import {
   BLOG_ERROR_CODES,
   BLOG_ERROR_RESPONSES,
   BLOG_PLATFORM_OTHER,
+  blogDetailPath,
+  buildXShareUrl,
   byPublishedAtDesc,
   getPlatformBadgeClass,
   BlogError,
@@ -82,5 +84,34 @@ describe("BlogError", () => {
       expect(res.status).toBeGreaterThanOrEqual(400);
       expect(res.message.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("blogDetailPath", () => {
+  it("記事 ID から個別ページのパスを作る", () => {
+    expect(blogDetailPath("abc123")).toBe("/blogs/abc123");
+  });
+
+  it("パスに使えない文字はエスケープする", () => {
+    expect(blogDetailPath("a/b?c#d")).toBe("/blogs/a%2Fb%3Fc%23d");
+  });
+});
+
+describe("buildXShareUrl", () => {
+  it("本文と URL をクエリに入れた X の投稿画面の URL を作る", () => {
+    const url = new URL(
+      buildXShareUrl("記事タイトル", "https://lumos-ynu.jp/blogs/abc"),
+    );
+    expect(url.origin + url.pathname).toBe("https://x.com/intent/post");
+    expect(url.searchParams.get("text")).toBe("記事タイトル");
+    expect(url.searchParams.get("url")).toBe("https://lumos-ynu.jp/blogs/abc");
+  });
+
+  it("& や # を含むタイトルでもクエリが壊れない", () => {
+    const url = new URL(
+      buildXShareUrl("A & B #tag ?q=1", "https://lumos-ynu.jp/blogs/abc"),
+    );
+    expect(url.searchParams.get("text")).toBe("A & B #tag ?q=1");
+    expect([...url.searchParams.keys()]).toEqual(["text", "url"]);
   });
 });

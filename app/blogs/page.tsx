@@ -1,8 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
 import { listPublicBlogs } from "@/lib/blogs";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { getPlatformBadgeClass } from "@/types/blog";
+import { blogDetailPath, getPlatformBadgeClass } from "@/types/blog";
 
 export default async function BlogsPage() {
   // 著者名の公開可否と退会済みの除外は listPublicBlogs が持っている
@@ -35,11 +36,10 @@ export default async function BlogsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {blogs.map((blog) => (
-                <a
+                // 元記事ではなく個別ページに飛ばす。共有されるのもこの URL にしたい
+                <Link
                   key={blog.id}
-                  href={blog.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={blogDetailPath(blog.id)}
                   className="block h-full"
                 >
                   <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card">
@@ -82,7 +82,7 @@ export default async function BlogsPage() {
                       </p>
                     </CardContent>
                   </Card>
-                </a>
+                </Link>
               ))}
             </div>
           )}
