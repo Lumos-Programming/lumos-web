@@ -1,9 +1,9 @@
-// レビュー依頼から一定期間反応が無いレビュアーを、同じレベルの別のメンバーに付け替える。
-// レベル表はリポジトリ変数 REVIEWER_LEVELS に JSON で置く (公開リポジトリのためコードには書かない)。
+// レビュー依頼から一定期間反応が無いレビュアーを、同じ区分の別のメンバーに付け替える。
+// 区分表はリポジトリ変数 REVIEWER_LEVELS に JSON で置く (公開リポジトリのためコードには書かない)。
 // キーは習熟度 (advanced / intermediate / beginner)。難しい PR ほど advanced の人に振る。
 //   例: {"advanced":["alice"],"intermediate":["bob","carol"],"beginner":["dave"]}
 // 「反応」はレビューの提出かコメント (PR 本体・コード行のどちらでも)。
-// レベル表に載っていないレビュアー (bot や手動で指名した人) には触らない。
+// 区分表に載っていないレビュアー (bot や手動で指名した人) には触らない。
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const LEVEL_KEYS = ["advanced", "intermediate", "beginner"];
@@ -14,7 +14,7 @@ export function parseLevels(raw) {
   const parsed = JSON.parse(raw);
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     throw new Error(
-      "REVIEWER_LEVELS はレベルをキーにしたオブジェクトにしてください",
+      "REVIEWER_LEVELS は区分をキーにしたオブジェクトにしてください",
     );
   }
   const byLevel = {};
@@ -35,7 +35,7 @@ export function parseLevels(raw) {
       // GitHub の login は大文字小文字を区別しないので、比較は小文字で揃える
       const key = login.toLowerCase();
       if (levelOf[key] !== undefined) {
-        throw new Error(`${login} が複数のレベルに入っています`);
+        throw new Error(`${login} が複数の区分に入っています`);
       }
       levelOf[key] = level;
     }
@@ -73,7 +73,7 @@ export function lastActivityAt({ reviews, issueComments, reviewComments }) {
 
 /**
  * 付け替える対象の login (小文字) を返す。
- * 依頼中で、レベル表に載っていて、依頼から staleDays 以上経ち、依頼後に反応が無い人。
+ * 依頼中で、区分表に載っていて、依頼から staleDays 以上経ち、依頼後に反応が無い人。
  */
 export function findStaleReviewers({
   requestedLogins,
@@ -97,7 +97,7 @@ export function findStaleReviewers({
 }
 
 /**
- * 同じレベルから代わりの 1 人を選ぶ。候補がいなければ null。
+ * 同じ区分から代わりの 1 人を選ぶ。候補がいなければ null。
  * 作成者と、この PR で一度でも依頼された人・反応した人は除く
  * (付け替えた相手を後でまた指名し直さないため)。
  */
@@ -232,7 +232,7 @@ async function main() {
     for (const { from, to } of plans) {
       if (!to) {
         summary.push(
-          `#${pr.number}: ${from} の代わりになる人が同じレベルにいないため据え置き`,
+          `#${pr.number}: ${from} の代わりになる人が同じ区分にいないため据え置き`,
         );
         continue;
       }

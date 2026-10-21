@@ -1,5 +1,5 @@
-# レビュー依頼から 3 日間反応が無いレビュアーを、同じレベルの別のメンバーに付け替える。
-# レベル表はリポジトリ変数 REVIEWER_LEVELS に置く (詳細は .github/scripts/reassign-reviewers.mjs)。
+# レビュー依頼から 3 日間反応が無いレビュアーを、同じ区分の別のメンバーに付け替える。
+# 区分表はリポジトリ変数 REVIEWER_LEVELS に置く (詳細は .github/scripts/reassign-reviewers.mjs)。
 name: Reassign stale reviewers
 on:
   schedule:

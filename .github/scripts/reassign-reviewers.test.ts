@@ -20,7 +20,7 @@ const LEVELS_JSON = JSON.stringify({
 });
 
 describe("parseLevels", () => {
-  it("レベルごとの一覧と login → レベルの対応を作る", () => {
+  it("区分ごとの一覧と login → 区分の対応を作る", () => {
     const { byLevel, levelOf } = parseLevels(LEVELS_JSON);
     expect(byLevel["intermediate"]).toEqual(["int-a", "int-b", "int-c"]);
     expect(levelOf["adv-b"]).toBe("advanced");
@@ -51,10 +51,10 @@ describe("parseLevels", () => {
     });
   });
 
-  it("同じ人が複数レベルにいたら例外 (大文字小文字違いも)", () => {
+  it("同じ人が複数の区分にいたら例外 (大文字小文字違いも)", () => {
     expect(() =>
       parseLevels('{"beginner":["Alice"],"intermediate":["alice"]}'),
-    ).toThrow("複数のレベル");
+    ).toThrow("複数の区分");
   });
 });
 
@@ -151,7 +151,7 @@ describe("findStaleReviewers", () => {
     ).toEqual(["int-a"]);
   });
 
-  it("レベル表に無い人・依頼時刻が分からない人には触らない", () => {
+  it("区分表に無い人・依頼時刻が分からない人には触らない", () => {
     expect(
       findStaleReviewers({
         ...base,
@@ -166,7 +166,7 @@ describe("findStaleReviewers", () => {
 describe("pickReplacement", () => {
   const levels = parseLevels(LEVELS_JSON);
 
-  it("同じレベルから除外対象以外を選ぶ", () => {
+  it("同じ区分から除外対象以外を選ぶ", () => {
     const picked = pickReplacement({
       staleLogin: "int-a",
       ...levels,
@@ -190,13 +190,13 @@ describe("pickReplacement", () => {
     expect(picked).toBeNull();
   });
 
-  it("候補がいなければ null (1 人しかいないレベル)", () => {
+  it("候補がいなければ null (1 人しかいない区分)", () => {
     expect(
       pickReplacement({ staleLogin: "beg-a", ...levels, excluded: ["beg-a"] }),
     ).toBeNull();
   });
 
-  it("レベル表に無い人なら null", () => {
+  it("区分表に無い人なら null", () => {
     expect(
       pickReplacement({ staleLogin: "unknown", ...levels, excluded: [] }),
     ).toBeNull();
