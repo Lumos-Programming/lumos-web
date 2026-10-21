@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export function LoginButton() {
@@ -9,7 +8,7 @@ export function LoginButton() {
   const callbackUrl = pathname && pathname !== "/" ? pathname : "/internal";
 
   return (
-    <Link href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}>
+    <a href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}>
       <Button
         size="sm"
         className="gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white"
@@ -24,6 +23,6 @@ export function LoginButton() {
         </svg>
         メンバーログイン
       </Button>
-    </Link>
+    </a>
   );
 }
