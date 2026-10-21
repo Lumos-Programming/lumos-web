@@ -67,6 +67,12 @@ const ADMIN_NAV_ITEMS = [
     exact: false,
   },
   {
+    href: "/internal/admin/events",
+    icon: CalendarDays,
+    label: "イベント管理",
+    exact: false,
+  },
+  {
     href: "/internal/admin/notifications",
     icon: BellRing,
     label: "登録案内通知",
