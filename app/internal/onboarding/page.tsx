@@ -1,8 +1,10 @@
 import { auth } from "@/lib/auth";
+import { isProduction } from "@/lib/env";
 import { getMember, isOnboardingComplete } from "@/lib/members";
 import { checkReturningMember } from "@/lib/discord";
 import { redirect } from "next/navigation";
 import OnboardingForm from "@/components/onboarding-form";
+import { DebugProfileButton } from "@/components/debug-profile-button";
 
 export default async function OnboardingPage({
   searchParams,
@@ -26,9 +28,12 @@ export default async function OnboardingPage({
   }
 
   return (
-    <OnboardingForm
-      lineBotFriendUrl={process.env.LINE_BOT_FRIEND_URL}
-      isReturningMember={isReturningMember}
-    />
+    <>
+      {!isProduction() && <DebugProfileButton />}
+      <OnboardingForm
+        lineBotFriendUrl={process.env.LINE_BOT_FRIEND_URL}
+        isReturningMember={isReturningMember}
+      />
+    </>
   );
 }
