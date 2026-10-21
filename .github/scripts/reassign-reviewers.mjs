@@ -1,10 +1,12 @@
 // レビュー依頼から一定期間反応が無いレビュアーを、同じレベルの別のメンバーに付け替える。
 // レベル表はリポジトリ変数 REVIEWER_LEVELS に JSON で置く (公開リポジトリのためコードには書かない)。
-//   例: {"3":["alice"],"2":["bob","carol"],"1":["dave"]}
+// キーは習熟度 (advanced / intermediate / beginner)。難しい PR ほど advanced の人に振る。
+//   例: {"advanced":["alice"],"intermediate":["bob","carol"],"beginner":["dave"]}
 // 「反応」はレビューの提出かコメント (PR 本体・コード行のどちらでも)。
 // レベル表に載っていないレビュアー (bot や手動で指名した人) には触らない。
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const LEVEL_KEYS = ["advanced", "intermediate", "beginner"];
 
 /** REVIEWER_LEVELS の文字列を { login: level } と { level: logins[] } にする。不正なら例外 */
 export function parseLevels(raw) {
@@ -18,6 +20,11 @@ export function parseLevels(raw) {
   const byLevel = {};
   const levelOf = {};
   for (const [level, logins] of Object.entries(parsed)) {
+    if (!LEVEL_KEYS.includes(level)) {
+      throw new Error(
+        `REVIEWER_LEVELS のキー "${level}" は ${LEVEL_KEYS.join(" / ")} のどれかにしてください`,
+      );
+    }
     if (!Array.isArray(logins) || !logins.every((l) => typeof l === "string")) {
       throw new Error(
         `REVIEWER_LEVELS の "${level}" は GitHub ID の配列にしてください`,

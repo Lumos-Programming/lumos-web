@@ -14,21 +14,21 @@ const NOW = Date.parse("2026-10-21T00:00:00Z");
 const daysAgo = (n: number) => new Date(NOW - n * DAY).toISOString();
 
 const LEVELS_JSON = JSON.stringify({
-  "3": ["lv3-a", "lv3-b"],
-  "2": ["lv2-a", "lv2-b", "lv2-c"],
-  "1": ["lv1-a"],
+  advanced: ["adv-a", "adv-b"],
+  intermediate: ["int-a", "int-b", "int-c"],
+  beginner: ["beg-a"],
 });
 
 describe("parseLevels", () => {
   it("レベルごとの一覧と login → レベルの対応を作る", () => {
     const { byLevel, levelOf } = parseLevels(LEVELS_JSON);
-    expect(byLevel["2"]).toEqual(["lv2-a", "lv2-b", "lv2-c"]);
-    expect(levelOf["lv3-b"]).toBe("3");
+    expect(byLevel["intermediate"]).toEqual(["int-a", "int-b", "int-c"]);
+    expect(levelOf["adv-b"]).toBe("advanced");
   });
 
   it("login は小文字で引ける", () => {
-    const { levelOf } = parseLevels('{"1":["Seripro"]}');
-    expect(levelOf["seripro"]).toBe("1");
+    const { levelOf } = parseLevels('{"beginner":["Seripro"]}');
+    expect(levelOf["seripro"]).toBe("beginner");
   });
 
   it("未設定・壊れた JSON・形の違う値は例外", () => {
@@ -36,14 +36,25 @@ describe("parseLevels", () => {
     expect(() => parseLevels("")).toThrow("設定されていません");
     expect(() => parseLevels("{")).toThrow();
     expect(() => parseLevels('["a"]')).toThrow("オブジェクト");
-    expect(() => parseLevels('{"1":"a"}')).toThrow("配列");
-    expect(() => parseLevels('{"1":[1]}')).toThrow("配列");
+    expect(() => parseLevels('{"beginner":"a"}')).toThrow("配列");
+    expect(() => parseLevels('{"beginner":[1]}')).toThrow("配列");
+  });
+
+  it("advanced / intermediate / beginner 以外のキーは例外 (typo 防止)", () => {
+    expect(() => parseLevels('{"Advanced":["a"]}')).toThrow("Advanced");
+    expect(() => parseLevels('{"3":["a"]}')).toThrow("3");
+  });
+
+  it("一部のキーだけでもよい", () => {
+    expect(parseLevels('{"advanced":["a"]}').byLevel).toEqual({
+      advanced: ["a"],
+    });
   });
 
   it("同じ人が複数レベルにいたら例外 (大文字小文字違いも)", () => {
-    expect(() => parseLevels('{"1":["Alice"],"2":["alice"]}')).toThrow(
-      "複数のレベル",
-    );
+    expect(() =>
+      parseLevels('{"beginner":["Alice"],"intermediate":["alice"]}'),
+    ).toThrow("複数のレベル");
   });
 });
 
@@ -100,19 +111,19 @@ describe("findStaleReviewers", () => {
     expect(
       findStaleReviewers({
         ...base,
-        requestedLogins: ["lv2-a"],
-        requestedAt: { "lv2-a": NOW - 3 * DAY },
+        requestedLogins: ["int-a"],
+        requestedAt: { "int-a": NOW - 3 * DAY },
         activityAt: {},
       }),
-    ).toEqual(["lv2-a"]);
+    ).toEqual(["int-a"]);
   });
 
   it("3 日経っていなければ返さない (境界の直前)", () => {
     expect(
       findStaleReviewers({
         ...base,
-        requestedLogins: ["lv2-a"],
-        requestedAt: { "lv2-a": NOW - 3 * DAY + 1 },
+        requestedLogins: ["int-a"],
+        requestedAt: { "int-a": NOW - 3 * DAY + 1 },
         activityAt: {},
       }),
     ).toEqual([]);
@@ -122,9 +133,9 @@ describe("findStaleReviewers", () => {
     expect(
       findStaleReviewers({
         ...base,
-        requestedLogins: ["lv2-a"],
-        requestedAt: { "lv2-a": NOW - 5 * DAY },
-        activityAt: { "lv2-a": NOW - 4 * DAY },
+        requestedLogins: ["int-a"],
+        requestedAt: { "int-a": NOW - 5 * DAY },
+        activityAt: { "int-a": NOW - 4 * DAY },
       }),
     ).toEqual([]);
   });
@@ -133,18 +144,18 @@ describe("findStaleReviewers", () => {
     expect(
       findStaleReviewers({
         ...base,
-        requestedLogins: ["lv2-a"],
-        requestedAt: { "lv2-a": NOW - 4 * DAY },
-        activityAt: { "lv2-a": NOW - 6 * DAY },
+        requestedLogins: ["int-a"],
+        requestedAt: { "int-a": NOW - 4 * DAY },
+        activityAt: { "int-a": NOW - 6 * DAY },
       }),
-    ).toEqual(["lv2-a"]);
+    ).toEqual(["int-a"]);
   });
 
   it("レベル表に無い人・依頼時刻が分からない人には触らない", () => {
     expect(
       findStaleReviewers({
         ...base,
-        requestedLogins: ["someone-else", "lv2-a"],
+        requestedLogins: ["someone-else", "int-a"],
         requestedAt: { "someone-else": NOW - 10 * DAY },
         activityAt: {},
       }),
@@ -157,31 +168,31 @@ describe("pickReplacement", () => {
 
   it("同じレベルから除外対象以外を選ぶ", () => {
     const picked = pickReplacement({
-      staleLogin: "lv2-a",
+      staleLogin: "int-a",
       ...levels,
-      excluded: ["lv2-a", "lv2-b"],
+      excluded: ["int-a", "int-b"],
     });
-    expect(picked).toBe("lv2-c");
+    expect(picked).toBe("int-c");
   });
 
   it("random の値で候補が変わる", () => {
-    const args = { staleLogin: "lv2-a", ...levels, excluded: ["lv2-a"] };
-    expect(pickReplacement({ ...args, random: () => 0 })).toBe("lv2-b");
-    expect(pickReplacement({ ...args, random: () => 0.999 })).toBe("lv2-c");
+    const args = { staleLogin: "int-a", ...levels, excluded: ["int-a"] };
+    expect(pickReplacement({ ...args, random: () => 0 })).toBe("int-b");
+    expect(pickReplacement({ ...args, random: () => 0.999 })).toBe("int-c");
   });
 
   it("除外は大文字小文字を区別しない", () => {
     const picked = pickReplacement({
-      staleLogin: "lv3-a",
+      staleLogin: "adv-a",
       ...levels,
-      excluded: ["LV3-A", "Lv3-B"],
+      excluded: ["ADV-A", "Adv-B"],
     });
     expect(picked).toBeNull();
   });
 
   it("候補がいなければ null (1 人しかいないレベル)", () => {
     expect(
-      pickReplacement({ staleLogin: "lv1-a", ...levels, excluded: ["lv1-a"] }),
+      pickReplacement({ staleLogin: "beg-a", ...levels, excluded: ["beg-a"] }),
     ).toBeNull();
   });
 
@@ -203,10 +214,10 @@ describe("planReassignments", () => {
   it("作成者・過去に依頼した人・反応した人を除いて選ぶ", () => {
     const plans = planReassignments({
       pr: {
-        user: { login: "lv2-b" },
-        requested_reviewers: [{ login: "lv2-a" }],
+        user: { login: "int-b" },
+        requested_reviewers: [{ login: "int-a" }],
       },
-      timeline: [requested("lv2-c", 10), requested("lv2-a", 4)],
+      timeline: [requested("int-c", 10), requested("int-a", 4)],
       reviews: [],
       issueComments: [],
       reviewComments: [],
@@ -214,17 +225,17 @@ describe("planReassignments", () => {
       now: NOW,
       staleDays: 3,
     });
-    // lv2-b は作成者、lv2-c は過去に依頼済みなので、Lv2 に候補が残らない
-    expect(plans).toEqual([{ from: "lv2-a", to: null }]);
+    // int-b は作成者、int-c は過去に依頼済みなので、intermediate に候補が残らない
+    expect(plans).toEqual([{ from: "int-a", to: null }]);
   });
 
   it("2 人同時に付け替えるとき同じ人を選ばない", () => {
     const plans = planReassignments({
       pr: {
         user: { login: "author" },
-        requested_reviewers: [{ login: "lv2-a" }, { login: "lv2-b" }],
+        requested_reviewers: [{ login: "int-a" }, { login: "int-b" }],
       },
-      timeline: [requested("lv2-a", 4), requested("lv2-b", 4)],
+      timeline: [requested("int-a", 4), requested("int-b", 4)],
       reviews: [],
       issueComments: [],
       reviewComments: [],
@@ -234,8 +245,8 @@ describe("planReassignments", () => {
       random: () => 0,
     });
     expect(plans).toEqual([
-      { from: "lv2-a", to: "lv2-c" },
-      { from: "lv2-b", to: null },
+      { from: "int-a", to: "int-c" },
+      { from: "int-b", to: null },
     ]);
   });
 
@@ -243,11 +254,11 @@ describe("planReassignments", () => {
     const plans = planReassignments({
       pr: {
         user: { login: "author" },
-        requested_reviewers: [{ login: "lv3-a" }],
+        requested_reviewers: [{ login: "adv-a" }],
       },
-      timeline: [requested("lv3-a", 5)],
+      timeline: [requested("adv-a", 5)],
       reviews: [],
-      issueComments: [{ user: { login: "lv3-a" }, created_at: daysAgo(1) }],
+      issueComments: [{ user: { login: "adv-a" }, created_at: daysAgo(1) }],
       reviewComments: [],
       levels,
       now: NOW,
@@ -259,8 +270,8 @@ describe("planReassignments", () => {
 
 describe("reassignComment", () => {
   it("交代先をメンションし、元の人の名前は出さない", () => {
-    expect(reassignComment("lv2-c", 3)).toBe(
-      "3日間レビューの動きがなかったため、レビュアーを @lv2-c さんに交代しました。(自動)",
+    expect(reassignComment("int-c", 3)).toBe(
+      "3日間レビューの動きがなかったため、レビュアーを @int-c さんに交代しました。(自動)",
     );
   });
 });
