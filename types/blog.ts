@@ -108,3 +108,14 @@ export class BlogError extends Error {
     this.code = code;
   }
 }
+
+/** 公開の個別ページのパス。共有してもらうのはこの URL (元記事の URL ではない) */
+export function blogDetailPath(id: string): string {
+  return `/blogs/${encodeURIComponent(id)}`;
+}
+
+/** X の投稿画面を、本文と URL を埋めた状態で開くための URL */
+export function buildXShareUrl(text: string, url: string): string {
+  const params = new URLSearchParams({ text, url });
+  return `https://x.com/intent/post?${params.toString()}`;
+}
