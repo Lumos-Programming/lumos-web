@@ -33,6 +33,10 @@ variable "cloud_run_env_vars" {
       AUTH_X_ID      = "eW5jSnZRbEFBLWJMY1Z3NTFmVXQ6MTpjaQ"
       AUTH_LINE_ID   = "2009690509"
 
+      # 草 (contribution calendar) 取得用の Lumos GitHub App。空なら草の取得だけスキップする
+      GITHUB_APP_ID              = ""
+      GITHUB_APP_INSTALLATION_ID = ""
+
       AUTH_DISCORD_ID                  = "1489548152779309197"
       DISCORD_GUILD_ID                 = "1368752707321729158"
       AUTH_URL                         = "https://dev.lumos-ynu.jp"
@@ -57,6 +61,10 @@ variable "cloud_run_env_vars" {
       AUTH_X_ID      = "MktOVXFWdWNFZzN5VzI2TXJFZ2Q6MTpjaQ"
       AUTH_LINE_ID   = "2009694131"
 
+      # 草 (contribution calendar) 取得用の Lumos GitHub App。空なら草の取得だけスキップする
+      GITHUB_APP_ID              = ""
+      GITHUB_APP_INSTALLATION_ID = ""
+
       AUTH_DISCORD_ID                  = "1377983265948041228"
       DISCORD_GUILD_ID                 = "1368752707321729158"
       AUTH_URL                         = "https://stg.lumos-ynu.jp"
@@ -79,6 +87,10 @@ variable "cloud_run_env_vars" {
       AUTH_GITHUB_ID = "Ov23liaSCNoELzDDQ71W"
       AUTH_X_ID      = "UUthQmxHVlY1anFBU0VtWmQxUmU6MTpjaQ"
       AUTH_LINE_ID   = "1661094871"
+
+      # 草 (contribution calendar) 取得用の Lumos GitHub App。空なら草の取得だけスキップする
+      GITHUB_APP_ID              = ""
+      GITHUB_APP_INSTALLATION_ID = ""
 
       AUTH_DISCORD_ID                  = "933021504319422544"
       DISCORD_GUILD_ID                 = "894226019240800276"

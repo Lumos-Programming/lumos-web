@@ -1,9 +1,14 @@
 import Image from "next/image";
+import { ContributionGraph } from "@/components/contribution-graph";
+import type { GithubContributions } from "@/types/github-contributions";
 import {
   getRingColorClass,
   getMemberTypeBadgeClass,
   getMemberTypeBadgeLabel,
 } from "@/types/member";
+
+/** タイルに出す草の週数。タイル幅に収まる範囲で、だいたい直近 4 か月 */
+const TILE_GRAPH_WEEKS = 16;
 
 export interface MemberTileProps {
   main: string;
@@ -16,6 +21,8 @@ export interface MemberTileProps {
   year?: string;
   currentOrg?: string;
   topInterests?: string[];
+  /** GitHub の草。あれば直近数か月分を小さく出す */
+  contributions?: GithubContributions;
   avatarSize?: "sm" | "md";
   preview?: boolean;
   onClick?: () => void;
@@ -32,6 +39,7 @@ export function MemberTile({
   year,
   currentOrg,
   topInterests,
+  contributions,
   avatarSize = "sm",
   preview = false,
   onClick,
@@ -95,6 +103,13 @@ export function MemberTile({
             </span>
           ))}
         </div>
+      )}
+      {contributions && (
+        <ContributionGraph
+          contributions={contributions}
+          weeks={TILE_GRAPH_WEEKS}
+          className="mt-2 px-1"
+        />
       )}
     </>
   );
