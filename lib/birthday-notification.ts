@@ -36,7 +36,6 @@ export function buildBirthdayNotification(
 
 /**
  * 環境ごとに設定された誕生日通知チャンネルへ Bot で送る。
- * 本番は専用チャンネル、非本番は運営チャンネルの ID を設定する。
  */
 export async function notifyBirthdayChannel(
   payload: DiscordMessagePayload,

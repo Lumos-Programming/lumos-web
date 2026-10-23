@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Bell,
   CalendarClock,
+  CalendarDays,
   Newspaper,
   Shield,
   ShieldCheck,
@@ -25,6 +26,13 @@ const ADMIN_ACTIONS = [
     label: "お知らせ管理",
     description: "Lumos公式のお知らせを作成・公開します",
     gradient: "from-pink-500 to-rose-500",
+  },
+  {
+    href: "/internal/admin/events",
+    icon: CalendarDays,
+    label: "イベント管理",
+    description: "サークル内イベントを登録・編集します",
+    gradient: "from-violet-500 to-purple-500",
   },
   {
     href: "/internal/admin/notifications",
