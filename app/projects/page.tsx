@@ -58,10 +58,40 @@ const currentProjects = [
     description:
       "テックな話題やLumos のサークル情報などをゆるい雑談形式でお届けするポッドキャストを始めました！",
     image: "/assets/Lumoslogo.png",
-    status: "進行中",
     technologies: ["RSS"],
-    leaderId: 1233034908662890568,
+    leaderId: "1233034908662890568",
     leaderName: "坪井 一馬",
+  },
+  {
+    id: 6,
+    title: "HAILS",
+    description:
+      "道信くん，りょうへいくん，Barusuくんの3人で作るリバーシゲームです！",
+    image:
+      "https://storage.googleapis.com/lumos-ynu-profile-prd/news/d0b52c19-9530-4900-b7c4-12b3b23f4ac6.webp",
+    status: "進行中",
+    technologies: ["Unity"],
+    leaderId: "",
+    leaderName: "林 りょうへい",
+  },
+  {
+    id: 7,
+    title: "Riddlumos",
+    description: "",
+    image:
+      "https://storage.googleapis.com/lumos-ynu-profile-prd/news/d0b52c19-9530-4900-b7c4-12b3b23f4ac6.webp",
+    status: "進行中",
+    technologies: [
+      "Node.js",
+      "電子工作",
+      "JavaScript",
+      "HTML/CSS",
+      "PHP",
+      "DTP",
+      "Unity",
+    ],
+    leaderId: "",
+    leaderName: "Kazuwee",
   },
 ];
 
