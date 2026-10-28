@@ -57,7 +57,9 @@ const currentProjects = [
     title: "ポッドキャスト Lupod",
     description:
       "テックな話題やLumos のサークル情報などをゆるい雑談形式でお届けするポッドキャストを始めました！",
-    image: "/assets/Lumoslogo.png",
+    image:
+      "https://storage.googleapis.com/lumos-ynu-profile-prd/news/d0b52c19-9530-4900-b7c4-12b3b23f4ac6.webp",
+    status: "進行中",
     technologies: ["RSS"],
     leaderId: "1233034908662890568",
     leaderName: "坪井 一馬",
@@ -67,8 +69,7 @@ const currentProjects = [
     title: "HAILS",
     description:
       "道信くん，りょうへいくん，Barusuくんの3人で作るリバーシゲームです！",
-    image:
-      "https://storage.googleapis.com/lumos-ynu-profile-prd/news/d0b52c19-9530-4900-b7c4-12b3b23f4ac6.webp",
+    image: "/assets/Lumoslogo.png",
     status: "進行中",
     technologies: ["Unity"],
     leaderId: "",
@@ -77,9 +78,9 @@ const currentProjects = [
   {
     id: 7,
     title: "Riddlumos",
-    description: "",
-    image:
-      "https://storage.googleapis.com/lumos-ynu-profile-prd/news/d0b52c19-9530-4900-b7c4-12b3b23f4ac6.webp",
+    description:
+      "Lumosの外部へのアウトプットを目的としたプロジェクトとして、技術を活かした謎解きを制作します。",
+    image: "/assets/Lumoslogo.png",
     status: "進行中",
     technologies: [
       "Node.js",
@@ -92,6 +93,37 @@ const currentProjects = [
     ],
     leaderId: "",
     leaderName: "Kazuwee",
+  },
+  {
+    id: 8,
+    title: "Web構築project",
+    description: "webページをグループ単位で作成するプロジェクトです！",
+    image: "/assets/Lumoslogo.png",
+    status: "進行中",
+    technologies: ["HTML/CSS"],
+    leaderId: "",
+    leaderName: "Kinu",
+  },
+  {
+    id: 9,
+    title: "故事成語ゲームPJ",
+    description: "故事成語を題材にしたゲームを作るプロジェクトです！",
+    image: "/assets/Lumoslogo.png",
+    status: "進行中",
+    technologies: ["HTML/CSS"],
+    leaderId: "",
+    leaderName: "森 悠晟",
+  },
+  {
+    id: 10,
+    title: "インフラPJ",
+    description:
+      "クラウド，オンプレミスに関わらず，インフラの構築を行うプロジェクトです！",
+    image: "/assets/Lumoslogo.png",
+    status: "進行中",
+    technologies: ["HTML/CSS"],
+    leaderId: "",
+    leaderName: "k-kanke",
   },
 ];
 
