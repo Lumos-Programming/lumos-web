@@ -17,10 +17,14 @@ type DiscordEmbedField = {
 
 type DiscordEmbed = {
   title: string;
+  /** 指定するとタイトルがこの URL へのリンクになる */
+  url?: string;
   description: string;
   color: number;
   fields?: DiscordEmbedField[];
   thumbnail?: { url: string };
+  /** Embed の下部に大きく出す画像。thumbnail は右上に小さく出る */
+  image?: { url: string };
   footer?: { text: string };
 };
 

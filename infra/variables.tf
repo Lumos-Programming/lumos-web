@@ -89,6 +89,7 @@ variable "cloud_run_env_vars" {
       LINE_PUSH_TARGET_ID              = "Ca2a9d031634839fbf0e57faff0c00eb6"
       LINE_GROUP_ID                    = "Ca2a9d031634839fbf0e57faff0c00eb6"
       BIRTHDAY_NOTIFICATION_CHANNEL_ID = "1548391863214542898"
+      BLOG_NOTIFICATION_CHANNEL_ID     = "1563415197232795718"
     }
   }
 }
