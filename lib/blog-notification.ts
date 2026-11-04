@@ -15,9 +15,14 @@ const BLOG_COLOR = 0x667eea; // ブログ一覧ページのヘッダー (メイ�
 const MAX_TITLE_LENGTH = 256;
 /** 説明はチャンネルで流し読みできる長さに切る */
 const MAX_DESCRIPTION_LENGTH = 200;
+/** Embed のフィールド値は 1024 文字まで (媒体名は自由入力で長さ制限がないため切る) */
+const MAX_FIELD_VALUE_LENGTH = 1024;
+
+const graphemeSegmenter = new Intl.Segmenter("ja", { granularity: "grapheme" });
 
 function truncate(text: string, max: number): string {
-  const chars = Array.from(text);
+  // 家族絵文字・国旗・肌色修飾などを途中で切らないよう、書記素クラスタ単位で数える
+  const chars = Array.from(graphemeSegmenter.segment(text), (s) => s.segment);
   return chars.length > max ? `${chars.slice(0, max - 1).join("")}…` : text;
 }
 
@@ -33,7 +38,11 @@ export function buildBlogNotification(blog: Blog): DiscordMessagePayload {
 
   const fields = [{ name: "公開日", value: blog.publishedAt, inline: true }];
   if (blog.platform) {
-    fields.unshift({ name: "媒体", value: blog.platform, inline: true });
+    fields.unshift({
+      name: "媒体",
+      value: truncate(blog.platform, MAX_FIELD_VALUE_LENGTH),
+      inline: true,
+    });
   }
 
   return {

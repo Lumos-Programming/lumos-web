@@ -89,6 +89,34 @@ describe("buildBlogNotification", () => {
     expect(embed.title).toHaveLength(256);
     expect(embed.title.endsWith("…")).toBe(true);
   });
+
+  it("ZWJ を含む家族絵文字など書記素クラスタを途中で切らない", () => {
+    const family = "👨‍👩‍👧‍👦";
+    const [embed] = buildBlogNotification({
+      ...BLOG,
+      description: family.repeat(300),
+    }).embeds;
+    const body = embed.description.split("\n\n")[1];
+
+    expect(body).toBe(`${family.repeat(199)}…`);
+  });
+
+  it("媒体名が Discord のフィールド値の上限 (1024 文字) を超えたら切る", () => {
+    const [embed] = buildBlogNotification({
+      ...BLOG,
+      platform: "a".repeat(1025),
+    }).embeds;
+
+    expect(embed.fields?.[0].value).toHaveLength(1024);
+    expect(embed.fields?.[0].value.endsWith("…")).toBe(true);
+  });
+
+  it("ちょうど 1024 文字の媒体名は切らない", () => {
+    const platform = "a".repeat(1024);
+    const [embed] = buildBlogNotification({ ...BLOG, platform }).embeds;
+
+    expect(embed.fields?.[0].value).toBe(platform);
+  });
 });
 
 describe("notifyBlogChannel", () => {
