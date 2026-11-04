@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   updateDiscordEvent: vi.fn(),
   deleteDiscordEvent: vi.fn(),
   fetch: vi.fn(),
+  syncMiniLtCalendarEvent: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth", () => ({ auth: mocks.auth }));
@@ -29,6 +30,9 @@ vi.mock("@/lib/discord", () => ({
   updateDiscordEvent: mocks.updateDiscordEvent,
   deleteDiscordEvent: mocks.deleteDiscordEvent,
   getDiscordEventUrl: (id: string) => `https://discord.test/${id}`,
+}));
+vi.mock("@/lib/mini-lt/calendar-event", () => ({
+  syncMiniLtCalendarEvent: mocks.syncMiniLtCalendarEvent,
 }));
 vi.mock("@/lib/mini-lt/line-flex", () => ({
   buildNextEventFlexMessage: () => ({ type: "flex" }),
@@ -80,6 +84,7 @@ describe.each(actions)("$name authorization", ({ invoke }) => {
       mocks.updateDiscordEvent,
       mocks.deleteDiscordEvent,
       mocks.fetch,
+      mocks.syncMiniLtCalendarEvent,
     ])
       expect(fn).not.toHaveBeenCalled();
   });
@@ -148,3 +153,31 @@ it.each([createWeekEvent, syncWeekEventDescription, deleteWeekEvent])(
     expect(mocks.getWeekData).not.toHaveBeenCalled();
   },
 );
+
+it.each([createWeekEvent, syncWeekEventDescription])(
+  "also syncs the week to the event calendar",
+  async (action) => {
+    await action(weekId);
+    expect(mocks.syncMiniLtCalendarEvent).toHaveBeenCalledWith(weekId);
+  },
+);
+
+it("keeps the Discord result when the calendar sync fails", async () => {
+  const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+  mocks.syncMiniLtCalendarEvent.mockRejectedValue(new Error("firestore down"));
+  await expect(createWeekEvent(weekId)).resolves.toBeUndefined();
+  expect(mocks.saveDiscordEvent).toHaveBeenCalled();
+  expect(consoleError).toHaveBeenCalled();
+  consoleError.mockRestore();
+});
+
+it("does not touch the calendar when the Discord event fails", async () => {
+  mocks.createDiscordEvent.mockRejectedValue(new Error("discord down"));
+  await expect(createWeekEvent(weekId)).rejects.toThrow("discord down");
+  expect(mocks.syncMiniLtCalendarEvent).not.toHaveBeenCalled();
+});
+
+it("leaves the calendar alone when deleting the Discord event", async () => {
+  await deleteWeekEvent(weekId);
+  expect(mocks.syncMiniLtCalendarEvent).not.toHaveBeenCalled();
+});
