@@ -6,6 +6,7 @@ import {
   isMemberOptedOut,
   isMemberPubliclyVisible,
   profileToMember,
+  type MemberDocument,
 } from "@/lib/members";
 import {
   BLOG_ERROR_CODES,
@@ -105,12 +106,24 @@ export async function listAllBlogs(): Promise<Blog[]> {
 }
 
 /**
- * 公開ページ (/blogs) 用の一覧。members の公開設定を必ず通す。
- * - 退会済み (optedOut) の著者の記事は出さない。退会は再加入で戻せるフラグなので、
- *   記事は消さずに公開一覧から隠すだけにしている
+ * 公開ページに出す形にする。members の公開設定を必ず通す。
+ * - 退会済み (optedOut) の著者の記事は出さない (null)。退会は再加入で戻せるフラグなので、
+ *   記事は消さずに公開ページから隠すだけにしている
  * - 名前を公開していない著者は PUBLIC_AUTHOR_FALLBACK_NAME にする。
  *   表示名の作り方そのものは profileToMember (公開ページ共通) に任せる
  */
+function toPublicBlog(
+  blog: Blog,
+  member: MemberDocument | null,
+): PublicBlog | null {
+  if (isMemberOptedOut(member)) return null;
+  const authorName = isMemberPubliclyVisible(member)
+    ? profileToMember(blog.authorId, member).name || PUBLIC_AUTHOR_FALLBACK_NAME
+    : PUBLIC_AUTHOR_FALLBACK_NAME;
+  return { ...blog, authorName };
+}
+
+/** 公開ページ (/blogs) 用の一覧。公開可否は toPublicBlog に従う */
 export async function listPublicBlogs(): Promise<PublicBlog[]> {
   const blogs = await listAllBlogs();
   const authorIds = [...new Set(blogs.map((blog) => blog.authorId))];
@@ -121,14 +134,25 @@ export async function listPublicBlogs(): Promise<PublicBlog[]> {
   );
 
   return blogs.flatMap((blog) => {
-    const member = members.get(blog.authorId) ?? null;
-    if (isMemberOptedOut(member)) return [];
-    const authorName = isMemberPubliclyVisible(member)
-      ? profileToMember(blog.authorId, member).name ||
-        PUBLIC_AUTHOR_FALLBACK_NAME
-      : PUBLIC_AUTHOR_FALLBACK_NAME;
-    return [{ ...blog, authorName }];
+    const publicBlog = toPublicBlog(blog, members.get(blog.authorId) ?? null);
+    return publicBlog ? [publicBlog] : [];
   });
+}
+
+/**
+ * 公開の個別ページ (/blogs/[id]) 用の 1 件。無い・公開できない記事は null。
+ * id は URL から来るので、Firestore のパス区切り "/" を含むものは doc() に渡さない
+ * (渡すと例外になり 404 ではなく 500 になる)。
+ */
+export async function getPublicBlog(id: string): Promise<PublicBlog | null> {
+  if (!id || id.includes("/")) return null;
+
+  const db = getDb();
+  const snap = await db.collection("blogs").doc(id).get();
+  if (!snap.exists) return null;
+
+  const blog = toBlog(snap.id, snap.data()!);
+  return toPublicBlog(blog, await getMember(blog.authorId));
 }
 
 export async function listBlogsByAuthor(authorId: string): Promise<Blog[]> {
