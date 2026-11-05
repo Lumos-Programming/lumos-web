@@ -3,12 +3,12 @@ import { registerDebugProfile } from "./debug-profile";
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
-  isProduction: vi.fn(),
+  getAppEnv: vi.fn(),
   updateMember: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({ auth: mocks.auth }));
-vi.mock("@/lib/env", () => ({ isProduction: mocks.isProduction }));
+vi.mock("@/lib/env", () => ({ getAppEnv: mocks.getAppEnv }));
 vi.mock("@/lib/members", () => ({ updateMember: mocks.updateMember }));
 
 beforeEach(() => {
@@ -16,7 +16,7 @@ beforeEach(() => {
   mocks.auth.mockResolvedValue({
     user: { id: "123456789012345678", optedOut: false },
   });
-  mocks.isProduction.mockReturnValue(false);
+  mocks.getAppEnv.mockReturnValue("local");
   mocks.updateMember.mockResolvedValue(undefined);
 });
 
@@ -43,12 +43,12 @@ describe("registerDebugProfile", () => {
     expect(mocks.updateMember).not.toHaveBeenCalled();
   });
 
-  it("is unavailable in production", async () => {
-    mocks.isProduction.mockReturnValue(true);
+  it("is unavailable when debug profiles are not explicitly enabled", async () => {
+    mocks.getAppEnv.mockReturnValue("staging");
 
     await expect(registerDebugProfile()).resolves.toEqual({
       success: false,
-      error: "本番環境では使用できません",
+      error: "ローカル・開発環境でのみ使用できます",
     });
     expect(mocks.updateMember).not.toHaveBeenCalled();
   });

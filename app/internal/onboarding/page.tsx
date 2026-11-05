@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { isProduction } from "@/lib/env";
+import { getAppEnv } from "@/lib/env";
 import { getMember, isOnboardingComplete } from "@/lib/members";
 import { checkReturningMember } from "@/lib/discord";
 import { redirect } from "next/navigation";
@@ -26,10 +26,11 @@ export default async function OnboardingPage({
   if (member && isOnboardingComplete(member) && !isDevPreview && !isSurvey) {
     redirect("/internal");
   }
+  const canUseDebugProfile = ["local", "development"].includes(getAppEnv());
 
   return (
     <>
-      {!isProduction() && <DebugProfileButton />}
+      {canUseDebugProfile && <DebugProfileButton />}
       <OnboardingForm
         lineBotFriendUrl={process.env.LINE_BOT_FRIEND_URL}
         isReturningMember={isReturningMember}

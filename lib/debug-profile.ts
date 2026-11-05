@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { isProduction } from "@/lib/env";
+import { getAppEnv } from "@/lib/env";
 import { updateMember } from "@/lib/members";
 
 type DebugProfileResult = { success: true } | { success: false; error: string };
@@ -40,8 +40,12 @@ export async function registerDebugProfile(): Promise<DebugProfileResult> {
       error: "退会済みアカウントでは操作できません",
     };
   }
-  if (isProduction()) {
-    return { success: false, error: "本番環境では使用できません" };
+  const canUseDebugProfile = ["local", "development"].includes(getAppEnv());
+  if (!canUseDebugProfile) {
+    return {
+      success: false,
+      error: "ローカル・開発環境でのみ使用できます",
+    };
   }
 
   try {
