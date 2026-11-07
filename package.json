@@ -58,7 +58,7 @@
     "firebase-admin": "^13.10.0",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
-    "next": "^16.3.3",
+    "next": "^16.4.1",
     "next-auth": "5.0.0-beta.32",
     "react": "^19.2.8",
     "react-day-picker": "8.10.1",
