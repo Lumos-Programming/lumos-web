@@ -40,6 +40,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
+          pull: true
+          no-cache: true
           push: true
           tags: asia-northeast1-docker.pkg.dev/lumos-infra/lumos-web/pr-${{ github.event.number }}:latest
           context: .

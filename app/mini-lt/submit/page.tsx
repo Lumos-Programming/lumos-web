@@ -5,6 +5,7 @@ import {
   createWeekEvent,
   syncWeekEventDescription,
 } from "@/lib/mini-lt/discord-events";
+import { syncMiniLtCalendarEvent } from "@/lib/mini-lt/calendar-event";
 import { WeekNavigator } from "@/components/mini-lt/WeekNavigator";
 import { ManageTalks } from "@/components/mini-lt/ManageTalks";
 import { Header } from "@/components/mini-lt/Header";
@@ -213,6 +214,13 @@ export default async function SubmitPage({
       }
     }
 
+    // サークル内イベントカレンダーにも反映する (Discord の成否とは独立)
+    try {
+      await syncMiniLtCalendarEvent(weekId);
+    } catch (error) {
+      console.error("Failed to sync mini LT calendar event:", error);
+    }
+
     revalidatePath("/mini-lt/submit");
     revalidatePath("/mini-lt");
   };
@@ -235,6 +243,13 @@ export default async function SubmitPage({
         console.error("Failed to sync Discord event:", error);
         // Don't fail the entire operation if Discord sync fails
       }
+    }
+
+    // サークル内イベントカレンダーにも反映する (Discord の成否とは独立)
+    try {
+      await syncMiniLtCalendarEvent(weekId);
+    } catch (error) {
+      console.error("Failed to sync mini LT calendar event:", error);
     }
 
     revalidatePath("/mini-lt/submit");

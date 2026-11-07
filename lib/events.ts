@@ -220,6 +220,49 @@ export async function updateEvent(
   });
 }
 
+/** mini LT から取り込んだイベントは週ごとに 1 件。ID を週 ID から決めて重複させない */
+function miniLtEventId(weekId: string): string {
+  return `mini-lt-${weekId}`;
+}
+
+/**
+ * mini LT の週をカレンダーに書き込む。同じ週は上書きし、作成日時は最初のものを残す。
+ * 入力は lib/mini-lt/calendar-event.ts で組み立てたものなので検証しない。
+ */
+export async function upsertMiniLtEvent(
+  weekId: string,
+  input: EventInput,
+): Promise<void> {
+  const db = getDb();
+  const ref = db.collection(COLLECTION).doc(miniLtEventId(weekId));
+
+  await db.runTransaction(async (transaction) => {
+    const snap = await transaction.get(ref);
+    if (snap.exists) {
+      transaction.update(ref, {
+        ...toDocumentFields(input),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      return;
+    }
+    transaction.set(ref, {
+      ...toDocumentFields(input),
+      source: "mini-lt",
+      sourceRef: weekId,
+      // 運営の手入力ではないので作成者はいない
+      createdBy: "",
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  });
+}
+
+/** mini LT の週をカレンダーから外す。まだ取り込んでいなければ何もしない */
+export async function deleteMiniLtEvent(weekId: string): Promise<void> {
+  const db = getDb();
+  await db.collection(COLLECTION).doc(miniLtEventId(weekId)).delete();
+}
+
 export async function deleteEvent(id: string): Promise<void> {
   const db = getDb();
   const ref = db.collection(COLLECTION).doc(id);
