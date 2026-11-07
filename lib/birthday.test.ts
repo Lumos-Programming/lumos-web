@@ -3,6 +3,7 @@ import { getTodayBirthdayNames } from "./birthday";
 import { getJstToday, isISODateString } from "./date";
 import type { MemberDocument } from "./members";
 import { profileToMemberInternal } from "./members";
+import { Timestamp } from "./database/values";
 
 function birthDate(value: string) {
   if (!isISODateString(value))
@@ -36,8 +37,8 @@ function createMemberDocument(birthDate?: string): MemberDocument {
       line: "internal",
       discord: "internal",
     },
-    createdAt: {} as FirebaseFirestore.Timestamp,
-    updatedAt: {} as FirebaseFirestore.Timestamp,
+    createdAt: Timestamp.fromMillis(0),
+    updatedAt: Timestamp.fromMillis(0),
   };
 }
 

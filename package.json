@@ -10,7 +10,15 @@
     "lint": "eslint --cache --cache-location .next/cache/eslint/ .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "dev:cloudflare": "CLOUDFLARE_DEV=1 next dev",
+    "build:cloudflare": "opennextjs-cloudflare build",
+    "preview:cloudflare": "opennextjs-cloudflare preview",
+    "deploy:cloudflare": "opennextjs-cloudflare deploy",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:copy": "tsx scripts/database-migration.ts copy",
+    "db:verify": "tsx scripts/database-migration.ts verify",
+    "db:replay": "tsx scripts/database-migration.ts replay"
   },
   "dependencies": {
     "@auth/core": "^0.41.3",
@@ -19,6 +27,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@google-cloud/storage": "^7.22.0",
     "@hookform/resolvers": "^3.10.0",
+    "@opennextjs/cloudflare": "^1.20.6",
     "@radix-ui/react-accordion": "1.2.12",
     "@radix-ui/react-alert-dialog": "1.1.15",
     "@radix-ui/react-aspect-ratio": "1.1.8",
@@ -78,6 +87,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260919.1",
     "@tailwindcss/typography": "^0.5.20",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.20.1",
@@ -89,10 +99,13 @@
     "firebase-tools": "^15.28.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
+    "miniflare": "5.20260918.0-alpha",
     "postcss": "^8.5.26",
     "prettier": "^3.9.6",
     "tailwindcss": "^3.4.19",
-    "typescript": "^5.9.3"
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.135.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

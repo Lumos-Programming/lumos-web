@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { MemberDocument } from "@/lib/members";
+import { Timestamp } from "./database/values";
 import {
   calcProfileCompletion,
   buildWelcomeMessage,
@@ -35,8 +36,8 @@ function createMember(overrides: Partial<MemberDocument> = {}): MemberDocument {
       line: "internal",
       discord: "public",
     },
-    createdAt: {} as FirebaseFirestore.Timestamp,
-    updatedAt: {} as FirebaseFirestore.Timestamp,
+    createdAt: Timestamp.fromMillis(0),
+    updatedAt: Timestamp.fromMillis(0),
     ...overrides,
   };
 }

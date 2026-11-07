@@ -5,6 +5,8 @@
 resource "google_cloud_run_service" "web" {
   for_each = toset(local.cloud_run_envs)
 
+  depends_on = [google_secret_manager_secret_iam_member.database_migration]
+
   name     = "lumos-web-${each.key}"
   location = var.region
   project  = var.project_id
@@ -44,7 +46,13 @@ resource "google_cloud_run_service" "web" {
 
         # --- plain-text env vars (per-environment values from variables) ---
         dynamic "env" {
-          for_each = var.cloud_run_env_vars[each.key]
+          for_each = merge(var.cloud_run_env_vars[each.key], {
+            DATABASE_MIGRATION_STAGE = local.database_migration[each.key].stage
+            DATABASE_WRITES_PAUSED   = tostring(contains(var.database_migration_writes_paused, each.key))
+            }, local.database_migration[each.key].stage == "firestore-only" ? {} : {
+            CLOUDFLARE_ACCOUNT_ID     = local.database_migration[each.key].account_id
+            CLOUDFLARE_D1_DATABASE_ID = local.database_migration[each.key].database_id
+          })
           content {
             name  = env.key
             value = env.value
@@ -52,6 +60,18 @@ resource "google_cloud_run_service" "web" {
         }
 
         # --- secrets (per-environment) ---
+        dynamic "env" {
+          for_each = local.database_migration[each.key].stage == "firestore-only" ? [] : [local.database_migration[each.key].api_token_secret_id]
+          content {
+            name = "CLOUDFLARE_API_TOKEN"
+            value_from {
+              secret_key_ref {
+                name = env.value
+                key  = "latest"
+              }
+            }
+          }
+        }
         env {
           name = "AUTH_SECRET"
           value_from {
