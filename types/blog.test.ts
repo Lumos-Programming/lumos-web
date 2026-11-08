@@ -3,7 +3,10 @@ import {
   BLOG_ERROR_CODES,
   BLOG_ERROR_RESPONSES,
   BLOG_PLATFORM_OTHER,
-  blogDetailPath,
+  BLOG_SHARE_PARAM,
+  blogCardElementId,
+  blogSharePath,
+  parseSharedBlogId,
   buildXShareUrl,
   byPublishedAtDesc,
   getPlatformBadgeClass,
@@ -32,14 +35,9 @@ describe("toPlatformSelection", () => {
 
 describe("getPlatformBadgeClass", () => {
   it("プリセットの媒体はそれぞれのブランドカラーを返す", () => {
-    expect(getPlatformBadgeClass("Qiita")).toBe("bg-[#54C500] text-[#1D1D1D]");
+    expect(getPlatformBadgeClass("Qiita")).toBe("bg-[#54C500] text-white");
     expect(getPlatformBadgeClass("Zenn")).toBe("bg-[#3C83F6] text-white");
     expect(getPlatformBadgeClass("Medium")).toBe("bg-[#1D1D1D] text-white");
-  });
-
-  it("背景が明るい Qiita だけ文字色を濃くする", () => {
-    // 白文字だと 2.24:1 しか出ないため
-    expect(getPlatformBadgeClass("Qiita")).not.toContain("text-white");
   });
 
   it("プリセットに無い媒体は既定の色のままにする", () => {
@@ -87,13 +85,48 @@ describe("BlogError", () => {
   });
 });
 
-describe("blogDetailPath", () => {
-  it("記事 ID から個別ページのパスを作る", () => {
-    expect(blogDetailPath("abc123")).toBe("/blogs/abc123");
+describe("blogSharePath", () => {
+  it("ブログ一覧に記事 ID をクエリで付けたパスを作る", () => {
+    expect(blogSharePath("abc123")).toBe(`/blogs?${BLOG_SHARE_PARAM}=abc123`);
   });
 
-  it("パスに使えない文字はエスケープする", () => {
-    expect(blogDetailPath("a/b?c#d")).toBe("/blogs/a%2Fb%3Fc%23d");
+  it("クエリに使えない文字はエスケープし、URL として読み戻すと元の ID になる", () => {
+    const path = blogSharePath("a&b?c#d e");
+    const url = new URL(path, "https://lumos-ynu.jp");
+    expect(url.pathname).toBe("/blogs");
+    expect(url.hash).toBe("");
+    expect(url.searchParams.get(BLOG_SHARE_PARAM)).toBe("a&b?c#d e");
+    expect(parseSharedBlogId(url.searchParams.get(BLOG_SHARE_PARAM)!)).toBe(
+      "a&b?c#d e",
+    );
+  });
+});
+
+describe("blogCardElementId", () => {
+  it("記事 ID ごとに別の DOM id を作る", () => {
+    expect(blogCardElementId("abc")).toBe("blog-abc");
+    expect(blogCardElementId("abc")).not.toBe(blogCardElementId("abd"));
+  });
+});
+
+describe("parseSharedBlogId", () => {
+  it("文字列の ID はそのまま返す", () => {
+    expect(parseSharedBlogId("abc123")).toBe("abc123");
+  });
+
+  it("同じキーが複数あるときは先頭を使う", () => {
+    expect(parseSharedBlogId(["first", "second"])).toBe("first");
+  });
+
+  it("未指定・空文字・空配列は null", () => {
+    expect(parseSharedBlogId(undefined)).toBeNull();
+    expect(parseSharedBlogId("")).toBeNull();
+    expect(parseSharedBlogId([])).toBeNull();
+  });
+
+  it("Firestore のパス区切り / を含む ID は null (doc() が例外を投げるため)", () => {
+    expect(parseSharedBlogId("a/b")).toBeNull();
+    expect(parseSharedBlogId(["a/b", "ok"])).toBeNull();
   });
 });
 

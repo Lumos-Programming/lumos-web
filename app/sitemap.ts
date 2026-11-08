@@ -1,11 +1,9 @@
 import type { MetadataRoute } from "next";
-import { listPublicBlogs } from "@/lib/blogs";
 import { listPublishedNews } from "@/lib/news";
-import { blogDetailPath } from "@/types/blog";
 
 const BASE_URL = "https://lumos-ynu.jp";
 
-// お知らせとブログを Firestore から読むため、ビルド時に生成しない
+// お知らせを Firestore から読むため、ビルド時に生成しない
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -26,12 +24,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "monthly",
   }));
 
-  const blogs = await listPublicBlogs();
-  const blogPages: MetadataRoute.Sitemap = blogs.map((blog) => ({
-    url: `${BASE_URL}${blogDetailPath(blog.id)}`,
-    priority: 0.4,
-    changeFrequency: "monthly",
-  }));
-
-  return [...staticPages, ...newsPages, ...blogPages];
+  return [...staticPages, ...newsPages];
 }

@@ -140,7 +140,7 @@ export async function listPublicBlogs(): Promise<PublicBlog[]> {
 }
 
 /**
- * 公開の個別ページ (/blogs/[id]) 用の 1 件。無い・公開できない記事は null。
+ * 共有 URL (/blogs?post=<id>) の OGP 用の 1 件。無い・公開できない記事は null。
  * id は URL から来るので、Firestore のパス区切り "/" を含むものは doc() に渡さない
  * (渡すと例外になり 404 ではなく 500 になる)。
  */
