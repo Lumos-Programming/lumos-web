@@ -42,6 +42,7 @@ variable "cloud_run_env_vars" {
       LINE_PUSH_TARGET_ID              = "C1634d113e1d5a316077098b5776b94b5"
       LINE_GROUP_ID                    = "C1634d113e1d5a316077098b5776b94b5"
       BIRTHDAY_NOTIFICATION_CHANNEL_ID = "1548186501072822384"
+      LOTTERY_NOTIFICATION_CHANNEL_ID  = "1569265115684143156" # Lusy Server #loto-dev
     }
     stg = {
       NEXT_PUBLIC_APP_ENV      = "staging"
@@ -66,6 +67,7 @@ variable "cloud_run_env_vars" {
       LINE_PUSH_TARGET_ID              = "C5a28521ffe1f42b16998bd506acab713"
       LINE_GROUP_ID                    = "C5a28521ffe1f42b16998bd506acab713"
       BIRTHDAY_NOTIFICATION_CHANNEL_ID = "1548390650217766932"
+      LOTTERY_NOTIFICATION_CHANNEL_ID  = "1569265199272296550" # Lusy Server #loto-stg
     }
     prd = {
       NEXT_PUBLIC_APP_ENV      = "production"
