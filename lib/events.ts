@@ -95,6 +95,7 @@ function toLumosEvent(
     location: data.location ?? "",
     source: data.source ?? "manual",
     sourceRef: data.sourceRef ?? null,
+    survey: data.survey ?? null,
     createdBy: data.createdBy ?? "",
     createdAt: toIso(data.createdAt),
     updatedAt: toIso(data.updatedAt),

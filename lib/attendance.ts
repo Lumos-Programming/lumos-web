@@ -40,8 +40,11 @@ export function parseMemberIdParam(value: string): string {
   return parsed.data;
 }
 
-/** 出席を記録できるメンバーか (退会済み・サブアカウントは不可) */
-function isAttendableMember(data: Partial<MemberDocument> | undefined) {
+/**
+ * 出席を記録できるメンバーか (退会済み・サブアカウントは不可)。
+ * アンケートに回答できるメンバーの判定にも使う。
+ */
+export function isAttendableMember(data: Partial<MemberDocument> | undefined) {
   return (
     Boolean(data) && data!.optedOut !== true && data!.isSubAccount !== true
   );

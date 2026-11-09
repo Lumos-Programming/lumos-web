@@ -3,6 +3,8 @@
  * "manual" は運営がダッシュボードから入力したもの。
  * "mini-lt" は mini-LT の週データから取り込んだもの (取り込み機能は別 issue)。
  */
+import type { SurveyDefinition } from "@/types/survey";
+
 export const EVENT_SOURCES = ["manual", "mini-lt"] as const;
 export type EventSource = (typeof EVENT_SOURCES)[number];
 
@@ -30,6 +32,11 @@ export interface LumosEvent {
   source: EventSource;
   /** mini-LT から取り込んだ場合の週 ID ("2026-W12")。手入力なら null */
   sourceRef: string | null;
+  /**
+   * 事前アンケート。無ければ null。
+   * 参加予定を事前に聞くためのもので、回答しても出席扱いにはならない (出席は当日に運営が登録する)。
+   */
+  survey: SurveyDefinition | null;
   /** 作成した運営の Discord ID */
   createdBy: string;
   createdAt: string | null;
@@ -63,6 +70,11 @@ export const EVENT_ERROR_CODES = {
   END_BEFORE_START: "END_BEFORE_START",
   NOT_FOUND: "NOT_FOUND",
   MEMBER_NOT_FOUND: "MEMBER_NOT_FOUND",
+  INVALID_SURVEY: "INVALID_SURVEY",
+  SURVEY_CHANGE_CONFLICT: "SURVEY_CHANGE_CONFLICT",
+  SURVEY_NOT_FOUND: "SURVEY_NOT_FOUND",
+  SURVEY_CLOSED: "SURVEY_CLOSED",
+  INVALID_SURVEY_ANSWER: "INVALID_SURVEY_ANSWER",
 } as const;
 export type EventErrorCode =
   (typeof EVENT_ERROR_CODES)[keyof typeof EVENT_ERROR_CODES];
@@ -82,13 +94,34 @@ export const EVENT_ERROR_RESPONSES: Record<
   },
   NOT_FOUND: { status: 404, message: "イベントが見つかりません" },
   MEMBER_NOT_FOUND: { status: 404, message: "メンバーが見つかりません" },
+  INVALID_SURVEY: {
+    status: 400,
+    message: "アンケートの質問が正しくありません",
+  },
+  SURVEY_CHANGE_CONFLICT: {
+    status: 409,
+    message: "回答のある質問は削除・種類の変更ができません",
+  },
+  SURVEY_NOT_FOUND: {
+    status: 404,
+    message: "このイベントにはアンケートがありません",
+  },
+  SURVEY_CLOSED: {
+    status: 409,
+    message: "イベントが始まったため回答の受付は終了しました",
+  },
+  INVALID_SURVEY_ANSWER: {
+    status: 400,
+    message: "未回答の必須項目があるか、回答の形式が正しくありません",
+  },
 };
 
 export class EventError extends Error {
   readonly code: EventErrorCode;
 
-  constructor(code: EventErrorCode) {
-    super(EVENT_ERROR_RESPONSES[code].message);
+  /** detail を渡すと既定の文言の代わりにそれを見せる (どの質問が原因かを伝えたいとき) */
+  constructor(code: EventErrorCode, detail?: string) {
+    super(detail ?? EVENT_ERROR_RESPONSES[code].message);
     this.name = "EventError";
     this.code = code;
   }

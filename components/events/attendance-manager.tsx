@@ -5,19 +5,26 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { candidateLabel, filterCandidates } from "@/lib/attendance-filter";
+import {
+  candidateLabel,
+  filterCandidates,
+  partitionCandidates,
+} from "@/lib/attendance-filter";
 import type { AttendanceCandidate } from "@/types/event";
 
 interface Props {
   eventId: string;
   candidates: AttendanceCandidate[];
   initialAttendeeIds: string[];
+  /** 事前アンケートの回答者。先頭にまとめて出す (回答しただけでは出席にしない) */
+  respondentIds?: string[];
 }
 
 export function AttendanceManager({
   eventId,
   candidates,
   initialAttendeeIds,
+  respondentIds = [],
 }: Props) {
   const [attendeeIds, setAttendeeIds] = useState(
     () => new Set(initialAttendeeIds),
@@ -30,9 +37,13 @@ export function AttendanceManager({
     () => filterCandidates(candidates, query),
     [candidates, query],
   );
-  // 出席済みを上に出し、当日の確認漏れを見つけやすくする
-  const attendees = filtered.filter((c) => attendeeIds.has(c.id));
-  const others = filtered.filter((c) => !attendeeIds.has(c.id));
+  const respondentSet = useMemo(() => new Set(respondentIds), [respondentIds]);
+  // アンケート回答者 → 出席済み (未回答) → その他 の順に出し、当日にチェックしやすくする
+  const { respondents, attendees, others } = partitionCandidates(
+    filtered,
+    attendeeIds,
+    respondentSet,
+  );
 
   const setIn = (
     setter: typeof setAttendeeIds,
@@ -131,9 +142,30 @@ export function AttendanceManager({
         </p>
       )}
 
+      {respondentSet.size > 0 && (
+        <section className="space-y-1">
+          <h2 className="text-sm font-semibold">
+            アンケート回答者 ({respondentSet.size})
+          </h2>
+          <p className="text-xs text-muted-foreground px-3">
+            事前に回答した人です。回答だけでは出席になりません。来た人にチェックを入れてください。
+          </p>
+          {respondents.length === 0 ? (
+            <p className="text-sm text-muted-foreground px-3">
+              該当するメンバーがいません
+            </p>
+          ) : (
+            <ul>{respondents.map(row)}</ul>
+          )}
+        </section>
+      )}
       {attendees.length > 0 && (
         <section className="space-y-1">
-          <h2 className="text-sm font-semibold">出席済み</h2>
+          <h2 className="text-sm font-semibold">
+            {respondentSet.size > 0
+              ? "出席済み (アンケート未回答)"
+              : "出席済み"}
+          </h2>
           <ul>{attendees.map(row)}</ul>
         </section>
       )}

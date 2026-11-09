@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { getEvent } from "@/lib/events";
 import { listAttendanceCandidates, listAttendances } from "@/lib/attendance";
+import { listSurveyResponses } from "@/lib/survey";
 import { formatEventSchedule } from "@/lib/events-format";
 import { PageHeader } from "@/components/page-header";
 import { AttendanceManager } from "@/components/events/attendance-manager";
@@ -20,9 +21,10 @@ export default async function EventAttendancePage({
   const event = await getEvent(id);
   if (!event) notFound();
 
-  const [attendances, candidates] = await Promise.all([
+  const [attendances, candidates, responses] = await Promise.all([
     listAttendances(id),
     listAttendanceCandidates(),
+    event.survey ? listSurveyResponses(id) : Promise.resolve([]),
   ]);
 
   return (
@@ -42,6 +44,7 @@ export default async function EventAttendancePage({
         eventId={id}
         candidates={candidates}
         initialAttendeeIds={attendances.map((a) => a.memberId)}
+        respondentIds={responses.map((r) => r.memberId)}
       />
     </div>
   );

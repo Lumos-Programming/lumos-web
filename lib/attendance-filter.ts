@@ -31,3 +31,31 @@ export function filterCandidates(
     ),
   );
 }
+
+/**
+ * 出席登録画面の並び。各メンバーはどれか 1 つにだけ入る。
+ * - respondents: 事前アンケートの回答者 (出席済みかどうかに関わらず先頭にまとめ、当日にチェックしやすくする)
+ * - attendees: アンケート未回答で出席済み (飛び込み参加など)
+ * - others: それ以外
+ * 回答しただけでは出席扱いにしないので、回答者もチェックを入れるまでは未出席のまま。
+ * 入力の並び (名前順) は各グループ内で保つ。
+ */
+export function partitionCandidates(
+  candidates: AttendanceCandidate[],
+  attendeeIds: ReadonlySet<string>,
+  respondentIds: ReadonlySet<string>,
+): {
+  respondents: AttendanceCandidate[];
+  attendees: AttendanceCandidate[];
+  others: AttendanceCandidate[];
+} {
+  const respondents: AttendanceCandidate[] = [];
+  const attendees: AttendanceCandidate[] = [];
+  const others: AttendanceCandidate[] = [];
+  for (const c of candidates) {
+    if (respondentIds.has(c.id)) respondents.push(c);
+    else if (attendeeIds.has(c.id)) attendees.push(c);
+    else others.push(c);
+  }
+  return { respondents, attendees, others };
+}

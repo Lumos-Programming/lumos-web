@@ -118,6 +118,7 @@ describe("events-format", () => {
       id: "x",
       source: "manual" as const,
       sourceRef: null,
+      survey: null,
       createdBy: "",
       createdAt: null,
       updatedAt: null,
