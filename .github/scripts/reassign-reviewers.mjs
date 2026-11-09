@@ -8,7 +8,15 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 const LEVEL_KEYS = ["advanced", "intermediate", "beginner"];
 
-/** REVIEWER_LEVELS の文字列を { login: level } と { level: logins[] } にする。不正なら例外 */
+/**
+ * @typedef {{ byLevel: Record<string, string[]>, levelOf: Record<string, string> }} Levels
+ */
+
+/**
+ * REVIEWER_LEVELS の文字列を { login: level } と { level: logins[] } にする。不正なら例外
+ * @param {string | undefined} raw
+ * @returns {Levels}
+ */
 export function parseLevels(raw) {
   if (!raw) throw new Error("REVIEWER_LEVELS が設定されていません");
   const parsed = JSON.parse(raw);
@@ -17,7 +25,9 @@ export function parseLevels(raw) {
       "REVIEWER_LEVELS は区分をキーにしたオブジェクトにしてください",
     );
   }
+  /** @type {Record<string, string[]>} */
   const byLevel = {};
+  /** @type {Record<string, string>} */
   const levelOf = {};
   for (const [level, logins] of Object.entries(parsed)) {
     if (!LEVEL_KEYS.includes(level)) {
@@ -43,8 +53,12 @@ export function parseLevels(raw) {
   return { byLevel, levelOf };
 }
 
-/** 各レビュアーが最後にレビュー依頼された時刻 (ms)。timeline の review_requested から取る */
+/**
+ * 各レビュアーが最後にレビュー依頼された時刻 (ms)。timeline の review_requested から取る
+ * @returns {Record<string, number>}
+ */
 export function lastRequestedAt(timeline) {
+  /** @type {Record<string, number>} */
   const result = {};
   for (const event of timeline) {
     if (event.event !== "review_requested" || !event.requested_reviewer)
@@ -56,8 +70,12 @@ export function lastRequestedAt(timeline) {
   return result;
 }
 
-/** 各ユーザーの最後の反応時刻 (ms)。レビュー・PR コメント・コード行コメントをまとめて見る */
+/**
+ * 各ユーザーの最後の反応時刻 (ms)。レビュー・PR コメント・コード行コメントをまとめて見る
+ * @returns {Record<string, number>}
+ */
 export function lastActivityAt({ reviews, issueComments, reviewComments }) {
+  /** @type {Record<string, number>} */
   const result = {};
   const record = (user, timestamp) => {
     if (!user || !timestamp) return;
@@ -168,45 +186,31 @@ export function reassignComment(to, staleDays) {
   return `${staleDays}日間レビューの動きがなかったため、レビュアーを @${to} さんに交代しました。(自動)`;
 }
 
-async function main() {
-  const token = process.env.GITHUB_TOKEN;
-  const repo = process.env.GITHUB_REPOSITORY;
-  const staleDays = Number(process.env.STALE_DAYS ?? "3");
-  const dryRun = process.env.DRY_RUN === "true";
-  const levels = parseLevels(process.env.REVIEWER_LEVELS);
-  const api = `https://api.github.com/repos/${repo}`;
-
-  async function request(method, path, body) {
-    const res = await fetch(`${api}${path}`, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    if (!res.ok) {
-      throw new Error(
-        `${method} ${path} が失敗しました: ${res.status} ${await res.text()}`,
-      );
-    }
-    return res.status === 204 ? null : res.json();
+/**
+ * request(method, path, body) で GET したときの全ページを返す。
+ * GitHub API は 1 ページ最大 100 件なので、100 件未満のページが来たら終わり
+ */
+export async function getAllPages(request, path) {
+  const items = [];
+  for (let page = 1; ; page++) {
+    const sep = path.includes("?") ? "&" : "?";
+    const batch = await request(
+      "GET",
+      `${path}${sep}per_page=100&page=${page}`,
+    );
+    items.push(...batch);
+    if (batch.length < 100) return items;
   }
+}
 
-  async function getAll(path) {
-    const items = [];
-    for (let page = 1; ; page++) {
-      const sep = path.includes("?") ? "&" : "?";
-      const batch = await request(
-        "GET",
-        `${path}${sep}per_page=100&page=${page}`,
-      );
-      items.push(...batch);
-      if (batch.length < 100) return items;
-    }
-  }
-
+/**
+ * open な PR を全部見て付け替えを実行し、結果の 1 行ずつを返す。
+ * API 呼び出しは request(method, path, body) に任せる (テストで差し替えるため)
+ * @returns {Promise<string[]>}
+ */
+export async function run({ request, levels, staleDays, dryRun, now }) {
+  const getAll = (path) => getAllPages(request, path);
+  /** @type {string[]} */
   const summary = [];
   const prs = await getAll("/pulls?state=open");
   for (const pr of prs) {
@@ -225,7 +229,7 @@ async function main() {
       issueComments,
       reviewComments,
       levels,
-      now: Date.now(),
+      now,
       staleDays,
     });
 
@@ -252,7 +256,42 @@ async function main() {
       });
     }
   }
+  return summary;
+}
 
+async function main() {
+  const token = process.env.GITHUB_TOKEN;
+  const repo = process.env.GITHUB_REPOSITORY;
+  const staleDays = Number(process.env.STALE_DAYS ?? "3");
+  const dryRun = process.env.DRY_RUN === "true";
+  const levels = parseLevels(process.env.REVIEWER_LEVELS);
+  const api = `https://api.github.com/repos/${repo}`;
+
+  async function request(method, path, body) {
+    const res = await fetch(`${api}${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      throw new Error(
+        `${method} ${path} が失敗しました: ${res.status} ${await res.text()}`,
+      );
+    }
+    return res.status === 204 ? null : res.json();
+  }
+
+  const summary = await run({
+    request,
+    levels,
+    staleDays,
+    dryRun,
+    now: Date.now(),
+  });
   const text = summary.length
     ? summary.join("\n")
     : "付け替え対象はありませんでした";

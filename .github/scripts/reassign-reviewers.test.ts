@@ -7,6 +7,8 @@ import {
   pickReplacement,
   planReassignments,
   reassignComment,
+  getAllPages,
+  run,
 } from "./reassign-reviewers.mjs";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -273,5 +275,170 @@ describe("reassignComment", () => {
     expect(reassignComment("int-c", 3)).toBe(
       "3日間レビューの動きがなかったため、レビュアーを @int-c さんに交代しました。(自動)",
     );
+  });
+});
+
+type Call = { method: string; path: string; body?: unknown };
+
+/**
+ * GitHub API の偽物。GET はパス (クエリ抜き) ごとに用意した配列を 100 件ずつ返し、
+ * 書き込みは記録するだけ。用意していない GET は空配列
+ */
+function fakeApi(data: Record<string, unknown[]>, failOn?: string) {
+  const calls: Call[] = [];
+  const request = async (method: string, path: string, body?: unknown) => {
+    calls.push({ method, path, body });
+    if (failOn && `${method} ${path}` === failOn) {
+      throw new Error(`${method} ${path} が失敗しました: 422`);
+    }
+    if (method !== "GET") return null;
+    const url = new URL(path, "https://api.github.test");
+    const page = Number(url.searchParams.get("page") ?? "1");
+    const all = data[url.pathname] ?? [];
+    return all.slice((page - 1) * 100, page * 100);
+  };
+  const writes = () => calls.filter((c) => c.method !== "GET");
+  return { request, calls, writes };
+}
+
+describe("getAllPages", () => {
+  it("100 件ちょうどのページの次も取りに行き、全件をつなげる", async () => {
+    const items = Array.from({ length: 200 }, (_, i) => i);
+    const api = fakeApi({ "/pulls": items });
+    expect(await getAllPages(api.request, "/pulls?state=open")).toEqual(items);
+    // 200 件 = 100 + 100 + 0 件の 3 ページ
+    expect(api.calls.map((c) => c.path)).toEqual([
+      "/pulls?state=open&per_page=100&page=1",
+      "/pulls?state=open&per_page=100&page=2",
+      "/pulls?state=open&per_page=100&page=3",
+    ]);
+  });
+
+  it("クエリの無いパスには ? で付ける", async () => {
+    const api = fakeApi({ "/pulls/1/reviews": [{ id: 1 }] });
+    expect(await getAllPages(api.request, "/pulls/1/reviews")).toEqual([
+      { id: 1 },
+    ]);
+    expect(api.calls[0].path).toBe("/pulls/1/reviews?per_page=100&page=1");
+  });
+});
+
+describe("run", () => {
+  const levels = parseLevels(LEVELS_JSON);
+  const stalePr = (number: number, extra: object = {}) => ({
+    number,
+    draft: false,
+    user: { login: "author" },
+    requested_reviewers: [{ login: "adv-a" }],
+    ...extra,
+  });
+  const timelineFor = (login: string, days: number) => [
+    {
+      event: "review_requested",
+      requested_reviewer: { login },
+      created_at: daysAgo(days),
+    },
+  ];
+  const base = { levels, staleDays: 3, now: NOW };
+
+  it("追加 → 削除 → コメントの順に書き込む (追加に失敗してもレビュアー 0 人にしないため)", async () => {
+    const api = fakeApi({
+      "/pulls": [stalePr(7)],
+      "/issues/7/timeline": timelineFor("adv-a", 4),
+    });
+    const summary = await run({ ...base, request: api.request, dryRun: false });
+    expect(summary).toEqual(["#7: adv-a → adv-b"]);
+    expect(api.writes()).toEqual([
+      {
+        method: "POST",
+        path: "/pulls/7/requested_reviewers",
+        body: { reviewers: ["adv-b"] },
+      },
+      {
+        method: "DELETE",
+        path: "/pulls/7/requested_reviewers",
+        body: { reviewers: ["adv-a"] },
+      },
+      {
+        method: "POST",
+        path: "/issues/7/comments",
+        body: { body: reassignComment("adv-b", 3) },
+      },
+    ]);
+  });
+
+  it("追加が失敗したら削除もコメントもしない", async () => {
+    const api = fakeApi(
+      {
+        "/pulls": [stalePr(7)],
+        "/issues/7/timeline": timelineFor("adv-a", 4),
+      },
+      "POST /pulls/7/requested_reviewers",
+    );
+    await expect(
+      run({ ...base, request: api.request, dryRun: false }),
+    ).rejects.toThrow("422");
+    expect(api.writes().map((c) => c.method)).toEqual(["POST"]);
+  });
+
+  it("dry run では結果だけ返し、書き込まない", async () => {
+    const api = fakeApi({
+      "/pulls": [stalePr(7)],
+      "/issues/7/timeline": timelineFor("adv-a", 4),
+    });
+    const summary = await run({ ...base, request: api.request, dryRun: true });
+    expect(summary).toEqual(["#7: adv-a → adv-b (dry run)"]);
+    expect(api.writes()).toEqual([]);
+  });
+
+  it("draft の PR とレビュアー未指名の PR は詳細を取りに行かない", async () => {
+    const api = fakeApi({
+      "/pulls": [
+        stalePr(1, { draft: true }),
+        stalePr(2, { requested_reviewers: [] }),
+      ],
+    });
+    const summary = await run({ ...base, request: api.request, dryRun: false });
+    expect(summary).toEqual([]);
+    expect(api.calls.map((c) => c.path)).toEqual([
+      "/pulls?state=open&per_page=100&page=1",
+    ]);
+  });
+
+  it("代わりがいないときは据え置きと報告し、書き込まない", async () => {
+    // beginner は beg-a 1 人だけ
+    const api = fakeApi({
+      "/pulls": [stalePr(3, { requested_reviewers: [{ login: "beg-a" }] })],
+      "/issues/3/timeline": timelineFor("beg-a", 4),
+    });
+    const summary = await run({ ...base, request: api.request, dryRun: false });
+    expect(summary).toEqual([
+      "#3: beg-a の代わりになる人が同じ区分にいないため据え置き",
+    ]);
+    expect(api.writes()).toEqual([]);
+  });
+
+  it("101 件目以降の PR も対象にする", async () => {
+    const prs = Array.from({ length: 101 }, (_, i) =>
+      stalePr(i + 1, { requested_reviewers: [] }),
+    );
+    prs[100] = stalePr(101);
+    const api = fakeApi({
+      "/pulls": prs,
+      "/issues/101/timeline": timelineFor("adv-a", 4),
+    });
+    const summary = await run({ ...base, request: api.request, dryRun: true });
+    expect(summary).toEqual(["#101: adv-a → adv-b (dry run)"]);
+  });
+
+  it("依頼から staleDays 経っていなければ何もしない", async () => {
+    const api = fakeApi({
+      "/pulls": [stalePr(7)],
+      "/issues/7/timeline": timelineFor("adv-a", 2),
+    });
+    expect(await run({ ...base, request: api.request, dryRun: false })).toEqual(
+      [],
+    );
+    expect(api.writes()).toEqual([]);
   });
 });
