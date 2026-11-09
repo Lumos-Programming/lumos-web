@@ -57,6 +57,7 @@ async function addMember(id: string, data: Record<string, unknown> = {}) {
 beforeEach(async () => {
   await db().recursiveDelete(db().collection("events"));
   await db().recursiveDelete(db().collection("members"));
+  await db().recursiveDelete(db().collection("pointTransactions"));
 });
 
 describe("recordAttendance", () => {
@@ -128,6 +129,54 @@ describe("recordAttendance", () => {
     expect(await recordAttendance(eventId, "newbie", "admin-1")).toEqual({
       created: true,
     });
+  });
+});
+
+describe("attendance points", () => {
+  const pointsOf = async (memberId: string) =>
+    (
+      await db()
+        .collection("pointTransactions")
+        .where("memberId", "==", memberId)
+        .get()
+    ).docs.map((d) => d.data());
+
+  it("awards attendance points once, with the event title", async () => {
+    const eventId = await newEvent();
+    await addMember("alice");
+    await recordAttendance(eventId, "alice", "admin-1");
+    await recordAttendance(eventId, "alice", "admin-2");
+    const points = await pointsOf("alice");
+    expect(points).toHaveLength(1);
+    expect(points[0]).toMatchObject({
+      reason: "event_attended",
+      points: 5,
+      description: "作業会",
+    });
+  });
+
+  it("awards separately per event", async () => {
+    const a = await newEvent();
+    const b = await newEvent();
+    await addMember("alice");
+    await recordAttendance(a, "alice", "admin-1");
+    await recordAttendance(b, "alice", "admin-1");
+    expect(await pointsOf("alice")).toHaveLength(2);
+  });
+
+  it("does not award points when recording fails", async () => {
+    const eventId = await newEvent();
+    await addMember("alice", { optedOut: true });
+    await recordAttendance(eventId, "alice", "admin-1").catch(() => {});
+    expect(await pointsOf("alice")).toEqual([]);
+  });
+
+  it("revokes the points when the attendance is removed", async () => {
+    const eventId = await newEvent();
+    await addMember("alice");
+    await recordAttendance(eventId, "alice", "admin-1");
+    await removeAttendance(eventId, "alice");
+    expect(await pointsOf("alice")).toEqual([]);
   });
 });
 

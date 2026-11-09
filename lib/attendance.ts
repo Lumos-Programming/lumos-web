@@ -2,6 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getDb } from "@/lib/firebase";
 import type { MemberDocument } from "@/lib/members";
+import { pointDocument, pointKeys, pointRef } from "@/lib/points";
 import {
   EVENT_ERROR_CODES,
   EventError,
@@ -49,8 +50,7 @@ function isAttendableMember(data: Partial<MemberDocument> | undefined) {
 
 /**
  * 出席を記録する。すでに記録済みなら何もせず created: false を返す
- * (登録者・日時は最初のものを残す)。ポイント付与 (#375) は created が true の
- * ときだけ行えば二重付与にならない。
+ * (登録者・日時は最初のものを残す)。新規のときだけ出席ポイントを付与する。
  */
 export async function recordAttendance(
   eventId: string,
@@ -79,6 +79,16 @@ export async function recordAttendance(
       recordedBy,
       recordedAt: FieldValue.serverTimestamp(),
     });
+    // 出席と同じトランザクションでポイントを付与する (出席記録とポイントが食い違わない)
+    tx.set(
+      pointRef(pointKeys.eventAttended(eventId, memberId)),
+      pointDocument({
+        key: pointKeys.eventAttended(eventId, memberId),
+        memberId,
+        reason: "event_attended",
+        description: eventSnap.data()?.title ?? "",
+      }),
+    );
     return { created: true };
   });
 }
@@ -100,6 +110,7 @@ export async function removeAttendance(
     if (!eventSnap.exists) throw new EventError(EVENT_ERROR_CODES.NOT_FOUND);
     if (!attendanceSnap.exists) return { removed: false };
     tx.delete(attendanceRef);
+    tx.delete(pointRef(pointKeys.eventAttended(eventId, memberId)));
     return { removed: true };
   });
 }
