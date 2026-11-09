@@ -20,6 +20,13 @@ import {
   toPlatformSelection,
   type Blog,
 } from "@/types/blog";
+import { supportsMetadataAutofill } from "@/lib/blog-metadata";
+import {
+  applyAutofill,
+  clearAutofilled,
+  toAutofillValues,
+  type AutofillValues,
+} from "@/lib/blog-autofill";
 
 type BlogFormValues = {
   url: string;
@@ -70,6 +77,9 @@ function toFormValues(blog: Blog): BlogFormValues {
   };
 }
 
+/** 記事情報の自動取得の状態。notFound のときは手動入力を促す */
+type AutofillStatus = "idle" | "loading" | "notFound";
+
 interface BlogManagerProps {
   /** サーバーで取得した自分の記事。以降の増減はこのコンポーネントが持つ */
   myBlogs: Blog[];
@@ -82,17 +92,54 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
   const [form, setForm] = useState<BlogFormValues>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autofillStatus, setAutofillStatus] = useState<AutofillStatus>("idle");
+  /** 最後に自動で入れた値。手で入れた値と見分けるために持つ */
+  const [autoFilled, setAutoFilled] = useState<AutofillValues>({});
+
+  /**
+   * 記事URLからタイトル・説明・公開日・媒体・サムネイル画像URLを取得して欄に入れる。
+   * overwrite が false のときは空欄にだけ入れる (手で入れた値を消さない)。
+   */
+  const autofill = async (url: string, overwrite: boolean) => {
+    if (!supportsMetadataAutofill(url)) return;
+    setAutofillStatus("loading");
+    let metadata: unknown = null;
+    try {
+      const res = await fetch("/api/blogs/metadata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok) metadata = data?.metadata ?? null;
+    } catch {
+      // 通信に失敗しても、ドメインで決まる媒体だけは入れる
+    }
+    const values = toAutofillValues(url, metadata);
+    // 取得中に記事URLが書き換えられていたら、古い結果は捨てる
+    setForm((prev) => {
+      if (prev.url !== url) return prev;
+      const result = applyAutofill(prev, values, overwrite);
+      setAutoFilled(result.filled);
+      return result.form;
+    });
+    setAutofillStatus(metadata ? "idle" : "notFound");
+  };
 
   const startEdit = (blog: Blog) => {
     setEditingId(blog.id);
     setForm(toFormValues(blog));
     setError(null);
+    setAutofillStatus("idle");
+    setAutoFilled({});
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
     setError(null);
+    setAutofillStatus("idle");
+    setAutoFilled({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -219,10 +266,41 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
               <Input
                 type="url"
                 value={form.url}
-                onChange={(e) => setForm({ ...form, url: e.target.value })}
+                onChange={(e) => {
+                  // 自動で入れた値は前の記事のものなので消す。手で入れた値は残す
+                  setForm(
+                    clearAutofilled(
+                      { ...form, url: e.target.value },
+                      autoFilled,
+                    ),
+                  );
+                  setAutoFilled({});
+                  setAutofillStatus("idle");
+                }}
+                onBlur={() => autofill(form.url, false)}
                 placeholder="https://qiita.com/..."
                 required
               />
+              {supportsMetadataAutofill(form.url) && (
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={autofillStatus === "loading"}
+                    onClick={() => autofill(form.url, true)}
+                  >
+                    記事の情報を取り直す
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    {autofillStatus === "loading"
+                      ? "記事の情報を取得しています..."
+                      : autofillStatus === "notFound"
+                        ? "自動で取得できませんでした。各項目を手動で入力してください"
+                        : "タイトルなどを記事から自動で入力します。入力後に書き換えられます"}
+                  </p>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">タイトル</label>
@@ -309,7 +387,11 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-3">
-              <Button type="submit" disabled={submitting}>
+              {/* 取得中に保存すると、届いた値がフォームのリセット後に捨てられる */}
+              <Button
+                type="submit"
+                disabled={submitting || autofillStatus === "loading"}
+              >
                 {submitting ? "保存中..." : editingId ? "更新する" : "登録する"}
               </Button>
               {editingId && (
