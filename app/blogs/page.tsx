@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { listPublicBlogs } from "@/lib/blogs";
+import { BlogThumbnail } from "@/components/blogs/blog-thumbnail";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { getPlatformBadgeClass } from "@/types/blog";
@@ -44,11 +44,9 @@ export default async function BlogsPage() {
                 >
                   <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card">
                     <div className="aspect-video relative bg-muted">
-                      <Image
-                        src={blog.thumbnailUrl || "/placeholder.svg"}
-                        alt={blog.title}
-                        fill
-                        className="object-cover"
+                      <BlogThumbnail
+                        src={blog.thumbnailUrl}
+                        title={blog.title}
                       />
                       {blog.platform && (
                         <div className="absolute top-4 left-4">
