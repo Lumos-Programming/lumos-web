@@ -2,8 +2,10 @@ import { createHmac } from "crypto";
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_REWARD_REPOS,
+  closingIssueNumbers,
   rewardRepos,
   rewardsForGithubEvent,
+  ticketsForGithubEvent,
   verifyGithubSignature,
 } from "./github-rewards";
 
@@ -157,5 +159,80 @@ describe("rewardsForGithubEvent: other inputs", () => {
     ["string payload", "pull_request", "x"],
   ])("ignores %s", (_name, event, payload) => {
     expect(rewardsForGithubEvent(event, payload, REPOS)).toEqual([]);
+  });
+});
+
+describe("closingIssueNumbers", () => {
+  const repo = "Lumos-Programming/lumos-web";
+  it.each([
+    ["Closes #12", [12]],
+    ["closes #12", [12]],
+    ["Fix #1, fixes #2 and resolved #3", [1, 2, 3]],
+    ["Close: #4", [4]],
+    ["Closes Lumos-Programming/lumos-web#5", [5]],
+    ["Closes https://github.com/Lumos-Programming/lumos-web/issues/6", [6]],
+    ["Closes #7\nCloses #7", [7]],
+    ["Closes #9 Closes #8", [8, 9]],
+  ])("%j → %j", (body, expected) => {
+    expect(closingIssueNumbers(body, repo)).toEqual(expected);
+  });
+
+  it.each([
+    ["no keyword", "Refs #12"],
+    ["keyword without number", "Closes the issue"],
+    ["other repository", "Closes Lumos-Programming/other#5"],
+    ["other repository URL", "Closes https://github.com/x/y/issues/6"],
+    ["word containing a keyword", "prefix #3"],
+    ["empty", ""],
+  ])("ignores %s", (_name, body) => {
+    expect(closingIssueNumbers(body, repo)).toEqual([]);
+  });
+
+  it("handles null bodies", () => {
+    expect(closingIssueNumbers(null, repo)).toEqual([]);
+  });
+});
+
+describe("ticketsForGithubEvent", () => {
+  const withBody = (body: string | null, over = {}, prOver = {}) =>
+    prPayload(over, { body, ...prOver });
+
+  it("gives one ticket per closed issue to the PR author", () => {
+    expect(
+      ticketsForGithubEvent(
+        "pull_request",
+        withBody("Closes #3, fixes #4"),
+        REPOS,
+      ),
+    ).toEqual([
+      {
+        githubUserId: 100,
+        key: "lottery_ticket:7:3",
+        description: "Lumos-Programming/lumos-web#3 を解決 (PR #42)",
+        sourceUrl: "https://github.com/x/pull/42",
+      },
+      expect.objectContaining({ key: "lottery_ticket:7:4" }),
+    ]);
+  });
+
+  it.each([
+    ["no closing keyword", "pull_request", withBody("Refs #3")],
+    ["unmerged", "pull_request", withBody("Closes #3", {}, { merged: false })],
+    [
+      "bot author",
+      "pull_request",
+      withBody("Closes #3", {}, { user: { id: 1, type: "Bot" } }),
+    ],
+    [
+      "other repository",
+      "pull_request",
+      withBody("Closes #3", {
+        repository: { id: 8, full_name: "Lumos-Programming/other" },
+      }),
+    ],
+    ["review event", "pull_request_review", withBody("Closes #3")],
+    ["null body", "pull_request", withBody(null)],
+  ])("gives nothing for %s", (_name, event, payload) => {
+    expect(ticketsForGithubEvent(event, payload, REPOS)).toEqual([]);
   });
 });

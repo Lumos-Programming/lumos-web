@@ -123,3 +123,66 @@ export function rewardsForGithubEvent(
 
   return [];
 }
+
+/**
+ * PR 本文から、この PR が閉じる同じリポジトリの Issue 番号を取り出す。
+ * GitHub のクローズキーワード (close/closes/closed/fix/fixes/fixed/resolve/resolves/resolved)
+ * に続く "#123" / "owner/repo#123" / Issue の URL を対象にする。別リポジトリの参照は無視する。
+ * https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue
+ */
+export function closingIssueNumbers(
+  body: string | null | undefined,
+  repoFullName: string,
+): number[] {
+  if (!body) return [];
+  const repo = repoFullName.toLowerCase();
+  const pattern =
+    /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*:?\s+(?:https:\/\/github\.com\/([\w.-]+\/[\w.-]+)\/issues\/|([\w.-]+\/[\w.-]+)#|#)(\d+)\b/gi;
+  const numbers = new Set<number>();
+  for (const m of body.matchAll(pattern)) {
+    const ref = (m[1] ?? m[2])?.toLowerCase();
+    if (ref && ref !== repo) continue;
+    numbers.add(Number(m[3]));
+  }
+  return [...numbers].sort((a, b) => a - b);
+}
+
+/** Webhook 1 件から導かれる宝くじチケット 1 枚 */
+export interface GithubTicket {
+  githubUserId: number;
+  key: string;
+  description: string;
+  sourceUrl: string;
+}
+
+/**
+ * マージされた PR が閉じた Issue 1 件につきチケット 1 枚を PR 作者に渡す。
+ * キーは Issue 単位なので、同じ Issue を閉じる PR が複数あっても 1 枚だけ。
+ */
+export function ticketsForGithubEvent(
+  eventName: string | null,
+  payload: unknown,
+  repos: string[],
+): GithubTicket[] {
+  const p = payload as
+    (PullRequestPayload & { pull_request?: { body?: string | null } }) | null;
+  const repo = p?.repository;
+  const pr = p?.pull_request;
+  if (
+    eventName !== "pull_request" ||
+    p?.action !== "closed" ||
+    !repo ||
+    !pr ||
+    pr.merged !== true ||
+    !isHuman(pr.user) ||
+    !repos.some((r) => r.toLowerCase() === repo.full_name.toLowerCase())
+  ) {
+    return [];
+  }
+  return closingIssueNumbers(pr.body, repo.full_name).map((issue) => ({
+    githubUserId: pr.user.id,
+    key: `lottery_ticket:${repo.id}:${issue}`,
+    description: `${repo.full_name}#${issue} を解決 (PR #${pr.number})`,
+    sourceUrl: pr.html_url,
+  }));
+}

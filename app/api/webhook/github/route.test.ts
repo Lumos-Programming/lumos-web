@@ -5,7 +5,9 @@ import { POST } from "./route";
 const mocks = vi.hoisted(() => ({
   getMemberIdByGithubId: vi.fn(),
   awardPoints: vi.fn(),
+  grantTicket: vi.fn(),
 }));
+vi.mock("@/lib/lottery", () => ({ grantTicket: mocks.grantTicket }));
 vi.mock("@/lib/members", () => ({
   getMemberIdByGithubId: mocks.getMemberIdByGithubId,
 }));
@@ -57,6 +59,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
   mocks.getMemberIdByGithubId.mockResolvedValue("alice");
   mocks.awardPoints.mockResolvedValue({ awarded: true });
+  mocks.grantTicket.mockResolvedValue({ granted: true, drawId: "2026-11-13" });
 });
 afterEach(() => vi.unstubAllEnvs());
 
@@ -121,5 +124,31 @@ describe("POST /api/webhook/github", () => {
   it("returns 500 so GitHub can redeliver when Firestore fails", async () => {
     mocks.awardPoints.mockRejectedValue(new Error("down"));
     expect((await POST(req(merged))).status).toBe(500);
+  });
+
+  it("grants lottery tickets for issues closed by the merged PR", async () => {
+    const payload = {
+      ...merged,
+      pull_request: { ...merged.pull_request, body: "Closes #3\nFixes #4" },
+    };
+    const res = await POST(req(payload));
+    expect(mocks.grantTicket).toHaveBeenCalledTimes(2);
+    expect(mocks.grantTicket).toHaveBeenCalledWith(
+      expect.objectContaining({ key: "lottery_ticket:7:3", memberId: "alice" }),
+    );
+    const statuses = (await res.json()).results.map(
+      (r: { status: string }) => r.status,
+    );
+    expect(statuses).toEqual(["awarded", "granted", "granted"]);
+  });
+
+  it("does not grant tickets to unlinked GitHub users", async () => {
+    mocks.getMemberIdByGithubId.mockResolvedValue(null);
+    const payload = {
+      ...merged,
+      pull_request: { ...merged.pull_request, body: "Closes #3" },
+    };
+    await POST(req(payload));
+    expect(mocks.grantTicket).not.toHaveBeenCalled();
   });
 });

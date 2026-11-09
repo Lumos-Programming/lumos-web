@@ -53,3 +53,26 @@ resource "google_cloud_scheduler_job" "birthday" {
 
   depends_on = [google_project_service.cloudscheduler]
 }
+
+# 週次宝くじ (#377): 毎週金曜 17:00 JST にチケットを締め切り、17:30 に抽選して
+# 環境ごとの LOTTERY_NOTIFICATION_CHANNEL_ID へ結果を投稿する。抽選済みの回は結果を変えない。
+resource "google_cloud_scheduler_job" "lottery" {
+  for_each = toset(local.cloud_run_envs)
+
+  name      = "weekly-lottery-${each.key}"
+  project   = var.project_id
+  region    = var.region
+  schedule  = "30 17 * * 5" # 毎週金曜 17:30
+  time_zone = "Asia/Tokyo"
+
+  http_target {
+    http_method = "GET"
+    uri         = "${var.cloud_run_env_vars[each.key]["AUTH_URL"]}/api/cron/lottery"
+
+    headers = {
+      Authorization = "Bearer ${random_password.cron_secret[each.key].result}"
+    }
+  }
+
+  depends_on = [google_project_service.cloudscheduler]
+}
