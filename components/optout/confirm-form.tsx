@@ -9,15 +9,9 @@ import {
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react";
+import { OPTOUT_REASON_OPTIONS } from "@/types/optout";
 
-const REASON_OPTIONS: { value: string; label: string }[] = [
-  { value: "busy", label: "忙しくなった・時間が取れない" },
-  { value: "interest_changed", label: "興味・目標が変わった" },
-  { value: "atmosphere", label: "活動の雰囲気が合わなかった" },
-  { value: "content", label: "活動内容が合わなかった" },
-  { value: "graduated", label: "卒業・進路変更のため" },
-  { value: "other", label: "その他" },
-];
+const REASON_OPTIONS = OPTOUT_REASON_OPTIONS;
 
 const REASON_DETAIL_MAX = 1000;
 
