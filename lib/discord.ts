@@ -2,6 +2,8 @@
  * Discord API integration for creating and managing scheduled events
  */
 
+import { discordFetch } from "@/lib/discord-fetch";
+
 const DISCORD_API_BASE = "https://discord.com/api/v10";
 
 export type DiscordEventEntityMetadata = {
@@ -44,7 +46,7 @@ export async function createDiscordEvent(
     throw new Error("DISCORD_BOT_TOKEN is not configured");
   }
 
-  const response = await fetch(
+  const response = await discordFetch(
     `${DISCORD_API_BASE}/guilds/${guildId}/scheduled-events`,
     {
       method: "POST",
@@ -104,7 +106,7 @@ export async function updateDiscordEvent(
     body.entity_metadata = { location: params.location };
   }
 
-  const response = await fetch(
+  const response = await discordFetch(
     `${DISCORD_API_BASE}/guilds/${guildId}/scheduled-events/${eventId}`,
     {
       method: "PATCH",
@@ -140,7 +142,7 @@ export async function deleteDiscordEvent(eventId: string): Promise<void> {
     throw new Error("DISCORD_BOT_TOKEN is not configured");
   }
 
-  const response = await fetch(
+  const response = await discordFetch(
     `${DISCORD_API_BASE}/guilds/${guildId}/scheduled-events/${eventId}`,
     {
       method: "DELETE",
@@ -197,7 +199,7 @@ export async function getEventInterestedUsers(
     throw new Error("DISCORD_BOT_TOKEN is not configured");
   }
 
-  const response = await fetch(
+  const response = await discordFetch(
     `${DISCORD_API_BASE}/guilds/${guildId}/scheduled-events/${eventId}/users?limit=100&with_member=true`,
     {
       headers: {
@@ -229,7 +231,7 @@ export async function checkReturningMember(userId: string): Promise<boolean> {
   }
 
   try {
-    const response = await fetch(
+    const response = await discordFetch(
       `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}`,
       {
         headers: {
@@ -260,7 +262,7 @@ export async function fetchDiscordDisplayName(
   if (!guildId || !botToken) return null;
 
   try {
-    const response = await fetch(
+    const response = await discordFetch(
       `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}`,
       { headers: { Authorization: `Bot ${botToken}` } },
     );
@@ -299,7 +301,7 @@ export async function addRoleToMember(
     throw new Error("DISCORD_BOT_TOKEN is not configured");
   }
 
-  const response = await fetch(
+  const response = await discordFetch(
     `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}/roles/${roleId}`,
     {
       method: "PUT",
@@ -332,7 +334,7 @@ export async function fetchDiscordUserAvatarHash(
     throw new Error("DISCORD_BOT_TOKEN is not configured");
   }
 
-  const res = await fetch(`${DISCORD_API_BASE}/users/${userId}`, {
+  const res = await discordFetch(`${DISCORD_API_BASE}/users/${userId}`, {
     headers: { Authorization: `Bot ${botToken}` },
   });
 

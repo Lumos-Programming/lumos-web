@@ -4,6 +4,7 @@
 
 import type { MemberDocument } from "@/lib/members";
 import { getOptoutRequestUrl } from "@/lib/discord-optout";
+import { discordFetch } from "@/lib/discord-fetch";
 
 const DISCORD_API_BASE = "https://discord.com/api/v10";
 
@@ -654,14 +655,17 @@ async function createDmChannel(recipientId: string): Promise<string> {
     throw new Error("DISCORD_BOT_TOKEN is not configured");
   }
 
-  const response = await fetch(`${DISCORD_API_BASE}/users/@me/channels`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bot ${botToken}`,
-      "Content-Type": "application/json",
+  const response = await discordFetch(
+    `${DISCORD_API_BASE}/users/@me/channels`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bot ${botToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ recipient_id: recipientId }),
     },
-    body: JSON.stringify({ recipient_id: recipientId }),
-  });
+  );
 
   if (!response.ok) {
     const error = await response.text();
@@ -681,7 +685,7 @@ export async function sendDiscordChannelMessage(
     throw new Error("DISCORD_BOT_TOKEN is not configured");
   }
 
-  const response = await fetch(
+  const response = await discordFetch(
     `${DISCORD_API_BASE}/channels/${channelId}/messages`,
     {
       method: "POST",
@@ -724,7 +728,7 @@ export async function notifyAdminChannel(
   const webhookUrl = process.env.ADMIN_NOTIFICATION_CHANNEL_WEBHOOK?.trim();
   if (!webhookUrl) return;
 
-  const response = await fetch(webhookUrl, {
+  const response = await discordFetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -834,7 +838,7 @@ export async function editDiscordDm(
   }
 
   const channelId = await createDmChannel(recipientId);
-  const response = await fetch(
+  const response = await discordFetch(
     `${DISCORD_API_BASE}/channels/${channelId}/messages/${messageId}`,
     {
       method: "PATCH",
