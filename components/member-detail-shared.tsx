@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AvatarImage, DEFAULT_AVATAR_SRC } from "@/components/avatar-image";
 import { Cake } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -89,19 +89,18 @@ export function MemberDetailContent({ member }: { member: Member }) {
             <div
               className={`w-28 h-28 sm:w-32 sm:h-32 relative rounded-lg overflow-hidden ring-2 ${ringColor}`}
             >
-              <Image
-                src={faceImage || "/assets/lumos_logo-full.png"}
+              <AvatarImage
+                src={faceImage || DEFAULT_AVATAR_SRC}
                 alt={`${member.name}の写真`}
-                fill
                 className="object-cover"
+                fallbackSrc={DEFAULT_AVATAR_SRC}
               />
             </div>
             {member.snsAvatar && (
               <div className="absolute -bottom-1.5 -right-1.5 w-9 h-9 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
-                <Image
+                <AvatarImage
                   src={member.snsAvatar}
                   alt=""
-                  fill
                   className="object-cover"
                 />
               </div>

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AvatarImage, DEFAULT_AVATAR_SRC } from "@/components/avatar-image";
 import {
   getRingColorClass,
   getMemberTypeBadgeClass,
@@ -47,16 +47,20 @@ export function MemberTile({
         <div
           className={`${sizeClass} relative rounded-full overflow-hidden ring-2 ${ringClass} transition-all duration-300 ${!preview ? "group-hover:ring-4 group-hover:shadow-lg group-hover:scale-105" : ""}`}
         >
-          <Image
+          <AvatarImage
             src={primaryAvatar}
             alt={`${main}の写真`}
-            fill
             className="object-cover"
+            fallbackSrc={DEFAULT_AVATAR_SRC}
           />
         </div>
         {secondaryAvatar && (
           <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
-            <Image src={secondaryAvatar} alt="" fill className="object-cover" />
+            <AvatarImage
+              src={secondaryAvatar}
+              alt=""
+              className="object-cover"
+            />
           </div>
         )}
       </div>
