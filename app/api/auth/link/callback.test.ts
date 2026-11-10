@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   exchangeCodeForTokenFull: vi.fn(),
   fetchProviderUser: vi.fn(),
   getMember: vi.fn(),
+  getMemberIdByGithubId: vi.fn(),
   updateMemberSns: vi.fn(),
   checkLineGroupMembership: vi.fn(),
   checkLineBotFriendship: vi.fn(),
@@ -36,6 +37,7 @@ vi.mock("@/lib/oauth-link", () => ({
 }));
 vi.mock("@/lib/members", () => ({
   getMember: mocks.getMember,
+  getMemberIdByGithubId: mocks.getMemberIdByGithubId,
   updateMemberSns: mocks.updateMemberSns,
 }));
 vi.mock("@/lib/line-invite", () => ({
@@ -78,6 +80,7 @@ beforeEach(() => {
     avatar: "https://example.test/avatar.png",
   });
   mocks.getMember.mockResolvedValue({ memberType: "卒業生" });
+  mocks.getMemberIdByGithubId.mockResolvedValue(null);
   mocks.checkLineGroupMembership.mockResolvedValue(false);
   mocks.checkLineBotFriendship.mockResolvedValue(true);
 });
@@ -161,3 +164,38 @@ it.each(["/internal/settings", "/internal/onboarding"])(
     }
   },
 );
+
+describe("GitHub account uniqueness", () => {
+  function errorOf(response: Response) {
+    return new URL(response.headers.get("location")!).searchParams.get("error");
+  }
+
+  it("looks up the owner by the numeric GitHub ID", async () => {
+    await github(request("github"));
+    expect(mocks.getMemberIdByGithubId).toHaveBeenCalledWith("provider-id");
+  });
+
+  it("rejects a GitHub account already linked to another member", async () => {
+    mocks.getMemberIdByGithubId.mockResolvedValue("other-member");
+    const response = await github(request("github"));
+    expect(errorOf(response)).toBe("github_already_linked");
+    expect(mocks.updateMemberSns).not.toHaveBeenCalled();
+  });
+
+  it("allows re-linking the same GitHub account to the same member", async () => {
+    mocks.getMemberIdByGithubId.mockResolvedValue("session-member");
+    const response = await github(request("github"));
+    expect(errorOf(response)).toBeNull();
+    expect(mocks.updateMemberSns).toHaveBeenCalledWith(
+      "session-member",
+      expect.objectContaining({ githubId: "provider-id" }),
+    );
+  });
+
+  it("fails safely when the owner lookup throws", async () => {
+    mocks.getMemberIdByGithubId.mockRejectedValue(new Error("firestore down"));
+    const response = await github(request("github"));
+    expect(errorOf(response)).toBe("github_link_failed");
+    expect(mocks.updateMemberSns).not.toHaveBeenCalled();
+  });
+});
