@@ -126,14 +126,14 @@ export function blogCardElementId(id: string): string {
 
 /**
  * searchParams の値から記事 ID を取り出す。
- * 同じキーが複数あれば先頭を使い、空文字や Firestore のパス区切り "/" を含むものは無効 (null)
+ * 同じキーが複数あれば先頭を使い、未指定・空文字は null。
+ * Firestore の ID として使えるかどうかは、問い合わせる直前の getPublicBlog (lib/blogs.ts) で判定する
  */
 export function parseSharedBlogId(
   value: string | string[] | undefined,
 ): string | null {
   const id = Array.isArray(value) ? value[0] : value;
-  if (!id || id.includes("/")) return null;
-  return id;
+  return id || null;
 }
 
 /** X の投稿画面を、本文と URL を埋めた状態で開くための URL */

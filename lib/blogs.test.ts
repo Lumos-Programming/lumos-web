@@ -7,6 +7,7 @@ import {
   listAllBlogs,
   listPublicBlogs,
   getPublicBlog,
+  isValidFirestoreDocId,
   listBlogsByAuthor,
   createBlog,
   updateBlog,
@@ -488,9 +489,50 @@ describe("getPublicBlog", () => {
     expect(await getPublicBlog(created.id)).toBeNull();
   });
 
-  it("空文字や / を含む ID は Firestore に問い合わせず null", async () => {
-    expect(await getPublicBlog("")).toBeNull();
-    expect(await getPublicBlog("blogs/abc")).toBeNull();
-    expect(await getPublicBlog("/")).toBeNull();
+  it("Firestore の ID として使えない ID は例外にせず null", async () => {
+    for (const id of [
+      "",
+      "blogs/abc",
+      "/",
+      ".",
+      "..",
+      "__foo__",
+      "____",
+      "a".repeat(1501),
+    ]) {
+      expect(await getPublicBlog(id)).toBeNull();
+    }
+  });
+});
+
+describe("isValidFirestoreDocId", () => {
+  it("普通の ID は使える", () => {
+    expect(isValidFirestoreDocId("abc123")).toBe(true);
+    expect(isValidFirestoreDocId("a.b")).toBe(true);
+    expect(isValidFirestoreDocId("...")).toBe(true);
+    expect(isValidFirestoreDocId("__foo")).toBe(true);
+    expect(isValidFirestoreDocId("foo__")).toBe(true);
+    expect(isValidFirestoreDocId("_a_")).toBe(true);
+  });
+
+  it("空文字・/ を含むもの・. と .. は使えない", () => {
+    expect(isValidFirestoreDocId("")).toBe(false);
+    expect(isValidFirestoreDocId("a/b")).toBe(false);
+    expect(isValidFirestoreDocId(".")).toBe(false);
+    expect(isValidFirestoreDocId("..")).toBe(false);
+  });
+
+  it("__foo__ の形 (__ で始まり __ で終わる) は使えない", () => {
+    expect(isValidFirestoreDocId("__foo__")).toBe(false);
+    expect(isValidFirestoreDocId("____")).toBe(false);
+    expect(isValidFirestoreDocId("__.__")).toBe(false);
+  });
+
+  it("1500 バイトちょうどは使え、超えると使えない (文字数ではなくバイト数)", () => {
+    expect(isValidFirestoreDocId("a".repeat(1500))).toBe(true);
+    expect(isValidFirestoreDocId("a".repeat(1501))).toBe(false);
+    // 「あ」は UTF-8 で 3 バイト: 500 文字 = 1500 バイト, 501 文字 = 1503 バイト
+    expect(isValidFirestoreDocId("あ".repeat(500))).toBe(true);
+    expect(isValidFirestoreDocId("あ".repeat(501))).toBe(false);
   });
 });

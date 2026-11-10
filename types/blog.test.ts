@@ -124,27 +124,43 @@ describe("parseSharedBlogId", () => {
     expect(parseSharedBlogId([])).toBeNull();
   });
 
-  it("Firestore のパス区切り / を含む ID は null (doc() が例外を投げるため)", () => {
-    expect(parseSharedBlogId("a/b")).toBeNull();
-    expect(parseSharedBlogId(["a/b", "ok"])).toBeNull();
+  it("Firestore の ID として使えるかはここでは判定しない (getPublicBlog 側でまとめて弾く)", () => {
+    expect(parseSharedBlogId("a/b")).toBe("a/b");
+    expect(parseSharedBlogId(["..", "ok"])).toBe("..");
   });
 });
 
 describe("buildXShareUrl", () => {
+  // 実際に共有される URL (/blogs?post=<id>) と同じ形で確認する
+  const shareUrl = `https://lumos-ynu.jp${blogSharePath("abc")}`;
+
   it("本文と URL をクエリに入れた X の投稿画面の URL を作る", () => {
-    const url = new URL(
-      buildXShareUrl("記事タイトル", "https://lumos-ynu.jp/blogs/abc"),
-    );
+    const url = new URL(buildXShareUrl("記事タイトル", shareUrl));
     expect(url.origin + url.pathname).toBe("https://x.com/intent/post");
     expect(url.searchParams.get("text")).toBe("記事タイトル");
-    expect(url.searchParams.get("url")).toBe("https://lumos-ynu.jp/blogs/abc");
+    expect(url.searchParams.get("url")).toBe(shareUrl);
   });
 
   it("& や # を含むタイトルでもクエリが壊れない", () => {
-    const url = new URL(
-      buildXShareUrl("A & B #tag ?q=1", "https://lumos-ynu.jp/blogs/abc"),
-    );
+    const url = new URL(buildXShareUrl("A & B #tag ?q=1", shareUrl));
     expect(url.searchParams.get("text")).toBe("A & B #tag ?q=1");
     expect([...url.searchParams.keys()]).toEqual(["text", "url"]);
+  });
+
+  it("クエリを含む共有 URL も url パラメータの中で壊れない", () => {
+    const url = new URL(buildXShareUrl("記事タイトル", shareUrl));
+    expect(url.searchParams.get("url")).toBe(
+      "https://lumos-ynu.jp/blogs?post=abc",
+    );
+    // post が intent URL 側のパラメータとして漏れていないこと
+    expect([...url.searchParams.keys()]).toEqual(["text", "url"]);
+  });
+
+  it("記号を含む記事 ID の共有 URL も元に戻せる", () => {
+    const tricky = `https://lumos-ynu.jp${blogSharePath("a&b=c#d")}`;
+    const url = new URL(buildXShareUrl("t", tricky));
+    expect(url.searchParams.get("url")).toBe(tricky);
+    const inner = new URL(url.searchParams.get("url")!);
+    expect(inner.searchParams.get("post")).toBe("a&b=c#d");
   });
 });

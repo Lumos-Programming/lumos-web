@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { ExternalLink } from "lucide-react";
-import { getPublicBlog, listPublicBlogs } from "@/lib/blogs";
+import { getPublicBlog, listPublicBlogs, type PublicBlog } from "@/lib/blogs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BlogShareButtons } from "@/components/blogs/blog-share-buttons";
@@ -31,7 +31,16 @@ export async function generateMetadata({
   searchParams,
 }: Props): Promise<Metadata> {
   const sharedId = parseSharedBlogId((await searchParams)[BLOG_SHARE_PARAM]);
-  const blog = sharedId ? await getPublicBlog(sharedId) : null;
+  if (!sharedId) return {};
+
+  let blog: PublicBlog | null;
+  try {
+    blog = await getPublicBlog(sharedId);
+  } catch (error) {
+    // OGP が出せなくても一覧は表示できるので、既定の OGP に戻す
+    console.error("Failed to load shared blog for metadata:", error);
+    return {};
+  }
   if (!blog) return {};
 
   const title = `${blog.title} | Lumos ブログ`;
@@ -44,6 +53,11 @@ export async function generateMetadata({
   return {
     title,
     description,
+    // /blogs?post=<id> は中身が一覧と同じなので、検索エンジンには /blogs 1 つとして扱わせる。
+    // og:url は X のカードのリンク先なので共有 URL のままにする
+    alternates: {
+      canonical: `${SITE_URL}/blogs`,
+    },
     openGraph: {
       type: "article",
       title,

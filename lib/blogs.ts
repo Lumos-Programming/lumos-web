@@ -144,8 +144,21 @@ export async function listPublicBlogs(): Promise<PublicBlog[]> {
  * id は URL から来るので、Firestore のパス区切り "/" を含むものは doc() に渡さない
  * (渡すと例外になり 404 ではなく 500 になる)。
  */
+/**
+ * Firestore のドキュメント ID として使える文字列か。
+ * 使えない ID を doc() に渡すと例外になるため、URL から来た ID は問い合わせる前にここで弾く。
+ * ルール: 空でない / "/" を含まない / "." や ".." だけではない / "__foo__" の形ではない / 1500 バイト以下
+ * (https://firebase.google.com/docs/firestore/quotas#collections_documents_and_fields)
+ */
+export function isValidFirestoreDocId(id: string): boolean {
+  if (!id || id.includes("/")) return false;
+  if (id === "." || id === "..") return false;
+  if (/^__.*__$/.test(id)) return false;
+  return Buffer.byteLength(id, "utf8") <= 1500;
+}
+
 export async function getPublicBlog(id: string): Promise<PublicBlog | null> {
-  if (!id || id.includes("/")) return null;
+  if (!isValidFirestoreDocId(id)) return null;
 
   const db = getDb();
   const snap = await db.collection("blogs").doc(id).get();
