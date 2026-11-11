@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EventCalendar } from "@/components/events/event-calendar";
 import { EventItem } from "@/components/events/event-item";
+import { CalendarSubscription } from "@/components/events/calendar-subscription";
 
 // イベントは運営がいつでも追加するので、リクエストごとに Firestore を読む
 export const dynamic = "force-dynamic";
@@ -46,6 +47,10 @@ export default async function EventsPage({
           ) : undefined
         }
       />
+
+      <div className="mb-8">
+        <CalendarSubscription />
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         {/* 月が変わったら日付の選択状態を持ち越さない */}
