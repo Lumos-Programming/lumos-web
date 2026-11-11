@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { Settings2 } from "lucide-react";
 import { isAdmin } from "@/lib/auth";
 import { listEventsInMonth, listUpcomingEvents } from "@/lib/events";
@@ -15,6 +16,16 @@ export const dynamic = "force-dynamic";
 
 const UPCOMING_LIMIT = 5;
 
+function getCalendarUrl(requestHeaders: Headers) {
+  const host =
+    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+  const protocol =
+    requestHeaders.get("x-forwarded-proto") ??
+    (process.env.NODE_ENV === "development" ? "http" : "https");
+
+  return `${protocol}://${host}/api/events/calendar.ics`;
+}
+
 export default async function EventsPage({
   searchParams,
 }: {
@@ -22,6 +33,7 @@ export default async function EventsPage({
 }) {
   const { m } = await searchParams;
   const today = todayJstDateKey();
+  const calendarUrl = getCalendarUrl(await headers());
   // 不正な月指定は黙って今月に倒す (URL を手で書き換えた場合)
   const month = m && isMonthKey(m) ? m : monthKeyOf(today);
 
@@ -49,7 +61,7 @@ export default async function EventsPage({
       />
 
       <div className="mb-8">
-        <CalendarSubscription />
+        <CalendarSubscription calendarUrl={calendarUrl} />
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">

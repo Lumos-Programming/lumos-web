@@ -5,14 +5,12 @@ import { CalendarPlus, Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-const CALENDAR_URL = "https://lumos-ynu.jp/api/events/calendar.ics";
-const WEBCAL_URL = "webcal://lumos-ynu.jp/api/events/calendar.ics";
-
-export function CalendarSubscription() {
+export function CalendarSubscription({ calendarUrl }: { calendarUrl: string }) {
   const [copied, setCopied] = useState(false);
+  const webcalUrl = calendarUrl.replace(/^https?:/, "webcal:");
 
   const copyUrl = async () => {
-    await navigator.clipboard.writeText(CALENDAR_URL);
+    await navigator.clipboard.writeText(calendarUrl);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2_000);
   };
@@ -28,7 +26,7 @@ export function CalendarSubscription() {
         </div>
         <div className="flex shrink-0 gap-2">
           <Button asChild size="sm">
-            <a href={WEBCAL_URL}>
+            <a href={webcalUrl}>
               <CalendarPlus className="h-4 w-4" />
               WebCal で登録
             </a>
