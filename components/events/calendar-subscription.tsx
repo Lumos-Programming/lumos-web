@@ -28,7 +28,7 @@ export function CalendarSubscription({ calendarUrl }: { calendarUrl: string }) {
           <Button asChild size="sm">
             <a href={webcalUrl}>
               <CalendarPlus className="h-4 w-4" />
-              WebCal で登録
+              カレンダーに登録
             </a>
           </Button>
           <Button variant="outline" size="sm" onClick={copyUrl}>
