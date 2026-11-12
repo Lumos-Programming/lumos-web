@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useReducer, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,10 +22,9 @@ import {
 } from "@/types/blog";
 import { supportsMetadataAutofill } from "@/lib/blog-metadata";
 import {
-  applyAutofill,
-  clearAutofilled,
-  toAutofillValues,
-  type AutofillValues,
+  autofillReducer,
+  initialAutofillState,
+  shouldFetchOnBlur,
 } from "@/lib/blog-autofill";
 
 type BlogFormValues = {
@@ -77,9 +76,6 @@ function toFormValues(blog: Blog): BlogFormValues {
   };
 }
 
-/** 記事情報の自動取得の状態。notFound のときは手動入力を促す */
-type AutofillStatus = "idle" | "loading" | "notFound";
-
 interface BlogManagerProps {
   /** サーバーで取得した自分の記事。以降の増減はこのコンポーネントが持つ */
   myBlogs: Blog[];
@@ -89,57 +85,53 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
   const router = useRouter();
   const [blogs, setBlogs] = useState(myBlogs);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<BlogFormValues>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [autofillStatus, setAutofillStatus] = useState<AutofillStatus>("idle");
-  /** 最後に自動で入れた値。手で入れた値と見分けるために持つ */
-  const [autoFilled, setAutoFilled] = useState<AutofillValues>({});
+  /** フォームの値と、記事情報の自動取得の状態 (どの欄に自動で入れたか・取得中か) */
+  const [autofillState, dispatch] = useReducer(
+    autofillReducer<BlogFormValues>,
+    EMPTY_FORM,
+    initialAutofillState,
+  );
+  const { form, status: autofillStatus } = autofillState;
+  /** 取得ごとに振る番号。途中で URL が変わったときに古い結果を見分けるのに使う */
+  const requestCounter = useRef(0);
+  const setFields = (fields: Partial<Omit<BlogFormValues, "url">>) =>
+    dispatch({ type: "fieldsChanged", fields });
 
   /**
    * 記事URLからタイトル・説明・公開日・媒体・サムネイル画像URLを取得して欄に入れる。
    * overwrite が false のときは空欄にだけ入れる (手で入れた値を消さない)。
    */
-  const autofill = async (url: string, overwrite: boolean) => {
-    if (!supportsMetadataAutofill(url)) return;
-    setAutofillStatus("loading");
+  const autofill = async (overwrite: boolean) => {
+    if (!supportsMetadataAutofill(form.url)) return;
+    const requestId = ++requestCounter.current;
+    dispatch({ type: "fetchStarted", requestId });
     let metadata: unknown = null;
     try {
       const res = await fetch("/api/blogs/metadata", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: form.url }),
       });
       const data = await res.json().catch(() => null);
       if (res.ok) metadata = data?.metadata ?? null;
     } catch {
       // 通信に失敗しても、ドメインで決まる媒体だけは入れる
     }
-    const values = toAutofillValues(url, metadata);
-    // 取得中に記事URLが書き換えられていたら、古い結果は捨てる
-    setForm((prev) => {
-      if (prev.url !== url) return prev;
-      const result = applyAutofill(prev, values, overwrite);
-      setAutoFilled(result.filled);
-      return result.form;
-    });
-    setAutofillStatus(metadata ? "idle" : "notFound");
+    dispatch({ type: "fetchFinished", requestId, metadata, overwrite });
   };
 
   const startEdit = (blog: Blog) => {
     setEditingId(blog.id);
-    setForm(toFormValues(blog));
+    dispatch({ type: "reset", form: toFormValues(blog) });
     setError(null);
-    setAutofillStatus("idle");
-    setAutoFilled({});
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setForm(EMPTY_FORM);
+    dispatch({ type: "reset", form: EMPTY_FORM });
     setError(null);
-    setAutofillStatus("idle");
-    setAutoFilled({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -266,18 +258,12 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
               <Input
                 type="url"
                 value={form.url}
-                onChange={(e) => {
-                  // 自動で入れた値は前の記事のものなので消す。手で入れた値は残す
-                  setForm(
-                    clearAutofilled(
-                      { ...form, url: e.target.value },
-                      autoFilled,
-                    ),
-                  );
-                  setAutoFilled({});
-                  setAutofillStatus("idle");
+                onChange={(e) =>
+                  dispatch({ type: "urlChanged", url: e.target.value })
+                }
+                onBlur={() => {
+                  if (shouldFetchOnBlur(autofillState)) autofill(false);
                 }}
-                onBlur={() => autofill(form.url, false)}
                 placeholder="https://qiita.com/..."
                 required
               />
@@ -288,7 +274,10 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
                     variant="outline"
                     size="sm"
                     disabled={autofillStatus === "loading"}
-                    onClick={() => autofill(form.url, true)}
+                    // 記事URLの欄からフォーカスを移さない。blur で取得が始まると
+                    // ボタンが disabled になり、このクリックが届かなくなるため
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => autofill(true)}
                   >
                     記事の情報を取り直す
                   </Button>
@@ -306,7 +295,7 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
               <label className="text-sm font-medium">タイトル</label>
               <Input
                 value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                onChange={(e) => setFields({ title: e.target.value })}
                 required
               />
             </div>
@@ -314,9 +303,7 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
               <label className="text-sm font-medium">説明（任意）</label>
               <Textarea
                 value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
+                onChange={(e) => setFields({ description: e.target.value })}
                 rows={3}
               />
             </div>
@@ -326,9 +313,7 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
                 <Input
                   type="date"
                   value={form.publishedAt}
-                  onChange={(e) =>
-                    setForm({ ...form, publishedAt: e.target.value })
-                  }
+                  onChange={(e) => setFields({ publishedAt: e.target.value })}
                   required
                 />
               </div>
@@ -337,8 +322,7 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
                 <Select
                   value={form.platformPreset}
                   onValueChange={(v) =>
-                    setForm({
-                      ...form,
+                    setFields({
                       platformPreset: v,
                       // 「その他」以外に切り替えたら自由記述は捨てる
                       platformOther:
@@ -364,7 +348,7 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
                   <Input
                     value={form.platformOther}
                     onChange={(e) =>
-                      setForm({ ...form, platformOther: e.target.value })
+                      setFields({ platformOther: e.target.value })
                     }
                     placeholder="媒体名を入力（例: はてなブログ）"
                     aria-label="媒体名"
@@ -379,9 +363,7 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
               <Input
                 type="url"
                 value={form.thumbnailUrl}
-                onChange={(e) =>
-                  setForm({ ...form, thumbnailUrl: e.target.value })
-                }
+                onChange={(e) => setFields({ thumbnailUrl: e.target.value })}
                 placeholder="https://..."
               />
             </div>

@@ -3,7 +3,10 @@
  * フォームの state を直接触らない純粋関数にして、コンポーネントから呼ぶ。
  */
 
-import { detectBlogPlatform } from "@/lib/blog-metadata";
+import {
+  detectBlogPlatform,
+  supportsMetadataAutofill,
+} from "@/lib/blog-metadata";
 
 /** 自動入力する欄。platformPreset は媒体のセレクトの値 */
 export const AUTOFILL_KEYS = [
@@ -81,4 +84,99 @@ export function clearAutofilled<T extends AutofillForm>(
     }
   }
   return next;
+}
+
+/** 記事情報の自動取得の状態。notFound のときは手動入力を促す */
+export type AutofillStatus = "idle" | "loading" | "notFound";
+
+/** 記事URLの欄を含むフォーム */
+type AutofillTarget = AutofillForm & { url: string };
+
+export interface AutofillState<T extends AutofillTarget> {
+  form: T;
+  /** 自動で入れた値。手で入れた値と見分けて、記事URLを変えたときに消すのに使う */
+  autoFilled: AutofillValues;
+  status: AutofillStatus;
+  /** 最後に取得を終えた記事URL。同じURLで blur し直しても取り直さないために持つ */
+  fetchedUrl: string | null;
+  /** 結果を待っている取得。これと違う取得の結果は古いものとして捨てる */
+  pendingRequestId: number | null;
+}
+
+export type AutofillAction<T extends AutofillTarget> =
+  /** 編集の開始・終了や登録後に、フォームを入れ替える */
+  | { type: "reset"; form: T }
+  /** 記事URL以外の欄を手で書き換えた */
+  | { type: "fieldsChanged"; fields: Partial<Omit<T, "url">> }
+  | { type: "urlChanged"; url: string }
+  | { type: "fetchStarted"; requestId: number }
+  | {
+      type: "fetchFinished";
+      requestId: number;
+      /** API の応答の metadata (中身は未検証)。取れなかったときは null */
+      metadata: unknown;
+      overwrite: boolean;
+    };
+
+export function initialAutofillState<T extends AutofillTarget>(
+  form: T,
+): AutofillState<T> {
+  return {
+    form,
+    autoFilled: {},
+    status: "idle",
+    fetchedUrl: null,
+    pendingRequestId: null,
+  };
+}
+
+/**
+ * 記事登録フォームの値と、自動入力の状態をまとめて更新する。
+ * 取得の開始と終了を別の action にして、途中で URL が変わったときは古い結果を捨てる。
+ */
+export function autofillReducer<T extends AutofillTarget>(
+  state: AutofillState<T>,
+  action: AutofillAction<T>,
+): AutofillState<T> {
+  switch (action.type) {
+    case "reset":
+      return initialAutofillState(action.form);
+    case "fieldsChanged":
+      return { ...state, form: { ...state.form, ...action.fields } };
+    case "urlChanged":
+      // 自動で入れた値は前の記事のものなので消す。手で入れた値は残す
+      return initialAutofillState(
+        clearAutofilled({ ...state.form, url: action.url }, state.autoFilled),
+      );
+    case "fetchStarted":
+      return {
+        ...state,
+        status: "loading",
+        pendingRequestId: action.requestId,
+      };
+    case "fetchFinished": {
+      if (action.requestId !== state.pendingRequestId) return state;
+      const values = toAutofillValues(state.form.url, action.metadata);
+      const result = applyAutofill(state.form, values, action.overwrite);
+      return {
+        form: result.form,
+        // 今回入れなかった欄も、前に自動で入れた値なら記録を残す
+        autoFilled: { ...state.autoFilled, ...result.filled },
+        status: action.metadata ? "idle" : "notFound",
+        fetchedUrl: state.form.url,
+        pendingRequestId: null,
+      };
+    }
+  }
+}
+
+/** 記事URLの欄から離れたときに取得するか。取得中や、取得済みの URL では取り直さない */
+export function shouldFetchOnBlur<T extends AutofillTarget>(
+  state: AutofillState<T>,
+): boolean {
+  return (
+    state.pendingRequestId === null &&
+    state.fetchedUrl !== state.form.url &&
+    supportsMetadataAutofill(state.form.url)
+  );
 }
