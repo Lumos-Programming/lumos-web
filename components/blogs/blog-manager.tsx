@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CopyBlogLinkButton } from "@/components/blogs/blog-share-buttons";
 import {
   BLOG_PLATFORM_OTHER,
   BLOG_PLATFORM_PRESETS,
@@ -181,7 +182,12 @@ export function BlogManager({ myBlogs }: BlogManagerProps) {
                       {blog.platform ? ` ・ ${blog.platform}` : ""}
                     </p>
                   </div>
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex flex-wrap justify-end gap-2 shrink-0">
+                    <CopyBlogLinkButton
+                      blogId={blog.id}
+                      size="sm"
+                      label="共有URLをコピー"
+                    />
                     <Button
                       type="button"
                       variant="outline"
