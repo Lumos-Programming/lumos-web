@@ -3,10 +3,7 @@
  * フォームの state を直接触らない純粋関数にして、コンポーネントから呼ぶ。
  */
 
-import {
-  detectBlogPlatform,
-  supportsMetadataAutofill,
-} from "@/lib/blog-metadata";
+import { detectBlogPlatform, supportsMetadataAutofill } from "@/lib/blog-url";
 
 /** 自動入力する欄。platformPreset は媒体のセレクトの値 */
 export const AUTOFILL_KEYS = [

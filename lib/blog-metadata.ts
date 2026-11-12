@@ -8,11 +8,17 @@
  *   RSS に載るのは直近 10 件程度なので、古い記事は取れない (null)。
  * 媒体ごとに出している項目が違うので、取れなかった項目は null のまま返す。
  *
- * サーバーから外部へリクエストするので、取得先は下の許可ホストに限る (SSRF 対策)。
+ * サーバーから外部へリクエストするので、取得先は lib/blog-url.ts の許可ホストに限る (SSRF 対策)。
+ * クライアントに入らないよう server-only にしている (URL の判定だけなら lib/blog-url.ts を使う)。
  * リダイレクトも自前で追い、行き先が許可ホストでなければそこで打ち切る。
  */
 
-import type { BlogPlatformPreset } from "@/types/blog";
+import "server-only";
+import {
+  isAllowedHost,
+  parseHttpsUrl,
+  resolveMetadataSource,
+} from "@/lib/blog-url";
 
 export interface BlogMetadata {
   thumbnailUrl: string | null;
@@ -22,105 +28,12 @@ export interface BlogMetadata {
   publishedAt: string | null;
 }
 
-export type BlogMetadataSource =
-  | { kind: "ogp"; pageUrl: string }
-  | { kind: "medium-rss"; feedUrl: string; postId: string };
-
-const OGP_HOSTS = new Map<string, BlogPlatformPreset>([
-  ["qiita.com", "Qiita"],
-  ["zenn.dev", "Zenn"],
-]);
-
 const FETCH_TIMEOUT_MS = 5000;
 const MAX_REDIRECTS = 3;
 /** 記事ページ・RSS とも数百 KB 程度。これを超えたら読むのをやめる */
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const USER_AGENT =
   "LumosWebBot/1.0 (+https://github.com/Lumos-Programming/lumos-web)";
-
-function isOgpHost(hostname: string): boolean {
-  return OGP_HOSTS.has(hostname);
-}
-
-function isMediumHost(hostname: string): boolean {
-  return hostname === "medium.com" || hostname.endsWith(".medium.com");
-}
-
-function isAllowedHost(hostname: string): boolean {
-  return isOgpHost(hostname) || isMediumHost(hostname);
-}
-
-function parseHttpsUrl(value: string): URL | null {
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" ? url : null;
-  } catch {
-    return null;
-  }
-}
-
-/** 記事URLのドメインから媒体を決める。対応外なら null (フォームでは「その他」のまま) */
-export function detectBlogPlatform(
-  articleUrl: string,
-): BlogPlatformPreset | null {
-  const url = parseHttpsUrl(articleUrl);
-  if (!url) return null;
-  if (isMediumHost(url.hostname)) return "Medium";
-  return OGP_HOSTS.get(url.hostname) ?? null;
-}
-
-/**
- * Medium の記事 ID を取り出す。記事URLは `.../タイトル-<16進のID>` か `/p/<ID>` の形。
- * RSS の guid は `https://medium.com/p/<ID>` なので、これで記事を突き合わせる。
- */
-function extractMediumPostId(url: URL): string | null {
-  const segments = url.pathname.split("/").filter(Boolean);
-  if (segments[0] === "p" && segments[1]) {
-    return /^[0-9a-f]{8,}$/.test(segments[1]) ? segments[1] : null;
-  }
-  const last = segments[segments.length - 1] ?? "";
-  return last.match(/-([0-9a-f]{8,})$/)?.[1] ?? null;
-}
-
-/**
- * Medium の RSS の URL を決める。
- * - `medium.com/@user/...` → `medium.com/feed/@user`
- * - `medium.com/<publication>/...` → `medium.com/feed/<publication>`
- * - `user.medium.com/...` → `user.medium.com/feed`
- */
-function toMediumFeedUrl(url: URL): string | null {
-  if (url.hostname !== "medium.com") {
-    return `https://${url.hostname}/feed`;
-  }
-  const first = url.pathname.split("/").filter(Boolean)[0];
-  // `/p/<ID>` だけでは書いた人も媒体も分からない
-  if (!first || first === "p") return null;
-  return `https://medium.com/feed/${first}`;
-}
-
-/** 記事URLから取得方法を決める。対応していない媒体・不正なURLは null */
-export function resolveMetadataSource(
-  articleUrl: string,
-): BlogMetadataSource | null {
-  const url = parseHttpsUrl(articleUrl);
-  if (!url) return null;
-
-  if (isOgpHost(url.hostname)) {
-    return { kind: "ogp", pageUrl: url.toString() };
-  }
-  if (isMediumHost(url.hostname)) {
-    const postId = extractMediumPostId(url);
-    const feedUrl = toMediumFeedUrl(url);
-    if (!postId || !feedUrl) return null;
-    return { kind: "medium-rss", feedUrl, postId };
-  }
-  return null;
-}
-
-/** 自動取得に対応している記事URLか。フォームで取得を試すかどうかの判定に使う */
-export function supportsMetadataAutofill(articleUrl: string): boolean {
-  return resolveMetadataSource(articleUrl) !== null;
-}
 
 function decodeHtmlEntities(value: string): string {
   return value
@@ -142,15 +55,13 @@ function toText(raw: string | undefined): string | null {
   return text === "" ? null : text;
 }
 
-/** 取り出した画像URLが http(s) の絶対URLのときだけ採用する */
+/** 取り出した画像URLが https の絶対URLのときだけ採用する (サイトは https なので http の画像は表示できない) */
 function toImageUrl(raw: string | undefined): string | null {
   const decoded = toText(raw);
   if (!decoded) return null;
   try {
     const url = new URL(decoded);
-    return url.protocol === "https:" || url.protocol === "http:"
-      ? decoded
-      : null;
+    return url.protocol === "https:" ? decoded : null;
   } catch {
     return null;
   }
@@ -310,6 +221,8 @@ async function fetchAllowedText(
   fetchImpl: typeof fetch,
 ): Promise<string | null> {
   let current = startUrl;
+  // リダイレクトを追っても延びないよう、期限は全体で 1 つにする
+  const signal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const url = parseHttpsUrl(current);
     if (!url || !isAllowedHost(url.hostname)) return null;
@@ -317,7 +230,7 @@ async function fetchAllowedText(
     const res = await fetchImpl(url, {
       redirect: "manual",
       headers: { "User-Agent": USER_AGENT },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      signal,
     });
     if (res.status >= 300 && res.status < 400) {
       const location = res.headers.get("location");

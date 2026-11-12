@@ -20,7 +20,7 @@ import {
   toPlatformSelection,
   type Blog,
 } from "@/types/blog";
-import { supportsMetadataAutofill } from "@/lib/blog-metadata";
+import { supportsMetadataAutofill } from "@/lib/blog-url";
 import {
   autofillReducer,
   initialAutofillState,
