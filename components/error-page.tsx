@@ -12,6 +12,8 @@ export type ErrorPageConfig = {
   redirectTo?: string;
   /** カウントダウン秒数（デフォルト: 10） */
   redirectSeconds?: number;
+  /** 説明文の下に出すボタン（例: もう一度ログインする） */
+  action?: { label: string; href: string };
 };
 
 export default function ErrorPage({ config }: { config: ErrorPageConfig }) {
@@ -113,6 +115,21 @@ export default function ErrorPage({ config }: { config: ErrorPageConfig }) {
             </span>
           ))}
         </p>
+
+        {config.action && (
+          <div
+            className="mt-6 animate-[fade-in-up_0.5s_ease_both]"
+            style={{ animationDelay: `${countdownDelay}s` }}
+          >
+            {/* /login はルートハンドラなので、クライアント遷移ではなく通常のリンクにする */}
+            <a
+              href={config.action.href}
+              className="inline-flex items-center justify-center rounded-full border border-[#c8cae0]/40 px-5 py-2 text-sm font-medium text-[#e8e9f5] transition-colors hover:bg-white/10"
+            >
+              {config.action.label}
+            </a>
+          </div>
+        )}
 
         {/* カウントダウン */}
         {config.redirectTo && (
