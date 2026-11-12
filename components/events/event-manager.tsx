@@ -1,8 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import {
+  ClipboardCheck,
+  ClipboardList,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -120,6 +128,7 @@ export function EventManager({ initialEvents }: EventManagerProps) {
             id: data.id,
             source: "manual",
             sourceRef: null,
+            survey: null,
             createdBy: "",
             createdAt: null,
             updatedAt: null,
@@ -157,6 +166,23 @@ export function EventManager({ initialEvents }: EventManagerProps) {
   const inputType = form.allDay ? "date" : "datetime-local";
   const actionsFor = (event: LumosEvent) => (
     <>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={event.survey ? "アンケート (作成済み)" : "アンケートを作成"}
+        title={event.survey ? "アンケート (作成済み)" : "アンケートを作成"}
+        className={event.survey ? "text-purple-600" : undefined}
+        asChild
+      >
+        <Link href={`/internal/admin/events/${event.id}/survey`}>
+          <ClipboardList className="h-4 w-4" />
+        </Link>
+      </Button>
+      <Button variant="ghost" size="icon" aria-label="出席登録" asChild>
+        <Link href={`/internal/admin/events/${event.id}/attendance`}>
+          <ClipboardCheck className="h-4 w-4" />
+        </Link>
+      </Button>
       <Button
         variant="ghost"
         size="icon"

@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { Settings2 } from "lucide-react";
-import { isAdmin } from "@/lib/auth";
+import { CheckCircle2, ClipboardList, Settings2 } from "lucide-react";
+import { auth, isAdmin } from "@/lib/auth";
 import { listEventsInMonth, listUpcomingEvents } from "@/lib/events";
 import { isMonthKey, monthKeyOf, todayJstDateKey } from "@/lib/events-format";
+import { isSurveyOpen, listAnsweredEventIds } from "@/lib/survey";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EventCalendar } from "@/components/events/event-calendar";
 import { EventItem } from "@/components/events/event-item";
+import type { LumosEvent } from "@/types/event";
 
 // イベントは運営がいつでも追加するので、リクエストごとに Firestore を読む
 export const dynamic = "force-dynamic";
@@ -24,11 +26,45 @@ export default async function EventsPage({
   // 不正な月指定は黙って今月に倒す (URL を手で書き換えた場合)
   const month = m && isMonthKey(m) ? m : monthKeyOf(today);
 
-  const [monthEvents, upcoming, admin] = await Promise.all([
+  const [monthEvents, upcoming, admin, session] = await Promise.all([
     listEventsInMonth(month),
     listUpcomingEvents(UPCOMING_LIMIT),
     isAdmin(),
+    auth(),
   ]);
+
+  // 回答受付中のアンケートがあるイベントだけ、回答済みかを調べる
+  const now = new Date();
+  const surveyEvents = upcoming.filter((e) => isSurveyOpen(e, now));
+  const answered = new Set(
+    session?.user?.id
+      ? await listAnsweredEventIds(
+          session.user.id,
+          surveyEvents.map((e) => e.id),
+        )
+      : [],
+  );
+
+  const surveyAction = (event: LumosEvent) => {
+    if (!isSurveyOpen(event, now)) return undefined;
+    const done = answered.has(event.id);
+    return (
+      <div className="flex flex-col items-end gap-1">
+        {done && (
+          <span className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            回答済み
+          </span>
+        )}
+        <Button asChild variant={done ? "outline" : "default"} size="sm">
+          <Link href={`/internal/events/${event.id}/survey`}>
+            <ClipboardList className="h-4 w-4" />
+            {done ? "回答を編集" : "アンケートに回答"}
+          </Link>
+        </Button>
+      </div>
+    );
+  };
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto animate-spring-up">
@@ -65,7 +101,13 @@ export default async function EventsPage({
               </CardContent>
             </Card>
           ) : (
-            upcoming.map((event) => <EventItem key={event.id} event={event} />)
+            upcoming.map((event) => (
+              <EventItem
+                key={event.id}
+                event={event}
+                actions={surveyAction(event)}
+              />
+            ))
           )}
         </aside>
       </div>

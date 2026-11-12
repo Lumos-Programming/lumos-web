@@ -15,6 +15,12 @@ export const EVENT_API_RESPONSES = {
       { error: "イベントを編集する権限がありません" },
       { status: 403 },
     ),
+  /** 退会済み (メンバー向けの操作) */
+  optedOut: () =>
+    NextResponse.json(
+      { error: "退会済みアカウントでは操作できません" },
+      { status: 403 },
+    ),
   /** 更新系の成功 */
   success: () => NextResponse.json({ ok: true }),
   /** ?month= の形式不正 */
@@ -31,8 +37,8 @@ export const EVENT_API_RESPONSES = {
  */
 export function toEventErrorResponse(error: unknown, context: string) {
   if (error instanceof EventError) {
-    const { status, message } = EVENT_ERROR_RESPONSES[error.code];
-    return NextResponse.json({ error: message }, { status });
+    const { status } = EVENT_ERROR_RESPONSES[error.code];
+    return NextResponse.json({ error: error.message }, { status });
   }
   console.error(`${context}:`, error);
   return NextResponse.json(

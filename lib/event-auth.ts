@@ -13,3 +13,12 @@ export function isEventEditor(session: Session | null): boolean {
   const user = session?.user;
   return Boolean(user?.id) && user?.optedOut !== true && user?.isAdmin === true;
 }
+
+/**
+ * イベントのアンケートに回答できるか。ログイン済みで退会していないメンバー。
+ * 退会済みはメンバー画面からは redirect されるが API には効かないので、ここで弾く。
+ */
+export function isEventParticipant(session: Session | null): boolean {
+  const user = session?.user;
+  return Boolean(user?.id) && user?.optedOut !== true;
+}

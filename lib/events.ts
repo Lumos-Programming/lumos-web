@@ -95,6 +95,7 @@ function toLumosEvent(
     location: data.location ?? "",
     source: data.source ?? "manual",
     sourceRef: data.sourceRef ?? null,
+    survey: data.survey ?? null,
     createdBy: data.createdBy ?? "",
     createdAt: toIso(data.createdAt),
     updatedAt: toIso(data.updatedAt),
@@ -269,5 +270,6 @@ export async function deleteEvent(id: string): Promise<void> {
   if (!(await ref.get()).exists) {
     throw new EventError(EVENT_ERROR_CODES.NOT_FOUND);
   }
-  await ref.delete();
+  // 出席記録などのサブコレクションも一緒に消す (doc.delete() だけだと残る)
+  await db.recursiveDelete(ref);
 }
