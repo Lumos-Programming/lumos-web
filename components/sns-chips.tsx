@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
+import { AvatarImage, DEFAULT_AVATAR_SRC } from "@/components/avatar-image";
 import { normalizeLinkedInUrl } from "@/lib/linkedin";
 
 export interface SnsEntry {
@@ -143,11 +143,11 @@ function LinePopup({
         </button>
         {entry.avatarUrl ? (
           <div className="w-24 h-24 relative rounded-full overflow-hidden ring-4 ring-[#06C755]/20">
-            <Image
+            <AvatarImage
               src={entry.avatarUrl}
               alt={entry.username}
-              fill
               className="object-cover"
+              fallbackSrc={DEFAULT_AVATAR_SRC}
             />
           </div>
         ) : (
@@ -178,7 +178,7 @@ export function SnsChip({ entry }: { entry: SnsEntry }) {
       <brand.Logo className="w-3.5 h-3.5 flex-shrink-0" />
       {entry.avatarUrl && (
         <div className="w-4 h-4 relative rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/30">
-          <Image src={entry.avatarUrl} alt="" fill className="object-cover" />
+          <AvatarImage src={entry.avatarUrl} alt="" className="object-cover" />
         </div>
       )}
       <span className="text-[11px] font-medium leading-none truncate max-w-[100px]">
