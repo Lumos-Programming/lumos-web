@@ -313,6 +313,26 @@ export async function updateMemberSns(
     });
 }
 
+/**
+ * GitHub の数値ユーザー ID から、その GitHub アカウントを連携しているメンバーの
+ * Discord ID を返す。GitHub のユーザー名は変更可能なため、Webhook などで
+ * 受け取った GitHub ユーザーとメンバーの対応付けには必ずこちらを使う。
+ * 退会済み・サブアカウントの doc は対象外。見つからなければ null。
+ */
+export async function getMemberIdByGithubId(
+  githubId: string | number,
+): Promise<string | null> {
+  const id = String(githubId).trim();
+  if (!/^\d+$/.test(id)) return null;
+  const db = getDb();
+  const snap = await db.collection("members").where("githubId", "==", id).get();
+  const doc = snap.docs.find((d) => {
+    const data = d.data() as Partial<MemberDocument>;
+    return data.optedOut !== true && data.isSubAccount !== true;
+  });
+  return doc?.id ?? null;
+}
+
 export async function deleteMemberSnsField(
   discordId: string,
   provider: "github" | "x" | "line" | "linkedin",
