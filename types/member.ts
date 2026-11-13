@@ -1,4 +1,5 @@
 import type { ISODateString } from "@/lib/date";
+import type { GithubContributions } from "@/types/github-contributions";
 
 export type Member = {
   id: string; // discordId
@@ -31,6 +32,7 @@ export type Member = {
   ringColor?: string; // リングカラーキー
   interests?: string[]; // 興味分野タグ
   topInterests?: string[]; // 一覧表示用Top 3
+  githubContributions?: GithubContributions; // GitHub の草（social.github が見える人だけ）
 };
 
 // リングカラーパレット定数（Tailwind content scan 対象のためここに定義）
