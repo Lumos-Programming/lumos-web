@@ -1,6 +1,7 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { z } from "zod";
 import { getDb } from "@/lib/firebase";
+import { pointDocument, pointKeys, pointRef } from "@/lib/points";
 import {
   getMember,
   isMemberOptedOut,
@@ -198,7 +199,21 @@ export async function createBlog(
   if (input.thumbnailUrl) data.thumbnailUrl = input.thumbnailUrl;
   if (input.platform) data.platform = input.platform;
 
-  await ref.set(data);
+  // 記事とポイントを同時に書く (片方だけ残らないようにする)
+  const key = pointKeys.blogPublished(ref.id);
+  const batch = db.batch();
+  batch.set(ref, data);
+  batch.set(
+    pointRef(key),
+    pointDocument({
+      key,
+      memberId: authorId,
+      reason: "blog_published",
+      description: input.title,
+      sourceUrl: input.url,
+    }),
+  );
+  await batch.commit();
   return toBlog(ref.id, data);
 }
 
@@ -234,5 +249,9 @@ export async function deleteBlog(id: string, authorId: string): Promise<void> {
   if (snap.data()?.authorId !== authorId)
     throw new BlogError(BLOG_ERROR_CODES.FORBIDDEN);
 
-  await ref.delete();
+  // 削除した記事のポイントは取り消す (登録・削除の繰り返しで増えないように)
+  const batch = db.batch();
+  batch.delete(ref);
+  batch.delete(pointRef(pointKeys.blogPublished(id)));
+  await batch.commit();
 }
