@@ -18,6 +18,8 @@ import {
   RefreshCw,
   CalendarClock,
   Wrench,
+  Coins,
+  Ticket,
 } from "lucide-react";
 import { isProduction } from "@/lib/env";
 import { signOut } from "next-auth/react";
@@ -50,6 +52,8 @@ const NAV_ITEMS = [
   { href: "/internal/birthdays", icon: Cake, label: "誕生日" },
   { href: "/internal/profile", icon: UserCircle, label: "プロフィール" },
   { href: "/internal/blogs", icon: BookOpen, label: "記事管理" },
+  { href: "/internal/points", icon: Coins, label: "ポイント" },
+  { href: "/internal/lottery", icon: Ticket, label: "宝くじ" },
   { href: "/internal/settings", icon: Settings, label: "設定" },
 ];
 

@@ -62,6 +62,7 @@ export const EVENT_ERROR_CODES = {
   INVALID_END_AT: "INVALID_END_AT",
   END_BEFORE_START: "END_BEFORE_START",
   NOT_FOUND: "NOT_FOUND",
+  MEMBER_NOT_FOUND: "MEMBER_NOT_FOUND",
 } as const;
 export type EventErrorCode =
   (typeof EVENT_ERROR_CODES)[keyof typeof EVENT_ERROR_CODES];
@@ -80,6 +81,7 @@ export const EVENT_ERROR_RESPONSES: Record<
     message: "終了日時は開始日時より後にしてください",
   },
   NOT_FOUND: { status: 404, message: "イベントが見つかりません" },
+  MEMBER_NOT_FOUND: { status: 404, message: "メンバーが見つかりません" },
 };
 
 export class EventError extends Error {
@@ -90,4 +92,26 @@ export class EventError extends Error {
     this.name = "EventError";
     this.code = code;
   }
+}
+
+/**
+ * イベントの出席記録 1 件 (events/{eventId}/attendances/{memberId})。
+ * 出席は当日に運営が会場で確認して登録する。事前のアンケート回答とは別物。
+ */
+export interface EventAttendance {
+  /** 出席したメンバーの Discord ID (= ドキュメント ID) */
+  memberId: string;
+  /** 登録した運営の Discord ID */
+  recordedBy: string;
+  recordedAt: string | null;
+}
+
+/** 出席登録画面で選べるメンバー。運営だけが見るので本名も含める */
+export interface AttendanceCandidate {
+  id: string;
+  /** 「姓 名」。未入力なら空文字 */
+  fullName: string;
+  nickname: string;
+  discordUsername: string;
+  avatar: string;
 }

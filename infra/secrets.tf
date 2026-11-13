@@ -17,7 +17,8 @@ locals {
     "line-channel-access-token",
     "line-bot-friend-url",
     "admin-notification-channel-webhook",
-    "cron-secret"
+    "cron-secret",
+    "github-webhook-secret"
   ]
 
   # Build a flat map: "github-oauth-secret-dev" => { secret_suffix, env }
@@ -69,4 +70,23 @@ resource "google_secret_manager_secret_version" "cron_secret" {
 
   secret      = google_secret_manager_secret.per_env["cron-secret-${each.key}"].id
   secret_data = random_password.cron_secret[each.key].result
+}
+
+# ---------------------------------------------------------------------------
+# github-webhook-secret – GitHub リポジトリ Webhook の署名検証用 (Rewarding システム #375)
+# 値は Terraform で生成する。リポジトリ Settings > Webhooks の Secret には
+# Secret Manager からこの値をコピーして登録する
+# ---------------------------------------------------------------------------
+resource "random_password" "github_webhook_secret" {
+  for_each = toset(local.cloud_run_envs)
+
+  length  = 48
+  special = false
+}
+
+resource "google_secret_manager_secret_version" "github_webhook_secret" {
+  for_each = toset(local.cloud_run_envs)
+
+  secret      = google_secret_manager_secret.per_env["github-webhook-secret-${each.key}"].id
+  secret_data = random_password.github_webhook_secret[each.key].result
 }
