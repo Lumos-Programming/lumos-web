@@ -21,7 +21,7 @@ variable "cloud_run_env_vars" {
   default = {
     dev = {
       NEXT_PUBLIC_APP_ENV      = "development"
-      ADMIN_ROLE_ID            = "1368939833162076200"
+      ADMIN_ROLE_ID            = "1381977862831083590"
       RETURNING_MEMBER_ROLE_ID = "1492146121663971409"
       # Lusy Server に存在する Dev 環境用のメンバーロール
       MEMBER_ROLE_ID = "1548449451117641758"
@@ -45,7 +45,7 @@ variable "cloud_run_env_vars" {
     }
     stg = {
       NEXT_PUBLIC_APP_ENV      = "staging"
-      ADMIN_ROLE_ID            = "1368939833162076200"
+      ADMIN_ROLE_ID            = "1381977862831083590"
       RETURNING_MEMBER_ROLE_ID = "1492146121663971409"
       # Lusy Server に存在する Stg 環境用のメンバーロール
       MEMBER_ROLE_ID = "1548449273325027438"
@@ -89,6 +89,7 @@ variable "cloud_run_env_vars" {
       LINE_PUSH_TARGET_ID              = "Ca2a9d031634839fbf0e57faff0c00eb6"
       LINE_GROUP_ID                    = "Ca2a9d031634839fbf0e57faff0c00eb6"
       BIRTHDAY_NOTIFICATION_CHANNEL_ID = "1548391863214542898"
+      BLOG_NOTIFICATION_CHANNEL_ID     = "1563415197232795718"
     }
   }
 }

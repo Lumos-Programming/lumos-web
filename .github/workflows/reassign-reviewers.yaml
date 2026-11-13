@@ -1,0 +1,38 @@
+# レビュー依頼から 3 日間反応が無いレビュアーを、同じ区分の別のメンバーに付け替える。
+# 区分表はリポジトリ変数 REVIEWER_LEVELS に置く (詳細は .github/scripts/reassign-reviewers.mjs)。
+name: Reassign stale reviewers
+on:
+  schedule:
+    # 6 時間ごと (JST 3/9/15/21 時)
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "付け替えずに結果だけ表示する"
+        type: boolean
+        default: true
+concurrency:
+  group: reassign-reviewers
+jobs:
+  reassign-reviewers:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      pull-requests: "write"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Reassign reviewers
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REVIEWER_LEVELS: ${{ vars.REVIEWER_LEVELS }}
+          STALE_DAYS: "3"
+          # 定期実行では実際に付け替える。手動実行は既定で dry run
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: node .github/scripts/reassign-reviewers.mjs
