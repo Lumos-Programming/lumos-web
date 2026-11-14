@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   deleteTalk: vi.fn(),
   createWeekEvent: vi.fn(),
   syncWeekEventDescription: vi.fn(),
+  syncMiniLtCalendarEvent: vi.fn(),
 }));
 vi.mock("@/lib/auth", () => ({
   auth: mocks.auth,
@@ -24,6 +25,9 @@ vi.mock("@/lib/firebase", () => ({
 vi.mock("@/lib/mini-lt/discord-events", () => ({
   createWeekEvent: mocks.createWeekEvent,
   syncWeekEventDescription: mocks.syncWeekEventDescription,
+}));
+vi.mock("@/lib/mini-lt/calendar-event", () => ({
+  syncMiniLtCalendarEvent: mocks.syncMiniLtCalendarEvent,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/link", () => ({ default: "a" }));
@@ -89,6 +93,7 @@ it("preserves member talk creation and automatic event creation", async () => {
     "member",
   );
   expect(mocks.createWeekEvent).toHaveBeenCalledWith(weekId);
+  expect(mocks.syncMiniLtCalendarEvent).toHaveBeenCalledWith(weekId);
 });
 
 it("preserves member talk editing and automatic synchronization", async () => {
@@ -96,6 +101,7 @@ it("preserves member talk editing and automatic synchronization", async () => {
   await actions.onAction({ ...form, id: "talk" });
   expect(mocks.updateTalk).toHaveBeenCalledWith(weekId, "talk", form, "member");
   expect(mocks.syncWeekEventDescription).toHaveBeenCalledWith(weekId);
+  expect(mocks.syncMiniLtCalendarEvent).toHaveBeenCalledWith(weekId);
 });
 
 it("preserves member talk deletion and automatic synchronization", async () => {
@@ -103,6 +109,7 @@ it("preserves member talk deletion and automatic synchronization", async () => {
   await actions.onDelete("talk");
   expect(mocks.deleteTalk).toHaveBeenCalledWith(weekId, "talk", "member");
   expect(mocks.syncWeekEventDescription).toHaveBeenCalledWith(weekId);
+  expect(mocks.syncMiniLtCalendarEvent).toHaveBeenCalledWith(weekId);
 });
 
 it.each([null, { user: { id: "member", optedOut: true } }])(
