@@ -19,6 +19,7 @@
   - Mini LT management: weekly lightning-talk event scheduling, admin panel, automated Discord event creation via bot, LINE push notifications (Flex Messages)
 - **権限管理**: Discord ギルドのロールに基づく管理者判定
   - Role-based admin detection via Discord guild roles
+- **二要素認証の確認**: 管理者のメンバー一覧で Discord 2FA の有効・未設定・未確認と確認日を表示。Discord ログイン時に更新し、既存データの欠損も補完します。未確認のメンバーは再ログインが必要です。表示は確認時点の状態です。
 
 ## 技術スタック / Tech Stack
 
@@ -86,6 +87,14 @@ just emulator-reset # エミュレータを再起動（データをリセット�
 - `just dev` を停止してもエミュレータは終了しません
 
 > **注意**: グローバルインストールの `firebase` コマンド（Homebrew等）は Node.js v25 と互換性がありません。必ず `pnpm exec firebase` を使用してください（justfile は自動的にこれを使用します）。
+
+## Discord OAuth トークンの保存
+
+Discord ログイン時に、既存 Firestore の `discord_oauth_tokens/{discordId}` にアクセストークン、リフレッシュトークン、有効期限（Unix 秒）、スコープ、トークン種別、作成・更新日時を保存します。コレクションは初回の書き込みで自動作成され、`FIRESTORE_DATABASE_ID` による環境分離も既存データと共通です。
+
+`lib/discord-oauth-tokens.ts` はサーバー専用の保存・取得・削除 API です。認証情報を `members`、JWT、ブラウザー向けセッションに含めず、再認証時には最新のトークン一式で置き換えます。退会・サブアカウントへの移行・連携解除時には削除し、退会済みアカウントでは保存しません。
+
+既存ユーザーのトークンは次回の Discord 認証から保存されます。再加入した場合も保存には再認証が必要です。トークンの自動更新や定期的な MFA 取得は、この保存処理には含まれません。
 
 ## 環境変数
 

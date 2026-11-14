@@ -28,8 +28,10 @@ const SUB_PROFILE = {
 };
 
 async function clearMembers() {
-  const snap = await db.collection("members").get();
-  for (const doc of snap.docs) await doc.ref.delete();
+  for (const collection of ["members", "discord_oauth_tokens"]) {
+    const snap = await db.collection(collection).get();
+    for (const doc of snap.docs) await doc.ref.delete();
+  }
 }
 
 /**
@@ -97,21 +99,27 @@ describe("linkSubAccount", () => {
 
   it("rejects linking when the sub is already a Lumos main member", async () => {
     await seedPrimary(SUB); // SUB already exists as a regular member
+    const tokenRef = db.collection("discord_oauth_tokens").doc(SUB);
+    const credentials = { accessToken: "existing-member-access-token" };
+    await tokenRef.set(credentials);
     const result = await linkSubAccount({
       primaryDiscordId: PRIMARY,
       sub: SUB_PROFILE,
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toBe("already_member");
+    expect((await tokenRef.get()).data()).toEqual(credentials);
   });
 
-  it("takes over a login-only stub left by the registration nudge DM", async () => {
+  it("takes over a login-only stub and removes its stored OAuth tokens", async () => {
     // 登録案内 DM からサブでログインしただけの doc (getOrCreateMember 相当)
     await db.collection("members").doc(SUB).set({
       discordUsername: "Sub User",
       discordAvatar: "",
       lastLoginAt: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
     });
+    const tokenRef = db.collection("discord_oauth_tokens").doc(SUB);
+    await tokenRef.set({ accessToken: "old-login-access-token" });
 
     const result = await linkSubAccount({
       primaryDiscordId: PRIMARY,
@@ -122,6 +130,7 @@ describe("linkSubAccount", () => {
     const subDoc = await db.collection("members").doc(SUB).get();
     expect(subDoc.data()?.isSubAccount).toBe(true);
     expect(subDoc.data()?.primaryDiscordId).toBe(PRIMARY);
+    expect((await tokenRef.get()).exists).toBe(false);
   });
 
   it("takes over an opt-out stub and clears the leftover member flags", async () => {
@@ -199,7 +208,9 @@ describe("unlinkSubAccount", () => {
     await linkSubAccount({ primaryDiscordId: PRIMARY, sub: SUB_PROFILE });
   });
 
-  it("removes the sub doc and clears subAccountDiscordId on primary", async () => {
+  it("removes the sub doc and OAuth tokens and clears subAccountDiscordId", async () => {
+    const tokenRef = db.collection("discord_oauth_tokens").doc(SUB);
+    await tokenRef.set({ accessToken: "stale-sub-access-token" });
     const result = await unlinkSubAccount({
       primaryDiscordId: PRIMARY,
       subDiscordId: SUB,
@@ -211,16 +222,38 @@ describe("unlinkSubAccount", () => {
 
     const subDoc = await db.collection("members").doc(SUB).get();
     expect(subDoc.exists).toBe(false);
+    expect((await tokenRef.get()).exists).toBe(false);
   });
 
   it("rejects unlinking when the sub is not owned by the primary", async () => {
     await seedPrimary(OTHER_PRIMARY);
+    const tokenRef = db.collection("discord_oauth_tokens").doc(SUB);
+    const credentials = { accessToken: "other-member-access-token" };
+    await tokenRef.set(credentials);
     const result = await unlinkSubAccount({
       primaryDiscordId: OTHER_PRIMARY,
       subDiscordId: SUB,
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toBe("not_linked");
+    expect((await tokenRef.get()).data()).toEqual(credentials);
+  });
+
+  it("preserves OAuth tokens when the sub doc belongs to another primary", async () => {
+    await db.collection("members").doc(SUB).update({
+      primaryDiscordId: OTHER_PRIMARY,
+    });
+    const tokenRef = db.collection("discord_oauth_tokens").doc(SUB);
+    const credentials = { accessToken: "other-member-access-token" };
+    await tokenRef.set(credentials);
+
+    const result = await unlinkSubAccount({
+      primaryDiscordId: PRIMARY,
+      subDiscordId: SUB,
+    });
+
+    expect(result).toEqual({ ok: false, error: "not_owner" });
+    expect((await tokenRef.get()).data()).toEqual(credentials);
   });
 });
 

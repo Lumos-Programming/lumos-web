@@ -6,6 +6,7 @@ import {
   isDiscordIdOptedOut,
 } from "@/lib/members";
 import { isSubAccountDiscordId } from "@/lib/sub-account";
+import { saveDiscordOAuthTokens } from "@/lib/discord-oauth-tokens";
 import {
   sendDiscordDm,
   buildWelcomeMessage,
@@ -128,13 +129,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // hash は resolveDiscordAvatar で URL に組み立てる。未設定 (null) は空文字で保存。
         const discordAvatarHash =
           (profile as { avatar?: string | null })?.avatar ?? "";
+        const discordMfaEnabled = profile?.mfa_enabled;
 
         const { isNewMember, lastLoginAt } = await getOrCreateMember(
           discordId,
           token.name ?? "",
           discordAvatarHash,
           (profile as { username?: string })?.username ?? undefined,
+          typeof discordMfaEnabled === "boolean"
+            ? discordMfaEnabled
+            : undefined,
         );
+
+        const member = await getMember(discordId);
+        token.faceImage = member?.faceImage ?? null;
+
+        if (account.access_token) {
+          await saveDiscordOAuthTokens(discordId, {
+            accessToken: account.access_token,
+            refreshToken: account.refresh_token,
+            expiresAt: account.expires_at,
+            scope: account.scope,
+            tokenType: account.token_type,
+          });
+          token.isAdmin = await fetchIsAdmin(account.access_token);
+        } else {
+          token.isAdmin = false;
+        }
 
         await sendLoginDm(
           discordId,
@@ -142,15 +163,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           isNewMember,
           lastLoginAt,
         );
-
-        const member = await getMember(discordId);
-        token.faceImage = member?.faceImage ?? null;
-
-        if (account.access_token) {
-          token.isAdmin = await fetchIsAdmin(account.access_token);
-        } else {
-          token.isAdmin = false;
-        }
       }
 
       // session.update() 呼び出し時: faceImage を最新化

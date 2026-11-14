@@ -142,6 +142,8 @@ export type AdminMemberRow = {
   discordId: string;
   discordUsername: string;
   discordHandle?: string;
+  discordMfaEnabled: boolean | null;
+  discordMfaCheckedAt: number | null;
   lastName: string;
   firstName: string;
   nickname: string;
@@ -181,6 +183,11 @@ export async function getAdminMembers(): Promise<AdminMemberRow[]> {
           discordId: doc.id,
           discordUsername: d.discordUsername ?? "",
           discordHandle: d.discordHandle,
+          discordMfaEnabled:
+            typeof d.discordMfaEnabled === "boolean"
+              ? d.discordMfaEnabled
+              : null,
+          discordMfaCheckedAt: d.discordMfaCheckedAt?.toMillis() ?? null,
           lastName: d.lastName ?? "",
           firstName: d.firstName ?? "",
           nickname: d.nickname ?? "",
