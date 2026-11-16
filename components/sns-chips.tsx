@@ -142,14 +142,13 @@ function LinePopup({
           </svg>
         </button>
         {entry.avatarUrl ? (
-          <div className="w-24 h-24 relative rounded-full overflow-hidden ring-4 ring-[#06C755]/20">
-            <AvatarImage
-              src={entry.avatarUrl}
-              alt={entry.username}
-              className="object-cover"
-              fallbackSrc={DEFAULT_AVATAR_SRC}
-            />
-          </div>
+          <AvatarImage
+            src={entry.avatarUrl}
+            alt={entry.username}
+            wrapperClassName="relative w-24 h-24 rounded-full overflow-hidden ring-4 ring-[#06C755]/20"
+            className="object-cover"
+            fallbackSrc={DEFAULT_AVATAR_SRC}
+          />
         ) : (
           <div className="w-24 h-24 rounded-full bg-[#06C755] flex items-center justify-center ring-4 ring-[#06C755]/20">
             <LineLogo className="w-12 h-12 text-white" />
@@ -177,9 +176,12 @@ export function SnsChip({ entry }: { entry: SnsEntry }) {
     <>
       <brand.Logo className="w-3.5 h-3.5 flex-shrink-0" />
       {entry.avatarUrl && (
-        <div className="w-4 h-4 relative rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/30">
-          <AvatarImage src={entry.avatarUrl} alt="" className="object-cover" />
-        </div>
+        <AvatarImage
+          src={entry.avatarUrl}
+          alt=""
+          wrapperClassName="relative w-4 h-4 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-white/30"
+          className="object-cover"
+        />
       )}
       <span className="text-[11px] font-medium leading-none truncate max-w-[100px]">
         {brand.prefixAt ? `@${entry.username}` : entry.username}

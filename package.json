@@ -88,6 +88,7 @@
     "eslint-config-prettier": "^10.1.8",
     "firebase-tools": "^15.28.2",
     "husky": "^9.1.7",
+    "jsdom": "^31.0.1",
     "lint-staged": "^16.4.0",
     "postcss": "^8.5.26",
     "prettier": "^3.9.6",

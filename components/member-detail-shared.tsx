@@ -86,24 +86,20 @@ export function MemberDetailContent({ member }: { member: Member }) {
         {/* 画像コンテナ */}
         <div className="shrink-0 self-center sm:self-start">
           <div className="relative w-fit">
-            <div
-              className={`w-28 h-28 sm:w-32 sm:h-32 relative rounded-lg overflow-hidden ring-2 ${ringColor}`}
-            >
-              <AvatarImage
-                src={faceImage || DEFAULT_AVATAR_SRC}
-                alt={`${member.name}の写真`}
-                className="object-cover"
-                fallbackSrc={DEFAULT_AVATAR_SRC}
-              />
-            </div>
+            <AvatarImage
+              src={faceImage || DEFAULT_AVATAR_SRC}
+              alt={`${member.name}の写真`}
+              wrapperClassName={`relative w-28 h-28 sm:w-32 sm:h-32 rounded-lg overflow-hidden ring-2 ${ringColor}`}
+              className="object-cover"
+              fallbackSrc={DEFAULT_AVATAR_SRC}
+            />
             {member.snsAvatar && (
-              <div className="absolute -bottom-1.5 -right-1.5 w-9 h-9 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
-                <AvatarImage
-                  src={member.snsAvatar}
-                  alt=""
-                  className="object-cover"
-                />
-              </div>
+              <AvatarImage
+                src={member.snsAvatar}
+                alt=""
+                wrapperClassName="absolute -bottom-1.5 -right-1.5 w-9 h-9 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden"
+                className="object-cover"
+              />
             )}
           </div>
         </div>
