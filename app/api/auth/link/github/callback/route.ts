@@ -6,7 +6,7 @@ import {
   fetchProviderUser,
   getCallbackUrl,
 } from "@/lib/oauth-link";
-import { updateMemberSns } from "@/lib/members";
+import { getMemberIdByGithubId, updateMemberSns } from "@/lib/members";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -45,6 +45,14 @@ export async function GET(request: NextRequest) {
       getCallbackUrl("github", origin),
     );
     const user = await fetchProviderUser("github", token);
+
+    // 同じ GitHub アカウントを複数メンバーに連携させない（ポイント付与先が一意に決まるようにする）
+    const ownerId = await getMemberIdByGithubId(user.id);
+    if (ownerId && ownerId !== discordId) {
+      const errorUrl = new URL(redirectTo, origin);
+      errorUrl.searchParams.set("error", "github_already_linked");
+      return NextResponse.redirect(errorUrl.toString());
+    }
 
     await updateMemberSns(discordId, {
       github: user.username,
