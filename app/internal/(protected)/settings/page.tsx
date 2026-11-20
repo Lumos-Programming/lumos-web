@@ -18,6 +18,7 @@ const SUCCESS_MESSAGES: Record<string, string> = {
 
 const ERROR_MESSAGES: Record<string, string> = {
   github_link_failed: "GitHub連携に失敗しました。もう一度お試しください。",
+  github_already_linked: "このGitHubアカウントは別のメンバーに連携済みです。",
   x_link_failed: "X連携に失敗しました。もう一度お試しください。",
   line_link_failed: "LINE連携に失敗しました。もう一度お試しください。",
   sub_discord_link_failed:

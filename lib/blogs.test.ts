@@ -229,6 +229,53 @@ describe("Blogs CRUD", () => {
       "2026-01-01",
     ]);
   });
+
+  describe("points", () => {
+    const pointDoc = (blogId: string) =>
+      firebaseAdmin
+        .firestore()
+        .collection("pointTransactions")
+        .doc(`blog_published:${blogId}`)
+        .get();
+
+    it("awards blog points to the author on create", async () => {
+      const created = await createBlog(authorId, validInput);
+      const snap = await pointDoc(created.id);
+      expect(snap.exists).toBe(true);
+      expect(snap.data()).toMatchObject({
+        memberId: authorId,
+        reason: "blog_published",
+        points: 5,
+        description: validInput.title,
+        sourceUrl: validInput.url,
+      });
+    });
+
+    it("does not award points when validation fails", async () => {
+      await expect(
+        createBlog(authorId, { ...validInput, title: "" }),
+      ).rejects.toBeInstanceOf(BlogError);
+      const all = await firebaseAdmin
+        .firestore()
+        .collection("pointTransactions")
+        .get();
+      expect(all.empty).toBe(true);
+    });
+
+    it("revokes the points when the blog is deleted", async () => {
+      const created = await createBlog(authorId, validInput);
+      await deleteBlog(created.id, authorId);
+      expect((await pointDoc(created.id)).exists).toBe(false);
+    });
+
+    it("keeps the points when someone else fails to delete", async () => {
+      const created = await createBlog(authorId, validInput);
+      await expect(
+        deleteBlog(created.id, otherAuthorId),
+      ).rejects.toBeInstanceOf(BlogError);
+      expect((await pointDoc(created.id)).exists).toBe(true);
+    });
+  });
 });
 
 describe("parseBlogInput", () => {
