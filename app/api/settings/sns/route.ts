@@ -17,15 +17,9 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json();
-    const allowed = [
-      "github",
-      "githubId",
-      "x",
-      "xId",
-      "linkedin",
-      "line",
-      "lineId",
-    ] as const;
+    // GitHub / X / LINE のユーザー名・ID は OAuth コールバックでのみ書き込む。
+    // ここで受け付けると他人の GitHub ID を自分に設定できてしまう（ポイント付与の横取り）。
+    const allowed = ["linkedin"] as const;
     type SnsKey = (typeof allowed)[number];
 
     const data: Partial<Record<SnsKey, string>> = {};

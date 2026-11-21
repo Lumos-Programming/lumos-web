@@ -365,9 +365,11 @@ export default function OnboardingForm({
           ? "LINE連携に失敗しました。もう一度お試しください。"
           : error === "github_link_failed"
             ? "GitHub連携に失敗しました。もう一度お試しください。"
-            : error === "x_link_failed"
-              ? "X連携に失敗しました。もう一度お試しください。"
-              : null;
+            : error === "github_already_linked"
+              ? "このGitHubアカウントは別のメンバーに連携済みです。"
+              : error === "x_link_failed"
+                ? "X連携に失敗しました。もう一度お試しください。"
+                : null;
       if (errorMessage) {
         queueMicrotask(() => setStep3Error(errorMessage));
       }

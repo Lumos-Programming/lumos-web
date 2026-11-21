@@ -1,8 +1,10 @@
 import { auth } from "@/lib/auth";
+import { getAppEnv } from "@/lib/env";
 import { getMember, isOnboardingComplete } from "@/lib/members";
 import { checkReturningMember } from "@/lib/discord";
 import { redirect } from "next/navigation";
 import OnboardingForm from "@/components/onboarding-form";
+import { DebugProfileButton } from "@/components/debug-profile-button";
 
 export default async function OnboardingPage({
   searchParams,
@@ -24,11 +26,15 @@ export default async function OnboardingPage({
   if (member && isOnboardingComplete(member) && !isDevPreview && !isSurvey) {
     redirect("/internal");
   }
+  const canUseDebugProfile = ["local", "development"].includes(getAppEnv());
 
   return (
-    <OnboardingForm
-      lineBotFriendUrl={process.env.LINE_BOT_FRIEND_URL}
-      isReturningMember={isReturningMember}
-    />
+    <>
+      {canUseDebugProfile && <DebugProfileButton />}
+      <OnboardingForm
+        lineBotFriendUrl={process.env.LINE_BOT_FRIEND_URL}
+        isReturningMember={isReturningMember}
+      />
+    </>
   );
 }

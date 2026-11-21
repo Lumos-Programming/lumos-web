@@ -177,6 +177,16 @@ export async function listEventsForAdmin(
   return snap.docs.map((doc) => toLumosEvent(doc.id, doc.data()));
 }
 
+/**
+ * 誰でも購読できる公開カレンダー用の一覧。
+ * 認証済み画面向けの API と違い、この関数自身は公開範囲だけを扱う入口になる。
+ */
+export async function listEventsForCalendar(): Promise<LumosEvent[]> {
+  const db = getDb();
+  const snap = await db.collection(COLLECTION).orderBy("startAt", "asc").get();
+  return snap.docs.map((doc) => toLumosEvent(doc.id, doc.data()));
+}
+
 export async function getEvent(id: string): Promise<LumosEvent | null> {
   const db = getDb();
   const snap = await db.collection(COLLECTION).doc(id).get();

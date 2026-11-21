@@ -10,7 +10,7 @@ on:
       - edited
 permissions: {}
 env:
-  GEMINI_MODEL: gemini-3.8-flash
+  GEMINI_MODEL: gemini-3.6-flash
   REVIEW_LANGUAGE: 日本語
   SANDBOX_NETWORK: public
 # ai-review-actionsは開発段階のため、3つのActionでmainを参照する。

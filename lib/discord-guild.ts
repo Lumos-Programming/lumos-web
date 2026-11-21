@@ -2,6 +2,8 @@
  * Discord Bot API integration for fetching guild members
  */
 
+import { discordFetch } from "@/lib/discord-fetch";
+
 const DISCORD_API_BASE = "https://discord.com/api/v10";
 
 export type DiscordGuildMember = {
@@ -42,7 +44,7 @@ export async function getGuildMembers(): Promise<DiscordGuildMember[]> {
       url.searchParams.set("after", after);
     }
 
-    const response = await fetch(url.toString(), {
+    const response = await discordFetch(url.toString(), {
       headers: {
         Authorization: `Bot ${botToken}`,
       },
