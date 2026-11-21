@@ -15,6 +15,10 @@ import {
   getTileDisplay,
 } from "@/types/member";
 import { SnsChipsSection } from "@/components/sns-chips";
+import {
+  ContributionGraph,
+  ContributionLegend,
+} from "@/components/contribution-graph";
 import { formatBirthDate } from "@/lib/date";
 
 // --- BioSection ---
@@ -142,6 +146,32 @@ export function MemberDetailContent({ member }: { member: Member }) {
           </div>
         </div>
       </div>
+
+      {/* GitHub の草（1 年分。狭い画面では横スクロール） */}
+      {member.githubContributions && (
+        <div className="border-t pt-4 mt-4">
+          <div className="flex items-baseline justify-between gap-2 mb-2">
+            <h4 className="font-bold text-sm text-muted-foreground">
+              GitHub の草
+            </h4>
+            <span className="text-xs text-muted-foreground">
+              過去 1 年間に{" "}
+              <span className="font-semibold text-foreground tabular-nums">
+                {member.githubContributions.total.toLocaleString()}
+              </span>{" "}
+              contributions
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <ContributionGraph
+              contributions={member.githubContributions}
+              showMonths
+              className="min-w-[560px]"
+            />
+          </div>
+          <ContributionLegend className="justify-end mt-1.5" />
+        </div>
+      )}
 
       {/* 下部: Bio（全幅、区切り線付き） */}
       {member.bio && (

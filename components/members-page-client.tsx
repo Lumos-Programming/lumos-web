@@ -66,6 +66,7 @@ export default function MembersPageClient({ members }: Props) {
                 year={member.year}
                 currentOrg={member.currentOrg}
                 topInterests={member.topInterests}
+                contributions={member.githubContributions}
                 avatarSize="md"
                 onClick={() => handleSelect(member)}
               />
