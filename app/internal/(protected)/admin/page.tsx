@@ -5,6 +5,7 @@ import {
   Bell,
   CalendarClock,
   CalendarDays,
+  MessageSquareText,
   Newspaper,
   Shield,
   ShieldCheck,
@@ -33,6 +34,13 @@ const ADMIN_ACTIONS = [
     label: "イベント管理",
     description: "サークル内イベントを登録・編集します",
     gradient: "from-violet-500 to-purple-500",
+  },
+  {
+    href: "/internal/admin/optout-reasons",
+    icon: MessageSquareText,
+    label: "退会理由",
+    description: "継続しない・退会の理由の回答を確認します",
+    gradient: "from-rose-500 to-red-500",
   },
   {
     href: "/internal/admin/notifications",

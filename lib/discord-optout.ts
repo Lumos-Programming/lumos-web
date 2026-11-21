@@ -21,6 +21,7 @@
 import crypto from "crypto";
 import { getDb } from "@/lib/firebase";
 import { FieldValue } from "firebase-admin/firestore";
+import { OPTOUT_REASON_VALUES, type OptoutReason } from "@/types/optout";
 
 // Firestore docId キー (既存レコードとの互換維持)
 const OPTOUT_KIND = "continuation-2026";
@@ -223,15 +224,7 @@ export async function getOptoutSubmissionIds(): Promise<Set<string>> {
 
 // --- Firestore: surveys (opt-out アンケート) ---
 
-export const OPTOUT_REASON_VALUES = [
-  "busy",
-  "interest_changed",
-  "atmosphere",
-  "content",
-  "graduated",
-  "other",
-] as const;
-export type OptoutReason = (typeof OPTOUT_REASON_VALUES)[number];
+export { OPTOUT_REASON_VALUES, type OptoutReason };
 
 export interface OptoutSurveyInput {
   reason: OptoutReason;
