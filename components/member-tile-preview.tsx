@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { AvatarImage, DEFAULT_AVATAR_SRC } from "@/components/avatar-image";
 import {
   getRingColorClass,
   getMemberTypeBadgeClass,
@@ -133,16 +133,13 @@ function DetailPreview({
           {/* 上部: 画像 + 名前・属性・興味・SNS */}
           <div className="flex gap-3 p-4">
             <div className="shrink-0">
-              <div
-                className={`w-16 h-16 sm:w-20 sm:h-20 relative rounded-lg overflow-hidden ring-2 ${getRingColorClass(data.ringColor)}`}
-              >
-                <Image
-                  src={data.primaryAvatar}
-                  alt="詳細プレビュー"
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <AvatarImage
+                src={data.primaryAvatar}
+                alt="詳細プレビュー"
+                wrapperClassName={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden ring-2 ${getRingColorClass(data.ringColor)}`}
+                className="object-cover"
+                fallbackSrc={DEFAULT_AVATAR_SRC}
+              />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-base font-bold text-gray-900 dark:text-gray-100 truncate">

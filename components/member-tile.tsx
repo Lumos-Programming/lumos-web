@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { AvatarImage, DEFAULT_AVATAR_SRC } from "@/components/avatar-image";
 import {
   getRingColorClass,
   getMemberTypeBadgeClass,
@@ -44,20 +44,20 @@ export function MemberTile({
   const content = (
     <>
       <div className="relative flex-shrink-0">
-        <div
-          className={`${sizeClass} relative rounded-full overflow-hidden ring-2 ${ringClass} transition-all duration-300 ${!preview ? "group-hover:ring-4 group-hover:shadow-lg group-hover:scale-105" : ""}`}
-        >
-          <Image
-            src={primaryAvatar}
-            alt={`${main}の写真`}
-            fill
+        <AvatarImage
+          src={primaryAvatar}
+          alt={`${main}の写真`}
+          wrapperClassName={`relative ${sizeClass} rounded-full overflow-hidden ring-2 ${ringClass} transition-all duration-300 ${!preview ? "group-hover:ring-4 group-hover:shadow-lg group-hover:scale-105" : ""}`}
+          className="object-cover"
+          fallbackSrc={DEFAULT_AVATAR_SRC}
+        />
+        {secondaryAvatar && (
+          <AvatarImage
+            src={secondaryAvatar}
+            alt=""
+            wrapperClassName="absolute -bottom-1 -right-1 w-7 h-7 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden"
             className="object-cover"
           />
-        </div>
-        {secondaryAvatar && (
-          <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full ring-2 ring-white dark:ring-gray-900 overflow-hidden">
-            <Image src={secondaryAvatar} alt="" fill className="object-cover" />
-          </div>
         )}
       </div>
       <p
