@@ -26,13 +26,12 @@ export const BLOG_PLATFORM_PRESETS = ["Qiita", "Zenn", "Medium"] as const;
 export type BlogPlatformPreset = (typeof BLOG_PLATFORM_PRESETS)[number];
 
 /**
- * 媒体チップの配色。背景は各サービスのブランドカラー。
- * 文字色は背景ごとに変える — Qiita の緑は明るく、白文字だと 2.24:1 しか出ないため
- * 濃い文字にして 7.5:1 まで上げている。
+ * 媒体チップの配色。背景は各サービスのブランドカラー、文字は白。
+ * Qiita は緑に白文字のロゴなので、コントラスト比 (2.24:1) より見た目の分かりやすさを優先して白にしている。
  * プリセットに無い媒体(「その他」の自由記述)は既定の色のままにする。
  */
 const PLATFORM_BADGE_CLASSES: Record<BlogPlatformPreset, string> = {
-  Qiita: "bg-[#54C500] text-[#1D1D1D]",
+  Qiita: "bg-[#54C500] text-white",
   Zenn: "bg-[#3C83F6] text-white",
   Medium: "bg-[#1D1D1D] text-white",
 };
@@ -107,4 +106,38 @@ export class BlogError extends Error {
     this.name = "BlogError";
     this.code = code;
   }
+}
+
+/**
+ * 共有用のクエリパラメータ名。個別ページは作らず、ブログ一覧を開いて該当カードを強調する。
+ * # (フラグメント) はサーバーに届かず OGP を記事ごとに出せないため、クエリにしている
+ */
+export const BLOG_SHARE_PARAM = "post";
+
+/** 共有してもらう URL のパス。元記事の URL ではなく、Lumos のブログ一覧を経由させる */
+export function blogSharePath(id: string): string {
+  return `/blogs?${new URLSearchParams({ [BLOG_SHARE_PARAM]: id }).toString()}`;
+}
+
+/** 一覧のカードの DOM id。共有 URL から開いたときのスクロール先 */
+export function blogCardElementId(id: string): string {
+  return `blog-${id}`;
+}
+
+/**
+ * searchParams の値から記事 ID を取り出す。
+ * 同じキーが複数あれば先頭を使い、未指定・空文字は null。
+ * Firestore の ID として使えるかどうかは、問い合わせる直前の getPublicBlog (lib/blogs.ts) で判定する
+ */
+export function parseSharedBlogId(
+  value: string | string[] | undefined,
+): string | null {
+  const id = Array.isArray(value) ? value[0] : value;
+  return id || null;
+}
+
+/** X の投稿画面を、本文と URL を埋めた状態で開くための URL */
+export function buildXShareUrl(text: string, url: string): string {
+  const params = new URLSearchParams({ text, url });
+  return `https://x.com/intent/post?${params.toString()}`;
 }

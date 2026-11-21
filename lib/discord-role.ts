@@ -1,5 +1,6 @@
 import { MEMBER_TYPES, FACULTIES, GRADUATE_SCHOOLS } from "@/types/profile";
 import { ALL_PRESET_TAGS } from "@/types/interests";
+import { discordFetch } from "@/lib/discord-fetch";
 
 const DISCORD_API_BASE = "https://discord.com/api/v10";
 
@@ -52,7 +53,7 @@ export async function addGuildMemberRole(
   roleId: string,
 ): Promise<void> {
   const { guildId, botToken } = getGuildAndToken();
-  const response = await fetch(
+  const response = await discordFetch(
     `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}/roles/${roleId}`,
     {
       method: "PUT",
@@ -73,7 +74,7 @@ export async function removeGuildMemberRole(
   roleId: string,
 ): Promise<void> {
   const { guildId, botToken } = getGuildAndToken();
-  const response = await fetch(
+  const response = await discordFetch(
     `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}/roles/${roleId}`,
     {
       method: "DELETE",
@@ -88,9 +89,12 @@ export async function removeGuildMemberRole(
 
 async function fetchGuildRoles(): Promise<DiscordRole[]> {
   const { guildId, botToken } = getGuildAndToken();
-  const response = await fetch(`${DISCORD_API_BASE}/guilds/${guildId}/roles`, {
-    headers: { Authorization: `Bot ${botToken}` },
-  });
+  const response = await discordFetch(
+    `${DISCORD_API_BASE}/guilds/${guildId}/roles`,
+    {
+      headers: { Authorization: `Bot ${botToken}` },
+    },
+  );
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`ギルドロール取得失敗: ${response.status} ${error}`);
@@ -100,7 +104,7 @@ async function fetchGuildRoles(): Promise<DiscordRole[]> {
 
 async function fetchGuildMemberRoles(userId: string): Promise<string[]> {
   const { guildId, botToken } = getGuildAndToken();
-  const response = await fetch(
+  const response = await discordFetch(
     `${DISCORD_API_BASE}/guilds/${guildId}/members/${userId}`,
     { headers: { Authorization: `Bot ${botToken}` } },
   );
@@ -114,14 +118,17 @@ async function fetchGuildMemberRoles(userId: string): Promise<string[]> {
 
 async function createGuildRole(name: string): Promise<DiscordRole> {
   const { guildId, botToken } = getGuildAndToken();
-  const response = await fetch(`${DISCORD_API_BASE}/guilds/${guildId}/roles`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bot ${botToken}`,
-      "Content-Type": "application/json",
+  const response = await discordFetch(
+    `${DISCORD_API_BASE}/guilds/${guildId}/roles`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bot ${botToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name }),
     },
-    body: JSON.stringify({ name }),
-  });
+  );
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`ロール作成失敗: ${response.status} ${error}`);
