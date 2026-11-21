@@ -88,6 +88,8 @@ async function fetchIsAdmin(accessToken: string): Promise<boolean> {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/login",
+    // 未設定だと Auth.js 標準の英語の "Server error" 画面になる (#210)
+    error: "/error/login",
   },
   providers: [
     Discord({
