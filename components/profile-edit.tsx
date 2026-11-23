@@ -47,6 +47,10 @@ import {
   getFacultyOptions,
 } from "@/types/profile";
 import type { EnrollmentType } from "@/types/profile";
+import {
+  enrollmentForMemberType,
+  type EnrollmentCache,
+} from "@/lib/enrollment-switch";
 import { getSchoolYearOptions } from "@/components/onboarding/types";
 import type { PublicImageOption } from "@/lib/members";
 import { DEFAULT_RING_COLOR, getRingColorClass } from "@/types/member";
@@ -165,21 +169,6 @@ const VISIBILITY_FIELD_KEYS = [
   "x",
   "linkedin",
 ] as const;
-
-type EnrollmentCache = {
-  year: string;
-  faculty: string;
-  admissionYear: string;
-  enrollmentType: EnrollmentType | "";
-  transferYear: string;
-  graduationYear: string;
-  currentOrg: string;
-  hasUndergrad: boolean | null;
-  undergradFaculty: string;
-  undergradAdmissionYear: string;
-  undergradEnrollmentType: EnrollmentType | "";
-  undergradTransferYear: string;
-};
 
 function CustomImageDialog({
   open,
@@ -1417,48 +1406,46 @@ export default function ProfileEdit() {
                     type="button"
                     onClick={() => {
                       if (type === memberType) return;
-                      // 現在の種別の情報をキャッシュに退避
+                      // 現在の種別の情報を退避し、切り替え先の情報を決める
+                      const current: EnrollmentCache = {
+                        year,
+                        faculty,
+                        admissionYear,
+                        enrollmentType,
+                        transferYear,
+                        graduationYear,
+                        currentOrg,
+                        hasUndergrad,
+                        undergradFaculty,
+                        undergradAdmissionYear,
+                        undergradEnrollmentType,
+                        undergradTransferYear,
+                      };
                       if (memberType) {
-                        enrollmentCacheRef.current[memberType] = {
-                          year,
-                          faculty,
-                          admissionYear,
-                          enrollmentType,
-                          transferYear,
-                          graduationYear,
-                          currentOrg,
-                          hasUndergrad,
-                          undergradFaculty,
-                          undergradAdmissionYear,
-                          undergradEnrollmentType,
-                          undergradTransferYear,
-                        };
+                        enrollmentCacheRef.current[memberType] = current;
                       }
-                      // キャッシュから復元、なければ空
-                      const cached = enrollmentCacheRef.current[type];
+                      const next = enrollmentForMemberType(
+                        type,
+                        current,
+                        enrollmentCacheRef.current[type],
+                      );
                       setMemberType(type);
-                      setYear(cached?.year ?? "");
-                      setFaculty(cached?.faculty ?? "");
-                      setAdmissionYear(cached?.admissionYear ?? "");
-                      setEnrollmentType(cached?.enrollmentType ?? "");
-                      setTransferYear(cached?.transferYear ?? "");
-                      setGraduationYear(cached?.graduationYear ?? "");
-                      setCurrentOrg(cached?.currentOrg ?? "");
+                      setYear(next.year);
+                      setFaculty(next.faculty);
+                      setAdmissionYear(next.admissionYear);
+                      setEnrollmentType(next.enrollmentType);
+                      setTransferYear(next.transferYear);
+                      setGraduationYear(next.graduationYear);
+                      setCurrentOrg(next.currentOrg);
                       setProfile((p) => ({
                         ...p,
-                        currentOrg: cached?.currentOrg ?? "",
+                        currentOrg: next.currentOrg,
                       }));
-                      setHasUndergrad(cached?.hasUndergrad ?? null);
-                      setUndergradFaculty(cached?.undergradFaculty ?? "");
-                      setUndergradAdmissionYear(
-                        cached?.undergradAdmissionYear ?? "",
-                      );
-                      setUndergradEnrollmentType(
-                        cached?.undergradEnrollmentType ?? "",
-                      );
-                      setUndergradTransferYear(
-                        cached?.undergradTransferYear ?? "",
-                      );
+                      setHasUndergrad(next.hasUndergrad);
+                      setUndergradFaculty(next.undergradFaculty);
+                      setUndergradAdmissionYear(next.undergradAdmissionYear);
+                      setUndergradEnrollmentType(next.undergradEnrollmentType);
+                      setUndergradTransferYear(next.undergradTransferYear);
                     }}
                     className={[
                       "px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200",
