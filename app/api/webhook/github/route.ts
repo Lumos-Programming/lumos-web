@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import { getMemberIdByGithubId } from "@/lib/members";
 import { awardPoints } from "@/lib/points";
+import { grantTicket } from "@/lib/lottery";
 import {
   rewardRepos,
   rewardsForGithubEvent,
+  ticketsForGithubEvent,
   verifyGithubSignature,
 } from "@/lib/github-rewards";
 
 /**
- * GitHub リポジトリの Webhook (pull_request / pull_request_review) を受けてポイントを付与する。
+ * GitHub リポジトリの Webhook (pull_request / pull_request_review) を受けてポイントと
+ * 宝くじチケット (Issue を閉じた PR) を付与する。
  * 署名は GITHUB_WEBHOOK_SECRET で検証する。連携メンバーがいない GitHub ユーザーは無視する。
  * 付与キーで冪等なので、GitHub の再送 (Redeliver) でも二重付与にならない。
  */
@@ -37,14 +40,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const rewards = rewardsForGithubEvent(
-    request.headers.get("x-github-event"),
-    payload,
-    rewardRepos(process.env.GITHUB_REWARD_REPOS),
-  );
+  const eventName = request.headers.get("x-github-event");
+  const repos = rewardRepos(process.env.GITHUB_REWARD_REPOS);
+  const rewards = rewardsForGithubEvent(eventName, payload, repos);
+  const tickets = ticketsForGithubEvent(eventName, payload, repos);
 
   try {
-    const results = await Promise.all(
+    const pointResults = await Promise.all(
       rewards.map(async (reward) => {
         const memberId = await getMemberIdByGithubId(reward.githubUserId);
         if (!memberId) return { key: reward.key, status: "no_member" };
@@ -58,6 +60,20 @@ export async function POST(request: Request) {
         return { key: reward.key, status: awarded ? "awarded" : "duplicate" };
       }),
     );
+    const ticketResults = await Promise.all(
+      tickets.map(async (ticket) => {
+        const memberId = await getMemberIdByGithubId(ticket.githubUserId);
+        if (!memberId) return { key: ticket.key, status: "no_member" };
+        const { granted } = await grantTicket({
+          key: ticket.key,
+          memberId,
+          description: ticket.description,
+          sourceUrl: ticket.sourceUrl,
+        });
+        return { key: ticket.key, status: granted ? "granted" : "duplicate" };
+      }),
+    );
+    const results = [...pointResults, ...ticketResults];
     // GitHub の Recent Deliveries で結果を確認できるよう本文に残す
     return NextResponse.json({ ok: true, results });
   } catch (error) {

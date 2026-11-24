@@ -7,6 +7,7 @@ export const POINT_RULES = {
   github_review_approved: 3,
   blog_published: 5,
   event_attended: 5,
+  lottery_prize: 20,
 } as const;
 
 export type PointReason = keyof typeof POINT_RULES;
@@ -16,6 +17,7 @@ export const POINT_REASON_LABELS: Record<PointReason, string> = {
   github_review_approved: "PR を Approve した",
   blog_published: "ブログ記事を登録した",
   event_attended: "イベントに出席した",
+  lottery_prize: "週次宝くじ 3等",
 };
 
 /** ポイント履歴 1 件 (pointTransactions/{key}) */

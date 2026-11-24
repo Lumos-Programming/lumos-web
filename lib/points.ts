@@ -123,4 +123,6 @@ export const pointKeys = {
   blogPublished: (blogId: string) => `blog_published:${blogId}`,
   eventAttended: (eventId: string, memberId: string) =>
     `event_attended:${eventId}:${memberId}`,
+  lotteryPrize: (drawId: string, memberId: string) =>
+    `lottery_prize:${drawId}:${memberId}`,
 };
