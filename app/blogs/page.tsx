@@ -1,12 +1,87 @@
+import type { Metadata } from "next";
 import Image from "next/image";
-import { listPublicBlogs } from "@/lib/blogs";
+import { ExternalLink } from "lucide-react";
+import { getPublicBlog, listPublicBlogs, type PublicBlog } from "@/lib/blogs";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { BlogShareButtons } from "@/components/blogs/blog-share-buttons";
+import { ScrollToBlogCard } from "@/components/blogs/scroll-to-blog-card";
 import { cn } from "@/lib/utils";
-import { getPlatformBadgeClass } from "@/types/blog";
+import {
+  BLOG_SHARE_PARAM,
+  blogCardElementId,
+  blogSharePath,
+  getPlatformBadgeClass,
+  parseSharedBlogId,
+} from "@/types/blog";
 
-export default async function BlogsPage() {
+const SITE_URL = "https://lumos-ynu.jp";
+const DEFAULT_OGP_IMAGE = `${SITE_URL}/assets/LumosOGP.webp`;
+
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+/**
+ * 共有 URL (/blogs?post=<id>) で開かれたときは、その記事のタイトルとサムネイルを OGP に出す。
+ * X などでシェアされたときに記事ごとのカードが表示されるようにするため。
+ * それ以外は親 (app/layout.tsx) の既定のままにする
+ */
+export async function generateMetadata({
+  searchParams,
+}: Props): Promise<Metadata> {
+  const sharedId = parseSharedBlogId((await searchParams)[BLOG_SHARE_PARAM]);
+  if (!sharedId) return {};
+
+  let blog: PublicBlog | null;
+  try {
+    blog = await getPublicBlog(sharedId);
+  } catch (error) {
+    // OGP が出せなくても一覧は表示できるので、既定の OGP に戻す
+    console.error("Failed to load shared blog for metadata:", error);
+    return {};
+  }
+  if (!blog) return {};
+
+  const title = `${blog.title} | Lumos ブログ`;
+  const description =
+    blog.description ||
+    `${blog.authorName} が書いた記事を Lumos で紹介しています。`;
+  const image = blog.thumbnailUrl || DEFAULT_OGP_IMAGE;
+
+  // openGraph / twitter は親と浅くマージされ、丸ごと置き換わる。siteName などもここで持ち直す
+  return {
+    title,
+    description,
+    // /blogs?post=<id> は中身が一覧と同じなので、検索エンジンには /blogs 1 つとして扱わせる。
+    // og:url は X のカードのリンク先なので共有 URL のままにする
+    alternates: {
+      canonical: `${SITE_URL}/blogs`,
+    },
+    openGraph: {
+      type: "article",
+      title,
+      description,
+      siteName: "lumosweb",
+      url: `${SITE_URL}${blogSharePath(blog.id)}`,
+      images: [{ url: image }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
+  };
+}
+
+export default async function BlogsPage({ searchParams }: Props) {
   // 著者名の公開可否と退会済みの除外は listPublicBlogs が持っている
   const blogs = await listPublicBlogs();
+  const sharedId = parseSharedBlogId((await searchParams)[BLOG_SHARE_PARAM]);
+  // 一覧に無い ID (削除済み・退会済みの著者) は強調せず、普通の一覧として見せる
+  const highlightedId =
+    sharedId && blogs.some((blog) => blog.id === sharedId) ? sharedId : null;
 
   return (
     <>
@@ -28,21 +103,27 @@ export default async function BlogsPage() {
       {/* Blog Cards */}
       <section className="section-padding bg-background">
         <div className="container mx-auto px-4 md:px-6">
+          {highlightedId && <ScrollToBlogCard blogId={highlightedId} />}
           {blogs.length === 0 ? (
             <p className="text-center text-muted-foreground py-16">
               まだ記事がありません。
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {blogs.map((blog) => (
-                <a
-                  key={blog.id}
-                  href={blog.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block h-full"
-                >
-                  <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 border-border bg-card">
+              {blogs.map((blog) => {
+                const highlighted = blog.id === highlightedId;
+                return (
+                  // カード全体はリンクにしない (スマホでスクロール中に誤タップしやすいため)。
+                  // 元記事へはボタンで飛ばす
+                  <Card
+                    key={blog.id}
+                    id={blogCardElementId(blog.id)}
+                    className={cn(
+                      "h-full flex flex-col overflow-hidden transition-all duration-300 border-border bg-card",
+                      highlighted &&
+                        "ring-4 ring-primary ring-offset-4 ring-offset-background shadow-lg",
+                    )}
+                  >
                     <div className="aspect-video relative bg-muted">
                       <Image
                         src={blog.thumbnailUrl || "/placeholder.svg"}
@@ -77,13 +158,30 @@ export default async function BlogsPage() {
                           {blog.description}
                         </p>
                       )}
-                      <p className="text-sm text-muted-foreground mt-auto">
+                      <p className="text-sm text-muted-foreground mt-auto mb-4">
                         {blog.authorName}
                       </p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button asChild size="sm">
+                          <a
+                            href={blog.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            記事を読む
+                            <ExternalLink className="ml-2 h-4 w-4" />
+                          </a>
+                        </Button>
+                        <BlogShareButtons
+                          blogId={blog.id}
+                          title={blog.title}
+                          size="sm"
+                        />
+                      </div>
                     </CardContent>
                   </Card>
-                </a>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
