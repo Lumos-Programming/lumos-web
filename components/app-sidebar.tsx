@@ -20,6 +20,7 @@ import {
   Wrench,
   Coins,
   Ticket,
+  Trophy,
 } from "lucide-react";
 import { isProduction } from "@/lib/env";
 import { signOut } from "next-auth/react";
@@ -54,6 +55,7 @@ const NAV_ITEMS = [
   { href: "/internal/blogs", icon: BookOpen, label: "記事管理" },
   { href: "/internal/points", icon: Coins, label: "ポイント" },
   { href: "/internal/lottery", icon: Ticket, label: "宝くじ" },
+  { href: "/internal/ranking", icon: Trophy, label: "ランキング" },
   { href: "/internal/settings", icon: Settings, label: "設定" },
 ];
 

@@ -76,3 +76,27 @@ resource "google_cloud_scheduler_job" "lottery" {
 
   depends_on = [google_project_service.cloudscheduler]
 }
+
+# 月間ランキング (#376): 毎月 1 日 09:00 JST に前月 (日本時間) の順位を確定し、表彰対象を
+# RANKING_NOTIFICATION_CHANNEL_ID (未設定なら LOTTERY_NOTIFICATION_CHANNEL_ID) へ投稿する。
+# 確定済みの月は結果を変えず、再実行しても投稿は 1 回だけ。
+resource "google_cloud_scheduler_job" "monthly_ranking" {
+  for_each = toset(local.cloud_run_envs)
+
+  name      = "monthly-ranking-${each.key}"
+  project   = var.project_id
+  region    = var.region
+  schedule  = "0 9 1 * *" # 毎月 1 日 09:00
+  time_zone = "Asia/Tokyo"
+
+  http_target {
+    http_method = "GET"
+    uri         = "${var.cloud_run_env_vars[each.key]["AUTH_URL"]}/api/cron/monthly-ranking"
+
+    headers = {
+      Authorization = "Bearer ${random_password.cron_secret[each.key].result}"
+    }
+  }
+
+  depends_on = [google_project_service.cloudscheduler]
+}
